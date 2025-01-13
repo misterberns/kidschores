@@ -283,28 +283,6 @@
       "no_penalties": "No penalties are available."
     }
   },
-  "entity": {
-    "kid": {
-      "name": "Kid Name",
-      "description": "The name of the kid."
-    },
-    "chore": {
-      "name": "Chore Name",
-      "description": "The name of the chore."
-    },
-    "badge": {
-      "name": "Badge Name",
-      "description": "The name of the badge."
-    },
-    "reward": {
-      "name": "Reward Name",
-      "description": "The name of the reward."
-    },
-    "penalty": {
-      "name": "Penalty Name",
-      "description": "The name of the penalty."
-    }
-  },
   "services": {
     "claim_chore": {
       "name": "Claim Chore",
