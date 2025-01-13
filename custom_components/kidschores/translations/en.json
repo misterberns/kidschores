@@ -25,6 +25,7 @@
         "description": "Enter the name for each kid.",
         "data": {
           "kid_name": "Kid Name",
+          "internal_id": "Internal ID",
           "ha_user": "Home Assistant User"
         }
       },
@@ -40,6 +41,7 @@
         "description": "Enter details for each chore.",
         "data": {
           "chore_name": "Chore Name",
+          "internal_id": "Internal ID",
           "default_points": "Default Points",
           "partial_allowed": "Allow Partial Points?",
           "shared_chore": "Shared Chore?",
@@ -62,6 +64,7 @@
         "description": "Enter details for each badge.",
         "data": {
           "badge_name": "Badge Name",
+          "internal_id": "Internal ID",
           "threshold_type": "Threshold Type",
           "threshold_value": "Threshold Value",
           "icon": "Icon (mdi:xxx)"
@@ -79,6 +82,7 @@
         "description": "Enter details for each reward.",
         "data": {
           "reward_name": "Reward Name",
+          "internal_id": "Internal ID",
           "reward_cost": "Reward Cost",
           "reward_description": "Description (optional)",
           "icon": "Icon (mdi:xxx)"
@@ -96,6 +100,7 @@
         "description": "Enter details for each penalty.",
         "data": {
           "penalty_name": "Penalty Name",
+          "internal_id": "Internal ID",
           "penalty_points": "Penalty Points (negative)",
           "icon": "Icon (mdi:xxx)"
         }
@@ -141,7 +146,7 @@
         "title": "Select {entity_type}",
         "description": "Select the {entity_type} you want to {action}.",
         "data": {
-          "entity_name": "{entity_type} Name"
+          "entity_name": "Name"
         }
       },
       "add_kid": {
@@ -149,7 +154,8 @@
         "description": "Provide the details for the new kid.",
         "data": {
           "kid_name": "Kid Name",
-          "ha_user": "Home Assistant User"
+          "ha_user": "Home Assistant User",
+          "internal_id": "Internal ID"
         }
       },
       "add_chore": {
@@ -157,6 +163,7 @@
         "description": "Provide the details for the new chore.",
         "data": {
           "chore_name": "Chore Name",
+          "internal_id": "Internal ID",
           "default_points": "Default Points",
           "partial_allowed": "Allow Partial Points?",
           "shared_chore": "Shared Chore?",
@@ -172,6 +179,7 @@
         "description": "Provide the details for the new badge.",
         "data": {
           "badge_name": "Badge Name",
+          "internal_id": "Internal ID",
           "threshold_type": "Threshold Type",
           "threshold_value": "Threshold Value",
           "icon": "Icon (mdi:xxx)"
@@ -182,6 +190,7 @@
         "description": "Provide the details for the new reward.",
         "data": {
           "reward_name": "Reward Name",
+          "internal_id": "Internal ID",
           "reward_cost": "Reward Cost",
           "reward_description": "Description (optional)",
           "icon": "Icon (mdi:xxx)"
@@ -192,6 +201,7 @@
         "description": "Provide the details for the new penalty.",
         "data": {
           "penalty_name": "Penalty Name",
+          "internal_id": "Internal ID",
           "penalty_points": "Penalty Points (negative)",
           "icon": "Icon (mdi:xxx)"
         }
@@ -201,7 +211,8 @@
         "description": "Modify the details of the selected kid.",
         "data": {
           "kid_name": "Kid Name",
-          "ha_user": "Home Assistant User"
+          "ha_user": "Home Assistant User",
+          "internal_id": "Internal ID"
         }
       },
       "edit_chore": {
@@ -209,6 +220,7 @@
         "description": "Modify the details of the selected chore.",
         "data": {
           "chore_name": "Chore Name",
+          "internal_id": "Internal ID",
           "default_points": "Default Points",
           "partial_allowed": "Allow Partial Points?",
           "shared_chore": "Shared Chore?",
@@ -224,6 +236,7 @@
         "description": "Modify the details of the selected badge.",
         "data": {
           "badge_name": "Badge Name",
+          "internal_id": "Internal ID",
           "threshold_type": "Threshold Type",
           "threshold_value": "Threshold Value",
           "icon": "Icon (mdi:xxx)"
@@ -234,6 +247,7 @@
         "description": "Modify the details of the selected reward.",
         "data": {
           "reward_name": "Reward Name",
+          "internal_id": "Internal ID",
           "reward_cost": "Reward Cost",
           "reward_description": "Description (optional)",
           "icon": "Icon (mdi:xxx)"
@@ -244,6 +258,7 @@
         "description": "Modify the details of the selected penalty.",
         "data": {
           "penalty_name": "Penalty Name",
+          "internal_id": "Internal ID",
           "penalty_points": "Penalty Points (negative)",
           "icon": "Icon (mdi:xxx)"
         }
@@ -281,6 +296,42 @@
       "no_badges": "No badges are available.",
       "no_rewards": "No rewards are available.",
       "no_penalties": "No penalties are available."
+    }
+  },
+  "selector": {
+    "menu_choices": {
+      "options": {
+        "add_kid": "Add Kid",
+        "edit_kid": "Edit Kid",
+        "delete_kid": "Delete Kid",
+        "add_chore": "Add Chore",
+        "edit_chore": "Edit Chore",
+        "delete_chore": "Delete Chore",
+        "add_badge": "Add Badge",
+        "edit_badge": "Edit Badge",
+        "delete_badge": "Delete Badge",
+        "add_reward": "Add Reward",
+        "edit_reward": "Edit Reward",
+        "delete_reward": "Delete Reward",
+        "add_penalty": "Add Penalty",
+        "edit_penalty": "Edit Penalty",
+        "delete_penalty": "Delete Penalty",
+        "done": "Finish Setup"
+      }
+    },
+    "recurring_frequency": {
+      "options": {
+        "none": "None",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly"
+      }
+    },
+    "threshold_type": {
+      "options": {
+        "points": "Points",
+        "chore_count": "Chore Count"
+      }
     }
   },
   "services": {
