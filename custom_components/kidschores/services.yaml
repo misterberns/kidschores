@@ -1,0 +1,112 @@
+# File: services.yaml
+#
+# Custom services documentation for the KidsChores integration.
+# These services allow direct actions through scripts or automations.
+# Includes UI editor support with selectors for dropdowns and text inputs.
+
+claim_chore:
+  name: "Claim Chore"
+  description: "A kid claims a chore, marking it as 'claimed' for parental approval."
+  fields:
+    kid_name:
+      name: "Kid Name"
+      description: "The name of the kid claiming the chore."
+      example: "Alice"
+      required: true
+      selector:
+        text:
+    chore_name:
+      name: "Chore Name"
+      description: "The name of the chore to claim."
+      example: "Wash Dishes"
+      required: true
+      selector:
+        text:
+
+approve_chore:
+  name: "Approve Chore"
+  description: "Parent approves a chore, awarding points (full or partial)."
+  fields:
+    parent_name:
+      name: "Parent Name"
+      description: "The parent approving the chore."
+      example: "Mom"
+      required: true
+      selector:
+        text:
+    kid_name:
+      name: "Kid Name"
+      description: "The name of the kid who performed the chore."
+      example: "Alice"
+      required: true
+      selector:
+        text:
+    chore_name:
+      name: "Chore Name"
+      description: "The name of the chore being approved."
+      example: "Wash Dishes"
+      required: true
+      selector:
+        text:
+    points_awarded:
+      name: "Points Awarded"
+      description: "Points to award (optional; defaults to the chore's points)."
+      example: 3
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 1000
+          mode: box
+
+redeem_reward:
+  name: "Redeem Reward"
+  description: "A parent redeems a reward for a kid, deducting points."
+  fields:
+    parent_name:
+      name: "Parent Name"
+      description: "The parent authorizing the reward redemption."
+      example: "Mom"
+      required: true
+      selector:
+        text:
+    kid_name:
+      name: "Kid Name"
+      description: "The kid redeeming the reward."
+      example: "Alice"
+      required: true
+      selector:
+        text:
+    reward_name:
+      name: "Reward Name"
+      description: "The name of the reward to redeem."
+      example: "Extra Screen Time"
+      required: true
+      selector:
+        text:
+
+apply_penalty:
+  name: "Apply Penalty"
+  description: "A parent applies a penalty, deducting points from a kid."
+  fields:
+    parent_name:
+      name: "Parent Name"
+      description: "The parent applying the penalty."
+      example: "Dad"
+      required: true
+      selector:
+        text:
+    kid_name:
+      name: "Kid Name"
+      description: "The kid receiving the penalty."
+      example: "Bob"
+      required: true
+      selector:
+        text:
+    penalty_name:
+      name: "Penalty Name"
+      description: "The name of the penalty to apply."
+      example: "Yelling"
+      required: true
+      selector:
+        text:

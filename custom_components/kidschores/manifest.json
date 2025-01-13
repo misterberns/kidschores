@@ -1,1 +1,11 @@
-
+{
+    "domain": "kidschores",
+    "name": "KidsChores",
+    "codeowners": ["@ad-ha"],
+    "config_flow": true,
+    "dependencies": [],
+    "documentation": "https://github.com/ad-ha/kidschores-ha",
+    "issue_tracker": "https://github.com/ad-ha/kidschores-ha/issues",
+    "requirements": [],
+    "version": "0.1.0"
+}
