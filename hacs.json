@@ -1,0 +1,6 @@
+{
+  "name": "KidsChores",
+  "homeassistant": "2024.12",
+  "hacs": "1.33.0",
+  "render_readme": true
+}
