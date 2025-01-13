@@ -10,94 +10,178 @@
         "title": "Points Label",
         "description": "Choose a label for points (e.g., Stars, Bucks).",
         "data": {
-          "points_label": "Points Label"
+          "points_label": {
+            "name": "Points Label",
+            "description": "Label used for points."
+          }
         }
       },
       "kid_count": {
         "title": "Number of Kids",
         "description": "How many kids do you want to manage?",
         "data": {
-          "kid_count": "Kid Count"
+          "kid_count": {
+            "name": "Kid Count",
+            "description": "Number of kids to manage."
+          }
         }
       },
       "kids": {
         "title": "Define Kid",
         "description": "Enter the name for each kid.",
         "data": {
-          "kid_name": "Kid Name",
-          "ha_user": "Home Assistant User"
+          "kid_name": {
+            "name": "Kid Name",
+            "description": "The name of the kid."
+          },
+          "ha_user": {
+            "name": "Home Assistant User",
+            "description": "Link to a Home Assistant user for this kid."
+          }
         }
       },
       "chore_count": {
         "title": "Number of Chores",
         "description": "How many chores do you want to define?",
         "data": {
-          "chore_count": "Chore Count"
+          "chore_count": {
+            "name": "Chore Count",
+            "description": "Number of chores to define."
+          }
         }
       },
       "chores": {
         "title": "Define Chore",
         "description": "Enter details for each chore.",
         "data": {
-          "chore_name": "Chore Name",
-          "default_points": "Default Points",
-          "partial_allowed": "Allow Partial Points?",
-          "shared_chore": "Shared Chore?",
-          "assigned_kids": "Assigned Kids",
-          "chore_description": "Description (optional)",
-          "icon": "Icon (mdi:xxx)",
-          "recurring_frequency": "Recurring Frequency",
-          "due_date": "Due Date"
+          "chore_name": {
+            "name": "Chore Name",
+            "description": "The name of the chore."
+          },
+          "default_points": {
+            "name": "Default Points",
+            "description": "Points awarded for completing this chore."
+          },
+          "partial_allowed": {
+            "name": "Allow Partial Points?",
+            "description": "Allow awarding partial points for incomplete chores."
+          },
+          "shared_chore": {
+            "name": "Shared Chore?",
+            "description": "Is this chore shared among multiple kids?"
+          },
+          "assigned_kids": {
+            "name": "Assigned Kids",
+            "description": "Select the kids assigned to this chore."
+          },
+          "chore_description": {
+            "name": "Description (optional)",
+            "description": "A brief description of the chore."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          },
+          "recurring_frequency": {
+            "name": "Recurring Frequency",
+            "description": "How often the chore recurs."
+          },
+          "due_date": {
+            "name": "Due Date",
+            "description": "The due date for the chore."
+          }
         }
       },
       "badge_count": {
         "title": "Number of Badges",
         "description": "How many badges do you want to define?",
         "data": {
-          "badge_count": "Badge Count"
+          "badge_count": {
+            "name": "Badge Count",
+            "description": "Number of badges to define."
+          }
         }
       },
       "badges": {
         "title": "Define Badge",
         "description": "Enter details for each badge.",
         "data": {
-          "badge_name": "Badge Name",
-          "threshold_type": "Threshold Type",
-          "threshold_value": "Threshold Value",
-          "icon": "Icon (mdi:xxx)"
+          "badge_name": {
+            "name": "Badge Name",
+            "description": "The name of the badge."
+          },
+          "threshold_type": {
+            "name": "Threshold Type",
+            "description": "Type of threshold for earning the badge."
+          },
+          "threshold_value": {
+            "name": "Threshold Value",
+            "description": "Value required to earn the badge."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
         }
       },
       "reward_count": {
         "title": "Number of Rewards",
         "description": "How many rewards do you want to define?",
         "data": {
-          "reward_count": "Reward Count"
+          "reward_count": {
+            "name": "Reward Count",
+            "description": "Number of rewards to define."
+          }
         }
       },
       "rewards": {
         "title": "Define Reward",
         "description": "Enter details for each reward.",
         "data": {
-          "reward_name": "Reward Name",
-          "reward_cost": "Reward Cost",
-          "reward_description": "Description (optional)",
-          "icon": "Icon (mdi:xxx)"
+          "reward_name": {
+            "name": "Reward Name",
+            "description": "The name of the reward."
+          },
+          "reward_cost": {
+            "name": "Reward Cost",
+            "description": "Points required to redeem the reward."
+          },
+          "reward_description": {
+            "name": "Description (optional)",
+            "description": "A brief description of the reward."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
         }
       },
       "penalty_count": {
         "title": "Number of Penalties",
         "description": "How many penalties do you want to define?",
         "data": {
-          "penalty_count": "Penalty Count"
+          "penalty_count": {
+            "name": "Penalty Count",
+            "description": "Number of penalties to define."
+          }
         }
       },
       "penalties": {
         "title": "Define Penalty",
         "description": "Enter details for each penalty.",
         "data": {
-          "penalty_name": "Penalty Name",
-          "penalty_points": "Penalty Points (negative)",
-          "icon": "Icon (mdi:xxx)"
+          "penalty_name": {
+            "name": "Penalty Name",
+            "description": "The name of the penalty."
+          },
+          "penalty_points": {
+            "name": "Penalty Points (negative)",
+            "description": "Points to deduct as a penalty."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
         }
       },
       "finish": {
@@ -230,6 +314,10 @@
       "penalty_points": {
         "name": "Penalty Points (negative)",
         "description": "Points to deduct as a penalty."
+      },
+      "entity_name": {
+        "name": "{entity_type} Name",
+        "description": "Select the name of the {entity_type}."
       }
     }
   },
@@ -239,28 +327,7 @@
         "title": "KidsChores Options",
         "description": "Manage kids, chores, badges, rewards, penalties, or finish.",
         "data": {
-          "menu_selection": {
-            "name": "Select an Action",
-            "description": "Choose one of the options below",
-            "select": {
-              "add_kid": "Add Kid",
-              "edit_kid": "Edit Kid",
-              "delete_kid": "Delete Kid",
-              "add_chore": "Add Chore",
-              "edit_chore": "Edit Chore",
-              "delete_chore": "Delete Chore",
-              "add_badge": "Add Badge",
-              "edit_badge": "Edit Badge",
-              "delete_badge": "Delete Badge",
-              "add_reward": "Add Reward",
-              "edit_reward": "Edit Reward",
-              "delete_reward": "Delete Reward",
-              "add_penalty": "Add Penalty",
-              "edit_penalty": "Edit Penalty",
-              "delete_penalty": "Delete Penalty",
-              "done": "Finish Setup"
-            }
-          }
+          "menu_selection": "Select an Action"
         }
       },
       "select_entity": {
@@ -269,8 +336,7 @@
         "data": {
           "entity_name": {
             "name": "{entity_type} Name",
-            "description": "Select the name of the {entity_type}.",
-            "entity_name": "Entity Name"
+            "description": "Select the name of the {entity_type}."
           }
         }
       },
@@ -278,129 +344,261 @@
         "title": "Add Kid",
         "description": "Provide the details for the new kid.",
         "data": {
-          "kid_name": "Kid Name",
-          "ha_user": "Home Assistant User"
+          "kid_name": {
+            "name": "Kid Name",
+            "description": "The name of the kid."
+          },
+          "ha_user": {
+            "name": "Home Assistant User",
+            "description": "Link to a Home Assistant user for this kid."
+          }
         }
       },
       "add_chore": {
         "title": "Add Chore",
         "description": "Provide the details for the new chore.",
         "data": {
-          "chore_name": "Chore Name",
-          "default_points": "Default Points",
-          "partial_allowed": "Allow Partial Points?",
-          "shared_chore": "Shared Chore?",
-          "assigned_kids": "Assigned Kids",
-          "chore_description": "Description (optional)",
-          "icon": "Icon (mdi:xxx)",
-          "recurring_frequency": "Recurring Frequency",
-          "due_date": "Due Date"
+          "chore_name": {
+            "name": "Chore Name",
+            "description": "The name of the chore."
+          },
+          "default_points": {
+            "name": "Default Points",
+            "description": "Points awarded for completing this chore."
+          },
+          "partial_allowed": {
+            "name": "Allow Partial Points?",
+            "description": "Allow awarding partial points for incomplete chores."
+          },
+          "shared_chore": {
+            "name": "Shared Chore?",
+            "description": "Is this chore shared among multiple kids?"
+          },
+          "assigned_kids": {
+            "name": "Assigned Kids",
+            "description": "Select the kids assigned to this chore."
+          },
+          "chore_description": {
+            "name": "Description (optional)",
+            "description": "A brief description of the chore."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          },
+          "recurring_frequency": {
+            "name": "Recurring Frequency",
+            "description": "How often the chore recurs."
+          },
+          "due_date": {
+            "name": "Due Date",
+            "description": "The due date for the chore."
+          }
         }
       },
       "add_badge": {
         "title": "Add Badge",
         "description": "Provide the details for the new badge.",
         "data": {
-          "badge_name": "Badge Name",
-          "threshold_type": "Threshold Type",
-          "threshold_value": "Threshold Value",
-          "icon": "Icon (mdi:xxx)"
+          "badge_name": {
+            "name": "Badge Name",
+            "description": "The name of the badge."
+          },
+          "threshold_type": {
+            "name": "Threshold Type",
+            "description": "Type of threshold for earning the badge."
+          },
+          "threshold_value": {
+            "name": "Threshold Value",
+            "description": "Value required to earn the badge."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
         }
       },
       "add_reward": {
         "title": "Add Reward",
         "description": "Provide the details for the new reward.",
         "data": {
-          "reward_name": "Reward Name",
-          "reward_cost": "Reward Cost",
-          "reward_description": "Description (optional)",
-          "icon": "Icon (mdi:xxx)"
+          "reward_name": {
+            "name": "Reward Name",
+            "description": "The name of the reward."
+          },
+          "reward_cost": {
+            "name": "Reward Cost",
+            "description": "Points required to redeem the reward."
+          },
+          "reward_description": {
+            "name": "Description (optional)",
+            "description": "A brief description of the reward."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
         }
       },
       "add_penalty": {
         "title": "Add Penalty",
         "description": "Provide the details for the new penalty.",
         "data": {
-          "penalty_name": "Penalty Name",
-          "penalty_points": "Penalty Points (negative)",
-          "icon": "Icon (mdi:xxx)"
+          "penalty_name": {
+            "name": "Penalty Name",
+            "description": "The name of the penalty."
+          },
+          "penalty_points": {
+            "name": "Penalty Points (negative)",
+            "description": "Points to deduct as a penalty."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
         }
       },
       "edit_kid": {
         "title": "Edit Kid",
         "description": "Modify the details of the selected kid.",
         "data": {
-          "kid_name": "Kid Name",
-          "ha_user": "Home Assistant User"
+          "kid_name": {
+            "name": "Kid Name",
+            "description": "The name of the kid."
+          },
+          "ha_user": {
+            "name": "Home Assistant User",
+            "description": "Link to a Home Assistant user for this kid."
+          }
         }
       },
       "edit_chore": {
         "title": "Edit Chore",
         "description": "Modify the details of the selected chore.",
         "data": {
-          "chore_name": "Chore Name",
-          "default_points": "Default Points",
-          "partial_allowed": "Allow Partial Points?",
-          "shared_chore": "Shared Chore?",
-          "assigned_kids": "Assigned Kids",
-          "chore_description": "Description (optional)",
-          "icon": "Icon (mdi:xxx)",
-          "recurring_frequency": "Recurring Frequency",
-          "due_date": "Due Date"
+          "chore_name": {
+            "name": "Chore Name",
+            "description": "The name of the chore."
+          },
+          "default_points": {
+            "name": "Default Points",
+            "description": "Points awarded for completing this chore."
+          },
+          "partial_allowed": {
+            "name": "Allow Partial Points?",
+            "description": "Allow awarding partial points for incomplete chores."
+          },
+          "shared_chore": {
+            "name": "Shared Chore?",
+            "description": "Is this chore shared among multiple kids?"
+          },
+          "assigned_kids": {
+            "name": "Assigned Kids",
+            "description": "Select the kids assigned to this chore."
+          },
+          "chore_description": {
+            "name": "Description (optional)",
+            "description": "A brief description of the chore."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          },
+          "recurring_frequency": {
+            "name": "Recurring Frequency",
+            "description": "How often the chore recurs."
+          },
+          "due_date": {
+            "name": "Due Date",
+            "description": "The due date for the chore."
+          }
         }
       },
       "edit_badge": {
         "title": "Edit Badge",
         "description": "Modify the details of the selected badge.",
         "data": {
-          "badge_name": "Badge Name",
-          "threshold_type": "Threshold Type",
-          "threshold_value": "Threshold Value",
-          "icon": "Icon (mdi:xxx)"
+          "badge_name": {
+            "name": "Badge Name",
+            "description": "The name of the badge."
+          },
+          "threshold_type": {
+            "name": "Threshold Type",
+            "description": "Type of threshold for earning the badge."
+          },
+          "threshold_value": {
+            "name": "Threshold Value",
+            "description": "Value required to earn the badge."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
         }
       },
       "edit_reward": {
         "title": "Edit Reward",
         "description": "Modify the details of the selected reward.",
         "data": {
-          "reward_name": "Reward Name",
-          "reward_cost": "Reward Cost",
-          "reward_description": "Description (optional)",
-          "icon": "Icon (mdi:xxx)"
+          "reward_name": {
+            "name": "Reward Name",
+            "description": "The name of the reward."
+          },
+          "reward_cost": {
+            "name": "Reward Cost",
+            "description": "Points required to redeem the reward."
+          },
+          "reward_description": {
+            "name": "Description (optional)",
+            "description": "A brief description of the reward."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
         }
       },
       "edit_penalty": {
         "title": "Edit Penalty",
         "description": "Modify the details of the selected penalty.",
         "data": {
-          "penalty_name": "Penalty Name",
-          "penalty_points": "Penalty Points (negative)",
-          "icon": "Icon (mdi:xxx)"
+          "penalty_name": {
+            "name": "Penalty Name",
+            "description": "The name of the penalty."
+          },
+          "penalty_points": {
+            "name": "Penalty Points (negative)",
+            "description": "Points to deduct as a penalty."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
         }
       },
       "delete_kid": {
         "title": "Delete Kid",
-        "description": "Are you sure you want to delete the kid '{kid_name}'?",
+        "description": "Are you sure you want to delete the kid {kid_name}?",
         "data": {}
       },
       "delete_chore": {
         "title": "Delete Chore",
-        "description": "Are you sure you want to delete the chore '{chore_name}'?",
+        "description": "Are you sure you want to delete the chore {chore_name}?",
         "data": {}
       },
       "delete_badge": {
         "title": "Delete Badge",
-        "description": "Are you sure you want to delete the badge '{badge_name}'?",
+        "description": "Are you sure you want to delete the badge {badge_name}?",
         "data": {}
       },
       "delete_reward": {
         "title": "Delete Reward",
-        "description": "Are you sure you want to delete the reward '{reward_name}'?",
+        "description": "Are you sure you want to delete the reward {reward_name}?",
         "data": {}
       },
       "delete_penalty": {
         "title": "Delete Penalty",
-        "description": "Are you sure you want to delete the penalty '{penalty_name}'?",
+        "description": "Are you sure you want to delete the penalty {penalty_name}?",
         "data": {}
       }
     },
@@ -413,9 +611,549 @@
       "no_penalties": "No penalties are available."
     },
     "field": {
+      "points_label": {
+        "name": "Points Label",
+        "description": "Label used for points."
+      },
+      "kid_count": {
+        "name": "Kid Count",
+        "description": "Number of kids to manage."
+      },
+      "kid_name": {
+        "name": "Kid Name",
+        "description": "The name of the kid."
+      },
+      "ha_user": {
+        "name": "Home Assistant User",
+        "description": "Link to a Home Assistant user for this kid."
+      },
+      "chore_count": {
+        "name": "Chore Count",
+        "description": "Number of chores to define."
+      },
+      "chore_name": {
+        "name": "Chore Name",
+        "description": "The name of the chore."
+      },
+      "default_points": {
+        "name": "Default Points",
+        "description": "Points awarded for completing this chore."
+      },
+      "partial_allowed": {
+        "name": "Allow Partial Points?",
+        "description": "Allow awarding partial points for incomplete chores."
+      },
+      "shared_chore": {
+        "name": "Shared Chore?",
+        "description": "Is this chore shared among multiple kids?"
+      },
+      "assigned_kids": {
+        "name": "Assigned Kids",
+        "description": "Select the kids assigned to this chore."
+      },
+      "chore_description": {
+        "name": "Description (optional)",
+        "description": "A brief description of the chore."
+      },
+      "icon": {
+        "name": "Icon (mdi:xxx)",
+        "description": "Choose an icon for this entity."
+      },
+      "recurring_frequency": {
+        "name": "Recurring Frequency",
+        "description": "How often the chore recurs."
+      },
+      "due_date": {
+        "name": "Due Date",
+        "description": "The due date for the chore."
+      },
+      "badge_count": {
+        "name": "Badge Count",
+        "description": "Number of badges to define."
+      },
+      "badge_name": {
+        "name": "Badge Name",
+        "description": "The name of the badge."
+      },
+      "threshold_type": {
+        "name": "Threshold Type",
+        "description": "Type of threshold for earning the badge."
+      },
+      "threshold_value": {
+        "name": "Threshold Value",
+        "description": "Value required to earn the badge."
+      },
+      "reward_count": {
+        "name": "Reward Count",
+        "description": "Number of rewards to define."
+      },
+      "reward_name": {
+        "name": "Reward Name",
+        "description": "The name of the reward."
+      },
+      "reward_cost": {
+        "name": "Reward Cost",
+        "description": "Points required to redeem the reward."
+      },
+      "reward_description": {
+        "name": "Description (optional)",
+        "description": "A brief description of the reward."
+      },
+      "penalty_count": {
+        "name": "Penalty Count",
+        "description": "Number of penalties to define."
+      },
+      "penalty_name": {
+        "name": "Penalty Name",
+        "description": "The name of the penalty."
+      },
+      "penalty_points": {
+        "name": "Penalty Points (negative)",
+        "description": "Points to deduct as a penalty."
+      },
       "entity_name": {
         "name": "{entity_type} Name",
         "description": "Select the name of the {entity_type}."
+      }
+    }
+  },
+  "options": {
+    "selector_options": {
+      "menu_selection": {
+        "choices": {
+          "add_kid": "Add Kid",
+          "edit_kid": "Edit Kid",
+          "delete_kid": "Delete Kid",
+          "add_chore": "Add Chore",
+          "edit_chore": "Edit Chore",
+          "delete_chore": "Delete Chore",
+          "add_badge": "Add Badge",
+          "edit_badge": "Edit Badge",
+          "delete_badge": "Delete Badge",
+          "add_reward": "Add Reward",
+          "edit_reward": "Edit Reward",
+          "delete_reward": "Delete Reward",
+          "add_penalty": "Add Penalty",
+          "edit_penalty": "Edit Penalty",
+          "delete_penalty": "Delete Penalty",
+          "done": "Finish Setup"
+        }
+      }
+    },
+    "step": {
+      "init": {
+        "title": "KidsChores Options",
+        "description": "Manage kids, chores, badges, rewards, penalties, or finish.",
+        "data": {
+          "menu_selection": "Select an Action"
+        }
+      },
+      "select_entity": {
+        "title": "Select {entity_type}",
+        "description": "Select the {entity_type} you want to {action}.",
+        "data": {
+          "entity_name": {
+            "name": "{entity_type} Name",
+            "description": "Select the name of the {entity_type}."
+          }
+        }
+      },
+      "add_kid": {
+        "title": "Add Kid",
+        "description": "Provide the details for the new kid.",
+        "data": {
+          "kid_name": {
+            "name": "Kid Name",
+            "description": "The name of the kid."
+          },
+          "ha_user": {
+            "name": "Home Assistant User",
+            "description": "Link to a Home Assistant user for this kid."
+          }
+        }
+      },
+      "add_chore": {
+        "title": "Add Chore",
+        "description": "Provide the details for the new chore.",
+        "data": {
+          "chore_name": {
+            "name": "Chore Name",
+            "description": "The name of the chore."
+          },
+          "default_points": {
+            "name": "Default Points",
+            "description": "Points awarded for completing this chore."
+          },
+          "partial_allowed": {
+            "name": "Allow Partial Points?",
+            "description": "Allow awarding partial points for incomplete chores."
+          },
+          "shared_chore": {
+            "name": "Shared Chore?",
+            "description": "Is this chore shared among multiple kids?"
+          },
+          "assigned_kids": {
+            "name": "Assigned Kids",
+            "description": "Select the kids assigned to this chore."
+          },
+          "chore_description": {
+            "name": "Description (optional)",
+            "description": "A brief description of the chore."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          },
+          "recurring_frequency": {
+            "name": "Recurring Frequency",
+            "description": "How often the chore recurs."
+          },
+          "due_date": {
+            "name": "Due Date",
+            "description": "The due date for the chore."
+          }
+        }
+      },
+      "add_badge": {
+        "title": "Add Badge",
+        "description": "Provide the details for the new badge.",
+        "data": {
+          "badge_name": {
+            "name": "Badge Name",
+            "description": "The name of the badge."
+          },
+          "threshold_type": {
+            "name": "Threshold Type",
+            "description": "Type of threshold for earning the badge."
+          },
+          "threshold_value": {
+            "name": "Threshold Value",
+            "description": "Value required to earn the badge."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
+        }
+      },
+      "add_reward": {
+        "title": "Add Reward",
+        "description": "Provide the details for the new reward.",
+        "data": {
+          "reward_name": {
+            "name": "Reward Name",
+            "description": "The name of the reward."
+          },
+          "reward_cost": {
+            "name": "Reward Cost",
+            "description": "Points required to redeem the reward."
+          },
+          "reward_description": {
+            "name": "Description (optional)",
+            "description": "A brief description of the reward."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
+        }
+      },
+      "add_penalty": {
+        "title": "Add Penalty",
+        "description": "Provide the details for the new penalty.",
+        "data": {
+          "penalty_name": {
+            "name": "Penalty Name",
+            "description": "The name of the penalty."
+          },
+          "penalty_points": {
+            "name": "Penalty Points (negative)",
+            "description": "Points to deduct as a penalty."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
+        }
+      },
+      "edit_kid": {
+        "title": "Edit Kid",
+        "description": "Modify the details of the selected kid.",
+        "data": {
+          "kid_name": {
+            "name": "Kid Name",
+            "description": "The name of the kid."
+          },
+          "ha_user": {
+            "name": "Home Assistant User",
+            "description": "Link to a Home Assistant user for this kid."
+          }
+        }
+      },
+      "edit_chore": {
+        "title": "Edit Chore",
+        "description": "Modify the details of the selected chore.",
+        "data": {
+          "chore_name": {
+            "name": "Chore Name",
+            "description": "The name of the chore."
+          },
+          "default_points": {
+            "name": "Default Points",
+            "description": "Points awarded for completing this chore."
+          },
+          "partial_allowed": {
+            "name": "Allow Partial Points?",
+            "description": "Allow awarding partial points for incomplete chores."
+          },
+          "shared_chore": {
+            "name": "Shared Chore?",
+            "description": "Is this chore shared among multiple kids?"
+          },
+          "assigned_kids": {
+            "name": "Assigned Kids",
+            "description": "Select the kids assigned to this chore."
+          },
+          "chore_description": {
+            "name": "Description (optional)",
+            "description": "A brief description of the chore."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          },
+          "recurring_frequency": {
+            "name": "Recurring Frequency",
+            "description": "How often the chore recurs."
+          },
+          "due_date": {
+            "name": "Due Date",
+            "description": "The due date for the chore."
+          }
+        }
+      },
+      "edit_badge": {
+        "title": "Edit Badge",
+        "description": "Modify the details of the selected badge.",
+        "data": {
+          "badge_name": {
+            "name": "Badge Name",
+            "description": "The name of the badge."
+          },
+          "threshold_type": {
+            "name": "Threshold Type",
+            "description": "Type of threshold for earning the badge."
+          },
+          "threshold_value": {
+            "name": "Threshold Value",
+            "description": "Value required to earn the badge."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
+        }
+      },
+      "edit_reward": {
+        "title": "Edit Reward",
+        "description": "Modify the details of the selected reward.",
+        "data": {
+          "reward_name": {
+            "name": "Reward Name",
+            "description": "The name of the reward."
+          },
+          "reward_cost": {
+            "name": "Reward Cost",
+            "description": "Points required to redeem the reward."
+          },
+          "reward_description": {
+            "name": "Description (optional)",
+            "description": "A brief description of the reward."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
+        }
+      },
+      "edit_penalty": {
+        "title": "Edit Penalty",
+        "description": "Modify the details of the selected penalty.",
+        "data": {
+          "penalty_name": {
+            "name": "Penalty Name",
+            "description": "The name of the penalty."
+          },
+          "penalty_points": {
+            "name": "Penalty Points (negative)",
+            "description": "Points to deduct as a penalty."
+          },
+          "icon": {
+            "name": "Icon (mdi:xxx)",
+            "description": "Choose an icon for this entity."
+          }
+        }
+      },
+      "delete_kid": {
+        "title": "Delete Kid",
+        "description": "Are you sure you want to delete the kid {kid_name}?",
+        "data": {}
+      },
+      "delete_chore": {
+        "title": "Delete Chore",
+        "description": "Are you sure you want to delete the chore {chore_name}?",
+        "data": {}
+      },
+      "delete_badge": {
+        "title": "Delete Badge",
+        "description": "Are you sure you want to delete the badge {badge_name}?",
+        "data": {}
+      },
+      "delete_reward": {
+        "title": "Delete Reward",
+        "description": "Are you sure you want to delete the reward {reward_name}?",
+        "data": {}
+      },
+      "delete_penalty": {
+        "title": "Delete Penalty",
+        "description": "Are you sure you want to delete the penalty {penalty_name}?",
+        "data": {}
+      }
+    },
+    "error": {
+      "invalid_entity": "The selected entity is invalid.",
+      "no_kids": "No kids are available.",
+      "no_chores": "No chores are available.",
+      "no_badges": "No badges are available.",
+      "no_rewards": "No rewards are available.",
+      "no_penalties": "No penalties are available."
+    },
+    "field": {
+      "points_label": {
+        "name": "Points Label",
+        "description": "Label used for points."
+      },
+      "kid_count": {
+        "name": "Kid Count",
+        "description": "Number of kids to manage."
+      },
+      "kid_name": {
+        "name": "Kid Name",
+        "description": "The name of the kid."
+      },
+      "ha_user": {
+        "name": "Home Assistant User",
+        "description": "Link to a Home Assistant user for this kid."
+      },
+      "chore_count": {
+        "name": "Chore Count",
+        "description": "Number of chores to define."
+      },
+      "chore_name": {
+        "name": "Chore Name",
+        "description": "The name of the chore."
+      },
+      "default_points": {
+        "name": "Default Points",
+        "description": "Points awarded for completing this chore."
+      },
+      "partial_allowed": {
+        "name": "Allow Partial Points?",
+        "description": "Allow awarding partial points for incomplete chores."
+      },
+      "shared_chore": {
+        "name": "Shared Chore?",
+        "description": "Is this chore shared among multiple kids?"
+      },
+      "assigned_kids": {
+        "name": "Assigned Kids",
+        "description": "Select the kids assigned to this chore."
+      },
+      "chore_description": {
+        "name": "Description (optional)",
+        "description": "A brief description of the chore."
+      },
+      "icon": {
+        "name": "Icon (mdi:xxx)",
+        "description": "Choose an icon for this entity."
+      },
+      "recurring_frequency": {
+        "name": "Recurring Frequency",
+        "description": "How often the chore recurs."
+      },
+      "due_date": {
+        "name": "Due Date",
+        "description": "The due date for the chore."
+      },
+      "badge_count": {
+        "name": "Badge Count",
+        "description": "Number of badges to define."
+      },
+      "badge_name": {
+        "name": "Badge Name",
+        "description": "The name of the badge."
+      },
+      "threshold_type": {
+        "name": "Threshold Type",
+        "description": "Type of threshold for earning the badge."
+      },
+      "threshold_value": {
+        "name": "Threshold Value",
+        "description": "Value required to earn the badge."
+      },
+      "reward_count": {
+        "name": "Reward Count",
+        "description": "Number of rewards to define."
+      },
+      "reward_name": {
+        "name": "Reward Name",
+        "description": "The name of the reward."
+      },
+      "reward_cost": {
+        "name": "Reward Cost",
+        "description": "Points required to redeem the reward."
+      },
+      "reward_description": {
+        "name": "Description (optional)",
+        "description": "A brief description of the reward."
+      },
+      "penalty_count": {
+        "name": "Penalty Count",
+        "description": "Number of penalties to define."
+      },
+      "penalty_name": {
+        "name": "Penalty Name",
+        "description": "The name of the penalty."
+      },
+      "penalty_points": {
+        "name": "Penalty Points (negative)",
+        "description": "Points to deduct as a penalty."
+      },
+      "entity_name": {
+        "name": "{entity_type} Name",
+        "description": "Select the name of the {entity_type}."
+      }
+    }
+  },
+  "selector_options": {
+    "menu_selection": {
+      "choices": {
+        "add_kid": "Add Kid",
+        "edit_kid": "Edit Kid",
+        "delete_kid": "Delete Kid",
+        "add_chore": "Add Chore",
+        "edit_chore": "Edit Chore",
+        "delete_chore": "Delete Chore",
+        "add_badge": "Add Badge",
+        "edit_badge": "Edit Badge",
+        "delete_badge": "Delete Badge",
+        "add_reward": "Add Reward",
+        "edit_reward": "Edit Reward",
+        "delete_reward": "Delete Reward",
+        "add_penalty": "Add Penalty",
+        "edit_penalty": "Edit Penalty",
+        "delete_penalty": "Delete Penalty",
+        "done": "Finish Setup"
       }
     }
   },
