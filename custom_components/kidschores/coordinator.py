@@ -1,6 +1,5 @@
 # File: coordinator.py
-"""
-Coordinator for the KidsChores integration.
+"""Coordinator for the KidsChores integration.
 
 Handles data synchronization, chore claiming and approval, badge tracking,
 reward redemption, penalty application, and recurring chore handling.
@@ -8,64 +7,58 @@ Manages entities primarily using internal_id for consistency.
 """
 
 import uuid
+import copy
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_time_change
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    LOGGER,
-    DOMAIN,
-    STORAGE_KEY,
-    STORAGE_VERSION,
-    DATA_KIDS,
-    DATA_CHORES,
-    DATA_BADGES,
-    DATA_REWARDS,
-    DATA_PENALTIES,
-    CONF_KIDS,
-    CONF_CHORES,
-    CONF_BADGES,
-    CONF_REWARDS,
-    CONF_PENALTIES,
-    CHORE_STATE_PENDING,
-    CHORE_STATE_CLAIMED,
-    CHORE_STATE_APPROVED,
-    CHORE_STATE_PARTIAL,
-    CHORE_STATE_OVERDUE,
-    EVENT_CHORE_COMPLETED,
-    EVENT_REWARD_REDEEMED,
-    BADGE_THRESHOLD_TYPE_POINTS,
     BADGE_THRESHOLD_TYPE_CHORE_COUNT,
-    DEFAULT_POINTS,
-    DEFAULT_PARTIAL_ALLOWED,
+    BADGE_THRESHOLD_TYPE_POINTS,
+    CHORE_STATE_APPROVED,
+    CHORE_STATE_CLAIMED,
+    CHORE_STATE_OVERDUE,
+    CHORE_STATE_PARTIAL,
+    CHORE_STATE_PENDING,
+    CONF_BADGES,
+    CONF_CHORES,
+    CONF_KIDS,
+    CONF_PARENTS,
+    CONF_PENALTIES,
+    CONF_REWARDS,
+    DATA_BADGES,
+    DATA_CHORES,
+    DATA_KIDS,
+    DATA_PARENTS,
+    DATA_PENALTIES,
+    DATA_PENDING_CHORE_APPROVALS,
+    DATA_PENDING_REWARD_APPROVALS,
+    DATA_REWARDS,
     DEFAULT_BADGE_THRESHOLD,
-    DEFAULT_REWARD_COST,
-    DEFAULT_PENALTY_POINTS,
     DEFAULT_ICON,
-    DEFAULT_PENALTY_ICON,
-    DEFAULT_REWARD_ICON,
     DEFAULT_MONTHLY_RESET_DAY,
+    DEFAULT_MULTIPLE_CLAIMS_PER_DAY,
+    DEFAULT_PARTIAL_ALLOWED,
+    DEFAULT_PENALTY_ICON,
+    DEFAULT_PENALTY_POINTS,
+    DEFAULT_POINTS,
+    DEFAULT_REWARD_COST,
+    DEFAULT_REWARD_ICON,
     DEFAULT_WEEKLY_RESET_DAY,
+    DOMAIN,
+    LOGGER,
     UPDATE_INTERVAL,
-    RESET_WEEKLY,
-    RESET_MONTHLY,
-    FIELD_KID_NAME,
-    FIELD_CHORE_NAME,
-    FIELD_PARENT_NAME,
-    FIELD_REWARD_NAME,
-    FIELD_PENALTY_NAME,
 )
 
 
 class KidsChoresDataCoordinator(DataUpdateCoordinator):
-    """
-    Coordinator for KidsChores integration.
+    """Coordinator for KidsChores integration.
+
     Manages data primarily using internal_id for entities.
     """
 
@@ -84,11 +77,11 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         )
         self.config_entry = config_entry
         self.storage_manager = storage_manager
-        self._data: Dict[str, Any] = {}
+        self._data: dict[str, Any] = {}
 
     async def _async_update_data(self):
-        """
-        Periodic update:
+        """Periodic update.
+
         - Checks overdue chores
         - Handles recurring resets
         - Notifies entities
@@ -101,7 +94,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error updating KidsChores data: {err}") from err
 
     async def async_config_entry_first_refresh(self):
-        """Initial load from storage + merging config options."""
+        """Load from storage and merge config options."""
         stored_data = self.storage_manager.get_data()
         self._data = (
             stored_data
@@ -111,13 +104,14 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 DATA_CHORES: {},
                 DATA_BADGES: {},
                 DATA_REWARDS: {},
+                DATA_PARENTS: {},
                 DATA_PENALTIES: {},
             }
         )
 
         # Register daily/weekly/monthly resets
         async_track_time_change(
-            self.hass, self._reset_daily_count, hour=0, minute=0, second=0
+            self.hass, self._reset_daily_count, hour=11, minute=28, second=0
         )
         async_track_time_change(
             self.hass, self._reset_weekly_count, hour=0, minute=0, second=0
@@ -135,6 +129,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         options = self.config_entry.options
 
         kids_dict = options.get(CONF_KIDS, {})
+        parents_dict = options.get(CONF_PARENTS, {})
         chores_dict = options.get(CONF_CHORES, {})
         badges_dict = options.get(CONF_BADGES, {})
         rewards_dict = options.get(CONF_REWARDS, {})
@@ -142,10 +137,13 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
         # Ensure minimal structure
         self._data.setdefault(DATA_KIDS, {})
+        self._data.setdefault(DATA_PARENTS, {})
         self._data.setdefault(DATA_CHORES, {})
         self._data.setdefault(DATA_BADGES, {})
         self._data.setdefault(DATA_REWARDS, {})
         self._data.setdefault(DATA_PENALTIES, {})
+        self._data.setdefault(DATA_PENDING_CHORE_APPROVALS, [])
+        self._data.setdefault(DATA_PENDING_REWARD_APPROVALS, [])
 
         # --- Kids ---
         # Remove kids not present in options
@@ -155,7 +153,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         for kid_id in kids_to_remove:
             del self._data[DATA_KIDS][kid_id]
             LOGGER.debug(
-                "Removed kid with ID '%s' as it's no longer in configuration.", kid_id
+                "Removed kid with ID '%s' as it's no longer in configuration", kid_id
             )
 
         # Add or update kids from options
@@ -177,7 +175,22 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     ),
                     "ha_user_id": kid_data.get("ha_user_id"),
                     "internal_id": kid_id,
+                    "points_multiplier": kid_data.get("points_multiplier", 1.0),
+                    "reward_claims": kid_data.get("reward_claims", {}),
+                    "reward_approvals": kid_data.get("reward_approvals", {}),
+                    "chore_claims": kid_data.get("chore_claims", {}),
+                    "chore_approvals": kid_data.get("chore_approvals", {}),
+                    "penalty_applies": kid_data.get("penalty_applies", {}),
                 }
+                self._data[DATA_KIDS][kid_id].update(
+                    {
+                        "reward_claims": {},
+                        "reward_approvals": {},
+                        "chore_claims": {},
+                        "chore_approvals": {},
+                        "penalty_applies": {},
+                    }
+                )
                 LOGGER.debug(
                     "Added new kid '%s' with ID: %s",
                     self._data[DATA_KIDS][kid_id]["name"],
@@ -194,7 +207,75 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 existing.setdefault(
                     "approved_chores", kid_data.get("approved_chores", [])
                 )
+                # Initialize 'redeemed_rewards' if missing
+                existing.setdefault(
+                    "redeemed_rewards", kid_data.get("redeemed_rewards", [])
+                )
+                existing.setdefault(
+                    "points_multiplier", kid_data.get("points_multiplier", 1.0)
+                )
+                existing.setdefault("reward_claims", kid_data.get("reward_claims", {}))
+                existing.setdefault(
+                    "reward_approvals", kid_data.get("reward_approvals", {})
+                )
+                existing.setdefault("chore_claims", kid_data.get("chore_claims", {}))
+                existing.setdefault(
+                    "chore_approvals", kid_data.get("chore_approvals", {})
+                )
+                existing.setdefault(
+                    "penalty_applies", kid_data.get("penalty_applies", {})
+                )
+
                 # Points and other historical data should not be overwritten
+
+        # --- Parents ---
+        existing_parents = set(self._data[DATA_PARENTS].keys())
+        option_parents = set(parents_dict.keys())
+        parents_to_remove = existing_parents - option_parents
+        for parent_id in parents_to_remove:
+            del self._data[DATA_PARENTS][parent_id]
+            LOGGER.debug(
+                "Removed parent with ID '%s' as it's no longer in configuration",
+                parent_id,
+            )
+
+        # Add or update parents from options
+        for parent_id, parent_data in parents_dict.items():
+            if parent_id not in self._data[DATA_PARENTS]:
+                # Add new parent
+                self._data[DATA_PARENTS][parent_id] = {
+                    "name": parent_data.get("name", ""),
+                    "ha_user_id": parent_data.get("ha_user_id", ""),
+                    "associated_kids": parent_data.get("associated_kids", []),
+                    "internal_id": parent_id,
+                }
+                LOGGER.debug(
+                    "Added new parent '%s' with ID: %s",
+                    self._data[DATA_PARENTS][parent_id]["name"],
+                    parent_id,
+                )
+            else:
+                # Update existing parent's editable fields
+                existing = self._data[DATA_PARENTS][parent_id]
+                existing["name"] = parent_data.get("name", existing["name"])
+                existing["ha_user_id"] = parent_data.get(
+                    "ha_user_id", existing["ha_user_id"]
+                )
+                existing["associated_kids"] = parent_data.get(
+                    "associated_kids", existing["associated_kids"]
+                )
+                # Ensure kid_ids are valid
+                valid_kids = []
+                for kid_id in existing["associated_kids"]:
+                    if kid_id in self.kids_data:
+                        valid_kids.append(kid_id)
+                    else:
+                        LOGGER.warning(
+                            "Parent '%s': Kid ID '%s' not found. Removing from parent's kid list.",
+                            existing["name"],
+                            kid_id,
+                        )
+                existing["associated_kids"] = valid_kids
 
         # --- Chores ---
         existing_chores = set(self._data[DATA_CHORES].keys())
@@ -203,7 +284,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         for chore_id in chores_to_remove:
             del self._data[DATA_CHORES][chore_id]
             LOGGER.debug(
-                "Removed chore with ID '%s' as it's no longer in configuration.",
+                "Removed chore with ID '%s' as it's no longer in configuration",
                 chore_id,
             )
 
@@ -214,12 +295,12 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 assigned_kids_names = chore_data.get("assigned_kids", [])
                 assigned_kids_ids = []
                 for kid_name in assigned_kids_names:
-                    kid_id = self._get_kid_id_by_name(self, kid_name)
+                    kid_id = self._get_kid_id_by_name(kid_name)
                     if kid_id:
                         assigned_kids_ids.append(kid_id)
                     else:
                         LOGGER.warning(
-                            "Chore '%s': Kid name '%s' not found. Skipping assignment.",
+                            "Chore '%s': Kid name '%s' not found. Skipping assignment",
                             chore_data.get("name", chore_id),
                             kid_name,
                         )
@@ -229,6 +310,9 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     "state": chore_data.get("state", CHORE_STATE_PENDING),
                     "assigned_to": chore_data.get("assigned_to"),
                     "default_points": chore_data.get("default_points", DEFAULT_POINTS),
+                    "allow_multiple_claims_per_day": chore_data.get(
+                        "allow_multiple_claims_per_day", DEFAULT_MULTIPLE_CLAIMS_PER_DAY
+                    ),
                     "partial_allowed": chore_data.get(
                         "partial_allowed", DEFAULT_PARTIAL_ALLOWED
                     ),
@@ -259,6 +343,10 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 existing["default_points"] = chore_data.get(
                     "default_points", existing["default_points"]
                 )
+                existing["allow_multiple_claims_per_day"] = chore_data.get(
+                    "allow_multiple_claims_per_day",
+                    existing["allow_multiple_claims_per_day"],
+                )
                 existing["partial_allowed"] = chore_data.get(
                     "partial_allowed", existing["partial_allowed"]
                 )
@@ -279,7 +367,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                         assigned_kids_ids.append(kid_id)
                     else:
                         LOGGER.warning(
-                            "Chore '%s': Kid name '%s' not found. Skipping assignment.",
+                            "Chore '%s': Kid name '%s' not found. Skipping assignment",
                             chore_data.get("name", chore_id),
                             kid_name,
                         )
@@ -292,7 +380,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 existing["last_completed"] = chore_data.get(
                     "last_completed", existing["last_completed"]
                 )
-                # Preserve internal_id and historical data
 
         # --- Badges ---
         existing_badges = set(self._data[DATA_BADGES].keys())
@@ -301,7 +388,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         for badge_id in badges_to_remove:
             del self._data[DATA_BADGES][badge_id]
             LOGGER.debug(
-                "Removed badge with ID '%s' as it's no longer in configuration.",
+                "Removed badge with ID '%s' as it's no longer in configuration",
                 badge_id,
             )
 
@@ -318,6 +405,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                         "threshold_value", DEFAULT_BADGE_THRESHOLD
                     ),
                     "earned_by": badge_data.get("earned_by", []),
+                    "points_multiplier": badge_data.get("points_multiplier", 1.0),
                     "icon": badge_data.get("icon", DEFAULT_ICON),
                     "description": badge_data.get("description", ""),
                     "internal_id": badge_id,
@@ -337,6 +425,9 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 existing["threshold_value"] = badge_data.get(
                     "threshold_value", existing["threshold_value"]
                 )
+                existing["points_multiplier"] = badge_data.get(
+                    "points_multiplier", existing["points_multiplier"]
+                )
                 existing["icon"] = badge_data.get("icon", existing["icon"])
                 existing["description"] = badge_data.get(
                     "description", existing["description"]
@@ -350,7 +441,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         for reward_id in rewards_to_remove:
             del self._data[DATA_REWARDS][reward_id]
             LOGGER.debug(
-                "Removed reward with ID '%s' as it's no longer in configuration.",
+                "Removed reward with ID '%s' as it's no longer in configuration",
                 reward_id,
             )
 
@@ -388,7 +479,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         for penalty_id in penalties_to_remove:
             del self._data[DATA_PENALTIES][penalty_id]
             LOGGER.debug(
-                "Removed penalty with ID '%s' as it's no longer in configuration.",
+                "Removed penalty with ID '%s' as it's no longer in configuration",
                 penalty_id,
             )
 
@@ -423,25 +514,91 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
     @property
     def kids_data(self):
+        """Return the kids data."""
         return self._data.get(DATA_KIDS, {})
 
     @property
+    def parents_data(self):
+        """Return the parents data."""
+        return self._data.get(DATA_PARENTS, {})
+
+    @property
     def chores_data(self):
+        """Return the chores data."""
         return self._data.get(DATA_CHORES, {})
 
     @property
     def badges_data(self):
+        """Return the badges data."""
         return self._data.get(DATA_BADGES, {})
 
     @property
     def rewards_data(self):
+        """Return the rewards data."""
         return self._data.get(DATA_REWARDS, {})
 
     @property
     def penalties_data(self):
+        """Return the penalties data."""
         return self._data.get(DATA_PENALTIES, {})
 
+    # ------------------ PARENTS ------------------
+    def add_parent(self, parent_def: dict):
+        """Add new parent at runtime if needed."""
+        parent_name = parent_def.get("name")
+        ha_user_id = parent_def.get("ha_user_id")
+        kid_ids = parent_def.get("kids", [])
+
+        if not parent_name or not ha_user_id:
+            LOGGER.warning("Add parent: Parent must have a name and ha_user_id")
+            return
+
+        # Check if parent already exists based on ha_user_id
+        if any(
+            parent_data["ha_user_id"] == ha_user_id
+            for parent_data in self.parents_data.values()
+        ):
+            LOGGER.warning(
+                "Add parent: Parent with ha_user_id '%s' already exists", ha_user_id
+            )
+            return
+
+        # Validate kid_ids
+        valid_kids = []
+        for kid_id in kid_ids:
+            if kid_id in self.kids_data:
+                valid_kids.append(kid_id)
+            else:
+                LOGGER.warning(
+                    "Add parent: Kid ID '%s' not found. Skipping assignment to parent '%s'.",
+                    kid_id,
+                    parent_name,
+                )
+
+        internal_id = str(uuid.uuid4())
+        self.parents_data[internal_id] = {
+            "name": parent_name,
+            "ha_user_id": ha_user_id,
+            "kids": valid_kids,
+            "internal_id": internal_id,
+        }
+        LOGGER.debug("Added new parent '%s' with ID: %s", parent_name, internal_id)
+        self._persist()
+        self.async_set_updated_data(self._data)
+
+    def remove_parent(self, parent_id: str):
+        """Remove a parent by ID."""
+        if parent_id in self.parents_data:
+            parent_name = self.parents_data[parent_id]["name"]
+            del self.parents_data[parent_id]
+            LOGGER.debug("Removed parent '%s' with ID: %s", parent_name, parent_id)
+            self._persist()
+            self.async_set_updated_data(self._data)
+        else:
+            LOGGER.warning("Remove parent: Parent ID '%s' not found", parent_id)
+
     # ------------------ CHORES ------------------
+
     def approve_chore(
         self,
         parent_name: str,
@@ -450,93 +607,328 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         points_awarded: Optional[float] = None,
     ):
         """Approve a chore for kid_id if assigned."""
+        LOGGER.debug(
+            "Attempting to approve chore ID '%s' for kid ID '%s' by parent '%s'",
+            chore_id,
+            kid_id,
+            parent_name,
+        )
         if chore_id not in self.chores_data:
-            LOGGER.warning("approve_chore: Chore ID '%s' not found.", chore_id)
-            return
+            LOGGER.warning("Approve chore: Chore ID '%s' not found", chore_id)
+            raise HomeAssistantError(f"Chore with ID '{chore_id}' not found.")
 
         chore_info = self.chores_data[chore_id]
         if kid_id not in chore_info.get("assigned_kids", []):
             LOGGER.warning(
-                "approve_chore: Chore ID '%s' not assigned to kid ID '%s'.",
+                "Approve chore: Chore ID '%s' not assigned to kid ID '%s'",
                 chore_id,
                 kid_id,
             )
-            return
+            raise HomeAssistantError(
+                f"Chore '{chore_info.get('name')}' is not assigned to kid '{self.kids_data[kid_id]['name']}'."
+            )
 
         kid_info = self.kids_data.get(kid_id)
         if not kid_info:
-            LOGGER.warning("approve_chore: Kid ID '%s' not found.", kid_id)
-            return
+            LOGGER.warning("Approve chore: Kid ID '%s' not found", kid_id)
+            raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
 
-        default_points = chore_info.get("default_points", DEFAULT_POINTS)
-        awarded = points_awarded if points_awarded is not None else default_points
-
-        if chore_info.get("shared_chore", False):
-            # For shared chores, update global state
-            if awarded < default_points:
-                chore_info["state"] = CHORE_STATE_PARTIAL
-            else:
-                chore_info["state"] = CHORE_STATE_APPROVED
-        else:
-            # For non-shared chores, update per-kid approved chores
-            if chore_id in kid_info.get("claimed_chores", []):
-                kid_info["claimed_chores"].remove(chore_id)
-                kid_info.setdefault("approved_chores", []).append(chore_id)
-            else:
+        # Check if multiple approvals are allowed for this chore
+        if not chore_info.get("allow_multiple_claims_per_day", False):
+            if chore_id in kid_info.get("approved_chores", []):
+                error_message = f"Chore '{chore_info['name']}' has already been approved today and multiple approvals are not allowed."
                 LOGGER.warning(
-                    "approve_chore: Chore ID '%s' was not claimed by kid ID '%s'.",
+                    "Chore ID '%s' has already been approved today by kid ID '%s' and multiple approvals are not allowed.",
                     chore_id,
                     kid_id,
                 )
+                raise HomeAssistantError(error_message)
 
-        # Award points
+        default_points = chore_info.get("default_points", DEFAULT_POINTS)
+        multiplier = kid_info.get("points_multiplier", 1.0)
+        awarded = (
+            points_awarded * multiplier
+            if points_awarded is not None
+            else default_points * multiplier
+        )
+
+        if chore_info.get("shared_chore", False):
+            # For shared chores, set global state to approved if any kid approves
+            if chore_info["state"] != CHORE_STATE_APPROVED:
+                chore_info["state"] = CHORE_STATE_APPROVED
+                LOGGER.debug(
+                    "Chore ID '%s' is a shared chore. Global state set to '%s' due to approval by kid ID '%s'.",
+                    chore_id,
+                    CHORE_STATE_APPROVED,
+                    kid_id,
+                )
+        else:
+            # For non-shared chores, approve for this specific kid
+            if chore_id in kid_info.get("claimed_chores", []):
+                # If chore was claimed by kid, move to approved
+                kid_info["claimed_chores"].remove(chore_id)
+                kid_info.setdefault("approved_chores", []).append(chore_id)
+                chore_info["state"] = CHORE_STATE_APPROVED
+                LOGGER.debug(
+                    "Chore ID '%s' approved for kid ID '%s'. Removed from claimed and added to approved chores. New state: '%s'",
+                    chore_id,
+                    kid_id,
+                    CHORE_STATE_APPROVED,
+                )
+            else:
+                # Direct approval by parent; set state to approved and add to approved_chores
+                chore_info["state"] = CHORE_STATE_APPROVED
+                if chore_id not in kid_info.get("approved_chores", []):
+                    kid_info.setdefault("approved_chores", []).append(chore_id)
+                    LOGGER.debug(
+                        "Chore ID '%s' directly approved by parent '%s' for kid ID '%s'. Added to approved chores. New state: '%s'",
+                        chore_id,
+                        parent_name,
+                        kid_id,
+                        CHORE_STATE_APPROVED,
+                    )
+                else:
+                    LOGGER.debug(
+                        "Chore ID '%s' already in approved chores for kid ID '%s'.",
+                        chore_id,
+                        kid_id,
+                    )
+
+        # Move chore from claimed to approved for the kid (for shared chores as well)
+        if chore_id in kid_info.get("claimed_chores", []):
+            kid_info["claimed_chores"].remove(chore_id)
+            LOGGER.debug(
+                "Chore ID '%s' removed from claimed_chores for kid ID '%s'.",
+                chore_id,
+                kid_id,
+            )
+        if chore_id not in kid_info.get("approved_chores", []):
+            kid_info.setdefault("approved_chores", []).append(chore_id)
+            LOGGER.debug(
+                "Chore ID '%s' added to approved_chores for kid ID '%s'.",
+                chore_id,
+                kid_id,
+            )
+
+        # Award points with multiplier
         kid_info["points"] += awarded
         kid_info["completed_chores_today"] += 1
         kid_info["completed_chores_weekly"] += 1
         kid_info["completed_chores_monthly"] += 1
 
+        LOGGER.debug(
+            "Awarded %s points to kid ID '%s'. Total points: %s",
+            awarded,
+            kid_id,
+            kid_info["points"],
+        )
+
         # Also check badges after awarding
         self._check_badges_for_kid(kid_id)
 
         chore_info["last_completed"] = datetime.now().isoformat()
+        LOGGER.debug(
+            "Updated 'last_completed' for chore ID '%s' to '%s'",
+            chore_id,
+            chore_info["last_completed"],
+        )
+
+        # Remove from pending approvals
+        self._data[DATA_PENDING_CHORE_APPROVALS] = [
+            approval
+            for approval in self._data[DATA_PENDING_CHORE_APPROVALS]
+            if not (approval["kid_id"] == kid_id and approval["chore_id"] == chore_id)
+        ]
+        LOGGER.debug(
+            "Removed chore ID '%s' for kid ID '%s' from pending approvals.",
+            chore_id,
+            kid_id,
+        )
+
+        # Increment chore_approvals counter
+        if chore_id in kid_info["chore_approvals"]:
+            kid_info["chore_approvals"][chore_id] += 1
+        else:
+            kid_info["chore_approvals"][chore_id] = 1
+        LOGGER.debug(
+            "Chore '%s' approved %d time(s) for kid '%s'.",
+            chore_id,
+            kid_info["chore_approvals"][chore_id],
+            kid_id,
+        )
+
+        # Persist
+        self._persist()
+        self.async_set_updated_data(self._data)
+        LOGGER.debug(
+            "Chore ID '%s' approval process completed. State: '%s', Points Awarded: %s",
+            chore_id,
+            chore_info["state"],
+            awarded,
+        )
+
+    def claim_chore(self, kid_id: str, chore_id: str, user_name: str):
+        """Kid claims chore => state=claimed; parent must then approve."""
+        if chore_id not in self.chores_data:
+            LOGGER.warning("Chore ID '%s' not found for claim", chore_id)
+            raise HomeAssistantError(f"Chore with ID '{chore_id}' not found.")
+
+        chore_info = self.chores_data[chore_id]
+        if kid_id not in chore_info.get("assigned_kids", []):
+            LOGGER.warning(
+                "Claim chore: Chore ID '%s' not assigned to kid ID '%s'",
+                chore_id,
+                kid_id,
+            )
+            raise HomeAssistantError(
+                f"Chore '{chore_info.get('name')}' is not assigned to kid '{self.kids_data[kid_id]['name']}'."
+            )
+
+        kid_info = self.kids_data.get(kid_id)
+        if not kid_info:
+            LOGGER.warning("Claim chore: Kid ID '%s' not found", kid_id)
+            raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+
+        # Check if multiple claims are allowed for this kid
+        if not chore_info.get("allow_multiple_claims_per_day", False):
+            if chore_id in kid_info.get(
+                "claimed_chores", []
+            ) or chore_id in kid_info.get("approved_chores", []):
+                error_message = f"Chore '{chore_info['name']}' has already been claimed today and multiple claims are not allowed."
+                LOGGER.warning(
+                    "Chore ID '%s' has already been claimed or approved today by kid ID '%s' and multiple claims are not allowed.",
+                    chore_id,
+                    kid_id,
+                )
+                raise HomeAssistantError(error_message)
+
+        if chore_info.get("shared_chore", False):
+            # For shared chores, allow each kid to claim independently
+            # Chore state should reflect if any kid has claimed it
+            chore_info["state"] = (
+                CHORE_STATE_CLAIMED  # Reflect that at least one kid has claimed it
+            )
+            LOGGER.debug(
+                "Chore ID '%s' claimed by kid ID '%s' as a shared chore. Chore state set to '%s'",
+                chore_id,
+                kid_id,
+                CHORE_STATE_CLAIMED,
+            )
+        else:
+            # For non-shared chores, add to kid's claimed chores
+            if chore_id not in kid_info.get("claimed_chores", []):
+                kid_info.setdefault("claimed_chores", []).append(chore_id)
+                LOGGER.debug(
+                    "Chore ID '%s' claimed by kid ID '%s'. Added to claimed chores.",
+                    chore_id,
+                    kid_id,
+                )
+            else:
+                LOGGER.debug(
+                    "Chore ID '%s' already claimed by kid ID '%s'",
+                    chore_id,
+                    kid_id,
+                )
+
+        # Update last_claimed timestamp
+        chore_info["last_claimed"] = datetime.now().isoformat()
+
+        # Increment chore_claims counter
+        if chore_id in kid_info["chore_claims"]:
+            kid_info["chore_claims"][chore_id] += 1
+        else:
+            kid_info["chore_claims"][chore_id] = 1
+        LOGGER.debug(
+            "Chore '%s' claimed %d time(s) by kid '%s'",
+            chore_id,
+            kid_info["chore_claims"][chore_id],
+            kid_id,
+        )
+
+        # Add to pending approvals
+        self._data[DATA_PENDING_CHORE_APPROVALS].append(
+            {
+                "kid_id": kid_id,
+                "chore_id": chore_id,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+        LOGGER.debug(
+            "Added chore ID '%s' for kid ID '%s' to pending approvals.",
+            chore_id,
+            kid_id,
+        )
 
         # Persist
         self._persist()
         self.async_set_updated_data(self._data)
 
-    def claim_chore(self, kid_id: str, chore_id: str, user_name: str):
-        """Kid claims chore => state=claimed; parent must then approve."""
-        if chore_id not in self.chores_data:
-            LOGGER.warning("Chore ID '%s' not found for claim.", chore_id)
-            return
-        chore_info = self.chores_data[chore_id]
-        if kid_id not in chore_info.get("assigned_kids", []):
-            LOGGER.warning(
-                "claim_chore: Chore ID '%s' not assigned to kid ID '%s'.",
+    def disapprove_chore(self, parent_name: str, kid_id: str, chore_id: str):
+        """Disapprove a chore for kid_id."""
+        chore_info = self.chores_data.get(chore_id)
+        if not chore_info:
+            LOGGER.warning("Disapprove chore: Chore ID '%s' not found", chore_id)
+            raise HomeAssistantError(f"Chore with ID '{chore_id}' not found.")
+
+        kid_info = self.kids_data.get(kid_id)
+        if not kid_info:
+            LOGGER.warning("Disapprove chore: Kid ID '%s' not found", kid_id)
+            raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+
+        # Remove the chore from the kid's approved_chores
+        if chore_id in kid_info.get("approved_chores", []):
+            kid_info["approved_chores"].remove(chore_id)
+            LOGGER.debug(
+                "Chore ID '%s' removed from approved_chores for kid ID '%s'.",
                 chore_id,
                 kid_id,
             )
-            return
 
+        # If shared chore, check if any other kid has approved it
         if chore_info.get("shared_chore", False):
-            # For shared chores, set global state
-            chore_info["state"] = CHORE_STATE_CLAIMED
-        else:
-            # For non-shared chores, add to kid's claimed chores
-            kid_info = self.kids_data.get(kid_id)
-            if kid_info is None:
-                LOGGER.warning("claim_chore: Kid ID '%s' not found.", kid_id)
-                return
-            if chore_id not in kid_info.get("claimed_chores", []):
-                kid_info.setdefault("claimed_chores", []).append(chore_id)
-            else:
+            other_approvals = any(
+                chore_id in other_kid.get("approved_chores", [])
+                for other_kid_id, other_kid in self.kids_data.items()
+                if other_kid_id != kid_id
+            )
+            if not other_approvals:
+                # No other approvals, set global state to pending
+                chore_info["state"] = CHORE_STATE_PENDING
                 LOGGER.debug(
-                    "Chore ID '%s' already claimed by kid ID '%s'.",
+                    "No other approvals for shared chore ID '%s'. Global state set to '%s'.",
                     chore_id,
-                    kid_id,
+                    CHORE_STATE_PENDING,
                 )
+            else:
+                # At least one other approval exists; keep global state as approved
+                LOGGER.debug(
+                    "Other approvals exist for shared chore ID '%s'. Global state remains '%s'.",
+                    chore_id,
+                    CHORE_STATE_APPROVED,
+                )
+        else:
+            # For non-shared chores, set global state to pending
+            chore_info["state"] = CHORE_STATE_PENDING
+            LOGGER.debug(
+                "Chore ID '%s' is not shared. Global state set to '%s' due to disapproval by kid ID '%s'.",
+                chore_id,
+                CHORE_STATE_PENDING,
+                kid_id,
+            )
 
-        # Persist
+        # Remove from pending approvals
+        self._data[DATA_PENDING_CHORE_APPROVALS] = [
+            approval
+            for approval in self._data[DATA_PENDING_CHORE_APPROVALS]
+            if not (approval["kid_id"] == kid_id and approval["chore_id"] == chore_id)
+        ]
+        LOGGER.debug(
+            "Removed chore ID '%s' for kid ID '%s' from pending approvals after disapproval.",
+            chore_id,
+            kid_id,
+        )
+
+        # Persist changes
         self._persist()
         self.async_set_updated_data(self._data)
 
@@ -544,25 +936,10 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         """Manually override a chore's state."""
         chore_info = self.chores_data.get(chore_id)
         if not chore_info:
-            LOGGER.warning("update_chore_state: Chore ID '%s' not found.", chore_id)
+            LOGGER.warning("Update chore state: Chore ID '%s' not found", chore_id)
             return
 
         chore_info["state"] = state
-        self._persist()
-        self.async_set_updated_data(self._data)
-
-    def reset_chore(self, chore_id: str):
-        """Reset a chore to pending."""
-        chore_info = self.chores_data.get(chore_id)
-        if not chore_info:
-            LOGGER.warning("reset_chore: Chore ID '%s' not found.", chore_id)
-            return
-
-        chore_info["state"] = CHORE_STATE_PENDING
-        chore_info["assigned_to"] = None
-        chore_info["last_completed"] = None
-        LOGGER.info("Chore ID '%s' has been reset.", chore_id)
-
         self._persist()
         self.async_set_updated_data(self._data)
 
@@ -596,14 +973,14 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 due_date = datetime.fromisoformat(due_str)
                 if now > due_date:
                     c_info["state"] = CHORE_STATE_OVERDUE
-                    LOGGER.info("Chore ID '%s' is overdue.", c_id)
+                    LOGGER.info("Chore ID '%s' is overdue", c_id)
 
-    # ------------------ POINTS / REWARDS ------------------
+    # ------------------ REWARDS ------------------
     def update_kid_points(self, kid_id: str, points: int):
         """Manually set a kid's points."""
         kid_info = self.kids_data.get(kid_id)
         if not kid_info:
-            LOGGER.warning("update_kid_points: Kid ID '%s' not found.", kid_id)
+            LOGGER.warning("Update kid points: Kid ID '%s' not found", kid_id)
             return
         kid_info["points"] = points
         self._check_badges_for_kid(kid_id)  # Check if awarding badges
@@ -611,46 +988,223 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self.async_set_updated_data(self._data)
 
     def redeem_reward(self, parent_name: str, kid_id: str, reward_id: str):
-        """Kid redeems a reward => deduct points if enough."""
+        """Kid claims a reward => mark as pending approval without deducting points."""
         reward = self.rewards_data.get(reward_id)
         if not reward:
-            LOGGER.warning("redeem_reward: Reward ID '%s' not found.", reward_id)
+            LOGGER.warning("Redeem Reward: Reward ID '%s' not found", reward_id)
             return
 
         kid_info = self.kids_data.get(kid_id)
         if not kid_info:
-            LOGGER.warning("redeem_reward: Kid ID '%s' not found.", kid_id)
+            LOGGER.warning("Redeem Reward: Kid ID '%s' not found", kid_id)
             return
 
         cost = reward.get("cost", 0)
+
         if kid_info["points"] < cost:
             LOGGER.warning(
-                "Redeem_reward: Kid ID '%s' does not have enough points.", kid_id
+                "Redeem Reward: Kid ID '%s' does not have enough points", kid_id
             )
             raise HomeAssistantError(
-                f"Kid '{kid_info['name']}' does not have enough points ({cost} needed)."
-            )  # Consider using localized messages
+                f"'{kid_info['name']}' does not have enough points ({cost} needed)"
+            )
 
-        kid_info["points"] -= cost
-        self._check_badges_for_kid(kid_id)
-        # Fire an event for reward redemption if desired
-        self.hass.bus.async_fire(
-            EVENT_REWARD_REDEEMED,
+        # Mark reward as pending approval
+        kid_info.setdefault("pending_rewards", []).append(reward_id)
+
+        # Initialize redeemed_rewards if not present
+        kid_info.setdefault("redeemed_rewards", [])
+
+        # Notify parent for approval
+        self.notify_parent_for_reward_approval(kid_id, reward_id)
+
+        LOGGER.info(
+            "Reward '%s' claimed by kid '%s' and pending approval by parent '%s'.",
+            reward["name"],
+            kid_info["name"],
+            parent_name,
+        )
+
+        # Add to pending approvals
+        self._data[DATA_PENDING_REWARD_APPROVALS].append(
             {
-                FIELD_PARENT_NAME: parent_name,
-                FIELD_KID_NAME: kid_info["name"],
-                FIELD_REWARD_NAME: reward["name"],
-                "reward_cost": cost,
-            },
+                "kid_id": kid_id,
+                "reward_id": reward_id,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
+        # Increment reward_claims counter
+        kid_info = self.kids_data.get(kid_id)
+        if reward_id in kid_info["reward_claims"]:
+            kid_info["reward_claims"][reward_id] += 1
+        else:
+            kid_info["reward_claims"][reward_id] = 1
+        LOGGER.debug(
+            "Reward '%s' claimed %d time(s) by kid '%s'.",
+            reward_id,
+            kid_info["reward_claims"][reward_id],
+            kid_id,
+        )
+
+        LOGGER.debug(
+            "Added reward ID '%s' for kid ID '%s' to pending approvals.",
+            reward_id,
+            kid_id,
         )
 
         self._persist()
         self.async_set_updated_data(self._data)
 
+    def approve_reward(self, parent_name: str, kid_id: str, reward_id: str):
+        """Parent approves the reward redemption => deduct points."""
+        kid_info = self.kids_data.get(kid_id)
+        if not kid_info:
+            LOGGER.warning("Approve Reward: Kid ID '%s' not found", kid_id)
+            raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+
+        reward = self.rewards_data.get(reward_id)
+        if not reward:
+            LOGGER.warning("Approve Reward: Reward ID '%s' not found", reward_id)
+            raise HomeAssistantError(f"Reward with ID '{reward_id}' not found.")
+
+        cost = reward.get("cost", 0)
+
+        if reward_id in kid_info.get("pending_rewards", []):
+            # Reward is pending approval
+            if kid_info["points"] < cost:
+                LOGGER.warning(
+                    "Approve Reward: Kid ID '%s' does not have enough points for reward '%s'",
+                    kid_id,
+                    reward["name"],
+                )
+                raise HomeAssistantError(
+                    f"'{kid_info['name']}' does not have enough points to redeem '{reward['name']}'."
+                )
+
+            # Deduct points
+            kid_info["points"] -= cost
+            # Remove from pending rewards
+            kid_info["pending_rewards"].remove(reward_id)
+            # Add to redeemed rewards
+            kid_info["redeemed_rewards"].append(reward_id)
+
+            LOGGER.info(
+                "Reward '%s' approved for kid '%s' by parent '%s'. Points deducted: %s",
+                reward["name"],
+                kid_info["name"],
+                parent_name,
+                cost,
+            )
+        else:
+            # Direct approval by parent without kid claiming
+            if kid_info["points"] < cost:
+                LOGGER.warning(
+                    "Approve Reward (Direct): Kid ID '%s' does not have enough points for reward '%s'",
+                    kid_id,
+                    reward["name"],
+                )
+                raise HomeAssistantError(
+                    f"'{kid_info['name']}' does not have enough points to redeem '{reward['name']}'."
+                )
+
+            # Deduct points
+            kid_info["points"] -= cost
+            # Add to redeemed rewards
+            kid_info["redeemed_rewards"].append(reward_id)
+
+            LOGGER.info(
+                "Reward '%s' directly approved for kid '%s' by parent '%s'. Points deducted: %s",
+                reward["name"],
+                kid_info["name"],
+                parent_name,
+                cost,
+            )
+
+        # Check badges after deduction
+        self._check_badges_for_kid(kid_id)
+
+        # Remove from pending approvals
+        self._data[DATA_PENDING_REWARD_APPROVALS] = [
+            approval
+            for approval in self._data[DATA_PENDING_REWARD_APPROVALS]
+            if not (approval["kid_id"] == kid_id and approval["reward_id"] == reward_id)
+        ]
+        LOGGER.debug(
+            "Removed reward ID '%s' for kid ID '%s' from pending approvals.",
+            reward_id,
+            kid_id,
+        )
+
+        # Increment reward_approvals counter
+        kid_info = self.kids_data.get(kid_id)
+        if reward_id in kid_info["reward_approvals"]:
+            kid_info["reward_approvals"][reward_id] += 1
+        else:
+            kid_info["reward_approvals"][reward_id] = 1
+        LOGGER.debug(
+            "Reward '%s' approved %d time(s) for kid '%s'.",
+            reward_id,
+            kid_info["reward_approvals"][reward_id],
+            kid_id,
+        )
+
+        # Persist changes
+        self._persist()
+        self.async_set_updated_data(self._data)
+
+    def disapprove_reward(self, parent_name: str, kid_id: str, reward_id: str):
+        """Disapprove a reward for kid_id."""
+        # Remove from pending rewards
+        self._data[DATA_PENDING_REWARD_APPROVALS] = [
+            approval
+            for approval in self._data[DATA_PENDING_REWARD_APPROVALS]
+            if not (approval["kid_id"] == kid_id and approval["reward_id"] == reward_id)
+        ]
+        LOGGER.debug(
+            "Removed reward ID '%s' for kid ID '%s' from pending approvals after disapproval.",
+            reward_id,
+            kid_id,
+        )
+
+        # Persist changes
+        self._persist()
+        self.async_set_updated_data(self._data)
+
     # ------------------ BADGES ------------------
+    def _update_kid_multiplier(self, kid_id: str):
+        """Update the kid's points multiplier based on highest badge achieved."""
+        kid_info = self.kids_data.get(kid_id)
+        if not kid_info:
+            return
+
+        # Find all badges earned by the kid
+        earned_badges = [
+            badge
+            for badge in self.badges_data.values()
+            if kid_id in badge.get("earned_by", [])
+        ]
+
+        if not earned_badges:
+            kid_info["points_multiplier"] = 1.0
+            return
+
+        # Determine the highest multiplier among earned badges
+        highest_multiplier = max(
+            badge.get("points_multiplier", 1.0) for badge in earned_badges
+        )
+
+        kid_info["points_multiplier"] = highest_multiplier
+
+        LOGGER.debug(
+            "Updated points multiplier for kid ID '%s' to %s",
+            kid_id,
+            highest_multiplier,
+        )
+
     def _check_badges_for_kid(self, kid_id: str):
-        """
-        Evaluate all badge thresholds for kid:
+        """Evaluate all badge thresholds for kid.
+
         - If threshold met (points or chore_count), mark as earned.
         - Once earned, do not remove even if points go below threshold again.
         """
@@ -660,7 +1214,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
         for badge_id, badge_data in self.badges_data.items():
             if kid_id in badge_data.get("earned_by", []):
-                continue  # Already earned => no removal
+                continue  # Skip already earned badges
 
             threshold_type = badge_data.get("threshold_type")
             threshold_value = badge_data.get("threshold_value", 0)
@@ -683,9 +1237,12 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         badge.setdefault("earned_by", []).append(kid_id)
         kid_info = self.kids_data.get(kid_id)
         if kid_info:
-            kid_info.setdefault("badges", []).append(badge["name"])  # Store badge name
+            kid_info.setdefault("badges", []).append(badge["name"])
 
-        LOGGER.info("Badge '%s' awarded to kid ID '%s'.", badge["name"], kid_id)
+        # Update kid's multiplier based on the highest badge achieved
+        self._update_kid_multiplier(kid_id)
+
+        LOGGER.info("Badge '%s' awarded to kid ID '%s'", badge["name"], kid_id)
         self._persist()
         self.async_set_updated_data(self._data)
 
@@ -693,12 +1250,12 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         """Add new badge at runtime if needed."""
         badge_name = badge_def.get("name")
         if not badge_name:
-            LOGGER.warning("add_badge: Badge must have a name.")
+            LOGGER.warning("Add badge: Badge must have a name")
             return
         if any(
             badge_data["name"] == badge_name for badge_data in self.badges_data.values()
         ):
-            LOGGER.warning("add_badge: Badge '%s' already exists.", badge_name)
+            LOGGER.warning("Add badge: Badge '%s' already exists", badge_name)
             return
         internal_id = str(uuid.uuid4())
         self.badges_data[internal_id] = {
@@ -723,17 +1280,32 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         """Apply penalty => negative 'points' to reduce kid's points."""
         penalty = self.penalties_data.get(penalty_id)
         if not penalty:
-            LOGGER.warning("apply_penalty: Penalty ID '%s' not found.", penalty_id)
+            LOGGER.warning("Apply penalty: Penalty ID '%s' not found", penalty_id)
             return
 
         kid_info = self.kids_data.get(kid_id)
         if not kid_info:
-            LOGGER.warning("apply_penalty: Kid ID '%s' not found.", kid_id)
+            LOGGER.warning("Apply penalty: Kid ID '%s' not found", kid_id)
             return
 
         delta = penalty.get("points", 0)
         kid_info["points"] += delta  # typically negative
         self._check_badges_for_kid(kid_id)
+
+        # Increment penalty_applies counter
+        kid_info = self.kids_data.get(kid_id)
+        if penalty_id in kid_info["penalty_applies"]:
+            kid_info["penalty_applies"][penalty_id] += 1
+        else:
+            kid_info["penalty_applies"][penalty_id] = 1
+        LOGGER.debug(
+            "Penalty '%s' applied %d time(s) to kid '%s'.",
+            penalty_id,
+            kid_info["penalty_applies"][penalty_id],
+            kid_id,
+        )
+
+        # Persist changes
         self._persist()
         self.async_set_updated_data(self._data)
 
@@ -741,13 +1313,13 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         """Add new penalty at runtime if needed."""
         penalty_name = penalty_def.get("name")
         if not penalty_name:
-            LOGGER.warning("add_penalty: Penalty must have a name.")
+            LOGGER.warning("Add penalty: Penalty must have a name")
             return
         if any(
             penalty_data["name"] == penalty_name
             for penalty_data in self.penalties_data.values()
         ):
-            LOGGER.warning("add_penalty: Penalty '%s' already exists.", penalty_name)
+            LOGGER.warning("Add penalty: Penalty '%s' already exists", penalty_name)
             return
         internal_id = str(uuid.uuid4())
         self.penalties_data[internal_id] = {
@@ -762,25 +1334,90 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self.async_set_updated_data(self._data)
 
     # ------------------ RESET CHORES ------------------
-    def _reset_daily_count(self, now):
+    async def _reset_daily_count(self, now):
+        """Reset daily chore counts and chore statuses."""
+
+        LOGGER.info("Executing _reset_daily_count method at %s", now)
+
+        # Reset daily chore counts for each kid
         for kid_id, kid_info in self.kids_data.items():
             kid_info["completed_chores_today"] = 0
-        LOGGER.info("Daily chore counts have been reset.")
-        self.async_set_updated_data(self._data)
 
-    def _reset_weekly_count(self, now):
+        LOGGER.info("Daily chore counts have been reset")
+
+        # Reset chore statuses and clear approved/claimed chores
+        for chore_id, chore_info in self.chores_data.items():
+            if chore_info["state"] not in [
+                CHORE_STATE_PENDING,
+                CHORE_STATE_OVERDUE,
+            ] and not chore_info.get("due_date"):
+                previous_state = chore_info["state"]
+                chore_info["state"] = CHORE_STATE_PENDING
+                LOGGER.debug(
+                    "Resetting status of chore ID '%s' from '%s' to '%s'",
+                    chore_id,
+                    previous_state,
+                    CHORE_STATE_PENDING,
+                )
+
+                # Remove chore_id from all kids' approved_chores and claimed_chores
+                for kid_id, kid_info in self.kids_data.items():
+                    if chore_id in kid_info.get("approved_chores", []):
+                        kid_info["approved_chores"].remove(chore_id)
+                        LOGGER.debug(
+                            "Removed chore ID '%s' from approved_chores for kid ID '%s'",
+                            chore_id,
+                            kid_id,
+                        )
+                    if chore_id in kid_info.get("claimed_chores", []):
+                        kid_info["claimed_chores"].remove(chore_id)
+                        LOGGER.debug(
+                            "Removed chore ID '%s' from claimed_chores for kid ID '%s'",
+                            chore_id,
+                            kid_id,
+                        )
+
+        LOGGER.info(
+            "Chore statuses, approved_chores, and claimed_chores have been reset"
+        )
+
+        # Clear all pending approvals as they are daily reset
+        self._data[DATA_PENDING_CHORE_APPROVALS] = []
+        self._data[DATA_PENDING_REWARD_APPROVALS] = []
+        LOGGER.debug("Cleared all pending chore and reward approvals during reset")
+
+        # Persist the changes
+        self._persist()
+
+        # Create a deep copy to ensure changes are detected
+        new_data = copy.deepcopy(self._data)
+
+        # Update the coordinator's data with the new copy
+        self.async_set_updated_data(new_data)
+
+        LOGGER.debug(
+            "Chore statuses and pending approvals have been updated in the coordinator."
+        )
+
+    async def _reset_weekly_count(self, now):
         if now.weekday() == DEFAULT_WEEKLY_RESET_DAY:
             for kid_id, kid_info in self.kids_data.items():
                 kid_info["completed_chores_weekly"] = 0
-            LOGGER.info("Weekly chore counts have been reset.")
-            self.async_set_updated_data(self._data)
+            LOGGER.info("Weekly chore counts have been reset")
+            self._persist()
+            new_data = copy.deepcopy(self._data)
+            self.async_set_updated_data(new_data)
+            LOGGER.debug("Weekly chore counts have been updated in the coordinator.")
 
-    def _reset_monthly_count(self, now):
+    async def _reset_monthly_count(self, now):
         if now.day == DEFAULT_MONTHLY_RESET_DAY:
             for kid_id, kid_info in self.kids_data.items():
                 kid_info["completed_chores_monthly"] = 0
-            LOGGER.info("Monthly chore counts have been reset.")
-            self.async_set_updated_data(self._data)
+            LOGGER.info("Monthly chore counts have been reset")
+            self._persist()
+            new_data = copy.deepcopy(self._data)
+            self.async_set_updated_data(new_data)
+            LOGGER.debug("Monthly chore counts have been updated in the coordinator.")
 
     # ------------------ STORAGE ------------------
     def _persist(self):
@@ -788,16 +1425,68 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self.storage_manager.set_data(self._data)
         self.hass.async_create_task(self.storage_manager.async_save())
 
+    # ------------------ NOTIFICATION ------------------
+
+    async def notify_parent_for_reward_approval(self, kid_id: str, reward_id: str):
+        """Send a notification to the parent requesting reward approval."""
+        kid_info = self.kids_data.get(kid_id)
+        reward_info = self.rewards_data.get(reward_id)
+
+        if not kid_info or not reward_info:
+            LOGGER.warning(
+                "Notification: Kid ID '%s' or Reward ID '%s' not found",
+                kid_id,
+                reward_id,
+            )
+            return
+
+        parent_user_id = kid_info.get("ha_user_id")
+        if not parent_user_id:
+            LOGGER.warning(
+                "Notification: Parent user ID for kid '%s' not set.",
+                kid_info.get("name"),
+            )
+            return
+
+        parent_user = await self.hass.auth.async_get_user(parent_user_id)
+        if not parent_user:
+            LOGGER.warning(
+                "Notification: Parent user with ID '%s' not found.",
+                parent_user_id,
+            )
+            return
+
+        # Define the notification message
+        message = (
+            f"Kid '{kid_info['name']}' has claimed the reward '{reward_info['name']}'. "
+            f"Please approve the redemption."
+        )
+        title = "KidsChores: Reward Approval Needed"
+
+        # Send the notification
+        await self.hass.components.persistent_notification.async_create(
+            self.hass,
+            message,
+            title=title,
+            notification_id=f"reward_approval_{reward_id}_{kid_id}",
+        )
+
+        LOGGER.debug(
+            "Sent reward approval notification for reward '%s' claimed by kid '%s'.",
+            reward_info["name"],
+            kid_info["name"],
+        )
+
     # ------------------ Helper Functions ------------------
     def _get_kid_id_by_name(self, kid_name: str) -> Optional[str]:
-        """Helper function to get kid_id by kid_name."""
+        """Help function to get kid_id by kid_name."""
         for kid_id, kid_info in self.kids_data.items():
             if kid_info.get("name") == kid_name:
                 return kid_id
         return None
 
     def _get_kid_name_by_id(self, kid_id: str) -> Optional[str]:
-        """Helper function to get kid_name by kid_id."""
+        """Help function to get kid_name by kid_id."""
         kid_info = self.kids_data.get(kid_id)
         if kid_info:
             return kid_info.get("name")

@@ -1,10 +1,10 @@
 # File: binary_sensor.py
-"""
-Binary sensors for KidsChores integration.
+"""Binary sensors for KidsChores integration.
 
 Includes:
 - ChoreStatusBinarySensor: True if a chore is approved for a kid or globally (if shared).
 - BadgeEarnedBinarySensor: True if a kid has earned at least one badge.
+
 """
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,11 +14,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
-    LOGGER,
     CHORE_STATE_PENDING,
     CHORE_STATE_CLAIMED,
     CHORE_STATE_APPROVED,
-    DATA_BADGES,
     DEFAULT_CHORE_BINARY_ICON,
     DEFAULT_BADGE_BINARY_ICON,
 )
@@ -28,9 +26,7 @@ from .coordinator import KidsChoresDataCoordinator
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
-    """
-    Set up binary sensors for each (kid, chore) and for each kid's "any badges" status.
-    """
+    """Set up binary sensors for each (kid, chore) and for each kid's "any badges" status."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator: KidsChoresDataCoordinator = data["coordinator"]
 
@@ -57,11 +53,10 @@ async def async_setup_entry(
 
 
 class ChoreStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """
-    Binary sensor => True if the chore is approved for the kid or globally (if shared).
-    """
+    """Binary sensor => True if the chore is approved for the kid or globally (if shared)."""
 
     def __init__(self, coordinator, entry, kid_id, kid_name, chore_id, chore_name):
+        """Initialize the binary sensor."""
         super().__init__(coordinator)
         self._entry = entry
         self._kid_id = kid_id
@@ -75,65 +70,56 @@ class ChoreStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        """
-        Return True if the chore is approved (shared) or approved for the specific kid.
-        """
-        chore_info = self.coordinator.chores_data.get(self._chore_id, {})
-        shared = chore_info.get("shared_chore", False)
-
-        if shared:
-            state = chore_info.get("state", CHORE_STATE_PENDING)
-            return state in [CHORE_STATE_CLAIMED, CHORE_STATE_APPROVED]
-        else:
-            # For non-shared chores, check if the chore is approved for the kid
-            kid_info = self.coordinator.kids_data.get(self._kid_id, {})
-            return self._chore_id in kid_info.get("approved_chores", [])
+        """Return True if the chore is approved (shared) or approved for the specific kid."""
+        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
+        return self._chore_id in kid_info.get("approved_chores", [])
 
     @property
     def extra_state_attributes(self):
-        """
-        Provide chore details for the sensor's attributes.
-        """
+        """Provide chore details for the sensor's attributes."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
-        shared = chore_info.get("shared_chore", False)
+        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
+
+        # Determine the individual kid's chore state
+        kid_state = "pending"
+        if self._chore_id in kid_info.get("approved_chores", []):
+            kid_state = "approved"
+        elif self._chore_id in kid_info.get("claimed_chores", []):
+            kid_state = "claimed"
+
+        # Retrieve the global chore state
+        global_state = chore_info.get("state", "unknown")
 
         attributes = {
             "kid_name": self._kid_name,
             "chore_name": self._chore_name,
-            "shared_chore": shared,
+            "shared_chore": chore_info.get("shared_chore", False),
+            "kid_state": kid_state,
+            "global_state": global_state,
             "due_date": chore_info.get("due_date", "Not Set"),
             "default_points": chore_info.get("default_points", 0),
             "description": chore_info.get("description", ""),
         }
 
-        if shared:
-            attributes["state"] = chore_info.get("state", "unknown")
-        else:
-            kid_info = self.coordinator.kids_data.get(self._kid_id, {})
-            if self._chore_id in kid_info.get("approved_chores", []):
-                attributes["state"] = "approved"
-            elif self._chore_id in kid_info.get("claimed_chores", []):
-                attributes["state"] = "claimed"
-            else:
-                attributes["state"] = "pending"
-
         return attributes
 
     @property
     def icon(self):
-        """
-        Return the chore's custom icon if set, else fallback.
-        """
+        """Return the chore's custom icon if set, else fallback."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
         return chore_info.get("icon", DEFAULT_CHORE_BINARY_ICON)
 
+    @property
+    def translation_key(self):
+        """Return the translation key for the chore state."""
+        return "chore_claim_bs"
+
 
 class BadgeEarnedBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """
-    Binary sensor => True if kid has at least one badge in kid_info["badges"].
-    """
+    """Binary sensor => True if kid has at least one badge in kid_info["badges"]."""
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
+        """Initialize the binary sensor."""
         super().__init__(coordinator)
         self._entry = entry
         self._kid_id = kid_id
@@ -143,24 +129,23 @@ class BadgeEarnedBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        """
-        Return True if the kid has any badge in 'badges' list.
-        """
+        """Return True if the kid has any badge in 'badges' list."""
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         earned = kid_info.get("badges", [])
         return len(earned) > 0
 
     @property
     def extra_state_attributes(self):
-        """
-        Provide the list of badges the kid has earned.
-        """
+        """Provide the list of badges the kid has earned."""
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return {"badges": kid_info.get("badges", [])}
 
     @property
     def icon(self):
-        """
-        Return the default badge icon.
-        """
+        """Return the default badge icon."""
         return DEFAULT_BADGE_BINARY_ICON
+
+    @property
+    def translation_key(self):
+        """Return the translation key for the chore state."""
+        return "badges_earned_bs"

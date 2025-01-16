@@ -1,6 +1,5 @@
 # File: __init__.py
-"""
-Initialization file for the KidsChores integration.
+"""Initialization file for the KidsChores integration.
 
 Handles setting up the integration, including loading configuration entries,
 initializing data storage, and preparing the coordinator for data handling.
@@ -30,8 +29,7 @@ from .services import async_setup_services, async_unload_services
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """
-    Set up the integration via configuration.yaml (if supported in the future).
+    """Set up the integration via configuration.yaml (if supported in the future).
 
     Args:
         hass: Home Assistant core object.
@@ -39,14 +37,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     Returns:
         bool: True if successful, False otherwise.
+
     """
-    LOGGER.info("Setting up KidsChores integration via YAML is currently unsupported.")
+    LOGGER.info("Setting up KidsChores integration via YAML is currently unsupported")
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """
-    Set up the integration from a config entry.
+    """Set up the integration from a config entry.
 
     Args:
         hass: Home Assistant core object.
@@ -54,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     Returns:
         bool: True if successful, raises an exception otherwise.
+
     """
     LOGGER.info("Starting setup for KidsChores entry: %s", entry.entry_id)
 
@@ -88,12 +87,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass, entry):
-    """
-    Unload a config entry.
+    """Unload a config entry.
 
     Args:
         hass: Home Assistant instance.
         entry: Config entry to unload.
+
     """
     LOGGER.info("Unloading KidsChores entry: %s", entry.entry_id)
 

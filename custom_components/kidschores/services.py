@@ -14,23 +14,20 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     DOMAIN,
-    LOGGER,
-    SERVICE_CLAIM_CHORE,
-    SERVICE_APPROVE_CHORE,
-    SERVICE_REDEEM_REWARD,
-    SERVICE_APPLY_PENALTY,
-    SERVICE_APPROVE_REWARD,
-    FIELD_KID_NAME,
     FIELD_CHORE_NAME,
+    FIELD_KID_NAME,
     FIELD_PARENT_NAME,
-    FIELD_REWARD_NAME,
     FIELD_PENALTY_NAME,
     FIELD_POINTS_AWARDED,
-    ERROR_KID_NOT_FOUND,
-    ERROR_CHORE_NOT_FOUND,
-    ERROR_REWARD_NOT_FOUND,
-    ERROR_PENALTY_NOT_FOUND,
-    ERROR_USER_NOT_AUTHORIZED,
+    FIELD_REWARD_NAME,
+    LOGGER,
+    SERVICE_APPLY_PENALTY,
+    SERVICE_APPROVE_CHORE,
+    SERVICE_APPROVE_REWARD,
+    SERVICE_CLAIM_CHORE,
+    SERVICE_DISAPPROVE_CHORE,
+    SERVICE_DISAPPROVE_REWARD,
+    SERVICE_REDEEM_REWARD,
 )
 from .coordinator import KidsChoresDataCoordinator
 
@@ -52,7 +49,31 @@ APPROVE_CHORE_SCHEMA = vol.Schema(
     }
 )
 
+DISAPPROVE_CHORE_SCHEMA = vol.Schema(
+    {
+        vol.Required(FIELD_PARENT_NAME): cv.string,
+        vol.Required(FIELD_KID_NAME): cv.string,
+        vol.Required(FIELD_CHORE_NAME): cv.string,
+    }
+)
+
 REDEEM_REWARD_SCHEMA = vol.Schema(
+    {
+        vol.Required(FIELD_PARENT_NAME): cv.string,
+        vol.Required(FIELD_KID_NAME): cv.string,
+        vol.Required(FIELD_REWARD_NAME): cv.string,
+    }
+)
+
+APPROVE_REWARD_SCHEMA = vol.Schema(
+    {
+        vol.Required(FIELD_PARENT_NAME): cv.string,
+        vol.Required(FIELD_KID_NAME): cv.string,
+        vol.Required(FIELD_REWARD_NAME): cv.string,
+    }
+)
+
+DISAPPROVE_REWARD_SCHEMA = vol.Schema(
     {
         vol.Required(FIELD_PARENT_NAME): cv.string,
         vol.Required(FIELD_KID_NAME): cv.string,
@@ -84,7 +105,7 @@ def async_setup_services(hass: HomeAssistant):
         """Handle claiming a chore."""
         entry_id = _get_first_kidschores_entry(hass)
         if not entry_id:
-            LOGGER.warning("Claim Chore: No KidsChores entry found.")
+            LOGGER.warning("Claim Chore: No KidsChores entry found")
             return
 
         coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
@@ -97,17 +118,17 @@ def async_setup_services(hass: HomeAssistant):
         # Map kid_name and chore_name to internal_ids
         kid_id = _get_kid_id_by_name(coordinator, kid_name)
         if not kid_id:
-            LOGGER.warning("Claim Chore: Kid '%s' not found.", kid_name)
-            raise HomeAssistantError(f"Kid '{kid_name}' not found.")
+            LOGGER.warning("Claim Chore: Kid '%s' not found", kid_name)
+            raise HomeAssistantError(f"Kid '{kid_name}' not found")
 
         chore_id = _get_chore_id_by_name(coordinator, chore_name)
         if not chore_id:
-            LOGGER.warning("Claim Chore: Chore '%s' not found.", chore_name)
-            raise HomeAssistantError(f"Chore '{chore_name}' not found.")
+            LOGGER.warning("Claim Chore: Chore '%s' not found", chore_name)
+            raise HomeAssistantError(f"Chore '{chore_name}' not found")
 
         # Check if user is authorized
         if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
-            LOGGER.warning("Claim Chore: User not authorized.")
+            LOGGER.warning("Claim Chore: User not authorized")
             raise HomeAssistantError(
                 "You are not authorized to claim chores for this kid."
             )
@@ -118,7 +139,7 @@ def async_setup_services(hass: HomeAssistant):
         )
 
         LOGGER.info(
-            "Chore '%s' claimed by kid '%s' by user '%s'.",
+            "Chore '%s' claimed by kid '%s' by user '%s'",
             chore_name,
             kid_name,
             user_id,
@@ -130,7 +151,7 @@ def async_setup_services(hass: HomeAssistant):
         entry_id = _get_first_kidschores_entry(hass)
 
         if not entry_id:
-            LOGGER.warning("Approve Chore: No KidsChores entry found.")
+            LOGGER.warning("Approve Chore: No KidsChores entry found")
             return
 
         coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
@@ -145,42 +166,103 @@ def async_setup_services(hass: HomeAssistant):
         # Map kid_name and chore_name to internal_ids
         kid_id = _get_kid_id_by_name(coordinator, kid_name)
         if not kid_id:
-            LOGGER.warning("Approve Chore: Kid '%s' not found.", kid_name)
-            raise HomeAssistantError(f"Kid '{kid_name}' not found.")
+            LOGGER.warning("Approve Chore: Kid '%s' not found", kid_name)
+            raise HomeAssistantError(f"Kid '{kid_name}' not found")
 
         chore_id = _get_chore_id_by_name(coordinator, chore_name)
         if not chore_id:
-            LOGGER.warning("Approve Chore: Chore '%s' not found.", chore_name)
-            raise HomeAssistantError(f"Chore '{chore_name}' not found.")
+            LOGGER.warning("Approve Chore: Chore '%s' not found", chore_name)
+            raise HomeAssistantError(f"Chore '{chore_name}' not found")
 
         # Check if user is authorized
         if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
-            LOGGER.warning("Approve Chore: User not authorized.")
+            LOGGER.warning("Approve Chore: User not authorized")
             raise HomeAssistantError(
                 "You are not authorized to approve chores for this kid."
             )
 
         # Approve chore and assign points
-        coordinator.approve_chore(
+        try:
+            coordinator.approve_chore(
+                parent_name=parent_name,
+                kid_id=kid_id,
+                chore_id=chore_id,
+                points_awarded=points_awarded,
+            )
+            LOGGER.info(
+                "Chore '%s' approved for kid '%s' by parent '%s'. Points Awarded: %s",
+                chore_name,
+                kid_name,
+                parent_name,
+                points_awarded,
+            )
+            await coordinator.async_request_refresh()
+        except HomeAssistantError as e:
+            LOGGER.error("Approve Chore: %s", e)
+            raise
+        except Exception as e:
+            LOGGER.error(
+                "Approve Chore: Failed to approve chore '%s' for kid '%s': %s",
+                chore_name,
+                kid_name,
+                e,
+            )
+            raise HomeAssistantError(
+                f"Failed to approve chore '{chore_name}' for kid '{kid_name}'."
+            )
+
+    async def handle_disapprove_chore(call: ServiceCall):
+        """Handle disapproving a chore."""
+        entry_id = _get_first_kidschores_entry(hass)
+        if not entry_id:
+            LOGGER.warning("Disapprove Chore: No KidsChores entry found")
+            return
+
+        coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
+            "coordinator"
+        ]
+        parent_name = call.data[FIELD_PARENT_NAME]
+        kid_name = call.data[FIELD_KID_NAME]
+        chore_name = call.data[FIELD_CHORE_NAME]
+
+        # Map kid_name and chore_name to internal_ids
+        kid_id = _get_kid_id_by_name(coordinator, kid_name)
+        if not kid_id:
+            LOGGER.warning("Disapprove Chore: Kid '%s' not found", kid_name)
+            raise HomeAssistantError(f"Kid '{kid_name}' not found")
+
+        chore_id = _get_chore_id_by_name(coordinator, chore_name)
+        if not chore_id:
+            LOGGER.warning("Disapprove Chore: Chore '%s' not found", chore_name)
+            raise HomeAssistantError(f"Chore '{chore_name}' not found")
+
+        # Check if user is authorized
+        user_id = call.context.user_id
+        if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
+            LOGGER.warning("Disapprove Chore: User not authorized")
+            raise HomeAssistantError(
+                "You are not authorized to disapprove chores for this kid."
+            )
+
+        # Disapprove the chore
+        coordinator.disapprove_chore(
             parent_name=parent_name,
             kid_id=kid_id,
             chore_id=chore_id,
-            points_awarded=points_awarded,
         )
         LOGGER.info(
-            "Chore '%s' approved for kid '%s' by parent '%s'. Points Awarded: %s",
+            "Chore '%s' disapproved for kid '%s' by parent '%s'.",
             chore_name,
             kid_name,
             parent_name,
-            points_awarded,
         )
         await coordinator.async_request_refresh()
 
     async def handle_redeem_reward(call: ServiceCall):
-        """Handle redeeming a reward."""
+        """Handle redeeming a reward (claiming without deduction)."""
         entry_id = _get_first_kidschores_entry(hass)
         if not entry_id:
-            LOGGER.warning("Redeem Reward: No KidsChores entry found.")
+            LOGGER.warning("Redeem Reward: No KidsChores entry found")
             return
 
         coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
@@ -193,29 +275,46 @@ def async_setup_services(hass: HomeAssistant):
         # Map kid_name and reward_name to internal_ids
         kid_id = _get_kid_id_by_name(coordinator, kid_name)
         if not kid_id:
-            LOGGER.warning("Redeem Reward: Kid '%s' not found.", kid_name)
-            raise HomeAssistantError(f"Kid '{kid_name}' not found.")
+            LOGGER.warning("Redeem Reward: Kid '%s' not found", kid_name)
+            raise HomeAssistantError(f"Kid '{kid_name}' not found")
 
         reward_id = _get_reward_id_by_name(coordinator, reward_name)
         if not reward_id:
-            LOGGER.warning("Redeem Reward: Reward '%s' not found.", reward_name)
-            raise HomeAssistantError(f"Reward '{reward_name}' not found.")
+            LOGGER.warning("Redeem Reward: Reward '%s' not found", reward_name)
+            raise HomeAssistantError(f"Reward '{reward_name}' not found")
 
         # Check if user is authorized
         user_id = call.context.user_id
         if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
-            LOGGER.warning("Redeem Reward: User not authorized.")
+            LOGGER.warning("Redeem Reward: User not authorized")
             raise HomeAssistantError(
                 "You are not authorized to redeem rewards for this kid."
             )
 
-        # Redeem reward
+        # Check if kid has enough points
+        kid_info = coordinator.kids_data.get(kid_id)
+        reward = coordinator.rewards_data.get(reward_id)
+        if not kid_info or not reward:
+            LOGGER.warning("Redeem Reward: Invalid kid or reward")
+            raise HomeAssistantError("Invalid kid or reward")
+
+        if kid_info["points"] < reward.get("cost", 0):
+            LOGGER.warning(
+                "Redeem Reward: Kid '%s' does not have enough points to redeem reward '%s'",
+                kid_name,
+                reward_name,
+            )
+            raise HomeAssistantError(
+                f"Kid '{kid_name}' does not have enough points to redeem '{reward_name}'."
+            )
+
+        # Process reward claim without deduction
         try:
             coordinator.redeem_reward(
                 parent_name=parent_name, kid_id=kid_id, reward_id=reward_id
             )
             LOGGER.info(
-                "Reward '%s' redeemed for kid '%s' by parent '%s'.",
+                "Reward '%s' claimed by kid '%s' and pending approval by parent '%s'",
                 reward_name,
                 kid_name,
                 parent_name,
@@ -226,20 +325,126 @@ def async_setup_services(hass: HomeAssistant):
             raise
         except Exception as e:
             LOGGER.error(
-                "Redeem Reward: Failed to redeem reward '%s' for kid '%s': %s",
+                "Redeem Reward: Failed to claim reward '%s' for kid '%s': %s",
                 reward_name,
                 kid_name,
                 e,
             )
             raise HomeAssistantError(
-                f"Failed to redeem reward '{reward_name}' for kid '{kid_name}'."
+                f"Failed to claim reward '{reward_name}' for kid '{kid_name}'."
             )
+
+    async def handle_approve_reward(call: ServiceCall):
+        """Handle approving a reward claimed by a kid."""
+        entry_id = _get_first_kidschores_entry(hass)
+        if not entry_id:
+            LOGGER.warning("Approve Reward: No KidsChores entry found")
+            return
+
+        coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
+            "coordinator"
+        ]
+        user_id = call.context.user_id
+        parent_name = call.data[FIELD_PARENT_NAME]
+        kid_name = call.data[FIELD_KID_NAME]
+        reward_name = call.data[FIELD_REWARD_NAME]
+
+        # Map kid_name and reward_name to internal_ids
+        kid_id = _get_kid_id_by_name(coordinator, kid_name)
+        if not kid_id:
+            LOGGER.warning("Approve Reward: Kid '%s' not found", kid_name)
+            raise HomeAssistantError(f"Kid '{kid_name}' not found")
+
+        reward_id = _get_reward_id_by_name(coordinator, reward_name)
+        if not reward_id:
+            LOGGER.warning("Approve Reward: Reward '%s' not found", reward_name)
+            raise HomeAssistantError(f"Reward '{reward_name}' not found")
+
+        # Check if user is authorized
+        if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
+            LOGGER.warning("Approve Reward: User not authorized")
+            raise HomeAssistantError(
+                "You are not authorized to approve rewards for this kid."
+            )
+
+        # Approve reward redemption and deduct points
+        try:
+            coordinator.approve_reward(
+                parent_name=parent_name, kid_id=kid_id, reward_id=reward_id
+            )
+            LOGGER.info(
+                "Reward '%s' approved for kid '%s' by parent '%s'",
+                reward_name,
+                kid_name,
+                parent_name,
+            )
+            await coordinator.async_request_refresh()
+        except HomeAssistantError as e:
+            LOGGER.error("Approve Reward: %s", e)
+            raise
+        except Exception as e:
+            LOGGER.error(
+                "Approve Reward: Failed to approve reward '%s' for kid '%s': %s",
+                reward_name,
+                kid_name,
+                e,
+            )
+            raise HomeAssistantError(
+                f"Failed to approve reward '{reward_name}' for kid '{kid_name}'."
+            )
+
+    async def handle_disapprove_reward(call: ServiceCall):
+        """Handle disapproving a reward."""
+        entry_id = _get_first_kidschores_entry(hass)
+        if not entry_id:
+            LOGGER.warning("Disapprove Reward: No KidsChores entry found")
+            return
+
+        coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
+            "coordinator"
+        ]
+        parent_name = call.data[FIELD_PARENT_NAME]
+        kid_name = call.data[FIELD_KID_NAME]
+        reward_name = call.data[FIELD_REWARD_NAME]
+
+        # Map kid_name and reward_name to internal_ids
+        kid_id = _get_kid_id_by_name(coordinator, kid_name)
+        if not kid_id:
+            LOGGER.warning("Disapprove Reward: Kid '%s' not found", kid_name)
+            raise HomeAssistantError(f"Kid '{kid_name}' not found")
+
+        reward_id = _get_reward_id_by_name(coordinator, reward_name)
+        if not reward_id:
+            LOGGER.warning("Disapprove Reward: Reward '%s' not found", reward_name)
+            raise HomeAssistantError(f"Reward '{reward_name}' not found")
+
+        # Check if user is authorized
+        user_id = call.context.user_id
+        if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
+            LOGGER.warning("Disapprove Reward: User not authorized")
+            raise HomeAssistantError(
+                "You are not authorized to disapprove rewards for this kid."
+            )
+
+        # Disapprove the reward
+        coordinator.disapprove_reward(
+            parent_name=parent_name,
+            kid_id=kid_id,
+            reward_id=reward_id,
+        )
+        LOGGER.info(
+            "Reward '%s' disapproved for kid '%s' by parent '%s'.",
+            reward_name,
+            kid_name,
+            parent_name,
+        )
+        await coordinator.async_request_refresh()
 
     async def handle_apply_penalty(call: ServiceCall):
         """Handle applying a penalty."""
         entry_id = _get_first_kidschores_entry(hass)
         if not entry_id:
-            LOGGER.warning("Apply Penalty: No KidsChores entry found.")
+            LOGGER.warning("Apply Penalty: No KidsChores entry found")
             return
 
         coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
@@ -252,18 +457,18 @@ def async_setup_services(hass: HomeAssistant):
         # Map kid_name and penalty_name to internal_ids
         kid_id = _get_kid_id_by_name(coordinator, kid_name)
         if not kid_id:
-            LOGGER.warning("Apply Penalty: Kid '%s' not found.", kid_name)
-            raise HomeAssistantError(f"Kid '{kid_name}' not found.")
+            LOGGER.warning("Apply Penalty: Kid '%s' not found", kid_name)
+            raise HomeAssistantError(f"Kid '{kid_name}' not found")
 
         penalty_id = _get_penalty_id_by_name(coordinator, penalty_name)
         if not penalty_id:
-            LOGGER.warning("Apply Penalty: Penalty '%s' not found.", penalty_name)
-            raise HomeAssistantError(f"Penalty '{penalty_name}' not found.")
+            LOGGER.warning("Apply Penalty: Penalty '%s' not found", penalty_name)
+            raise HomeAssistantError(f"Penalty '{penalty_name}' not found")
 
         # Check if user is authorized
         user_id = call.context.user_id
         if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
-            LOGGER.warning("Apply Penalty: User not authorized.")
+            LOGGER.warning("Apply Penalty: User not authorized")
             raise HomeAssistantError(
                 "You are not authorized to apply penalties for this kid."
             )
@@ -274,7 +479,7 @@ def async_setup_services(hass: HomeAssistant):
                 parent_name=parent_name, kid_id=kid_id, penalty_id=penalty_id
             )
             LOGGER.info(
-                "Penalty '%s' applied for kid '%s' by parent '%s'.",
+                "Penalty '%s' applied for kid '%s' by parent '%s'",
                 penalty_name,
                 kid_name,
                 parent_name,
@@ -294,50 +499,6 @@ def async_setup_services(hass: HomeAssistant):
                 f"Failed to apply penalty '{penalty_name}' for kid '{kid_name}'."
             )
 
-    async def handle_approve_reward(call: ServiceCall):
-        """Handle approving a reward claimed by a kid."""
-        entry_id = _get_first_kidschores_entry(hass)
-        if not entry_id:
-            LOGGER.warning("Approve Reward: No KidsChores entry found.")
-            return
-
-        coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
-            "coordinator"
-        ]
-        user_id = call.context.user_id
-        parent_name = call.data[FIELD_PARENT_NAME]
-        kid_name = call.data[FIELD_KID_NAME]
-        reward_name = call.data[FIELD_REWARD_NAME]
-
-        # Map kid_name and reward_name to internal_ids
-        kid_id = _get_kid_id_by_name(coordinator, kid_name)
-        if not kid_id:
-            LOGGER.warning("Approve Reward: Kid '%s' not found.", kid_name)
-            raise HomeAssistantError(f"Kid '{kid_name}' not found.")
-
-        reward_id = _get_reward_id_by_name(coordinator, reward_name)
-        if not reward_id:
-            LOGGER.warning("Approve Reward: Reward '%s' not found.", reward_name)
-            raise HomeAssistantError(f"Reward '{reward_name}' not found.")
-
-        # Check if user is authorized
-        if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
-            LOGGER.warning("Approve Reward: User not authorized.")
-            raise HomeAssistantError(
-                "You are not authorized to approve rewards for this kid."
-            )
-
-        # Implement approval logic
-        # For demonstration, we'll assume approval is already handled during redemption
-        # If additional steps are needed, implement them here
-        LOGGER.info(
-            "Reward '%s' for kid '%s' has been approved by parent '%s'.",
-            reward_name,
-            kid_name,
-            parent_name,
-        )
-        await coordinator.async_request_refresh()
-
     # --- Register Services ---
     hass.services.async_register(
         DOMAIN, SERVICE_CLAIM_CHORE, handle_claim_chore, schema=CLAIM_CHORE_SCHEMA
@@ -346,10 +507,13 @@ def async_setup_services(hass: HomeAssistant):
         DOMAIN, SERVICE_APPROVE_CHORE, handle_approve_chore, schema=APPROVE_CHORE_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_REDEEM_REWARD, handle_redeem_reward, schema=REDEEM_REWARD_SCHEMA
+        DOMAIN,
+        SERVICE_DISAPPROVE_CHORE,
+        handle_disapprove_chore,
+        schema=DISAPPROVE_CHORE_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_APPLY_PENALTY, handle_apply_penalty, schema=APPLY_PENALTY_SCHEMA
+        DOMAIN, SERVICE_REDEEM_REWARD, handle_redeem_reward, schema=REDEEM_REWARD_SCHEMA
     )
     hass.services.async_register(
         DOMAIN,
@@ -357,8 +521,17 @@ def async_setup_services(hass: HomeAssistant):
         handle_approve_reward,
         schema=APPROVE_REWARD_SCHEMA,
     )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DISAPPROVE_REWARD,
+        handle_disapprove_reward,
+        schema=DISAPPROVE_REWARD_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_APPLY_PENALTY, handle_apply_penalty, schema=APPLY_PENALTY_SCHEMA
+    )
 
-    LOGGER.info("KidsChores services have been registered successfully.")
+    LOGGER.info("KidsChores services have been registered successfully")
 
 
 async def async_unload_services(hass: HomeAssistant):
@@ -366,16 +539,18 @@ async def async_unload_services(hass: HomeAssistant):
     services = [
         SERVICE_CLAIM_CHORE,
         SERVICE_APPROVE_CHORE,
+        SERVICE_DISAPPROVE_CHORE,
         SERVICE_REDEEM_REWARD,
+        SERVICE_DISAPPROVE_REWARD,
         SERVICE_APPLY_PENALTY,
-        SERVICE_APPROVE_REWARD,  # New Service
+        SERVICE_APPROVE_REWARD,
     ]
 
     for service in services:
         if hass.services.has_service(DOMAIN, service):
             hass.services.async_remove(DOMAIN, service)
 
-    LOGGER.info("KidsChores services have been unregistered.")
+    LOGGER.info("KidsChores services have been unregistered")
 
 
 def _get_first_kidschores_entry(hass: HomeAssistant) -> Optional[str]:
@@ -440,7 +615,7 @@ async def is_user_authorized_for_kid(
 
     user: User = await hass.auth.async_get_user(user_id)
     if not user:
-        LOGGER.warning("Authorization: Invalid user ID '%s'.", user_id)
+        LOGGER.warning("Authorization: Invalid user ID '%s'", user_id)
         return False
 
     if user.is_admin:
@@ -451,7 +626,7 @@ async def is_user_authorized_for_kid(
     ]["coordinator"]
     kid_info = coordinator.kids_data.get(kid_id)
     if not kid_info:
-        LOGGER.warning("Authorization: Kid ID '%s' not found.", kid_id)
+        LOGGER.warning("Authorization: Kid ID '%s' not found", kid_id)
         return False
 
     linked_ha_id = kid_info.get("ha_user_id")
@@ -459,7 +634,7 @@ async def is_user_authorized_for_kid(
         return True
 
     LOGGER.warning(
-        "Authorization: User '%s' is not authorized to manage kid '%s'.",
+        "Authorization: User '%s' is not authorized to manage kid '%s'",
         user.name,
         kid_info.get("name"),
     )

@@ -43,6 +43,7 @@
           "chore_name": "Chore Name",
           "internal_id": "Internal ID",
           "default_points": "Default Points",
+          "allow_multiple_claims_per_day": "Allow Multiple Claims per Day?",
           "partial_allowed": "Allow Partial Points?",
           "shared_chore": "Shared Chore?",
           "assigned_kids": "Assigned Kids",
@@ -67,6 +68,7 @@
           "internal_id": "Internal ID",
           "threshold_type": "Threshold Type",
           "threshold_value": "Threshold Value",
+          "points_multiplier": "Points Multiplier",
           "icon": "Icon (mdi:xxx)"
         }
       },
@@ -139,7 +141,14 @@
         "title": "KidsChores Options",
         "description": "Manage kids, chores, badges, rewards, penalties, or finish.",
         "data": {
-          "menu_selection": "Select an Action"
+          "menu_selection": "Select an Option"
+        }
+      },
+      "manage_entity": {
+        "title": "Select Action",
+        "description": "Add, edit or delete options.",
+        "data": {
+          "manage_action": "Select an Action"
         }
       },
       "select_entity": {
@@ -165,6 +174,7 @@
           "chore_name": "Chore Name",
           "internal_id": "Internal ID",
           "default_points": "Default Points",
+          "allow_multiple_claims_per_day": "Allow Multiple Claims per Day?",
           "partial_allowed": "Allow Partial Points?",
           "shared_chore": "Shared Chore?",
           "assigned_kids": "Assigned Kids",
@@ -182,6 +192,7 @@
           "internal_id": "Internal ID",
           "threshold_type": "Threshold Type",
           "threshold_value": "Threshold Value",
+          "points_multiplier": "Points Multiplier",
           "icon": "Icon (mdi:xxx)"
         }
       },
@@ -222,6 +233,7 @@
           "chore_name": "Chore Name",
           "internal_id": "Internal ID",
           "default_points": "Default Points",
+          "allow_multiple_claims_per_day": "Allow Multiple Claims per Day?",
           "partial_allowed": "Allow Partial Points?",
           "shared_chore": "Shared Chore?",
           "assigned_kids": "Assigned Kids",
@@ -239,6 +251,7 @@
           "internal_id": "Internal ID",
           "threshold_type": "Threshold Type",
           "threshold_value": "Threshold Value",
+          "points_multiplier": "Points Multiplier",
           "icon": "Icon (mdi:xxx)"
         }
       },
@@ -299,24 +312,23 @@
     }
   },
   "selector": {
-    "menu_choices": {
+    "main_menu": {
       "options": {
-        "add_kid": "Add Kid",
-        "edit_kid": "Edit Kid",
-        "delete_kid": "Delete Kid",
-        "add_chore": "Add Chore",
-        "edit_chore": "Edit Chore",
-        "delete_chore": "Delete Chore",
-        "add_badge": "Add Badge",
-        "edit_badge": "Edit Badge",
-        "delete_badge": "Delete Badge",
-        "add_reward": "Add Reward",
-        "edit_reward": "Edit Reward",
-        "delete_reward": "Delete Reward",
-        "add_penalty": "Add Penalty",
-        "edit_penalty": "Edit Penalty",
-        "delete_penalty": "Delete Penalty",
+        "manage_kid": "Manage Kid",
+        "manage_parent": "Manage Parent",
+        "manage_chore": "Manage Chore",
+        "manage_badge": "Manage Badge",
+        "manage_reward": "Manage Reward",
+        "manage_penalty": "Manage Penalty",
         "done": "Finish Setup"
+      }
+    },
+    "manage_actions": {
+      "options": {
+        "add": "Add",
+        "edit": "Edit",
+        "delete": "Delete",
+        "back": "Back to Main Menu"
       }
     },
     "recurring_frequency": {
@@ -377,6 +389,27 @@
         }
       }
     },
+    "disapprove_chore": {
+      "name": "Disapprove Chore",
+      "description": "Parent disapproves a chore for a kid, reverting its status.",
+      "fields": {
+        "parent_name": {
+          "name": "Parent Name",
+          "description": "The parent disapproving the chore.",
+          "example": "Mom"
+        },
+        "kid_name": {
+          "name": "Kid Name",
+          "description": "The name of the kid whose chore is being disapproved.",
+          "example": "Bob"
+        },
+        "chore_name": {
+          "name": "Chore Name",
+          "description": "The name of the chore being disapproved.",
+          "example": "Clean Room"
+        }
+      }
+    },
     "redeem_reward": {
       "name": "Redeem Reward",
       "description": "A parent redeems a reward for a kid, deducting points.",
@@ -394,6 +427,48 @@
         "reward_name": {
           "name": "Reward Name",
           "description": "The name of the reward to redeem.",
+          "example": "Extra Screen Time"
+        }
+      }
+    },
+    "approve_reward": {
+      "name": "Approve Reward",
+      "description": "Parent approves a reward claimed by a kid.",
+      "fields": {
+        "parent_name": {
+          "name": "Parent Name",
+          "description": "The parent approving the reward.",
+          "example": "Mom"
+        },
+        "kid_name": {
+          "name": "Kid Name",
+          "description": "The kid who is redeeming the reward.",
+          "example": "Alice"
+        },
+        "reward_name": {
+          "name": "Reward Name",
+          "description": "The name of the reward being approved.",
+          "example": "Extra Screen Time"
+        }
+      }
+    },
+    "disapprove_reward": {
+      "name": "Disapprove Reward",
+      "description": "Parent disapproves a reward redemption for a kid.",
+      "fields": {
+        "parent_name": {
+          "name": "Parent Name",
+          "description": "The parent disapproving the reward.",
+          "example": "Dad"
+        },
+        "kid_name": {
+          "name": "Kid Name",
+          "description": "The kid whose reward redemption is being disapproved.",
+          "example": "Bob"
+        },
+        "reward_name": {
+          "name": "Reward Name",
+          "description": "The name of the reward being disapproved.",
           "example": "Extra Screen Time"
         }
       }
@@ -418,25 +493,90 @@
           "example": "Yelling"
         }
       }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "chore_state": {
+        "state": {
+          "pending": "Pending",
+          "approved": "Approved",
+          "claimed": "Claimed",
+          "unknown": "Unknown",
+          "none": "None"
+        },
+        "state_attributes": {
+          "kid_name": { "name": "Kid Name" },
+          "chore_name": { "name": "Chore Name" },
+          "shared_chore": {
+            "name": "Shared Chore",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "due_date": { "name": "Due Date" },
+          "default_points": { "name": "Default Points" },
+          "description": { "name": "Description" },
+          "state": {
+            "name": "State",
+            "state": {
+              "pending": "Pending",
+              "approved": "Approved",
+              "claimed": "Claimed",
+              "unknown": "Unknown",
+              "none": "None"
+            }
+          }
+        }
+      },
+      "kids_highest_badge": {
+        "state_attributes": {
+          "kid_name": { "name": "Kid Name" },
+          "all_earned_badges": { "name": "All Earned Badges" },
+          "highest_badge_threshold_value": { "name": "Highest Badge" }
+        }
+      }
     },
-    "approve_reward": {
-      "name": "Approve Reward",
-      "description": "Parent approves a reward claimed by a kid.",
-      "fields": {
-        "parent_name": {
-          "name": "Parent Name",
-          "description": "The parent approving the reward.",
-          "example": "Mom"
+    "binary_sensor": {
+      "chore_claim_bs": {
+        "state": {
+          "on": "Approved",
+          "off": "Not Claimed"
         },
-        "kid_name": {
-          "name": "Kid Name",
-          "description": "The kid who is redeeming the reward.",
-          "example": "Alice"
-        },
-        "reward_name": {
-          "name": "Reward Name",
-          "description": "The name of the reward being approved.",
-          "example": "Extra Screen Time"
+        "state_attributes": {
+          "kid_name": { "name": "Kid Name" },
+          "chore_name": { "name": "Chore Name" },
+          "shared_chore": {
+            "name": "Shared Chore",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "kid_state": {
+            "name": "Kid State",
+            "state": {
+              "pending": "Pending",
+              "approved": "Approved",
+              "claimed": "Claimed",
+              "unknown": "Unknown",
+              "none": "None"
+            }
+          },
+          "global_state": {
+            "name": "Global State",
+            "state": {
+              "pending": "Pending",
+              "approved": "Approved",
+              "claimed": "Claimed",
+              "unknown": "Unknown",
+              "none": "None"
+            }
+          },
+          "due_date": { "name": "Due Date" },
+          "default_points": { "name": "Default Points" },
+          "description": { "name": "Description" }
         }
       }
     }

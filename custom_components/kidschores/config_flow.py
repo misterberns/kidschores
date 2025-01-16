@@ -20,11 +20,13 @@ from .const import (
     CONF_CHORES,
     CONF_BADGES,
     CONF_REWARDS,
+    CONF_PARENTS,
     CONF_PENALTIES,
     DEFAULT_POINTS_LABEL,
 )
 from .flow_helpers import (
     build_kid_schema,
+    build_parent_schema,
     build_chore_schema,
     build_badge_schema,
     build_reward_schema,
@@ -41,18 +43,21 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._data: Dict[str, Any] = {}
         self._kids_temp: Dict[str, Dict[str, Any]] = {}
+        self._parents_temp: Dict[str, Dict[str, Any]] = {}
         self._chores_temp: Dict[str, Dict[str, Any]] = {}
         self._badges_temp: Dict[str, Dict[str, Any]] = {}
         self._rewards_temp: Dict[str, Dict[str, Any]] = {}
         self._penalties_temp: Dict[str, Dict[str, Any]] = {}
 
         self._kid_count: int = 0
+        self._parents_count: int = 0
         self._chore_count: int = 0
         self._badge_count: int = 0
         self._reward_count: int = 0
         self._penalty_count: int = 0
 
         self._kid_index: int = 0
+        self._parents_index: int = 0
         self._chore_index: int = 0
         self._badge_index: int = 0
         self._reward_index: int = 0
@@ -134,7 +139,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._kid_index += 1
             if self._kid_index >= self._kid_count:
-                return await self.async_step_chore_count()
+                return await self.async_step_parent_count()
             return await self.async_step_kids()
 
         # Retrieve HA users for linking
@@ -144,6 +149,81 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="kids", data_schema=kid_schema, errors=errors
+        )
+
+    # --------------------------------------------------------------------------
+    # PARENTS
+    # --------------------------------------------------------------------------
+    async def async_step_parent_count(self, user_input=None):
+        """Ask how many parents to define initially."""
+        errors = {}
+        if user_input is not None:
+            try:
+                self._parents_count = int(user_input["parent_count"])
+                if self._parents_count < 0:
+                    raise ValueError
+                if self._parents_count == 0:
+                    return await self.async_step_chore_count()
+                self._parents_index = 0
+                return await self.async_step_parents()
+            except ValueError:
+                errors["base"] = "invalid_parent_count"
+
+        schema = vol.Schema({vol.Required("parent_count", default=1): vol.Coerce(int)})
+        return self.async_show_form(
+            step_id="parent_count", data_schema=schema, errors=errors
+        )
+
+    async def async_step_parents(self, user_input=None):
+        """Collect each parent's info using internal_id as the primary key.
+
+        Store in self._parents_temp as a dict keyed by internal_id.
+        """
+        errors = {}
+        if user_input is not None:
+            parent_name = user_input["parent_name"].strip()
+            ha_user_id = user_input.get("ha_user_id")
+            associated_kids = user_input.get("associated_kids", [])
+
+            if not parent_name:
+                errors["parent_name"] = "invalid_parent_name"
+            elif any(
+                parent_data["name"] == parent_name
+                for parent_data in self._parents_temp.values()
+            ):
+                errors["parent_name"] = "duplicate_parent"
+            else:
+                internal_id = user_input.get("internal_id", str(uuid.uuid4()))
+                self._parents_temp[internal_id] = {
+                    "name": parent_name,
+                    "ha_user_id": ha_user_id,
+                    "associated_kids": associated_kids,
+                    "internal_id": internal_id,
+                }
+                LOGGER.debug("Added parent: %s with ID: %s", parent_name, internal_id)
+
+            self._parents_index += 1
+            if self._parents_index >= self._parents_count:
+                return await self.async_step_chore_count()
+            return await self.async_step_parents()
+
+        # Retrieve kids for association from _kids_temp
+        kids_dict = {
+            kid_data["name"]: kid_id for kid_id, kid_data in self._kids_temp.items()
+        }
+
+        users = await self.hass.auth.async_get_users()
+
+        parent_schema = build_parent_schema(
+            users=users,
+            kids_dict=kids_dict,
+            default_parent_name="",
+            default_ha_user_id=None,
+            default_associated_kids=[],
+            internal_id=None,
+        )
+        return self.async_show_form(
+            step_id="parents", data_schema=parent_schema, errors=errors
         )
 
     # --------------------------------------------------------------------------
@@ -193,6 +273,9 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "partial_allowed": user_input["partial_allowed"],
                     "shared_chore": user_input["shared_chore"],
                     "assigned_kids": user_input["assigned_kids"],
+                    "allow_multiple_claims_per_day": user_input[
+                        "allow_multiple_claims_per_day"
+                    ],
                     "description": user_input.get("chore_description", ""),
                     "icon": user_input.get("icon", ""),
                     "recurring_frequency": user_input.get(
@@ -267,6 +350,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "name": badge_name,
                     "threshold_type": user_input["threshold_type"],
                     "threshold_value": user_input["threshold_value"],
+                    "points_multiplier": user_input["points_multiplier"],
                     "icon": user_input.get("icon", ""),
                     "internal_id": internal_id,
                 }
@@ -410,8 +494,27 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self._create_entry()
 
+        # Create a mapping from kid_id to kid_name for easy lookup
+        kid_id_to_name = {
+            kid_id: data["name"] for kid_id, data in self._kids_temp.items()
+        }
+
+        # Enhance parents summary to include associated kids by name
+        parents_summary = []
+        for parent in self._parents_temp.values():
+            associated_kids_names = [
+                kid_id_to_name.get(kid_id, "Unknown")
+                for kid_id in parent.get("associated_kids", [])
+            ]
+            if associated_kids_names:
+                kids_str = ", ".join(associated_kids_names)
+                parents_summary.append(f"{parent['name']} (Kids: {kids_str})")
+            else:
+                parents_summary.append(parent["name"])
+
         summary = (
             f"Kids: {', '.join(kid_data['name'] for kid_data in self._kids_temp.values()) or 'None'}\n"
+            f"Parents: {', '.join(parents_summary) or 'None'}\n"
             f"Chores: {', '.join(chore_data['name'] for chore_data in self._chores_temp.values()) or 'None'}\n"
             f"Badges: {', '.join(badge_data['name'] for badge_data in self._badges_temp.values()) or 'None'}\n"
             f"Rewards: {', '.join(reward_data['name'] for reward_data in self._rewards_temp.values()) or 'None'}\n"
@@ -430,6 +533,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         entry_options = {
             CONF_KIDS: self._kids_temp,
+            CONF_PARENTS: self._parents_temp,
             CONF_CHORES: self._chores_temp,
             CONF_BADGES: self._badges_temp,
             CONF_REWARDS: self._rewards_temp,
