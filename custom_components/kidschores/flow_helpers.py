@@ -1,21 +1,18 @@
 # File: flow_helpers.py
-"""
-Helpers for the KidsChores integration's Config and Options flow.
+"""Helpers for the KidsChores integration's Config and Options flow.
+
 Provides schema builders and input-processing logic for internal_id-based management.
 """
 
 import uuid
 import voluptuous as vol
 from homeassistant.helpers import selector, config_validation as cv
-from .const import LOGGER
 
 
 def build_kid_schema(
     users, default_kid_name="", default_ha_user_id=None, internal_id=None
 ):
-    """
-    Builds a Voluptuous schema for adding/editing a Kid, keyed by internal_id in the dict.
-    """
+    """Build a Voluptuous schema for adding/editing a Kid, keyed by internal_id in the dict."""
     user_options = [{"value": user.id, "label": user.name} for user in users]
 
     return vol.Schema(
@@ -33,17 +30,54 @@ def build_kid_schema(
     )
 
 
+def build_parent_schema(
+    users,
+    kids_dict,
+    default_parent_name="",
+    default_ha_user_id=None,
+    default_associated_kids=None,
+    internal_id=None,
+):
+    """Build a Voluptuous schema for adding/editing a Parent, keyed by internal_id in the dict."""
+    user_options = [{"value": user.id, "label": user.name} for user in users]
+    kid_options = [
+        {"value": kid_id, "label": kid_name} for kid_name, kid_id in kids_dict.items()
+    ]
+
+    return vol.Schema(
+        {
+            vol.Required("parent_name", default=default_parent_name): str,
+            vol.Optional("ha_user_id"): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=user_options,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    multiple=False,
+                )
+            ),
+            vol.Optional(
+                "associated_kids", default=default_associated_kids or []
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=kid_options,
+                    translation_key="associated_kids",
+                    multiple=True,
+                )
+            ),
+            vol.Optional("internal_id", default=internal_id or str(uuid.uuid4())): str,
+        }
+    )
+
+
 def build_chore_schema(kids_dict, default=None):
-    """
-    Builds a schema for chores, referencing existing kids by name.
+    """Build a schema for chores, referencing existing kids by name.
+
     Uses internal_id for entity management.
     """
     default = default or {}
     chore_name_default = default.get("name", "")
     internal_id_default = default.get("internal_id", str(uuid.uuid4()))
 
-    # Build kid choices without "__ALL__"
-    kid_choices = {k: k for k in kids_dict.keys()}
+    kid_choices = {k: k for k in kids_dict}
 
     return vol.Schema(
         {
@@ -55,6 +89,10 @@ def build_chore_schema(kids_dict, default=None):
             vol.Required(
                 "assigned_kids", default=default.get("assigned_kids", [])
             ): cv.multi_select(kid_choices),
+            vol.Required(
+                "allow_multiple_claims_per_day",
+                default=default.get("allow_multiple_claims_per_day", False),
+            ): bool,
             vol.Required(
                 "shared_chore", default=default.get("shared_chore", False)
             ): bool,
@@ -70,30 +108,44 @@ def build_chore_schema(kids_dict, default=None):
             vol.Required(
                 "recurring_frequency",
                 default=default.get("recurring_frequency", "none"),
-            ): vol.In(["none", "daily", "weekly", "monthly"]),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=["none", "daily", "weekly", "monthly"],
+                    translation_key="recurring_frequency",
+                )
+            ),
             vol.Optional("due_date"): selector.DateTimeSelector(),
         }
     )
 
 
 def build_badge_schema(default=None):
-    """
-    Builds a schema for badges, keyed by internal_id in the dict.
-    """
+    """Build a schema for badges, keyed by internal_id in the dict."""
     default = default or {}
     badge_name_default = default.get("name", "")
     internal_id_default = default.get("internal_id", str(uuid.uuid4()))
+    points_multiplier_default = default.get("points_multiplier", 1.0)
 
     return vol.Schema(
         {
             vol.Required("badge_name", default=badge_name_default): str,
             vol.Optional("internal_id", default=internal_id_default): str,
             vol.Required(
-                "threshold_type", default=default.get("threshold_type", "points")
-            ): vol.In(["points", "chore_count"]),
+                "threshold_type",
+                default=default.get("threshold_type", "points"),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=["points", "chore_count"],
+                    translation_key="threshold_type",
+                )
+            ),
             vol.Required(
                 "threshold_value", default=default.get("threshold_value", 10)
             ): vol.Coerce(float),
+            vol.Required(
+                "points_multiplier",
+                default=points_multiplier_default,
+            ): vol.All(vol.Coerce(float), vol.Range(min=1.0)),
             vol.Optional(
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
@@ -102,9 +154,7 @@ def build_badge_schema(default=None):
 
 
 def build_reward_schema(default=None):
-    """
-    Builds a schema for rewards, keyed by internal_id in the dict.
-    """
+    """Build a schema for rewards, keyed by internal_id in the dict."""
     default = default or {}
     reward_name_default = default.get("name", "")
     internal_id_default = default.get("internal_id", str(uuid.uuid4()))
@@ -127,8 +177,8 @@ def build_reward_schema(default=None):
 
 
 def build_penalty_schema(default=None):
-    """
-    Builds a schema for penalties, keyed by internal_id in the dict.
+    """Build a schema for penalties, keyed by internal_id in the dict.
+
     Stores penalty_points as positive in the form, converted to negative internally.
     """
     default = default or {}
@@ -153,9 +203,7 @@ def build_penalty_schema(default=None):
 
 
 def process_penalty_form_input(user_input: dict) -> dict:
-    """
-    Ensure penalty points are negative internally.
-    """
+    """Ensure penalty points are negative internally."""
     data = dict(user_input)
     data["points"] = -abs(data["penalty_points"])
     return data

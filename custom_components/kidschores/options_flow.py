@@ -1,6 +1,6 @@
 # File: options_flow.py
-"""
-Options Flow for the KidsChores integration, managing entities by internal_id.
+"""Options Flow for the KidsChores integration, managing entities by internal_id.
+
 Handles add/edit/delete operations with entities referenced internally by internal_id.
 Ensures consistency and reloads the integration upon changes.
 """
@@ -16,11 +16,12 @@ from .const import (
     CONF_CHORES,
     CONF_BADGES,
     CONF_REWARDS,
+    CONF_PARENTS,
     CONF_PENALTIES,
-    DOMAIN,
 )
 from .flow_helpers import (
     build_kid_schema,
+    build_parent_schema,
     build_chore_schema,
     build_badge_schema,
     build_reward_schema,
@@ -37,56 +38,39 @@ def _ensure_str(value):
 
 
 class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
-    """
-    Options Flow for adding/editing/deleting kids, chores, badges, rewards, and penalties.
+    """Options Flow for adding/editing/deleting kids, chores, badges, rewards, and penalties.
+
     Manages entities via internal_id for consistency and historical data preservation.
     """
 
     def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize the options flow."""
-        # Removed: self.config_entry = config_entry
-        self.config_entry = config_entry  # Deprecated
         self._entry_options = {}
         self._action = None
         self._entity_type = None
 
     async def async_step_init(self, user_input=None):
-        """
-        Main menu for the Options Flow:
+        """Display the main menu for the Options Flow.
+
         Add/Edit/Delete kid, chore, badge, reward, penalty, or done.
         """
         self._entry_options = dict(self.config_entry.options)
 
         if user_input is not None:
             selection = user_input["menu_selection"]
-            if selection.startswith("add_"):
-                self._entity_type = selection.replace("add_", "")
-                return await getattr(self, f"async_step_add_{self._entity_type}")()
-            elif selection.startswith("edit_"):
-                self._entity_type = selection.replace("edit_", "")
-                return await self.async_step_select_entity(action="edit")
-            elif selection.startswith("delete_"):
-                self._entity_type = selection.replace("delete_", "")
-                return await self.async_step_select_entity(action="delete")
+            if selection.startswith("manage_"):
+                self._entity_type = selection.replace("manage_", "")
+                return await self.async_step_manage_entity()
             elif selection == "done":
                 return self.async_create_entry(title="Options", data={})
 
-        menu_choices = [
-            "add_kid",
-            "edit_kid",
-            "delete_kid",
-            "add_chore",
-            "edit_chore",
-            "delete_chore",
-            "add_badge",
-            "edit_badge",
-            "delete_badge",
-            "add_reward",
-            "edit_reward",
-            "delete_reward",
-            "add_penalty",
-            "edit_penalty",
-            "delete_penalty",
+        main_menu = [
+            "manage_kid",
+            "manage_parent",
+            "manage_chore",
+            "manage_badge",
+            "manage_reward",
+            "manage_penalty",
             "done",
         ]
 
@@ -96,18 +80,59 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required("menu_selection"): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=menu_choices,
-                            mode=selector.SelectSelectorMode.DROPDOWN,
+                            options=main_menu,
+                            mode=selector.SelectSelectorMode.LIST,
+                            translation_key="main_menu",
                         )
                     )
                 }
             ),
         )
 
-    async def async_step_select_entity(self, user_input=None, action=None):
+    async def async_step_manage_entity(self, user_input=None):
+        """Handle the management actions for a selected entity type.
+
+        Presents add/edit/delete options for the selected entity.
+        """
+        if user_input is not None:
+            self._action = user_input["manage_action"]
+            # Route to the corresponding step based on action
+            if self._action == "add":
+                return await getattr(self, f"async_step_add_{self._entity_type}")()
+            elif self._action in ["edit", "delete"]:
+                return await self.async_step_select_entity()
+            elif self._action == "back":
+                return await self.async_step_init()
+
+        # Define manage action choices
+        manage_action_choices = [
+            "add",
+            "edit",
+            "delete",
+            "back",  # Option to go back to the main menu
+        ]
+
+        return self.async_show_form(
+            step_id="manage_entity",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("manage_action"): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=manage_action_choices,
+                            mode=selector.SelectSelectorMode.LIST,
+                            translation_key="manage_actions",
+                        )
+                    )
+                }
+            ),
+            description_placeholders={"entity_type": self._entity_type},
+        )
+
+    async def async_step_select_entity(self, user_input=None):
         """Select an entity (kid, chore, etc.) to edit or delete based on internal_id."""
-        if action:
-            self._action = action
+        if self._action not in ["edit", "delete"]:
+            LOGGER.error("Invalid action '%s' for select_entity step", self._action)
+            return self.async_abort(reason="invalid_action")
 
         entity_dict = self._get_entity_dict()
         entity_names = [data["name"] for data in entity_dict.values()]
@@ -123,16 +148,16 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 None,
             )
             if not internal_id:
-                LOGGER.error("Selected entity '%s' not found.", selected_name)
+                LOGGER.error("Selected entity '%s' not found", selected_name)
                 return self.async_abort(reason="invalid_entity")
 
             # Store internal_id in context for later use
             self.context["internal_id"] = internal_id
 
-            if self._action == "edit":
-                return await getattr(self, f"async_step_edit_{self._entity_type}")()
-            elif self._action == "delete":
-                return await getattr(self, f"async_step_delete_{self._entity_type}")()
+            # Route to the corresponding edit/delete step
+            return await getattr(
+                self, f"async_step_{self._action}_{self._entity_type}"
+            )()
 
         if not entity_names:
             return self.async_abort(reason=f"no_{self._entity_type}s")
@@ -144,7 +169,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required("entity_name"): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=entity_names,
-                            mode=selector.SelectSelectorMode.DROPDOWN,
+                            mode=selector.SelectSelectorMode.LIST,
                         )
                     )
                 }
@@ -157,19 +182,22 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     def _get_entity_dict(self):
         """Retrieve the appropriate entity dictionary based on entity_type."""
-        return self._entry_options.get(
-            CONF_KIDS
-            if self._entity_type == "kid"
-            else CONF_CHORES
-            if self._entity_type == "chore"
-            else CONF_BADGES
-            if self._entity_type == "badge"
-            else CONF_REWARDS
-            if self._entity_type == "reward"
-            else CONF_PENALTIES
-            if self._entity_type == "penalty"
-            else {},
-        )
+        entity_type_to_conf = {
+            "kid": CONF_KIDS,
+            "parent": CONF_PARENTS,
+            "chore": CONF_CHORES,
+            "badge": CONF_BADGES,
+            "reward": CONF_REWARDS,
+            "penalty": CONF_PENALTIES,
+        }
+        key = entity_type_to_conf.get(self._entity_type)
+        if key is None:
+            LOGGER.error(
+                "Unknown entity_type '%s'. Cannot retrieve entity dictionary.",
+                self._entity_type,
+            )
+            return {}
+        return self._entry_options.get(key, {})
 
     # ------------------ ADD ENTITY ------------------
     async def async_step_add_kid(self, user_input=None):
@@ -203,6 +231,52 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="add_kid", data_schema=schema, errors=errors
         )
 
+    async def async_step_add_parent(self, user_input=None):
+        """Add a new parent."""
+        errors = {}
+        parents_dict = self._entry_options.setdefault(CONF_PARENTS, {})
+
+        if user_input is not None:
+            parent_name = user_input["parent_name"].strip()
+            ha_user_id = user_input.get("ha_user_id")
+            associated_kids = user_input.get("associated_kids", [])
+
+            if any(
+                parent_data["name"] == parent_name
+                for parent_data in parents_dict.values()
+            ):
+                errors["parent_name"] = "duplicate_parent"
+            else:
+                internal_id = user_input.get("internal_id", str(uuid.uuid4()))
+                parents_dict[internal_id] = {
+                    "name": parent_name,
+                    "ha_user_id": ha_user_id,
+                    "associated_kids": associated_kids,
+                    "internal_id": internal_id,
+                }
+                LOGGER.debug("Added parent '%s' with ID: %s", parent_name, internal_id)
+                await self._update_and_reload()
+                return await self.async_step_init()
+
+        # Retrieve HA users and existing kids for linking
+        users = await self.hass.auth.async_get_users()
+        kids_dict = {
+            kid_data["name"]: kid_id
+            for kid_id, kid_data in self._entry_options.get(CONF_KIDS, {}).items()
+        }
+
+        parent_schema = build_parent_schema(
+            users=users,
+            kids_dict=kids_dict,
+            default_parent_name="",
+            default_ha_user_id=None,
+            default_associated_kids=[],
+            internal_id=None,
+        )
+        return self.async_show_form(
+            step_id="add_parent", data_schema=parent_schema, errors=errors
+        )
+
     async def async_step_add_chore(self, user_input=None):
         """Add a new chore."""
         errors = {}
@@ -222,6 +296,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     "default_points": user_input["default_points"],
                     "partial_allowed": user_input["partial_allowed"],
                     "shared_chore": user_input["shared_chore"],
+                    "allow_multiple_claims_per_day": user_input[
+                        "allow_multiple_claims_per_day"
+                    ],
                     "assigned_kids": user_input["assigned_kids"],
                     "description": user_input.get("chore_description", ""),
                     "icon": user_input.get("icon", ""),
@@ -267,6 +344,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     "name": badge_name,
                     "threshold_type": user_input["threshold_type"],
                     "threshold_value": user_input["threshold_value"],
+                    "points_multiplier": user_input["points_multiplier"],
                     "icon": user_input.get("icon", ""),
                     "internal_id": internal_id,
                 }
@@ -351,7 +429,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         internal_id = self.context.get("internal_id")
 
         if not internal_id or internal_id not in kids_dict:
-            LOGGER.error("Edit kid: Invalid internal_id '%s'.", internal_id)
+            LOGGER.error("Edit kid: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_kid")
 
         kid_data = kids_dict[internal_id]
@@ -385,6 +463,56 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="edit_kid", data_schema=schema, errors=errors
         )
 
+    async def async_step_edit_parent(self, user_input=None):
+        """Edit an existing parent."""
+        errors = {}
+        parents_dict = self._entry_options.get(CONF_PARENTS, {})
+        internal_id = self.context.get("internal_id")
+
+        if not internal_id or internal_id not in parents_dict:
+            LOGGER.error("Edit parent: Invalid internal_id '%s'", internal_id)
+            return self.async_abort(reason="invalid_parent")
+
+        parent_data = parents_dict[internal_id]
+
+        if user_input is not None:
+            new_name = user_input["parent_name"].strip()
+            ha_user_id = user_input.get("ha_user_id")
+            associated_kids = user_input.get("associated_kids", [])
+
+            # Check for duplicate names excluding current parent
+            if any(
+                data["name"] == new_name and eid != internal_id
+                for eid, data in parents_dict.items()
+            ):
+                errors["parent_name"] = "duplicate_parent"
+            else:
+                parent_data["name"] = new_name
+                parent_data["ha_user_id"] = ha_user_id
+                parent_data["associated_kids"] = associated_kids
+                LOGGER.debug("Edited parent '%s' with ID: %s", new_name, internal_id)
+                await self._update_and_reload()
+                return await self.async_step_init()
+
+        # Retrieve HA users and existing kids for linking
+        users = await self.hass.auth.async_get_users()
+        kids_dict = {
+            kid_data["name"]: kid_id
+            for kid_id, kid_data in self._entry_options.get(CONF_KIDS, {}).items()
+        }
+
+        parent_schema = build_parent_schema(
+            users=users,
+            kids_dict=kids_dict,
+            default_parent_name=parent_data["name"],
+            default_ha_user_id=parent_data.get("ha_user_id"),
+            default_associated_kids=parent_data.get("associated_kids", []),
+            internal_id=internal_id,
+        )
+        return self.async_show_form(
+            step_id="edit_parent", data_schema=parent_schema, errors=errors
+        )
+
     async def async_step_edit_chore(self, user_input=None):
         """Edit an existing chore."""
         errors = {}
@@ -392,7 +520,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         internal_id = self.context.get("internal_id")
 
         if not internal_id or internal_id not in chores_dict:
-            LOGGER.error("Edit chore: Invalid internal_id '%s'.", internal_id)
+            LOGGER.error("Edit chore: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_chore")
 
         chore_data = chores_dict[internal_id]
@@ -411,6 +539,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 chore_data["default_points"] = user_input["default_points"]
                 chore_data["partial_allowed"] = user_input["partial_allowed"]
                 chore_data["shared_chore"] = user_input["shared_chore"]
+                chore_data["allow_multiple_claims_per_day"] = user_input[
+                    "allow_multiple_claims_per_day"
+                ]
                 chore_data["assigned_kids"] = user_input["assigned_kids"]
                 chore_data["description"] = user_input.get("chore_description", "")
                 chore_data["icon"] = user_input.get("icon", "")
@@ -443,7 +574,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         internal_id = self.context.get("internal_id")
 
         if not internal_id or internal_id not in badges_dict:
-            LOGGER.error("Edit badge: Invalid internal_id '%s'.", internal_id)
+            LOGGER.error("Edit badge: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_badge")
 
         badge_data = badges_dict[internal_id]
@@ -461,6 +592,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 badge_data["name"] = new_name
                 badge_data["threshold_type"] = user_input["threshold_type"]
                 badge_data["threshold_value"] = user_input["threshold_value"]
+                badge_data["points_multiplier"] = user_input["points_multiplier"]
                 badge_data["icon"] = user_input.get("icon", "")
                 LOGGER.debug("Edited badge '%s' with ID: %s", new_name, internal_id)
                 await self._update_and_reload()
@@ -478,7 +610,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         internal_id = self.context.get("internal_id")
 
         if not internal_id or internal_id not in rewards_dict:
-            LOGGER.error("Edit reward: Invalid internal_id '%s'.", internal_id)
+            LOGGER.error("Edit reward: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_reward")
 
         reward_data = rewards_dict[internal_id]
@@ -513,7 +645,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         internal_id = self.context.get("internal_id")
 
         if not internal_id or internal_id not in penalties_dict:
-            LOGGER.error("Edit penalty: Invalid internal_id '%s'.", internal_id)
+            LOGGER.error("Edit penalty: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_penalty")
 
         penalty_data = penalties_dict[internal_id]
@@ -553,7 +685,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         internal_id = self.context.get("internal_id")
 
         if not internal_id or internal_id not in kids_dict:
-            LOGGER.error("Delete kid: Invalid internal_id '%s'.", internal_id)
+            LOGGER.error("Delete kid: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_kid")
 
         kid_name = kids_dict[internal_id]["name"]
@@ -570,13 +702,36 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             description_placeholders={"kid_name": kid_name},
         )
 
+    async def async_step_delete_parent(self, user_input=None):
+        """Delete a parent."""
+        parents_dict = self._entry_options.get(CONF_PARENTS, {})
+        internal_id = self.context.get("internal_id")
+
+        if not internal_id or internal_id not in parents_dict:
+            LOGGER.error("Delete parent: Invalid internal_id '%s'", internal_id)
+            return self.async_abort(reason="invalid_parent")
+
+        parent_name = parents_dict[internal_id]["name"]
+
+        if user_input is not None:
+            parents_dict.pop(internal_id, None)
+            LOGGER.debug("Deleted parent '%s' with ID: %s", parent_name, internal_id)
+            await self._update_and_reload()
+            return await self.async_step_init()
+
+        return self.async_show_form(
+            step_id="delete_parent",
+            data_schema=vol.Schema({}),
+            description_placeholders={"parent_name": parent_name},
+        )
+
     async def async_step_delete_chore(self, user_input=None):
         """Delete a chore."""
         chores_dict = self._entry_options.get(CONF_CHORES, {})
         internal_id = self.context.get("internal_id")
 
         if not internal_id or internal_id not in chores_dict:
-            LOGGER.error("Delete chore: Invalid internal_id '%s'.", internal_id)
+            LOGGER.error("Delete chore: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_chore")
 
         chore_name = chores_dict[internal_id]["name"]
@@ -599,7 +754,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         internal_id = self.context.get("internal_id")
 
         if not internal_id or internal_id not in badges_dict:
-            LOGGER.error("Delete badge: Invalid internal_id '%s'.", internal_id)
+            LOGGER.error("Delete badge: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_badge")
 
         badge_name = badges_dict[internal_id]["name"]
@@ -622,7 +777,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         internal_id = self.context.get("internal_id")
 
         if not internal_id or internal_id not in rewards_dict:
-            LOGGER.error("Delete reward: Invalid internal_id '%s'.", internal_id)
+            LOGGER.error("Delete reward: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_reward")
 
         reward_name = rewards_dict[internal_id]["name"]
@@ -645,7 +800,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         internal_id = self.context.get("internal_id")
 
         if not internal_id or internal_id not in penalties_dict:
-            LOGGER.error("Delete penalty: Invalid internal_id '%s'.", internal_id)
+            LOGGER.error("Delete penalty: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_penalty")
 
         penalty_name = penalties_dict[internal_id]["name"]
@@ -669,4 +824,4 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             self.config_entry, options=self._entry_options
         )
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-        LOGGER.debug("Options updated and integration reloaded.")
+        LOGGER.debug("Options updated and integration reloaded")

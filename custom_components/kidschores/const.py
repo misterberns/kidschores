@@ -8,18 +8,19 @@ It also supports localization by defining all labels and UI texts used in sensor
 services, and options flow.
 """
 
+import logging
+from homeassistant.const import Platform
+
 # Integration Domain and Logging
 DOMAIN = "kidschores"  # Unique domain identifier for this integration
-import logging
-
 LOGGER = logging.getLogger(__package__)  # Logger for debugging
 
 # Supported Platforms
 PLATFORMS = [
-    "sensor",
-    "binary_sensor",
-    "button",
-]  # Active platforms used in the integration
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+]
 
 # Storage and Versioning
 STORAGE_KEY = "kidschores_data"  # Persistent storage key
@@ -31,6 +32,7 @@ CONF_KIDS = "kids"  # Key for kids configuration
 CONF_CHORES = "chores"  # Key for chores configuration
 CONF_BADGES = "badges"  # Key for badges configuration
 CONF_REWARDS = "rewards"  # Key for rewards configuration
+CONF_PARENTS = "parents"  # Key for parents configuration
 CONF_PENALTIES = "penalties"  # Key for penalties configuration
 
 # Update Interval
@@ -60,6 +62,7 @@ DEFAULT_REWARD_COST = 10  # Default cost for each reward
 DEFAULT_PENALTY_POINTS = 2  # Default points deducted for each penalty
 DEFAULT_BADGE_THRESHOLD = 50  # Default points threshold for badges
 DEFAULT_PARTIAL_ALLOWED = False  # Partial points not allowed by default
+DEFAULT_MULTIPLE_CLAIMS_PER_DAY = False  # Allow only one chore claim per day
 DEFAULT_POINTS_LABEL = "Points"  # Default label for points displayed in UI
 DEFAULT_DAILY_RESET_TIME = {
     "hour": 0,
@@ -74,7 +77,11 @@ DATA_KIDS = "kids"  # Key for storing kids data in storage
 DATA_CHORES = "chores"  # Key for storing chores data
 DATA_BADGES = "badges"  # Key for storing badges data
 DATA_REWARDS = "rewards"  # Key for storing rewards data
+DATA_PARENTS = "parents"  # Key for storing parent data
 DATA_PENALTIES = "penalties"  # Key for storing penalties data
+DATA_PENDING_CHORE_APPROVALS = "pending_chore_approvals"  # Pending chore approvals
+DATA_PENDING_REWARD_APPROVALS = "pending_reward_approvals"  # Pending reward approvals
+
 
 # Chore States
 CHORE_STATE_PENDING = "pending"  # Default state: chore pending approval
@@ -105,6 +112,17 @@ SENSOR_TYPE_COMPLETED_WEEKLY = (
 SENSOR_TYPE_COMPLETED_MONTHLY = (
     "completed_monthly"  # Sensor tracking monthly chores completed
 )
+SENSOR_TYPE_PENDING_CHORE_APPROVALS = (
+    "pending_chore_approvals"  # Pending chore approvals
+)
+SENSOR_TYPE_PENDING_REWARD_APPROVALS = (
+    "pending_reward_approvals"  # Pending reward approvals
+)
+SENSOR_TYPE_REWARD_CLAIMS = "reward_claims"  # Reward claims sensor
+SENSOR_TYPE_REWARD_APPROVALS = "reward_approvals"  # Reward approvals sensor
+SENSOR_TYPE_CHORE_CLAIMS = "chore_claims"  # Chore claims sensor
+SENSOR_TYPE_CHORE_APPROVALS = "chore_approvals"  # Chore approvals sensor
+SENSOR_TYPE_PENALTY_APPLIES = "penalty_applies"  # Penalty applies sensor
 
 # Custom Services
 SERVICE_CLAIM_CHORE = "claim_chore"  # Claim chore service
@@ -112,6 +130,8 @@ SERVICE_APPROVE_CHORE = "approve_chore"  # Approve chore service
 SERVICE_REDEEM_REWARD = "redeem_reward"  # Redeem reward service
 SERVICE_APPLY_PENALTY = "apply_penalty"  # Apply penalty service
 SERVICE_APPROVE_REWARD = "approve_reward"  # Approve reward service
+SERVICE_DISAPPROVE_CHORE = "disapprove_chore"  # Disapprove chore service
+SERVICE_DISAPPROVE_REWARD = "disapprove_reward"  # Disapprove reward service
 
 # Field Names (for consistency across services)
 FIELD_KID_NAME = "kid_name"
@@ -120,11 +140,6 @@ FIELD_PARENT_NAME = "parent_name"
 FIELD_REWARD_NAME = "reward_name"
 FIELD_PENALTY_NAME = "penalty_name"
 FIELD_POINTS_AWARDED = "points_awarded"
-
-# Reset Timings
-RESET_HOURLY = {"hour": 0, "minute": 0, "second": 0}  # Reset chores daily at midnight
-RESET_WEEKLY = 0  # Weekly reset day (Monday)
-RESET_MONTHLY = 1  # Monthly reset on the 1st day
 
 # Validation Keys
 VALIDATION_PARTIAL_ALLOWED = "partial_allowed"  # Allow partial points in chores
@@ -150,6 +165,13 @@ LABEL_COMPLETED_MONTHLY = "Monthly Completed Chores"
 BUTTON_REWARD_PREFIX = "reward_button_"  # Prefix for dynamically created reward buttons
 BUTTON_PENALTY_PREFIX = (
     "penalty_button_"  # Prefix for dynamically created penalty buttons
+)
+BUTTON_DISAPPROVE_CHORE_PREFIX = "disapprove_chore_button_"  # Disapprove chore button
+BUTTON_DISAPPROVE_REWARD_PREFIX = (
+    "disapprove_reward_button_"  # Disapprove reward button
+)
+DEFAULT_DISAPPROVE_ICON = (
+    "mdi:close-circle-outline"  # Default icon for disapprove buttons
 )
 
 # Translations - Errors and Warnings

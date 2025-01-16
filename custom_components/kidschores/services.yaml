@@ -2,7 +2,7 @@
 #
 # Custom services documentation for the KidsChores integration.
 # These services allow direct actions through scripts or automations.
-# Includes UI editor support with selectors for dropdowns and text inputs.
+# Includes UI editor support with selectors for text inputs and numbers.
 
 claim_chore:
   name: "Claim Chore"
@@ -59,9 +59,35 @@ approve_chore:
           max: 1000
           mode: box
 
+disapprove_chore:
+  name: "Disapprove Chore"
+  description: "Parent disapproves a chore for a kid, reverting its status."
+  fields:
+    parent_name:
+      name: "Parent Name"
+      description: "The parent disapproving the chore."
+      example: "Mom"
+      required: true
+      selector:
+        text:
+    kid_name:
+      name: "Kid Name"
+      description: "The name of the kid whose chore is being disapproved."
+      example: "Bob"
+      required: true
+      selector:
+        text:
+    chore_name:
+      name: "Chore Name"
+      description: "The name of the chore being disapproved."
+      example: "Clean Room"
+      required: true
+      selector:
+        text:
+
 redeem_reward:
   name: "Redeem Reward"
-  description: "A parent redeems a reward for a kid, deducting points."
+  description: "A kid redeems a reward, marking it as 'pending' for parental approval."
   fields:
     parent_name:
       name: "Parent Name"
@@ -80,6 +106,58 @@ redeem_reward:
     reward_name:
       name: "Reward Name"
       description: "The name of the reward to redeem."
+      example: "Extra Screen Time"
+      required: true
+      selector:
+        text:
+
+approve_reward:
+  name: "Approve Reward"
+  description: "Parent approves a reward claimed by a kid, deducting points."
+  fields:
+    parent_name:
+      name: "Parent Name"
+      description: "The parent approving the reward."
+      example: "Mom"
+      required: true
+      selector:
+        text:
+    kid_name:
+      name: "Kid Name"
+      description: "The kid who is redeeming the reward."
+      example: "Alice"
+      required: true
+      selector:
+        text:
+    reward_name:
+      name: "Reward Name"
+      description: "The name of the reward being approved."
+      example: "Extra Screen Time"
+      required: true
+      selector:
+        text:
+
+disapprove_reward:
+  name: "Disapprove Reward"
+  description: "Parent disapproves a reward redemption for a kid."
+  fields:
+    parent_name:
+      name: "Parent Name"
+      description: "The parent disapproving the reward."
+      example: "Dad"
+      required: true
+      selector:
+        text:
+    kid_name:
+      name: "Kid Name"
+      description: "The kid whose reward redemption is being disapproved."
+      example: "Bob"
+      required: true
+      selector:
+        text:
+    reward_name:
+      name: "Reward Name"
+      description: "The name of the reward being disapproved."
       example: "Extra Screen Time"
       required: true
       selector:

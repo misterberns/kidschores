@@ -17,6 +17,7 @@ from .const import (
     DATA_BADGES,
     DATA_REWARDS,
     DATA_PENALTIES,
+    DATA_PARENTS,
 )
 
 
@@ -57,6 +58,7 @@ class KidsChoresStorageManager:
                 DATA_BADGES: {},  # Dictionary of badges keyed by internal_id.
                 DATA_REWARDS: {},  # Dictionary of rewards keyed by internal_id.
                 DATA_PENALTIES: {},  # Dictionary of penalties keyed by internal_id.
+                DATA_PARENTS: {},  # Dictionary of parents keyed by internal_id.
             }
         else:
             # Load existing data into memory.
@@ -99,6 +101,15 @@ class KidsChoresStorageManager:
             dict: Kids data keyed by internal_id.
         """
         return self._data.get(DATA_KIDS, {})
+
+    def get_parents(self):
+        """
+        Retrieve the parents data.
+
+        Returns:
+            dict: Parents data keyed by internal_id.
+        """
+        return self._data.get(DATA_PARENTS, {})
 
     def get_chores(self):
         """
@@ -178,6 +189,7 @@ class KidsChoresStorageManager:
             DATA_CHORES: {},
             DATA_BADGES: {},
             DATA_REWARDS: {},
+            DATA_PARENTS: {},
             DATA_PENALTIES: {},
         }
         await self.async_save()

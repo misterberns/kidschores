@@ -1,6 +1,6 @@
 # File: sensor.py
-"""
-Sensors for KidsChores integration, including:
+"""Sensors for KidsChores integration.
+
 1) KidPointsSensor - total points
 2) CompletedChoresDailySensor/Weekly/Monthly
 3) KidBadgesSensor - number of badges
@@ -15,23 +15,15 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DOMAIN,
-    LOGGER,
-    SENSOR_TYPE_POINTS,
-    SENSOR_TYPE_COMPLETED_DAILY,
-    SENSOR_TYPE_COMPLETED_WEEKLY,
-    SENSOR_TYPE_COMPLETED_MONTHLY,
-    SENSOR_TYPE_BADGES,
-    LABEL_POINTS,
-    LABEL_BADGES,
-    LABEL_COMPLETED_DAILY,
-    LABEL_COMPLETED_WEEKLY,
-    LABEL_COMPLETED_MONTHLY,
+    CONF_POINTS_LABEL,
+    DATA_PENDING_CHORE_APPROVALS,
+    DATA_PENDING_REWARD_APPROVALS,
     DEFAULT_CHORE_SENSOR_ICON,
+    DEFAULT_POINTS_LABEL,
     DEFAULT_TROPHY_ICON,
     DEFAULT_TROPHY_OUTLINE,
-    CONF_POINTS_LABEL,
-    DEFAULT_POINTS_LABEL,
+    DOMAIN,
+    LABEL_POINTS,
 )
 from .coordinator import KidsChoresDataCoordinator
 
@@ -39,8 +31,8 @@ from .coordinator import KidsChoresDataCoordinator
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
-    """
-    Setup sensors for:
+    """Set up sensors for KidsChores integration.
+
     - Kid points
     - Completed chores daily/weekly/monthly
     - Kid badges (# of badges)
@@ -52,6 +44,9 @@ async def async_setup_entry(
 
     points_label = entry.data.get(CONF_POINTS_LABEL, DEFAULT_POINTS_LABEL)
     entities = []
+
+    entities.append(PendingChoreApprovalsSensor(coordinator, entry))
+    entities.append(PendingRewardApprovalsSensor(coordinator, entry))
 
     # 1) For each kid, add standard sensors
     for kid_id, kid_info in coordinator.kids_data.items():
@@ -71,6 +66,43 @@ async def async_setup_entry(
         entities.append(KidBadgesSensor(coordinator, entry, kid_id, kid_name))
         entities.append(KidHighestBadgeSensor(coordinator, entry, kid_id, kid_name))
 
+        # Reward Claims and Approvals
+        for reward_id, reward_info in coordinator.rewards_data.items():
+            reward_name = reward_info.get("name", f"Reward {reward_id}")
+            entities.append(
+                RewardClaimsSensor(
+                    coordinator, entry, kid_id, kid_name, reward_id, reward_name
+                )
+            )
+            entities.append(
+                RewardApprovalsSensor(
+                    coordinator, entry, kid_id, kid_name, reward_id, reward_name
+                )
+            )
+
+        # Chore Claims and Approvals
+        for chore_id, chore_info in coordinator.chores_data.items():
+            chore_name = chore_info.get("name", f"Chore {chore_id}")
+            entities.append(
+                ChoreClaimsSensor(
+                    coordinator, entry, kid_id, kid_name, chore_id, chore_name
+                )
+            )
+            entities.append(
+                ChoreApprovalsSensor(
+                    coordinator, entry, kid_id, kid_name, chore_id, chore_name
+                )
+            )
+
+        # Penalty Applies
+        for penalty_id, penalty_info in coordinator.penalties_data.items():
+            penalty_name = penalty_info.get("name", f"Penalty {penalty_id}")
+            entities.append(
+                PenaltyAppliesSensor(
+                    coordinator, entry, kid_id, kid_name, penalty_id, penalty_name
+                )
+            )
+
     # 2) For each chore assigned to each kid, add a ChoreStatusSensor
     for chore_id, chore_info in coordinator.chores_data.items():
         chore_name = chore_info.get("name", f"Chore {chore_id}")
@@ -87,12 +119,10 @@ async def async_setup_entry(
 
 
 class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
-    """
-    Textual sensor for chore status: pending/claimed/approved/etc.
-    One sensor per (kid, chore).
-    """
+    """Sensor for chore status: pending/claimed/approved/etc."""
 
     def __init__(self, coordinator, entry, kid_id, kid_name, chore_id, chore_name):
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self._kid_id = kid_id
         self._kid_name = kid_name
@@ -104,9 +134,7 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        """
-        Return the chore's state based on shared or individual tracking.
-        """
+        """Return the chore's state based on shared or individual tracking."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
         shared = chore_info.get("shared_chore", False)
 
@@ -124,9 +152,7 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        """
-        Include points, description, etc.
-        """
+        """Include points, description, etc."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
         shared = chore_info.get("shared_chore", False)
 
@@ -158,11 +184,17 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
         return chore_info.get("icon", DEFAULT_CHORE_SENSOR_ICON)
 
+    @property
+    def translation_key(self):
+        """Return the translation key for the sensor."""
+        return "chore_state"
+
 
 class KidPointsSensor(CoordinatorEntity, SensorEntity):
     """Sensor for a kid's total points balance."""
 
     def __init__(self, coordinator, entry, kid_id, kid_name, points_label):
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self._kid_id = kid_id
         self._kid_name = kid_name
@@ -173,11 +205,13 @@ class KidPointsSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
+        """Return the kid's total points."""
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return kid_info.get("points", 0)
 
     @property
     def native_unit_of_measurement(self):
+        """Return the points label."""
         return self._points_label or LABEL_POINTS
 
 
@@ -185,6 +219,7 @@ class CompletedChoresDailySensor(CoordinatorEntity, SensorEntity):
     """How many chores kid completed today."""
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self._kid_id = kid_id
         self._kid_name = kid_name
@@ -193,6 +228,7 @@ class CompletedChoresDailySensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
+        """Return the number of chores completed today."""
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return kid_info.get("completed_chores_today", 0)
 
@@ -201,6 +237,7 @@ class CompletedChoresWeeklySensor(CoordinatorEntity, SensorEntity):
     """How many chores kid completed this week."""
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self._kid_id = kid_id
         self._kid_name = kid_name
@@ -209,6 +246,7 @@ class CompletedChoresWeeklySensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
+        """Return the number of chores completed this week."""
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return kid_info.get("completed_chores_weekly", 0)
 
@@ -217,6 +255,7 @@ class CompletedChoresMonthlySensor(CoordinatorEntity, SensorEntity):
     """How many chores kid completed this month."""
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self._kid_id = kid_id
         self._kid_name = kid_name
@@ -225,16 +264,16 @@ class CompletedChoresMonthlySensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
+        """Return the number of chores completed this month."""
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return kid_info.get("completed_chores_monthly", 0)
 
 
 class KidBadgesSensor(CoordinatorEntity, SensorEntity):
-    """
-    Sensor: number of badges earned + attribute with the list.
-    """
+    """Sensor: number of badges earned + attribute with the list."""
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self._kid_id = kid_id
         self._kid_name = kid_name
@@ -243,25 +282,26 @@ class KidBadgesSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
+        """Return the number of badges the kid has earned."""
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return len(kid_info.get("badges", []))
 
     @property
     def extra_state_attributes(self):
+        """Include the list of badges the kid has earned."""
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return {"badges": kid_info.get("badges", [])}
 
 
 class KidHighestBadgeSensor(CoordinatorEntity, SensorEntity):
-    """
-    Sensor that returns the "highest" badge the kid currently has,
-    based on the threshold_value in coordinator.badges_data.
+    """Sensor that returns the "highest" badge the kid currently has, based on the threshold_value in coordinator.badges_data.
 
     - If the kid has no badges, the sensor is "None".
     - If multiple badges are tied for the highest threshold, it picks one with that top threshold.
     """
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self._entry = entry
         self._kid_id = kid_id
@@ -270,12 +310,8 @@ class KidHighestBadgeSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = f"{kid_name} - Highest Badge"
 
     def _find_highest_badge(self):
-        """
-        Helper: Determine which badge from kid_info['badges']
-        has the highest 'threshold_value'. Return (badge_name, threshold_value).
+        """Determine which badge has the highest ranking."""
 
-        If none, returns (None, -1).
-        """
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         earned_badge_names = kid_info.get("badges", [])
 
@@ -304,8 +340,8 @@ class KidHighestBadgeSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self) -> str:
-        """
-        Return the badge name of the highest-threshold badge the kid has earned.
+        """Return the badge name of the highest-threshold badge the kid has earned.
+
         If the kid has none, return "None".
         """
         highest_badge, _ = self._find_highest_badge()
@@ -313,9 +349,7 @@ class KidHighestBadgeSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def icon(self):
-        """
-        Return the icon for the highest badge. Fall back if none found.
-        """
+        """Return the icon for the highest badge. Fall back if none found."""
         highest_badge, _ = self._find_highest_badge()
         if highest_badge:
             badge_data = next(
@@ -331,8 +365,8 @@ class KidHighestBadgeSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        """
-        Provide additional details:
+        """Provide additional details.
+
         - kid_name
         - all_earned_badges
         - highest_badge_threshold_value
@@ -345,3 +379,198 @@ class KidHighestBadgeSensor(CoordinatorEntity, SensorEntity):
             "all_earned_badges": kid_info.get("badges", []),
             "highest_badge_threshold_value": highest_val if highest_badge else 0,
         }
+
+    @property
+    def translation_key(self):
+        """Return the translation key for the sensor."""
+        return "kids_highest_badge"
+
+
+class PendingChoreApprovalsSensor(CoordinatorEntity, SensorEntity):
+    """Sensor listing all pending chore approvals."""
+
+    def __init__(self, coordinator, entry):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_pending_chore_approvals"
+        self._attr_name = "Pending Chore Approvals"
+        self._attr_icon = "mdi:clipboard-check-outline"
+
+    @property
+    def native_value(self):
+        """Return a summary of pending chore approvals."""
+        approvals = self.coordinator._data.get(DATA_PENDING_CHORE_APPROVALS, [])
+        return f"{len(approvals)} pending chores"
+
+    @property
+    def extra_state_attributes(self):
+        """Return detailed pending chores."""
+        approvals = self.coordinator._data.get(DATA_PENDING_CHORE_APPROVALS, [])
+        detailed = []
+        for approval in approvals:
+            kid_name = (
+                self.coordinator._get_kid_name_by_id(approval["kid_id"])
+                or "Unknown Kid"
+            )
+            chore_name = self.coordinator.chores_data.get(approval["chore_id"], {}).get(
+                "name", "Unknown Chore"
+            )
+            timestamp = approval["timestamp"]
+            detailed.append(
+                {
+                    "Kid": kid_name,
+                    "Chore": chore_name,
+                    "Claimed on": timestamp,
+                }
+            )
+        return {"pending_chores": detailed}
+
+    @property
+    def translation_key(self):
+        """Return the translation key for the sensor."""
+        return "pending_chores_approvals"
+
+
+class PendingRewardApprovalsSensor(CoordinatorEntity, SensorEntity):
+    """Sensor listing all pending reward approvals."""
+
+    def __init__(self, coordinator, entry):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_pending_reward_approvals"
+        self._attr_name = "Pending Reward Approvals"
+        self._attr_icon = "mdi:gift-open-outline"
+
+    @property
+    def native_value(self):
+        """Return a summary of pending reward approvals."""
+        approvals = self.coordinator._data.get(DATA_PENDING_REWARD_APPROVALS, [])
+        return f"{len(approvals)} pending rewards"
+
+    @property
+    def extra_state_attributes(self):
+        """Return detailed pending rewards."""
+        approvals = self.coordinator._data.get(DATA_PENDING_REWARD_APPROVALS, [])
+        detailed = []
+        for approval in approvals:
+            kid_name = (
+                self.coordinator._get_kid_name_by_id(approval["kid_id"])
+                or "Unknown Kid"
+            )
+            reward_name = self.coordinator.rewards_data.get(
+                approval["reward_id"], {}
+            ).get("name", "Unknown Reward")
+            timestamp = approval["timestamp"]
+            detailed.append(
+                {
+                    "Kid": kid_name,
+                    "Reward": reward_name,
+                    "Redeemed on": timestamp,
+                }
+            )
+        return {"pending_rewards": detailed}
+
+    @property
+    def translation_key(self):
+        """Return the translation key for the sensor."""
+        return "pending_rewards_approvals"
+
+
+class RewardClaimsSensor(CoordinatorEntity, SensorEntity):
+    """Sensor tracking how many times each reward has been claimed by a kid."""
+
+    def __init__(self, coordinator, entry, kid_id, kid_name, reward_id, reward_name):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._kid_id = kid_id
+        self._kid_name = kid_name
+        self._reward_id = reward_id
+        self._reward_name = reward_name
+        self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{reward_id}_reward_claims"
+        self._attr_name = f"{kid_name} - '{reward_name}' Claims"
+
+    @property
+    def native_value(self):
+        """Return the number of times the reward has been claimed."""
+        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
+        return kid_info.get("reward_claims", {}).get(self._reward_id, 0)
+
+
+class RewardApprovalsSensor(CoordinatorEntity, SensorEntity):
+    """Sensor tracking how many times each reward has been approved for a kid."""
+
+    def __init__(self, coordinator, entry, kid_id, kid_name, reward_id, reward_name):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._kid_id = kid_id
+        self._kid_name = kid_name
+        self._reward_id = reward_id
+        self._reward_name = reward_name
+        self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{reward_id}_reward_approvals"
+        self._attr_name = f"{kid_name} - '{reward_name}' Approvals"
+
+    @property
+    def native_value(self):
+        """Return the number of times the reward has been approved."""
+        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
+        return kid_info.get("reward_approvals", {}).get(self._reward_id, 0)
+
+
+class ChoreClaimsSensor(CoordinatorEntity, SensorEntity):
+    """Sensor tracking how many times each chore has been claimed by a kid."""
+
+    def __init__(self, coordinator, entry, kid_id, kid_name, chore_id, chore_name):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._kid_id = kid_id
+        self._kid_name = kid_name
+        self._chore_id = chore_id
+        self._chore_name = chore_name
+        self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{chore_id}_chore_claims"
+        self._attr_name = f"{kid_name} - '{chore_name}' Claims"
+
+    @property
+    def native_value(self):
+        """Return the number of times the chore has been claimed."""
+        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
+        return kid_info.get("chore_claims", {}).get(self._chore_id, 0)
+
+
+class ChoreApprovalsSensor(CoordinatorEntity, SensorEntity):
+    """Sensor tracking how many times each chore has been approved for a kid."""
+
+    def __init__(self, coordinator, entry, kid_id, kid_name, chore_id, chore_name):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._kid_id = kid_id
+        self._kid_name = kid_name
+        self._chore_id = chore_id
+        self._chore_name = chore_name
+        self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{chore_id}_chore_approvals"
+        self._attr_name = f"{kid_name} - '{chore_name}' Approvals"
+
+    @property
+    def native_value(self):
+        """Return the number of times the chore has been approved."""
+        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
+        return kid_info.get("chore_approvals", {}).get(self._chore_id, 0)
+
+
+class PenaltyAppliesSensor(CoordinatorEntity, SensorEntity):
+    """Sensor tracking how many times each penalty has been applied to a kid."""
+
+    def __init__(self, coordinator, entry, kid_id, kid_name, penalty_id, penalty_name):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._kid_id = kid_id
+        self._kid_name = kid_name
+        self._penalty_id = penalty_id
+        self._penalty_name = penalty_name
+        self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{penalty_id}_penalty_applies"
+        self._attr_name = f"{kid_name} - '{penalty_name}' Penalties Applied"
+
+    @property
+    def native_value(self):
+        """Return the number of times the penalty has been applied."""
+        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
+        return kid_info.get("penalty_applies", {}).get(self._penalty_id, 0)
