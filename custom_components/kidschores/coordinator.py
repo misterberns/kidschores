@@ -111,7 +111,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
         # Register daily/weekly/monthly resets
         async_track_time_change(
-            self.hass, self._reset_daily_count, hour=11, minute=28, second=0
+            self.hass, self._reset_daily_count, hour=0, minute=0, second=0
         )
         async_track_time_change(
             self.hass, self._reset_weekly_count, hour=0, minute=0, second=0
