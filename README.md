@@ -57,7 +57,7 @@
    - **Add Chores, Badges, Rewards, and Penalties:** Define each with relevant details like names, descriptions, points, icons, etc.
 5. **Finish the setup** and start managing your kids' chores and rewards directly from Home Assistant.
 
-## **KIDSCCHORES FEATURES**
+## **KIDSCHORES FEATURES**
 
 ### 🌟 **KidsChores Features:**
 
