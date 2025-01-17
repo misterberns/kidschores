@@ -55,6 +55,9 @@ async def async_setup_entry(
             KidPointsSensor(coordinator, entry, kid_id, kid_name, points_label)
         )
         entities.append(
+            CompletedChoresTotalSensor(coordinator, entry, kid_id, kid_name)
+        )
+        entities.append(
             CompletedChoresDailySensor(coordinator, entry, kid_id, kid_name)
         )
         entities.append(
@@ -213,6 +216,31 @@ class KidPointsSensor(CoordinatorEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the points label."""
         return self._points_label or LABEL_POINTS
+
+
+class CompletedChoresTotalSensor(CoordinatorEntity, SensorEntity):
+    """Sensor tracking the total number of chores a kid has completed since integration start."""
+
+    def __init__(self, coordinator, entry, kid_id, kid_name):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._kid_id = kid_id
+        self._kid_name = kid_name
+        self._attr_unique_id = f"{entry.entry_id}_{kid_id}_completed_total"
+        self._attr_name = f"{kid_name} - Total Chores Completed"
+        self._attr_native_unit_of_measurement = "chores"
+        self._attr_icon = "mdi:clipboard-check-outline"
+
+    @property
+    def native_value(self):
+        """Return the total number of chores completed by the kid."""
+        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
+        return kid_info.get("completed_chores_total", 0)
+
+    @property
+    def translation_key(self):
+        """Return the translation key for the sensor."""
+        return "total_chores_completed"
 
 
 class CompletedChoresDailySensor(CoordinatorEntity, SensorEntity):

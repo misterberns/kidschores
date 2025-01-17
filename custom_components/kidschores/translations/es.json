@@ -29,6 +29,23 @@
           "ha_user": "Usuario de Home Assistant"
         }
       },
+      "parent_count": {
+        "title": "Número de Padres",
+        "description": "¿Cuántos padres deseas definir inicialmente?",
+        "data": {
+          "parent_count": "Número de Padres"
+        }
+      },
+      "parents": {
+        "title": "Definir Padre/Madre",
+        "description": "Ingresa los detalles de cada padre/madre.",
+        "data": {
+          "parent_name": "Nombre del Padre/Madre",
+          "ha_user_id": "Usuario de Home Assistant",
+          "associated_kids": "Niños/as Asociados/as",
+          "internal_id": "ID Interno"
+        }
+      },
       "chore_count": {
         "title": "Número de Tareas",
         "description": "¿Cuántas tareas deseas definir?",
@@ -132,7 +149,8 @@
       "no_chores": "No hay tareas disponibles.",
       "no_badges": "No hay insignias disponibles.",
       "no_rewards": "No hay recompensas disponibles.",
-      "no_penalties": "No hay penalizaciones disponibles."
+      "no_penalties": "No hay penalizaciones disponibles.",
+      "single_instance_allowed": "Solamente se permite la creación de KidsChores una única vez."
     }
   },
   "options": {
@@ -164,6 +182,16 @@
         "data": {
           "kid_name": "Nombre del Niño/a",
           "ha_user": "Usuario de Home Assistant",
+          "internal_id": "ID Interno"
+        }
+      },
+      "add_parent": {
+        "title": "Añadir Padre/Madre",
+        "description": "Proporciona los detalles del nuevo padre/madre.",
+        "data": {
+          "parent_name": "Nombre del Padre/Madre",
+          "ha_user_id": "Usuario de Home Assistant",
+          "associated_kids": "Niños/as Asociados/as",
           "internal_id": "ID Interno"
         }
       },
@@ -226,6 +254,16 @@
           "internal_id": "ID Interno"
         }
       },
+      "edit_parent": {
+        "title": "Editar Padre/Madre",
+        "description": "Modifica los detalles del padre/madre seleccionado.",
+        "data": {
+          "parent_name": "Nombre del Padre/Madre",
+          "ha_user_id": "Usuario de Home Assistant",
+          "associated_kids": "Niños/as Asociados/as",
+          "internal_id": "ID Interno"
+        }
+      },
       "edit_chore": {
         "title": "Editar Tarea",
         "description": "Modifica los detalles de la tarea seleccionada.",
@@ -279,6 +317,11 @@
       "delete_kid": {
         "title": "Eliminar Niño/a",
         "description": "¿Estás seguro de que deseas eliminar al niño/a {kid_name}?",
+        "data": {}
+      },
+      "delete_parent": {
+        "title": "Eliminar Padre/Madre",
+        "description": "¿Estás seguro de que deseas eliminar al padre/madre {parent_name}?",
         "data": {}
       },
       "delete_chore": {

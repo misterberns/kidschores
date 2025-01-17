@@ -9,6 +9,7 @@ Manages entities primarily using internal_id for consistency.
 import uuid
 import copy
 from datetime import datetime, timedelta
+from calendar import monthrange
 from typing import Any, Optional
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,6 +41,7 @@ from .const import (
     DATA_PENDING_REWARD_APPROVALS,
     DATA_REWARDS,
     DEFAULT_BADGE_THRESHOLD,
+    DEFAULT_DAILY_RESET_TIME,
     DEFAULT_ICON,
     DEFAULT_MONTHLY_RESET_DAY,
     DEFAULT_MULTIPLE_CLAIMS_PER_DAY,
@@ -106,18 +108,14 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 DATA_REWARDS: {},
                 DATA_PARENTS: {},
                 DATA_PENALTIES: {},
+                DATA_PENDING_CHORE_APPROVALS: [],
+                DATA_PENDING_REWARD_APPROVALS: [],
             }
         )
 
         # Register daily/weekly/monthly resets
         async_track_time_change(
-            self.hass, self._reset_daily_count, hour=0, minute=0, second=0
-        )
-        async_track_time_change(
-            self.hass, self._reset_weekly_count, hour=0, minute=0, second=0
-        )
-        async_track_time_change(
-            self.hass, self._reset_monthly_count, hour=0, minute=0, second=0
+            self.hass, self._reset_all_chore_counts, **DEFAULT_DAILY_RESET_TIME
         )
 
         self._initialize_data_from_config()
@@ -173,6 +171,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     "completed_chores_monthly": kid_data.get(
                         "completed_chores_monthly", 0
                     ),
+                    "completed_chores_total": kid_data.get("completed_chores_total", 0),
                     "ha_user_id": kid_data.get("ha_user_id"),
                     "internal_id": kid_id,
                     "points_multiplier": kid_data.get("points_multiplier", 1.0),
@@ -181,16 +180,9 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     "chore_claims": kid_data.get("chore_claims", {}),
                     "chore_approvals": kid_data.get("chore_approvals", {}),
                     "penalty_applies": kid_data.get("penalty_applies", {}),
+                    "pending_rewards": kid_data.get("pending_rewards", []),
+                    "redeemed_rewards": kid_data.get("redeemed_rewards", []),
                 }
-                self._data[DATA_KIDS][kid_id].update(
-                    {
-                        "reward_claims": {},
-                        "reward_approvals": {},
-                        "chore_claims": {},
-                        "chore_approvals": {},
-                        "penalty_applies": {},
-                    }
-                )
                 LOGGER.debug(
                     "Added new kid '%s' with ID: %s",
                     self._data[DATA_KIDS][kid_id]["name"],
@@ -224,6 +216,12 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 )
                 existing.setdefault(
                     "penalty_applies", kid_data.get("penalty_applies", {})
+                )
+                existing.setdefault(
+                    "pending_rewards", kid_data.get("pending_rewards", [])
+                )
+                existing.setdefault(
+                    "completed_chores_total", kid_data.get("completed_chores_total", 0)
                 )
 
                 # Points and other historical data should not be overwritten
@@ -404,6 +402,10 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     "threshold_value": badge_data.get(
                         "threshold_value", DEFAULT_BADGE_THRESHOLD
                     ),
+                    "chore_count_type": badge_data.get(
+                        "chore_count_type",
+                        "daily",  # New Field for flexibility
+                    ),
                     "earned_by": badge_data.get("earned_by", []),
                     "points_multiplier": badge_data.get("points_multiplier", 1.0),
                     "icon": badge_data.get("icon", DEFAULT_ICON),
@@ -424,6 +426,9 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 )
                 existing["threshold_value"] = badge_data.get(
                     "threshold_value", existing["threshold_value"]
+                )
+                existing["chore_count_type"] = badge_data.get(
+                    "chore_count_type", existing.get("chore_count_type", "daily")
                 )
                 existing["points_multiplier"] = badge_data.get(
                     "points_multiplier", existing["points_multiplier"]
@@ -547,7 +552,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         """Add new parent at runtime if needed."""
         parent_name = parent_def.get("name")
         ha_user_id = parent_def.get("ha_user_id")
-        kid_ids = parent_def.get("kids", [])
+        kid_ids = parent_def.get("associated_kids", [])  # Updated key
 
         if not parent_name or not ha_user_id:
             LOGGER.warning("Add parent: Parent must have a name and ha_user_id")
@@ -579,7 +584,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self.parents_data[internal_id] = {
             "name": parent_name,
             "ha_user_id": ha_user_id,
-            "kids": valid_kids,
+            "associated_kids": valid_kids,
             "internal_id": internal_id,
         }
         LOGGER.debug("Added new parent '%s' with ID: %s", parent_name, internal_id)
@@ -715,12 +720,14 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         kid_info["completed_chores_today"] += 1
         kid_info["completed_chores_weekly"] += 1
         kid_info["completed_chores_monthly"] += 1
+        kid_info["completed_chores_total"] += 1
 
         LOGGER.debug(
-            "Awarded %s points to kid ID '%s'. Total points: %s",
+            "Awarded %s points to kid ID '%s'. Total points: %s, Total chores: %s",
             awarded,
             kid_id,
             kid_info["points"],
+            kid_info["completed_chores_total"],
         )
 
         # Also check badges after awarding
@@ -952,13 +959,51 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         elif freq == "weekly":
             next_due = now + timedelta(weeks=1)
         elif freq == "monthly":
-            next_due = now + timedelta(days=30)
+            days_in_month = monthrange(now.year, now.month)[1]
+            reset_day = min(DEFAULT_MONTHLY_RESET_DAY, days_in_month)
+            if now.day > reset_day:
+                # Move to next month
+                year = now.year + (now.month // 12)
+                month = (now.month % 12) + 1
+                try:
+                    next_due = now.replace(year=year, month=month, day=reset_day)
+                except ValueError:
+                    # In case reset_day exceeds the number of days in the next month
+                    next_due = now.replace(year=year, month=month, day=days_in_month)
+            else:
+                # Ensure the next_due is in the future
+                if now.day < reset_day:
+                    next_due = now.replace(day=reset_day)
+                else:
+                    # If today is the reset_day, set to next month
+                    year = now.year + (now.month // 12)
+                    month = (now.month % 12) + 1
+                    try:
+                        next_due = now.replace(year=year, month=month, day=reset_day)
+                    except ValueError:
+                        next_due = now.replace(
+                            year=year, month=month, day=days_in_month
+                        )
         else:
             return
+
+        # Ensure next_due is always in the future
+        if next_due <= now:
+            if freq == "daily":
+                next_due += timedelta(days=1)
+            elif freq == "weekly":
+                next_due += timedelta(weeks=1)
+            elif freq == "monthly":
+                days_in_next_month = monthrange(next_due.year, next_due.month)[1]
+                next_due += timedelta(days=days_in_next_month)
 
         chore_info["state"] = CHORE_STATE_PENDING
         chore_info["assigned_to"] = None
         chore_info["due_date"] = next_due.isoformat()
+
+        LOGGER.debug(
+            f"Chore ID '{chore_info['internal_id']}' recurring frequency '{freq}' updated to next due date '{chore_info['due_date']}'"
+        )
 
     def _handle_scheduled_tasks(self):
         """Check overdue chores, handle recurring resets."""
@@ -1015,8 +1060,10 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         # Initialize redeemed_rewards if not present
         kid_info.setdefault("redeemed_rewards", [])
 
-        # Notify parent for approval
-        self.notify_parent_for_reward_approval(kid_id, reward_id)
+        # Notify parent for approval asynchronously
+        self.hass.async_create_task(
+            self.notify_parent_for_reward_approval(kid_id, reward_id)
+        )
 
         LOGGER.info(
             "Reward '%s' claimed by kid '%s' and pending approval by parent '%s'.",
@@ -1035,7 +1082,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         )
 
         # Increment reward_claims counter
-        kid_info = self.kids_data.get(kid_id)
         if reward_id in kid_info["reward_claims"]:
             kid_info["reward_claims"][reward_id] += 1
         else:
@@ -1053,6 +1099,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             kid_id,
         )
 
+        # Persist changes
         self._persist()
         self.async_set_updated_data(self._data)
 
@@ -1137,7 +1184,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         )
 
         # Increment reward_approvals counter
-        kid_info = self.kids_data.get(kid_id)
         if reward_id in kid_info["reward_approvals"]:
             kid_info["reward_approvals"][reward_id] += 1
         else:
@@ -1223,28 +1269,49 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 if kid_info["points"] >= threshold_value:
                     self._award_badge(kid_id, badge_id)
             elif threshold_type == BADGE_THRESHOLD_TYPE_CHORE_COUNT:
-                # Depending on the chore count type, adjust accordingly
-                # For simplicity, assuming daily chore count here
-                if kid_info.get("completed_chores_daily", 0) >= threshold_value:
+                chore_count_type = badge_data.get("chore_count_type", "daily")
+                if chore_count_type == "total":
+                    chore_count = kid_info.get("completed_chores_total", 0)
+                else:
+                    chore_count = kid_info.get(
+                        f"completed_chores_{chore_count_type}", 0
+                    )
+                if chore_count >= threshold_value:
                     self._award_badge(kid_id, badge_id)
 
     def _award_badge(self, kid_id: str, badge_id: str):
         """Add the badge to kid's 'earned_by' and kid's 'badges' list."""
         badge = self.badges_data.get(badge_id)
         if not badge:
+            LOGGER.error(
+                "Attempted to award non-existent badge ID '%s' to kid ID '%s'",
+                badge_id,
+                kid_id,
+            )
+            return
+
+        if kid_id in badge.get("earned_by", []):
+            LOGGER.debug("Kid ID '%s' already earned badge ID '%s'", kid_id, badge_id)
             return
 
         badge.setdefault("earned_by", []).append(kid_id)
         kid_info = self.kids_data.get(kid_id)
         if kid_info:
             kid_info.setdefault("badges", []).append(badge["name"])
+            LOGGER.info(
+                "Badge '%s' awarded to kid '%s' (ID: '%s')",
+                badge["name"],
+                kid_info["name"],
+                kid_id,
+            )
 
-        # Update kid's multiplier based on the highest badge achieved
-        self._update_kid_multiplier(kid_id)
+            # Update kid's multiplier based on the highest badge achieved
+            self._update_kid_multiplier(kid_id)
 
-        LOGGER.info("Badge '%s' awarded to kid ID '%s'", badge["name"], kid_id)
-        self._persist()
-        self.async_set_updated_data(self._data)
+            self._persist()
+            self.async_set_updated_data(self._data)
+        else:
+            LOGGER.error("Cannot award badge: Kid ID '%s' not found", kid_id)
 
     def add_badge(self, badge_def: dict):
         """Add new badge at runtime if needed."""
@@ -1266,7 +1333,12 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             "threshold_value": badge_def.get(
                 "threshold_value", DEFAULT_BADGE_THRESHOLD
             ),
+            "chore_count_type": badge_def.get(
+                "chore_count_type",
+                "daily",  # New Field for flexibility
+            ),
             "earned_by": [],
+            "points_multiplier": badge_def.get("points_multiplier", 1.0),
             "icon": badge_def.get("icon", DEFAULT_ICON),
             "description": badge_def.get("description", ""),
             "internal_id": internal_id,
@@ -1293,7 +1365,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self._check_badges_for_kid(kid_id)
 
         # Increment penalty_applies counter
-        kid_info = self.kids_data.get(kid_id)
         if penalty_id in kid_info["penalty_applies"]:
             kid_info["penalty_applies"][penalty_id] += 1
         else:
@@ -1334,57 +1405,65 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self.async_set_updated_data(self._data)
 
     # ------------------ RESET CHORES ------------------
-    async def _reset_daily_count(self, now):
-        """Reset daily chore counts and chore statuses."""
+    async def _reset_all_chore_counts(self, now: datetime):
+        """
+        Trigger resets based on the current time for all frequencies.
 
-        LOGGER.info("Executing _reset_daily_count method at %s", now)
+        Args:
+            now (datetime): The current datetime.
+        """
+        await self._reset_chore_counts("daily", now)
+        await self._reset_chore_counts("weekly", now)
+        await self._reset_chore_counts("monthly", now)
 
-        # Reset daily chore counts for each kid
+    async def _reset_chore_counts(self, frequency: str, now: datetime):
+        """
+        Reset chore counts and statuses based on the recurring frequency.
+
+        Args:
+            frequency (str): The frequency type ('daily', 'weekly', 'monthly').
+            now (datetime): The current datetime.
+        """
+
+        # Determine which chores to reset based on frequency
+        if frequency == "daily":
+            target_frequencies = ["daily", "none"]
+            reset_day_check = True
+        elif frequency == "weekly":
+            target_frequencies = ["weekly"]
+            reset_day_check = now.weekday() == DEFAULT_WEEKLY_RESET_DAY
+        elif frequency == "monthly":
+            target_frequencies = ["monthly"]
+            days_in_month = monthrange(now.year, now.month)[1]
+            reset_day = min(DEFAULT_MONTHLY_RESET_DAY, days_in_month)
+            reset_day_check = now.day == reset_day
+        else:
+            LOGGER.warning(f"Unknown frequency '{frequency}'. No resets performed.")
+            return
+
+        if not reset_day_check:
+            LOGGER.debug(f"No reset needed for frequency '{frequency}' today.")
+            return
+
+        # Reset counts for the specified frequency
         for kid_id, kid_info in self.kids_data.items():
-            kid_info["completed_chores_today"] = 0
+            if frequency == "daily":
+                kid_info["completed_chores_today"] = 0
+            elif frequency == "weekly":
+                kid_info["completed_chores_weekly"] = 0
+            elif frequency == "monthly":
+                kid_info["completed_chores_monthly"] = 0
 
-        LOGGER.info("Daily chore counts have been reset")
+        LOGGER.info(f"{frequency.capitalize()} chore counts have been reset")
 
-        # Reset chore statuses and clear approved/claimed chores
+        # Reset chore statuses and clear approvals only for daily resets
+        if frequency == "daily":
+            await self._reset_daily_chore_statuses(target_frequencies)
+
+        # Update due dates for recurring chores
         for chore_id, chore_info in self.chores_data.items():
-            if chore_info["state"] not in [
-                CHORE_STATE_PENDING,
-                CHORE_STATE_OVERDUE,
-            ] and not chore_info.get("due_date"):
-                previous_state = chore_info["state"]
-                chore_info["state"] = CHORE_STATE_PENDING
-                LOGGER.debug(
-                    "Resetting status of chore ID '%s' from '%s' to '%s'",
-                    chore_id,
-                    previous_state,
-                    CHORE_STATE_PENDING,
-                )
-
-                # Remove chore_id from all kids' approved_chores and claimed_chores
-                for kid_id, kid_info in self.kids_data.items():
-                    if chore_id in kid_info.get("approved_chores", []):
-                        kid_info["approved_chores"].remove(chore_id)
-                        LOGGER.debug(
-                            "Removed chore ID '%s' from approved_chores for kid ID '%s'",
-                            chore_id,
-                            kid_id,
-                        )
-                    if chore_id in kid_info.get("claimed_chores", []):
-                        kid_info["claimed_chores"].remove(chore_id)
-                        LOGGER.debug(
-                            "Removed chore ID '%s' from claimed_chores for kid ID '%s'",
-                            chore_id,
-                            kid_id,
-                        )
-
-        LOGGER.info(
-            "Chore statuses, approved_chores, and claimed_chores have been reset"
-        )
-
-        # Clear all pending approvals as they are daily reset
-        self._data[DATA_PENDING_CHORE_APPROVALS] = []
-        self._data[DATA_PENDING_REWARD_APPROVALS] = []
-        LOGGER.debug("Cleared all pending chore and reward approvals during reset")
+            if chore_info.get("recurring_frequency") == frequency:
+                self._handle_recurring_chore(chore_info)
 
         # Persist the changes
         self._persist()
@@ -1396,28 +1475,72 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self.async_set_updated_data(new_data)
 
         LOGGER.debug(
-            "Chore statuses and pending approvals have been updated in the coordinator."
+            f"{frequency.capitalize()} chore counts have been updated in the coordinator."
         )
 
-    async def _reset_weekly_count(self, now):
-        if now.weekday() == DEFAULT_WEEKLY_RESET_DAY:
-            for kid_id, kid_info in self.kids_data.items():
-                kid_info["completed_chores_weekly"] = 0
-            LOGGER.info("Weekly chore counts have been reset")
-            self._persist()
-            new_data = copy.deepcopy(self._data)
-            self.async_set_updated_data(new_data)
-            LOGGER.debug("Weekly chore counts have been updated in the coordinator.")
+    async def _reset_daily_chore_statuses(self, target_frequencies: list):
+        """
+        Reset chore statuses and clear approved/claimed chores for daily resets.
 
-    async def _reset_monthly_count(self, now):
-        if now.day == DEFAULT_MONTHLY_RESET_DAY:
-            for kid_id, kid_info in self.kids_data.items():
-                kid_info["completed_chores_monthly"] = 0
-            LOGGER.info("Monthly chore counts have been reset")
-            self._persist()
-            new_data = copy.deepcopy(self._data)
-            self.async_set_updated_data(new_data)
-            LOGGER.debug("Monthly chore counts have been updated in the coordinator.")
+        Args:
+            target_frequencies (list): Frequencies of chores to reset (e.g., ["daily", "none"]).
+        """
+        LOGGER.info("Executing _reset_daily_chore_statuses")
+
+        # Reset chore statuses and clear approved/claimed chores for chores with specified frequencies
+        for chore_id, chore_info in self.chores_data.items():
+            if chore_info.get("recurring_frequency") in target_frequencies:
+                if chore_info["state"] not in [
+                    CHORE_STATE_PENDING,
+                    CHORE_STATE_OVERDUE,
+                ] and not chore_info.get("due_date"):
+                    previous_state = chore_info["state"]
+                    chore_info["state"] = CHORE_STATE_PENDING
+                    LOGGER.debug(
+                        "Resetting status of chore ID '%s' from '%s' to '%s'",
+                        chore_id,
+                        previous_state,
+                        CHORE_STATE_PENDING,
+                    )
+
+                    # Remove chore_id from all kids' approved_chores and claimed_chores
+                    for kid_id, kid_info in self.kids_data.items():
+                        if chore_id in kid_info.get("approved_chores", []):
+                            kid_info["approved_chores"].remove(chore_id)
+                            LOGGER.debug(
+                                "Removed chore ID '%s' from approved_chores for kid ID '%s'",
+                                chore_id,
+                                kid_id,
+                            )
+                        if chore_id in kid_info.get("claimed_chores", []):
+                            kid_info["claimed_chores"].remove(chore_id)
+                            LOGGER.debug(
+                                "Removed chore ID '%s' from claimed_chores for kid ID '%s'",
+                                chore_id,
+                                kid_id,
+                            )
+
+        LOGGER.info(
+            "Chore statuses, approved_chores, and claimed_chores have been reset for daily chores"
+        )
+
+        # Clear pending chore approvals for chores with 'daily' or 'none' frequency
+        daily_chore_ids = [
+            chore_id
+            for chore_id, chore_info in self.chores_data.items()
+            if chore_info.get("recurring_frequency") in ["daily", "none"]
+        ]
+        self._data[DATA_PENDING_CHORE_APPROVALS] = [
+            approval
+            for approval in self._data[DATA_PENDING_CHORE_APPROVALS]
+            if approval["chore_id"] not in daily_chore_ids
+        ]
+        LOGGER.debug(
+            "Cleared pending chore approvals for chores with 'daily' or 'none' frequency."
+        )
+
+        # Persist all changes
+        self._persist()
 
     # ------------------ STORAGE ------------------
     def _persist(self):

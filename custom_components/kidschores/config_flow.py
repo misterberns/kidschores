@@ -65,6 +65,12 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None):
         """Start the config flow with an intro step."""
+
+        # Check if there's an existing KidsChores entry
+        if any(self._async_current_entries()):
+            return self.async_abort(reason="single_instance_allowed")
+
+        # Continue your normal flow
         return await self.async_step_intro()
 
     async def async_step_intro(self, user_input=None):
