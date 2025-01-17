@@ -29,6 +29,23 @@
           "ha_user": "Home Assistant User"
         }
       },
+      "parent_count": {
+        "title": "Number of Parents",
+        "description": "How many parents do you want to define initially?",
+        "data": {
+          "parent_count": "Number of Parents"
+        }
+      },
+      "parents": {
+        "title": "Define Parent",
+        "description": "Enter details for each parent.",
+        "data": {
+          "parent_name": "Parent Name",
+          "ha_user_id": "Home Assistant User",
+          "associated_kids": "Associated Kids",
+          "internal_id": "Internal ID"
+        }
+      },
       "chore_count": {
         "title": "Number of Chores",
         "description": "How many chores do you want to define?",
@@ -132,7 +149,8 @@
       "no_chores": "No chores are available.",
       "no_badges": "No badges are available.",
       "no_rewards": "No rewards are available.",
-      "no_penalties": "No penalties are available."
+      "no_penalties": "No penalties are available.",
+      "single_instance_allowed": "Only a single KidsChores instance can be configured."
     }
   },
   "options": {
@@ -164,6 +182,16 @@
         "data": {
           "kid_name": "Kid Name",
           "ha_user": "Home Assistant User",
+          "internal_id": "Internal ID"
+        }
+      },
+      "add_parent": {
+        "title": "Add Parent",
+        "description": "Provide the details for the new parent.",
+        "data": {
+          "parent_name": "Parent Name",
+          "ha_user_id": "Home Assistant User",
+          "associated_kids": "Associated Kids",
           "internal_id": "Internal ID"
         }
       },
@@ -226,6 +254,16 @@
           "internal_id": "Internal ID"
         }
       },
+      "edit_parent": {
+        "title": "Edit Parent",
+        "description": "Modify the details of the selected parent.",
+        "data": {
+          "parent_name": "Parent Name",
+          "ha_user_id": "Home Assistant User",
+          "associated_kids": "Associated Kids",
+          "internal_id": "Internal ID"
+        }
+      },
       "edit_chore": {
         "title": "Edit Chore",
         "description": "Modify the details of the selected chore.",
@@ -279,6 +317,11 @@
       "delete_kid": {
         "title": "Delete Kid",
         "description": "Are you sure you want to delete the kid {kid_name}?",
+        "data": {}
+      },
+      "delete_parent": {
+        "title": "Delete Parent",
+        "description": "Are you sure you want to delete the parent {parent_name}?",
         "data": {}
       },
       "delete_chore": {
