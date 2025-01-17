@@ -6,7 +6,9 @@
 [![Hassfest](https://github.com/ad-ha/kidschores-ha/actions/workflows/hassfest.yaml/badge.svg)](https://github.com/ad-ha/kidschores-ha/actions/workflows/hassfest.yaml)
 
 
-![icon](https://github.com/user-attachments/assets/e95bdb54-2c4c-4a84-96b4-f47a46a1228a)
+<p align="center">
+   <img src="https://github.com/user-attachments/assets/e95bdb54-2c4c-4a84-96b4-f47a46a1228a">
+</p>
 
 
 # **KidsChores**
