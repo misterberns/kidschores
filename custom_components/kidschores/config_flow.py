@@ -22,6 +22,8 @@ from .const import (
     CONF_REWARDS,
     CONF_PARENTS,
     CONF_PENALTIES,
+    CONF_POINTS_ICON,
+    DEFAULT_POINTS_ICON,
     DEFAULT_POINTS_LABEL,
 )
 from .flow_helpers import (
@@ -31,6 +33,7 @@ from .flow_helpers import (
     build_badge_schema,
     build_reward_schema,
     build_penalty_schema,
+    build_points_schema,
 )
 
 
@@ -83,16 +86,22 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_points_label(self, user_input=None):
         """Let the user define a custom label for points."""
         errors = {}
+
         if user_input is not None:
             points_label = user_input.get(CONF_POINTS_LABEL, DEFAULT_POINTS_LABEL)
+            points_icon = user_input.get(CONF_POINTS_ICON, DEFAULT_POINTS_ICON)
+
             self._data[CONF_POINTS_LABEL] = points_label
+            self._data[CONF_POINTS_ICON] = points_icon
+
             return await self.async_step_kid_count()
 
-        schema = vol.Schema(
-            {vol.Required(CONF_POINTS_LABEL, default=DEFAULT_POINTS_LABEL): str}
+        points_schema = build_points_schema(
+            default_label=DEFAULT_POINTS_LABEL, default_icon=DEFAULT_POINTS_ICON
         )
+
         return self.async_show_form(
-            step_id="points_label", data_schema=schema, errors=errors
+            step_id="points_label", data_schema=points_schema, errors=errors
         )
 
     # --------------------------------------------------------------------------
@@ -534,10 +543,10 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _create_entry(self):
         """Finalize config entry with data and options using internal_id as keys."""
-        entry_data = {
-            CONF_POINTS_LABEL: self._data.get(CONF_POINTS_LABEL, DEFAULT_POINTS_LABEL)
-        }
+        entry_data = {}
         entry_options = {
+            CONF_POINTS_LABEL: self._data.get(CONF_POINTS_LABEL, DEFAULT_POINTS_LABEL),
+            CONF_POINTS_ICON: self._data.get(CONF_POINTS_ICON, DEFAULT_POINTS_ICON),
             CONF_KIDS: self._kids_temp,
             CONF_PARENTS: self._parents_temp,
             CONF_CHORES: self._chores_temp,

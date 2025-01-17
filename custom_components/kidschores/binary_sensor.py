@@ -13,12 +13,22 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DOMAIN,
-    CHORE_STATE_PENDING,
-    CHORE_STATE_CLAIMED,
+    ATTR_CHORE_NAME,
+    ATTR_DEFAULT_POINTS,
+    ATTR_DESCRIPTION,
+    ATTR_DUE_DATE,
+    ATTR_GLOBAL_STATE,
+    ATTR_KID_NAME,
+    ATTR_KID_STATE,
+    ATTR_SHARED_CHORE,
     CHORE_STATE_APPROVED,
-    DEFAULT_CHORE_BINARY_ICON,
+    CHORE_STATE_CLAIMED,
+    CHORE_STATE_PENDING,
+    CHORE_STATE_UNKNOWN,
     DEFAULT_BADGE_BINARY_ICON,
+    DEFAULT_CHORE_BINARY_ICON,
+    DOMAIN,
+    DUE_DATE_NOT_SET,
 )
 from .coordinator import KidsChoresDataCoordinator
 
@@ -81,24 +91,24 @@ class ChoreStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
 
         # Determine the individual kid's chore state
-        kid_state = "pending"
+        kid_state = CHORE_STATE_PENDING
         if self._chore_id in kid_info.get("approved_chores", []):
-            kid_state = "approved"
+            kid_state = CHORE_STATE_APPROVED
         elif self._chore_id in kid_info.get("claimed_chores", []):
-            kid_state = "claimed"
+            kid_state = CHORE_STATE_CLAIMED
 
         # Retrieve the global chore state
-        global_state = chore_info.get("state", "unknown")
+        global_state = chore_info.get("state", CHORE_STATE_UNKNOWN)
 
         attributes = {
-            "kid_name": self._kid_name,
-            "chore_name": self._chore_name,
-            "shared_chore": chore_info.get("shared_chore", False),
-            "kid_state": kid_state,
-            "global_state": global_state,
-            "due_date": chore_info.get("due_date", "Not Set"),
-            "default_points": chore_info.get("default_points", 0),
-            "description": chore_info.get("description", ""),
+            ATTR_KID_NAME: self._kid_name,
+            ATTR_CHORE_NAME: self._chore_name,
+            ATTR_SHARED_CHORE: chore_info.get("shared_chore", False),
+            ATTR_KID_STATE: kid_state,
+            ATTR_GLOBAL_STATE: global_state,
+            ATTR_DUE_DATE: chore_info.get("due_date", DUE_DATE_NOT_SET),
+            ATTR_DEFAULT_POINTS: chore_info.get("default_points", 0),
+            ATTR_DESCRIPTION: chore_info.get("description", ""),
         }
 
         return attributes

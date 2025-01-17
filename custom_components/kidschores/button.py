@@ -20,26 +20,24 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
-    DOMAIN,
-    LOGGER,
     BUTTON_DISAPPROVE_CHORE_PREFIX,
     BUTTON_DISAPPROVE_REWARD_PREFIX,
-    DEFAULT_DISAPPROVE_ICON,
-    BUTTON_REWARD_PREFIX,
     BUTTON_PENALTY_PREFIX,
+    BUTTON_REWARD_PREFIX,
+    CONF_POINTS_LABEL,
     DATA_PENDING_CHORE_APPROVALS,
     DATA_PENDING_REWARD_APPROVALS,
-    DEFAULT_CHORE_CLAIM_ICON,
     DEFAULT_CHORE_APPROVE_ICON,
-    DEFAULT_REWARD_ICON,
+    DEFAULT_CHORE_CLAIM_ICON,
+    DEFAULT_DISAPPROVE_ICON,
     DEFAULT_PENALTY_ICON,
-    DEFAULT_POINTS_ADJUST_PLUS_ICON,
     DEFAULT_POINTS_ADJUST_MINUS_ICON,
+    DEFAULT_POINTS_ADJUST_PLUS_ICON,
     DEFAULT_POINTS_LABEL,
-    CHORE_STATE_CLAIMED,
-    CHORE_STATE_APPROVED,
-    CHORE_STATE_PENDING,
-    CONF_POINTS_LABEL,
+    DEFAULT_REWARD_ICON,
+    DOMAIN,
+    ERROR_NOT_AUTHORIZED_ACTION_FMT,
+    LOGGER,
 )
 from .coordinator import KidsChoresDataCoordinator
 
@@ -61,7 +59,7 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator: KidsChoresDataCoordinator = data["coordinator"]
 
-    points_label = entry.data.get(CONF_POINTS_LABEL, DEFAULT_POINTS_LABEL)
+    points_label = entry.options.get(CONF_POINTS_LABEL, DEFAULT_POINTS_LABEL)
 
     entities = []
 
@@ -247,7 +245,9 @@ class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
             if user_id and not await is_user_authorized(
                 self.hass, user_id, "claim_chore"
             ):
-                raise HomeAssistantError("Not authorized to claim chores.")
+                raise HomeAssistantError(
+                    ERROR_NOT_AUTHORIZED_ACTION_FMT.format("claim chores")
+                )
 
             user_obj = await self.hass.auth.async_get_user(user_id) if user_id else None
             user_name = user_obj.name if user_obj else "Unknown"
@@ -312,7 +312,9 @@ class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
             if user_id and not await is_user_authorized(
                 self.hass, user_id, "approve_chore"
             ):
-                raise HomeAssistantError("Not authorized to approve chores.")
+                raise HomeAssistantError(
+                    ERROR_NOT_AUTHORIZED_ACTION_FMT.format("approve chores")
+                )
 
             parent_name = "ParentOrAdmin"  # You might want to fetch actual parent name
             self.coordinator.approve_chore(
@@ -386,7 +388,9 @@ class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
             if user_id and not await is_user_authorized(
                 self.hass, user_id, "disapprove_chore"
             ):
-                raise HomeAssistantError("Not authorized to disapprove chores.")
+                raise HomeAssistantError(
+                    ERROR_NOT_AUTHORIZED_ACTION_FMT.format("disapprove chores")
+                )
 
             user_obj = await self.hass.auth.async_get_user(user_id) if user_id else None
             parent_name = user_obj.name if user_obj else "ParentOrAdmin"
@@ -455,7 +459,9 @@ class RewardButton(CoordinatorEntity, ButtonEntity):
             if user_id and not await is_user_authorized(
                 self.hass, user_id, "redeem_reward"
             ):
-                raise HomeAssistantError("Not authorized to redeem rewards.")
+                raise HomeAssistantError(
+                    ERROR_NOT_AUTHORIZED_ACTION_FMT.format("redeem rewards")
+                )
 
             user_obj = await self.hass.auth.async_get_user(user_id) if user_id else None
             parent_name = user_obj.name if user_obj else "Unknown"
@@ -521,7 +527,9 @@ class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
             if user_id and not await is_user_authorized(
                 self.hass, user_id, "approve_reward"
             ):
-                raise HomeAssistantError("Not authorized to approve rewards.")
+                raise HomeAssistantError(
+                    ERROR_NOT_AUTHORIZED_ACTION_FMT.format("approve rewards")
+                )
 
             user_obj = await self.hass.auth.async_get_user(user_id) if user_id else None
             parent_name = user_obj.name if user_obj else "ParentOrAdmin"
@@ -616,7 +624,9 @@ class DisapproveRewardButton(CoordinatorEntity, ButtonEntity):
             if user_id and not await is_user_authorized(
                 self.hass, user_id, "disapprove_reward"
             ):
-                raise HomeAssistantError("Not authorized to disapprove rewards.")
+                raise HomeAssistantError(
+                    ERROR_NOT_AUTHORIZED_ACTION_FMT.format("disapprove rewards")
+                )
 
             user_obj = await self.hass.auth.async_get_user(user_id) if user_id else None
             parent_name = user_obj.name if user_obj else "ParentOrAdmin"
@@ -685,7 +695,9 @@ class PenaltyButton(CoordinatorEntity, ButtonEntity):
             if user_id and not await is_user_authorized(
                 self.hass, user_id, "apply_penalty"
             ):
-                raise HomeAssistantError("Not authorized to apply penalties.")
+                raise HomeAssistantError(
+                    ERROR_NOT_AUTHORIZED_ACTION_FMT.format("apply penalties")
+                )
 
             user_obj = await self.hass.auth.async_get_user(user_id) if user_id else None
             parent_name = user_obj.name if user_obj else "Unknown"
@@ -759,7 +771,9 @@ class PointsAdjustButton(CoordinatorEntity, ButtonEntity):
             if user_id and not await is_user_authorized(
                 self.hass, user_id, "adjust_points"
             ):
-                raise HomeAssistantError("Not authorized to adjust points.")
+                raise HomeAssistantError(
+                    ERROR_NOT_AUTHORIZED_ACTION_FMT.format("adjust points")
+                )
 
             current_points = self.coordinator.kids_data[self._kid_id]["points"]
             new_points = current_points + self._delta
