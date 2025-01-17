@@ -8,9 +8,10 @@
       },
       "points_label": {
         "title": "Etiqueta de Puntos",
-        "description": "Elige una etiqueta para los puntos (por ejemplo, Estrellas, Dólares).",
+        "description": "Elige una etiqueta e ícono para los puntos.",
         "data": {
-          "points_label": "Etiqueta de Puntos"
+          "points_label": "Etiqueta de Puntos",
+          "points_icon": "Ícono de Puntos"
         }
       },
       "kid_count": {
@@ -149,7 +150,9 @@
       "no_chores": "No hay tareas disponibles.",
       "no_badges": "No hay insignias disponibles.",
       "no_rewards": "No hay recompensas disponibles.",
-      "no_penalties": "No hay penalizaciones disponibles.",
+      "no_penalties": "No hay penalizaciones disponibles."
+    },
+    "abort": {
       "single_instance_allowed": "Solamente se permite la creación de KidsChores una única vez."
     }
   },
@@ -174,6 +177,14 @@
         "description": "Selecciona el/la {entity_type} que deseas {action}.",
         "data": {
           "entity_name": "Nombre"
+        }
+      },
+      "manage_points": {
+        "title": "Editar Etiqueta e Ícono de Puntos",
+        "description": "Cambiar la etiqueta e ícono usados para representar los puntos.",
+        "data": {
+          "points_label": "Etiqueta de Puntos",
+          "points_icon": "Ícono de Puntos"
         }
       },
       "add_kid": {
@@ -352,11 +363,23 @@
       "no_badges": "No hay insignias disponibles.",
       "no_rewards": "No hay recompensas disponibles.",
       "no_penalties": "No hay penalizaciones disponibles."
+    },
+    "abort": {
+      "setup_complete": "Configuración Finalizada",
+      "invalid_action": "Acción inválida",
+      "invalid_entity": "Entidad inválida",
+      "invalid_kid": "Niño/a inválido/a",
+      "invalid_parent": "Padre/Madre inválido/a",
+      "invalid_chore": "Tarea inválida",
+      "invalid_badge": "Insignia inválida",
+      "invalid_reward": "Recompensa inválida",
+      "invalid_penalty": "Penalización inválida"
     }
   },
   "selector": {
     "main_menu": {
       "options": {
+        "manage_points": "Gestionar Puntos",
         "manage_kid": "Gestionar Niño/a",
         "manage_parent": "Gestionar Padre/Madre",
         "manage_chore": "Gestionar Tarea",

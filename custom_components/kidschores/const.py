@@ -27,6 +27,7 @@ STORAGE_KEY = "kidschores_data"  # Persistent storage key
 STORAGE_VERSION = 1  # Version number for storage format (used during migrations)
 
 # Configuration Keys
+CONF_POINTS_ICON = "points_icon"
 CONF_POINTS_LABEL = "points_label"  # Custom label for points
 CONF_KIDS = "kids"  # Key for kids configuration
 CONF_CHORES = "chores"  # Key for chores configuration
@@ -34,6 +35,7 @@ CONF_BADGES = "badges"  # Key for badges configuration
 CONF_REWARDS = "rewards"  # Key for rewards configuration
 CONF_PARENTS = "parents"  # Key for parents configuration
 CONF_PENALTIES = "penalties"  # Key for penalties configuration
+CONF_GLOBAL = "global"
 
 # Update Interval
 UPDATE_INTERVAL = 5  # Update interval for coordinator (in minutes)
@@ -53,6 +55,7 @@ DEFAULT_REWARD_ICON = "mdi:gift-outline"  # Default icon for rewards
 DEFAULT_PENALTY_ICON = "mdi:alert-outline"  # Default icon for penalties
 DEFAULT_POINTS_ADJUST_PLUS_ICON = "mdi:plus-circle-outline"
 DEFAULT_POINTS_ADJUST_MINUS_ICON = "mdi:minus-circle-outline"
+DEFAULT_POINTS_ICON = "mdi:star-outline"
 DEFAULT_TROPHY_ICON = "mdi:trophy"  # For highest-badge sensor fallback
 DEFAULT_TROPHY_OUTLINE = "mdi:trophy-outline"
 
@@ -89,6 +92,7 @@ CHORE_STATE_CLAIMED = "claimed"  # Chore claimed by a kid
 CHORE_STATE_APPROVED = "approved"  # Chore fully approved
 CHORE_STATE_PARTIAL = "partial"  # Chore approved with partial points
 CHORE_STATE_OVERDUE = "overdue"  # Chore not completed before the due date
+CHORE_STATE_UNKNOWN = "unknown"
 
 # Badge Threshold Types
 BADGE_THRESHOLD_TYPE_POINTS = "points"  # Badges awarded for reaching points
@@ -124,6 +128,22 @@ SENSOR_TYPE_CHORE_CLAIMS = "chore_claims"  # Chore claims sensor
 SENSOR_TYPE_CHORE_APPROVALS = "chore_approvals"  # Chore approvals sensor
 SENSOR_TYPE_PENALTY_APPLIES = "penalty_applies"  # Penalty applies sensor
 
+# Sensor Attributes
+ATTR_KID_NAME = "kid_name"
+ATTR_CHORE_NAME = "chore_name"
+ATTR_SHARED_CHORE = "shared_chore"
+ATTR_KID_STATE = "kid_state"
+ATTR_GLOBAL_STATE = "global_state"
+ATTR_DUE_DATE = "due_date"
+ATTR_DEFAULT_POINTS = "default_points"
+ATTR_DESCRIPTION = "description"
+ATTR_ALL_EARNED_BADGES = "all_earned_badges"
+ATTR_HIGHEST_BADGE_THRESHOLD_VALUE = "highest_badge_threshold_value"
+ATTR_CLAIMED_ON = "Claimed on"
+ATTR_REDEEMED_ON = "Redeemed on"
+ATTR_REWARD_NAME = "reward_name"
+ATTR_BADGES = "badges"
+
 # Custom Services
 SERVICE_CLAIM_CHORE = "claim_chore"  # Claim chore service
 SERVICE_APPROVE_CHORE = "approve_chore"  # Approve chore service
@@ -149,6 +169,7 @@ VALIDATION_THRESHOLD_VALUE = "threshold_value"  # Badge criteria value
 
 # Options Flow Management
 OPTIONS_FLOW_KIDS = "manage_kids"  # Edit kids step
+OPTIONS_FLOW_PARENTS = "manage_parents"  # Edit parents step
 OPTIONS_FLOW_CHORES = "manage_chores"  # Edit chores step
 OPTIONS_FLOW_BADGES = "manage_badges"  # Edit badges step
 OPTIONS_FLOW_REWARDS = "manage_rewards"  # Edit rewards step
@@ -174,7 +195,9 @@ DEFAULT_DISAPPROVE_ICON = (
     "mdi:close-circle-outline"  # Default icon for disapprove buttons
 )
 
-# Translations - Errors and Warnings
+# Errors and Warnings
+DUE_DATE_NOT_SET = "Not Set"
+MSG_NO_ENTRY_FOUND = "No KidsChores entry found"
 ERROR_KID_NOT_FOUND = "Kid not found."  # Error for non-existent kid
 ERROR_CHORE_NOT_FOUND = "Chore not found."  # Error for missing chore
 ERROR_INVALID_POINTS = "Invalid points."  # Error for invalid points input
@@ -183,6 +206,15 @@ ERROR_PENALTY_NOT_FOUND = "Penalty not found."  # Error for missing penalty
 ERROR_USER_NOT_AUTHORIZED = (
     "User is not authorized to perform this action."  # Auth error
 )
+ERROR_KID_NOT_FOUND_FMT = "Kid '{}' not found"
+ERROR_CHORE_NOT_FOUND_FMT = "Chore '{}' not found"
+ERROR_REWARD_NOT_FOUND_FMT = "Reward '{}' not found"
+ERROR_PENALTY_NOT_FOUND_FMT = "Penalty '{}' not found"
+ERROR_NOT_AUTHORIZED_FMT = "User not authorized to {} for this kid."
+ERROR_NOT_AUTHORIZED_ACTION_FMT = "Not authorized to {}."
+UNKNOWN_KID = "Unknown Kid"
+UNKNOWN_CHORE = "Unknown Chore"
+UNKNOWN_REWARD = "Unknown Reward"
 
 # Parent Approval Workflow
 PARENT_APPROVAL_REQUIRED = True  # Enable parent approval for certain actions

@@ -8,6 +8,27 @@ import uuid
 import voluptuous as vol
 from homeassistant.helpers import selector, config_validation as cv
 
+from .const import (
+    CONF_POINTS_LABEL,
+    CONF_POINTS_ICON,
+    DEFAULT_POINTS_LABEL,
+    DEFAULT_POINTS_ICON,
+)
+
+
+def build_points_schema(
+    default_label=DEFAULT_POINTS_LABEL, default_icon=DEFAULT_POINTS_ICON
+):
+    """Build a schema for points label & icon."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_POINTS_LABEL, default=default_label): str,
+            vol.Optional(
+                CONF_POINTS_ICON, default=default_icon
+            ): selector.IconSelector(),
+        }
+    )
+
 
 def build_kid_schema(
     users, default_kid_name="", default_ha_user_id=None, internal_id=None

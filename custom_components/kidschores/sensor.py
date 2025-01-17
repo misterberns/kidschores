@@ -15,15 +15,41 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    ATTR_ALL_EARNED_BADGES,
+    ATTR_BADGES,
+    ATTR_CLAIMED_ON,
+    ATTR_CHORE_NAME,
+    ATTR_DEFAULT_POINTS,
+    ATTR_DESCRIPTION,
+    ATTR_DUE_DATE,
+    ATTR_GLOBAL_STATE,
+    ATTR_HIGHEST_BADGE_THRESHOLD_VALUE,
+    ATTR_KID_NAME,
+    ATTR_KID_STATE,
+    ATTR_REDEEMED_ON,
+    ATTR_REWARD_NAME,
+    ATTR_SHARED_CHORE,
+    CHORE_STATE_APPROVED,
+    CHORE_STATE_CLAIMED,
+    CHORE_STATE_OVERDUE,
+    CHORE_STATE_PARTIAL,
+    CHORE_STATE_PENDING,
+    CHORE_STATE_UNKNOWN,
+    CONF_POINTS_ICON,
     CONF_POINTS_LABEL,
     DATA_PENDING_CHORE_APPROVALS,
     DATA_PENDING_REWARD_APPROVALS,
     DEFAULT_CHORE_SENSOR_ICON,
+    DEFAULT_POINTS_ICON,
     DEFAULT_POINTS_LABEL,
     DEFAULT_TROPHY_ICON,
     DEFAULT_TROPHY_OUTLINE,
     DOMAIN,
+    DUE_DATE_NOT_SET,
     LABEL_POINTS,
+    UNKNOWN_CHORE,
+    UNKNOWN_KID,
+    UNKNOWN_REWARD,
 )
 from .coordinator import KidsChoresDataCoordinator
 
@@ -42,7 +68,8 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator: KidsChoresDataCoordinator = data["coordinator"]
 
-    points_label = entry.data.get(CONF_POINTS_LABEL, DEFAULT_POINTS_LABEL)
+    points_label = entry.options.get(CONF_POINTS_LABEL, DEFAULT_POINTS_LABEL)
+    points_icon = entry.options.get(CONF_POINTS_ICON, DEFAULT_POINTS_ICON)
     entities = []
 
     entities.append(PendingChoreApprovalsSensor(coordinator, entry))
@@ -52,7 +79,9 @@ async def async_setup_entry(
     for kid_id, kid_info in coordinator.kids_data.items():
         kid_name = kid_info.get("name", f"Kid {kid_id}")
         entities.append(
-            KidPointsSensor(coordinator, entry, kid_id, kid_name, points_label)
+            KidPointsSensor(
+                coordinator, entry, kid_id, kid_name, points_label, points_icon
+            )
         )
         entities.append(
             CompletedChoresTotalSensor(coordinator, entry, kid_id, kid_name)
@@ -139,45 +168,57 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the chore's state based on shared or individual tracking."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
+        current_state = chore_info.get("state", CHORE_STATE_UNKNOWN)
         shared = chore_info.get("shared_chore", False)
 
+        # If the chore is explicitly marked as overdue
+        if current_state == CHORE_STATE_OVERDUE:
+            return CHORE_STATE_OVERDUE
+
+        # If it's a shared chore,  return the global chore state
         if shared:
-            return chore_info.get("state", "unknown")
+            # If no explicit state found, fallback to 'unknown'
+            return current_state or CHORE_STATE_UNKNOWN
+
+        # For non-shared chores, check the kid's lists
+        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
+        if self._chore_id in kid_info.get("approved_chores", []):
+            return CHORE_STATE_APPROVED
+        elif self._chore_id in kid_info.get("claimed_chores", []):
+            return CHORE_STATE_CLAIMED
         else:
-            # For non-shared chores, determine state based on kid's lists
-            kid_info = self.coordinator.kids_data.get(self._kid_id, {})
-            if self._chore_id in kid_info.get("approved_chores", []):
-                return "approved"
-            elif self._chore_id in kid_info.get("claimed_chores", []):
-                return "claimed"
-            else:
-                return "pending"
+            return CHORE_STATE_PENDING
 
     @property
     def extra_state_attributes(self):
         """Include points, description, etc."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
+        current_state = chore_info.get("state", CHORE_STATE_UNKNOWN)
         shared = chore_info.get("shared_chore", False)
 
         attributes = {
-            "kid_name": self._kid_name,
-            "chore_name": self._chore_name,
-            "shared_chore": shared,
-            "due_date": chore_info.get("due_date", "Not Set"),
-            "default_points": chore_info.get("default_points", 0),
-            "description": chore_info.get("description", ""),
+            ATTR_KID_NAME: self._kid_name,
+            ATTR_CHORE_NAME: self._chore_name,
+            ATTR_SHARED_CHORE: shared,
+            ATTR_DUE_DATE: chore_info.get("due_date", DUE_DATE_NOT_SET),
+            ATTR_DEFAULT_POINTS: chore_info.get("default_points", 0),
+            ATTR_DESCRIPTION: chore_info.get("description", ""),
         }
 
-        if shared:
-            attributes["state"] = chore_info.get("state", "unknown")
+        # If chore is overdue, reflect that
+        if current_state == CHORE_STATE_OVERDUE:
+            attributes["state"] = CHORE_STATE_OVERDUE
+        elif shared:
+            attributes["state"] = current_state or CHORE_STATE_UNKNOWN
         else:
+            # Non-shared => check if kid has it claimed or approved
             kid_info = self.coordinator.kids_data.get(self._kid_id, {})
             if self._chore_id in kid_info.get("approved_chores", []):
-                attributes["state"] = "approved"
+                attributes["state"] = CHORE_STATE_APPROVED
             elif self._chore_id in kid_info.get("claimed_chores", []):
-                attributes["state"] = "claimed"
+                attributes["state"] = CHORE_STATE_CLAIMED
             else:
-                attributes["state"] = "pending"
+                attributes["state"] = CHORE_STATE_PENDING
 
         return attributes
 
@@ -196,12 +237,13 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
 class KidPointsSensor(CoordinatorEntity, SensorEntity):
     """Sensor for a kid's total points balance."""
 
-    def __init__(self, coordinator, entry, kid_id, kid_name, points_label):
+    def __init__(self, coordinator, entry, kid_id, kid_name, points_label, points_icon):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._kid_id = kid_id
         self._kid_name = kid_name
         self._points_label = points_label
+        self._points_icon = points_icon
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_points"
         self._attr_name = f"{kid_name} - {self._points_label}"
         self._attr_state_class = "measurement"
@@ -216,6 +258,11 @@ class KidPointsSensor(CoordinatorEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the points label."""
         return self._points_label or LABEL_POINTS
+
+    @property
+    def icon(self):
+        """Use the points' custom icon if set, else fallback."""
+        return self._points_icon or DEFAULT_POINTS_ICON
 
 
 class CompletedChoresTotalSensor(CoordinatorEntity, SensorEntity):
@@ -318,7 +365,7 @@ class KidBadgesSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Include the list of badges the kid has earned."""
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
-        return {"badges": kid_info.get("badges", [])}
+        return {ATTR_BADGES: kid_info.get("badges", [])}
 
 
 class KidHighestBadgeSensor(CoordinatorEntity, SensorEntity):
@@ -403,9 +450,9 @@ class KidHighestBadgeSensor(CoordinatorEntity, SensorEntity):
         highest_badge, highest_val = self._find_highest_badge()
 
         return {
-            "kid_name": self._kid_name,
-            "all_earned_badges": kid_info.get("badges", []),
-            "highest_badge_threshold_value": highest_val if highest_badge else 0,
+            ATTR_KID_NAME: self._kid_name,
+            ATTR_ALL_EARNED_BADGES: kid_info.get("badges", []),
+            ATTR_HIGHEST_BADGE_THRESHOLD_VALUE: highest_val if highest_badge else 0,
         }
 
     @property
@@ -434,24 +481,30 @@ class PendingChoreApprovalsSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return detailed pending chores."""
         approvals = self.coordinator._data.get(DATA_PENDING_CHORE_APPROVALS, [])
-        detailed = []
+        grouped_by_kid = {}
+
         for approval in approvals:
             kid_name = (
-                self.coordinator._get_kid_name_by_id(approval["kid_id"])
-                or "Unknown Kid"
+                self.coordinator._get_kid_name_by_id(approval["kid_id"]) or UNKNOWN_KID
             )
-            chore_name = self.coordinator.chores_data.get(approval["chore_id"], {}).get(
-                "name", "Unknown Chore"
-            )
+            chore_info = self.coordinator.chores_data.get(approval["chore_id"], {})
+            chore_name = chore_info.get("name", UNKNOWN_CHORE)
+
             timestamp = approval["timestamp"]
-            detailed.append(
+
+            # If this kid hasn't appeared yet, add an empty list for them
+            if kid_name not in grouped_by_kid:
+                grouped_by_kid[kid_name] = []
+
+            grouped_by_kid[kid_name].append(
                 {
-                    "Kid": kid_name,
-                    "Chore": chore_name,
-                    "Claimed on": timestamp,
+                    ATTR_CHORE_NAME: chore_name,
+                    ATTR_CLAIMED_ON: timestamp,
                 }
             )
-        return {"pending_chores": detailed}
+
+        # Return the dictionary so that each kid is a "top-level" key
+        return grouped_by_kid
 
     @property
     def translation_key(self):
@@ -479,24 +532,30 @@ class PendingRewardApprovalsSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return detailed pending rewards."""
         approvals = self.coordinator._data.get(DATA_PENDING_REWARD_APPROVALS, [])
-        detailed = []
+        grouped_by_kid = {}
+
         for approval in approvals:
             kid_name = (
-                self.coordinator._get_kid_name_by_id(approval["kid_id"])
-                or "Unknown Kid"
+                self.coordinator._get_kid_name_by_id(approval["kid_id"]) or UNKNOWN_KID
             )
-            reward_name = self.coordinator.rewards_data.get(
-                approval["reward_id"], {}
-            ).get("name", "Unknown Reward")
+            reward_info = self.coordinator.rewards_data.get(approval["reward_id"], {})
+            reward_name = reward_info.get("name", UNKNOWN_REWARD)
+
             timestamp = approval["timestamp"]
-            detailed.append(
+
+            # If this kid doesn't exist yet in our dictionary, add them
+            if kid_name not in grouped_by_kid:
+                grouped_by_kid[kid_name] = []
+
+            grouped_by_kid[kid_name].append(
                 {
-                    "Kid": kid_name,
-                    "Reward": reward_name,
-                    "Redeemed on": timestamp,
+                    ATTR_REWARD_NAME: reward_name,
+                    ATTR_REDEEMED_ON: timestamp,
                 }
             )
-        return {"pending_rewards": detailed}
+
+        # Return the dict directly so each kid is a top-level key
+        return grouped_by_kid
 
     @property
     def translation_key(self):

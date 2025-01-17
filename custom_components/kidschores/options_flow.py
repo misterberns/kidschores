@@ -18,6 +18,10 @@ from .const import (
     CONF_REWARDS,
     CONF_PARENTS,
     CONF_PENALTIES,
+    CONF_POINTS_ICON,
+    CONF_POINTS_LABEL,
+    DEFAULT_POINTS_ICON,
+    DEFAULT_POINTS_LABEL,
 )
 from .flow_helpers import (
     build_kid_schema,
@@ -26,6 +30,7 @@ from .flow_helpers import (
     build_badge_schema,
     build_reward_schema,
     build_penalty_schema,
+    build_points_schema,
 )
 
 
@@ -60,11 +65,16 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             selection = user_input["menu_selection"]
             if selection.startswith("manage_"):
                 self._entity_type = selection.replace("manage_", "")
+                # If user chose manage_points
+                if self._entity_type == "points":
+                    return await self.async_step_manage_points()
+                # Else manage other entities
                 return await self.async_step_manage_entity()
             elif selection == "done":
-                return self.async_create_entry(title="Options", data={})
+                return self.async_abort(reason="setup_complete")
 
         main_menu = [
+            "manage_points",
             "manage_kid",
             "manage_parent",
             "manage_chore",
@@ -87,6 +97,37 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     )
                 }
             ),
+        )
+
+    async def async_step_manage_points(self, user_input=None):
+        """Let user edit the points label/icon after initial setup."""
+        if user_input is not None:
+            new_label = user_input.get(CONF_POINTS_LABEL, DEFAULT_POINTS_LABEL)
+            new_icon = user_input.get(CONF_POINTS_ICON, DEFAULT_POINTS_ICON)
+
+            self._entry_options = dict(self.config_entry.options)
+            self._entry_options[CONF_POINTS_LABEL] = new_label
+            self._entry_options[CONF_POINTS_ICON] = new_icon
+            LOGGER.debug(
+                "Before saving points, entry_options = %s", self._entry_options
+            )
+            await self._update_and_reload()
+
+            return await self.async_step_init()
+
+        # Get existing values from entry options
+        current_label = self._entry_options.get(CONF_POINTS_LABEL, DEFAULT_POINTS_LABEL)
+        current_icon = self._entry_options.get(CONF_POINTS_ICON, DEFAULT_POINTS_ICON)
+
+        # Build the form
+        points_schema = build_points_schema(
+            default_label=current_label, default_icon=current_icon
+        )
+
+        return self.async_show_form(
+            step_id="manage_points",
+            data_schema=points_schema,
+            description_placeholders={},
         )
 
     async def async_step_manage_entity(self, user_input=None):

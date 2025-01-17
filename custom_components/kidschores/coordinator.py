@@ -1213,6 +1213,16 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             kid_id,
         )
 
+        # Remove from the kid's 'pending_rewards' list
+        kid_info = self.kids_data.get(kid_id)
+        if kid_info and reward_id in kid_info.get("pending_rewards", []):
+            kid_info["pending_rewards"].remove(reward_id)
+            LOGGER.debug(
+                "Removed reward ID '%s' from kid ID '%s' pending_rewards after disapproval.",
+                reward_id,
+                kid_id,
+            )
+
         # Persist changes
         self._persist()
         self.async_set_updated_data(self._data)
@@ -1493,7 +1503,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 if chore_info["state"] not in [
                     CHORE_STATE_PENDING,
                     CHORE_STATE_OVERDUE,
-                ] and not chore_info.get("due_date"):
+                ]:
                     previous_state = chore_info["state"]
                     chore_info["state"] = CHORE_STATE_PENDING
                     LOGGER.debug(

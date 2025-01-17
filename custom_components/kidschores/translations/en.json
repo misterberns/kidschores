@@ -8,9 +8,10 @@
       },
       "points_label": {
         "title": "Points Label",
-        "description": "Choose a label for points (e.g., Stars, Bucks).",
+        "description": "Choose a label and icon for points.",
         "data": {
-          "points_label": "Points Label"
+          "points_label": "Points Label",
+          "points_icon": "Points Icon"
         }
       },
       "kid_count": {
@@ -149,7 +150,9 @@
       "no_chores": "No chores are available.",
       "no_badges": "No badges are available.",
       "no_rewards": "No rewards are available.",
-      "no_penalties": "No penalties are available.",
+      "no_penalties": "No penalties are available."
+    },
+    "abort": {
       "single_instance_allowed": "Only a single KidsChores instance can be configured."
     }
   },
@@ -174,6 +177,14 @@
         "description": "Select the {entity_type} you want to {action}.",
         "data": {
           "entity_name": "Name"
+        }
+      },
+      "manage_points": {
+        "title": "Edit Points Label & Icon",
+        "description": "Change the label and icon used to represent points.",
+        "data": {
+          "points_label": "Points Label",
+          "points_icon": "Points Icon"
         }
       },
       "add_kid": {
@@ -352,11 +363,23 @@
       "no_badges": "No badges are available.",
       "no_rewards": "No rewards are available.",
       "no_penalties": "No penalties are available."
+    },
+    "abort": {
+      "setup_complete": "Setup Complete",
+      "invalid_action": "Invalid Action",
+      "invalid_entity": "Invalid Entity",
+      "invalid_kid": "Invalid Kid",
+      "invalid_parent": "Invalid Parent",
+      "invalid_chore": "Invalid Chore",
+      "invalid_badge": "Invalid Badge",
+      "invalid_reward": "Invalid Reward",
+      "invalid_penalty": "Invalid Penalty"
     }
   },
   "selector": {
     "main_menu": {
       "options": {
+        "manage_points": "Manage Points",
         "manage_kid": "Manage Kid",
         "manage_parent": "Manage Parent",
         "manage_chore": "Manage Chore",
