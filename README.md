@@ -6,14 +6,17 @@
 [![Hassfest](https://github.com/ad-ha/kidschores-ha/actions/workflows/hassfest.yaml/badge.svg)](https://github.com/ad-ha/kidschores-ha/actions/workflows/hassfest.yaml)
 
 
+<h1>KidsChores</h1>
+
 <p align="center">
    <img src="https://github.com/user-attachments/assets/e95bdb54-2c4c-4a84-96b4-f47a46a1228a">
 </p>
-
-
-# **KidsChores**
-
-<a href="https://buymeacoffee.com/varetas3d" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+<p align="center">
+   <a href="https://buymeacoffee.com/varetas3d" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+</p>
+<p>
+   <br>
+</p>
 
 **Important Notes:** 
 - **This integration is in beta. You may encounter bugs or unexpected behaviors. Please report any issues through [Issues](https://github.com/ad-ha/kidschores-ha/issues).**
