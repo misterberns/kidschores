@@ -300,6 +300,7 @@ class CompletedChoresDailySensor(CoordinatorEntity, SensorEntity):
         self._kid_name = kid_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_completed_daily"
         self._attr_name = f"{kid_name} - Chores Completed Today"
+        self._attr_native_unit_of_measurement = "chores"
 
     @property
     def native_value(self):
@@ -318,6 +319,7 @@ class CompletedChoresWeeklySensor(CoordinatorEntity, SensorEntity):
         self._kid_name = kid_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_completed_weekly"
         self._attr_name = f"{kid_name} - Chores Completed This Week"
+        self._attr_native_unit_of_measurement = "chores"
 
     @property
     def native_value(self):
@@ -336,6 +338,7 @@ class CompletedChoresMonthlySensor(CoordinatorEntity, SensorEntity):
         self._kid_name = kid_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_completed_monthly"
         self._attr_name = f"{kid_name} - Chores Completed This Month"
+        self._attr_native_unit_of_measurement = "chores"
 
     @property
     def native_value(self):

@@ -9,6 +9,7 @@ import uuid
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers import selector
+from homeassistant.util import dt as dt_util
 
 from .const import (
     LOGGER,
@@ -243,6 +244,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
     # ------------------ ADD ENTITY ------------------
     async def async_step_add_kid(self, user_input=None):
         """Add a new kid."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         kids_dict = self._entry_options.setdefault(CONF_KIDS, {})
 
@@ -259,6 +262,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     "ha_user_id": ha_user_id,
                     "internal_id": internal_id,
                 }
+                self._entry_options[CONF_KIDS] = kids_dict
+
                 LOGGER.debug("Added kid '%s' with ID: %s", kid_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
@@ -274,6 +279,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_add_parent(self, user_input=None):
         """Add a new parent."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         parents_dict = self._entry_options.setdefault(CONF_PARENTS, {})
 
@@ -295,6 +302,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     "associated_kids": associated_kids,
                     "internal_id": internal_id,
                 }
+                self._entry_options[CONF_PARENTS] = parents_dict
+
                 LOGGER.debug("Added parent '%s' with ID: %s", parent_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
@@ -320,6 +329,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_add_chore(self, user_input=None):
         """Add a new chore."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         chores_dict = self._entry_options.setdefault(CONF_CHORES, {})
 
@@ -353,6 +364,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     ),
                     "internal_id": internal_id,
                 }
+                self._entry_options[CONF_CHORES] = chores_dict
+
                 LOGGER.debug("Added chore '%s' with ID: %s", chore_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
@@ -369,6 +382,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_add_badge(self, user_input=None):
         """Add a new badge."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         badges_dict = self._entry_options.setdefault(CONF_BADGES, {})
 
@@ -388,7 +403,10 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     "points_multiplier": user_input["points_multiplier"],
                     "icon": user_input.get("icon", ""),
                     "internal_id": internal_id,
+                    "description": user_input.get("badge_description", ""),
                 }
+                self._entry_options[CONF_BADGES] = badges_dict
+
                 LOGGER.debug("Added badge '%s' with ID: %s", badge_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
@@ -400,6 +418,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_add_reward(self, user_input=None):
         """Add a new reward."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         rewards_dict = self._entry_options.setdefault(CONF_REWARDS, {})
 
@@ -420,6 +440,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     "icon": user_input.get("icon", ""),
                     "internal_id": internal_id,
                 }
+                self._entry_options[CONF_REWARDS] = rewards_dict
+
                 LOGGER.debug("Added reward '%s' with ID: %s", reward_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
@@ -431,6 +453,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_add_penalty(self, user_input=None):
         """Add a new penalty."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         penalties_dict = self._entry_options.setdefault(CONF_PENALTIES, {})
 
@@ -447,10 +471,13 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             else:
                 penalties_dict[internal_id] = {
                     "name": penalty_name,
+                    "description": user_input.get("penalty_description", ""),
                     "points": -abs(penalty_points),  # Ensure points are negative
                     "icon": user_input.get("icon", ""),
                     "internal_id": internal_id,
                 }
+                self._entry_options[CONF_PENALTIES] = penalties_dict
+
                 LOGGER.debug(
                     "Added penalty '%s' with ID: %s", penalty_name, internal_id
                 )
@@ -465,6 +492,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
     # ------------------ EDIT ENTITY ------------------
     async def async_step_edit_kid(self, user_input=None):
         """Edit an existing kid."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         kids_dict = self._entry_options.get(CONF_KIDS, {})
         internal_id = self.context.get("internal_id")
@@ -488,6 +517,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             else:
                 kid_data["name"] = new_name
                 kid_data["ha_user_id"] = ha_user_id
+
+                self._entry_options[CONF_KIDS] = kids_dict
+
                 LOGGER.debug("Edited kid '%s' with ID: %s", new_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
@@ -506,6 +538,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_edit_parent(self, user_input=None):
         """Edit an existing parent."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         parents_dict = self._entry_options.get(CONF_PARENTS, {})
         internal_id = self.context.get("internal_id")
@@ -531,6 +565,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 parent_data["name"] = new_name
                 parent_data["ha_user_id"] = ha_user_id
                 parent_data["associated_kids"] = associated_kids
+
+                self._entry_options[CONF_PARENTS] = parents_dict
+
                 LOGGER.debug("Edited parent '%s' with ID: %s", new_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
@@ -556,6 +593,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_edit_chore(self, user_input=None):
         """Edit an existing chore."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         chores_dict = self._entry_options.get(CONF_CHORES, {})
         internal_id = self.context.get("internal_id")
@@ -577,14 +616,14 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 errors["chore_name"] = "duplicate_chore"
             else:
                 chore_data["name"] = new_name
+                chore_data["description"] = user_input.get("chore_description", "")
                 chore_data["default_points"] = user_input["default_points"]
-                chore_data["partial_allowed"] = user_input["partial_allowed"]
                 chore_data["shared_chore"] = user_input["shared_chore"]
+                chore_data["partial_allowed"] = user_input["partial_allowed"]
                 chore_data["allow_multiple_claims_per_day"] = user_input[
                     "allow_multiple_claims_per_day"
                 ]
                 chore_data["assigned_kids"] = user_input["assigned_kids"]
-                chore_data["description"] = user_input.get("chore_description", "")
                 chore_data["icon"] = user_input.get("icon", "")
                 chore_data["recurring_frequency"] = user_input.get(
                     "recurring_frequency", "none"
@@ -594,6 +633,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     if user_input.get("due_date")
                     else None
                 )
+
+                self._entry_options[CONF_CHORES] = chores_dict
+
                 LOGGER.debug("Edited chore '%s' with ID: %s", new_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
@@ -610,6 +652,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_edit_badge(self, user_input=None):
         """Edit an existing badge."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         badges_dict = self._entry_options.get(CONF_BADGES, {})
         internal_id = self.context.get("internal_id")
@@ -635,6 +679,10 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 badge_data["threshold_value"] = user_input["threshold_value"]
                 badge_data["points_multiplier"] = user_input["points_multiplier"]
                 badge_data["icon"] = user_input.get("icon", "")
+                badge_data["description"] = user_input["badge_description"]
+
+                self._entry_options[CONF_BADGES] = badges_dict
+
                 LOGGER.debug("Edited badge '%s' with ID: %s", new_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
@@ -646,6 +694,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_edit_reward(self, user_input=None):
         """Edit an existing reward."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         rewards_dict = self._entry_options.get(CONF_REWARDS, {})
         internal_id = self.context.get("internal_id")
@@ -670,6 +720,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 reward_data["cost"] = user_input["reward_cost"]
                 reward_data["description"] = user_input.get("reward_description", "")
                 reward_data["icon"] = user_input.get("icon", "")
+
+                self._entry_options[CONF_REWARDS] = rewards_dict
+
                 LOGGER.debug("Edited reward '%s' with ID: %s", new_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
@@ -681,6 +734,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_edit_penalty(self, user_input=None):
         """Edit an existing penalty."""
+        self._entry_options = dict(self.config_entry.options)
+
         errors = {}
         penalties_dict = self._entry_options.get(CONF_PENALTIES, {})
         internal_id = self.context.get("internal_id")
@@ -703,10 +758,14 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 errors["penalty_name"] = "duplicate_penalty"
             else:
                 penalty_data["name"] = new_name
+                penalty_data["description"] = user_input.get("penalty_description", "")
                 penalty_data["points"] = -abs(
                     penalty_points
                 )  # Ensure points are negative
                 penalty_data["icon"] = user_input.get("icon", "")
+
+                self._entry_options[CONF_PENALTIES] = penalties_dict
+
                 LOGGER.debug("Edited penalty '%s' with ID: %s", new_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
@@ -722,6 +781,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
     # ------------------ DELETE ENTITY ------------------
     async def async_step_delete_kid(self, user_input=None):
         """Delete a kid."""
+        self._entry_options = dict(self.config_entry.options)
+
         kids_dict = self._entry_options.get(CONF_KIDS, {})
         internal_id = self.context.get("internal_id")
 
@@ -733,6 +794,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             kids_dict.pop(internal_id, None)
+
+            self._entry_options[CONF_KIDS] = kids_dict
+
             LOGGER.debug("Deleted kid '%s' with ID: %s", kid_name, internal_id)
             await self._update_and_reload()
             return await self.async_step_init()
@@ -745,6 +809,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_delete_parent(self, user_input=None):
         """Delete a parent."""
+        self._entry_options = dict(self.config_entry.options)
+
         parents_dict = self._entry_options.get(CONF_PARENTS, {})
         internal_id = self.context.get("internal_id")
 
@@ -756,6 +822,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             parents_dict.pop(internal_id, None)
+
+            self._entry_options[CONF_PARENTS] = parents_dict
+
             LOGGER.debug("Deleted parent '%s' with ID: %s", parent_name, internal_id)
             await self._update_and_reload()
             return await self.async_step_init()
@@ -768,6 +837,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_delete_chore(self, user_input=None):
         """Delete a chore."""
+        self._entry_options = dict(self.config_entry.options)
+
         chores_dict = self._entry_options.get(CONF_CHORES, {})
         internal_id = self.context.get("internal_id")
 
@@ -779,6 +850,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             chores_dict.pop(internal_id, None)
+
+            self._entry_options[CONF_CHORES] = chores_dict
+
             LOGGER.debug("Deleted chore '%s' with ID: %s", chore_name, internal_id)
             await self._update_and_reload()
             return await self.async_step_init()
@@ -791,6 +865,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_delete_badge(self, user_input=None):
         """Delete a badge."""
+        self._entry_options = dict(self.config_entry.options)
+
         badges_dict = self._entry_options.get(CONF_BADGES, {})
         internal_id = self.context.get("internal_id")
 
@@ -802,6 +878,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             badges_dict.pop(internal_id, None)
+
+            self._entry_options[CONF_BADGES] = badges_dict
+
             LOGGER.debug("Deleted badge '%s' with ID: %s", badge_name, internal_id)
             await self._update_and_reload()
             return await self.async_step_init()
@@ -814,6 +893,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_delete_reward(self, user_input=None):
         """Delete a reward."""
+        self._entry_options = dict(self.config_entry.options)
+
         rewards_dict = self._entry_options.get(CONF_REWARDS, {})
         internal_id = self.context.get("internal_id")
 
@@ -825,6 +906,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             rewards_dict.pop(internal_id, None)
+
+            self._entry_options[CONF_REWARDS] = rewards_dict
+
             LOGGER.debug("Deleted reward '%s' with ID: %s", reward_name, internal_id)
             await self._update_and_reload()
             return await self.async_step_init()
@@ -837,6 +921,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_delete_penalty(self, user_input=None):
         """Delete a penalty."""
+        self._entry_options = dict(self.config_entry.options)
+
         penalties_dict = self._entry_options.get(CONF_PENALTIES, {})
         internal_id = self.context.get("internal_id")
 
@@ -848,6 +934,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             penalties_dict.pop(internal_id, None)
+
+            self._entry_options[CONF_PENALTIES] = penalties_dict
+
             LOGGER.debug("Deleted penalty '%s' with ID: %s", penalty_name, internal_id)
             await self._update_and_reload()
             return await self.async_step_init()
@@ -861,8 +950,14 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
     # ------------------ HELPER METHODS ------------------
     async def _update_and_reload(self):
         """Update the config entry options and reload the integration."""
+        new_data = dict(self.config_entry.data)
+        new_data["last_change"] = dt_util.utcnow().isoformat()
+
         self.hass.config_entries.async_update_entry(
-            self.config_entry, options=self._entry_options
+            self.config_entry, data=new_data, options=self._entry_options
+        )
+        LOGGER.debug(
+            "Called update_entry. Now reloading entry: %s", self.config_entry.entry_id
         )
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
         LOGGER.debug("Options updated and integration reloaded")

@@ -87,7 +87,8 @@
           "threshold_type": "Threshold Type",
           "threshold_value": "Threshold Value",
           "points_multiplier": "Points Multiplier",
-          "icon": "Icon (mdi:xxx)"
+          "icon": "Icon (mdi:xxx)",
+          "badge_description": "Description (optional)"
         }
       },
       "reward_count": {
@@ -120,6 +121,7 @@
         "description": "Enter details for each penalty.",
         "data": {
           "penalty_name": "Penalty Name",
+          "penalty_description": "Description (optional)",
           "internal_id": "Internal ID",
           "penalty_points": "Penalty Points (negative)",
           "icon": "Icon (mdi:xxx)"
@@ -232,7 +234,8 @@
           "threshold_type": "Threshold Type",
           "threshold_value": "Threshold Value",
           "points_multiplier": "Points Multiplier",
-          "icon": "Icon (mdi:xxx)"
+          "icon": "Icon (mdi:xxx)",
+          "badge_description": "Description (optional)"
         }
       },
       "add_reward": {
@@ -251,6 +254,7 @@
         "description": "Provide the details for the new penalty.",
         "data": {
           "penalty_name": "Penalty Name",
+          "penalty_description": "Description (optional)",
           "internal_id": "Internal ID",
           "penalty_points": "Penalty Points (negative)",
           "icon": "Icon (mdi:xxx)"
@@ -301,7 +305,8 @@
           "threshold_type": "Threshold Type",
           "threshold_value": "Threshold Value",
           "points_multiplier": "Points Multiplier",
-          "icon": "Icon (mdi:xxx)"
+          "icon": "Icon (mdi:xxx)",
+          "badge_description": "Description (optional)"
         }
       },
       "edit_reward": {
@@ -320,6 +325,7 @@
         "description": "Modify the details of the selected penalty.",
         "data": {
           "penalty_name": "Penalty Name",
+          "penalty_description": "Description (optional)",
           "internal_id": "Internal ID",
           "penalty_points": "Penalty Points (negative)",
           "icon": "Icon (mdi:xxx)"
