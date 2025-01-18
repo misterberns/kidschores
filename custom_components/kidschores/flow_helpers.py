@@ -103,7 +103,9 @@ def build_chore_schema(kids_dict, default=None):
     return vol.Schema(
         {
             vol.Required("chore_name", default=chore_name_default): str,
-            vol.Optional("internal_id", default=internal_id_default): str,
+            vol.Optional(
+                "chore_description", default=default.get("description", "")
+            ): str,
             vol.Required(
                 "default_points", default=default.get("default_points", 5)
             ): vol.Coerce(float),
@@ -111,18 +113,15 @@ def build_chore_schema(kids_dict, default=None):
                 "assigned_kids", default=default.get("assigned_kids", [])
             ): cv.multi_select(kid_choices),
             vol.Required(
+                "shared_chore", default=default.get("shared_chore", False)
+            ): bool,
+            vol.Required(
                 "allow_multiple_claims_per_day",
                 default=default.get("allow_multiple_claims_per_day", False),
             ): bool,
             vol.Required(
-                "shared_chore", default=default.get("shared_chore", False)
-            ): bool,
-            vol.Required(
                 "partial_allowed", default=default.get("partial_allowed", False)
             ): bool,
-            vol.Optional(
-                "chore_description", default=default.get("description", "")
-            ): str,
             vol.Optional(
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
@@ -136,6 +135,7 @@ def build_chore_schema(kids_dict, default=None):
                 )
             ),
             vol.Optional("due_date"): selector.DateTimeSelector(),
+            vol.Optional("internal_id", default=internal_id_default): str,
         }
     )
 
@@ -150,7 +150,9 @@ def build_badge_schema(default=None):
     return vol.Schema(
         {
             vol.Required("badge_name", default=badge_name_default): str,
-            vol.Optional("internal_id", default=internal_id_default): str,
+            vol.Optional(
+                "badge_description", default=default.get("description", "")
+            ): str,
             vol.Required(
                 "threshold_type",
                 default=default.get("threshold_type", "points"),
@@ -170,6 +172,7 @@ def build_badge_schema(default=None):
             vol.Optional(
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
+            vol.Optional("internal_id", default=internal_id_default): str,
         }
     )
 
@@ -183,16 +186,16 @@ def build_reward_schema(default=None):
     return vol.Schema(
         {
             vol.Required("reward_name", default=reward_name_default): str,
-            vol.Optional("internal_id", default=internal_id_default): str,
+            vol.Optional(
+                "reward_description", default=default.get("description", "")
+            ): str,
             vol.Required("reward_cost", default=default.get("cost", 10.0)): vol.Coerce(
                 float
             ),
             vol.Optional(
-                "reward_description", default=default.get("description", "")
-            ): str,
-            vol.Optional(
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
+            vol.Optional("internal_id", default=internal_id_default): str,
         }
     )
 
@@ -212,13 +215,16 @@ def build_penalty_schema(default=None):
     return vol.Schema(
         {
             vol.Required("penalty_name", default=penalty_name_default): str,
-            vol.Optional("internal_id", default=internal_id_default): str,
+            vol.Optional(
+                "penalty_description", default=default.get("description", "")
+            ): str,
             vol.Required("penalty_points", default=display_points): vol.All(
                 vol.Coerce(float), vol.Range(min=0.1)
             ),
             vol.Optional(
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
+            vol.Optional("internal_id", default=internal_id_default): str,
         }
     )
 

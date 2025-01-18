@@ -87,7 +87,8 @@
           "threshold_type": "Tipo de Umbral",
           "threshold_value": "Valor del Umbral",
           "points_multiplier": "Multiplicador de Puntos",
-          "icon": "Ícono (mdi:xxx)"
+          "icon": "Ícono (mdi:xxx)",
+          "badge_description": "Descripción (opcional)"
         }
       },
       "reward_count": {
@@ -232,7 +233,8 @@
           "threshold_type": "Tipo de Umbral",
           "threshold_value": "Valor del Umbral",
           "points_multiplier": "Multiplicador de Puntos",
-          "icon": "Ícono (mdi:xxx)"
+          "icon": "Ícono (mdi:xxx)",
+          "badge_description": "Descripción (opcional)"
         }
       },
       "add_reward": {
@@ -301,7 +303,8 @@
           "threshold_type": "Tipo de Umbral",
           "threshold_value": "Valor del Umbral",
           "points_multiplier": "Multiplicador de Puntos",
-          "icon": "Ícono (mdi:xxx)"
+          "icon": "Ícono (mdi:xxx)",
+          "badge_description": "Descripción (opcional)"
         }
       },
       "edit_reward": {

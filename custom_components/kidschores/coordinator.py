@@ -402,10 +402,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     "threshold_value": badge_data.get(
                         "threshold_value", DEFAULT_BADGE_THRESHOLD
                     ),
-                    "chore_count_type": badge_data.get(
-                        "chore_count_type",
-                        "daily",  # New Field for flexibility
-                    ),
                     "earned_by": badge_data.get("earned_by", []),
                     "points_multiplier": badge_data.get("points_multiplier", 1.0),
                     "icon": badge_data.get("icon", DEFAULT_ICON),
@@ -426,9 +422,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 )
                 existing["threshold_value"] = badge_data.get(
                     "threshold_value", existing["threshold_value"]
-                )
-                existing["chore_count_type"] = badge_data.get(
-                    "chore_count_type", existing.get("chore_count_type", "daily")
                 )
                 existing["points_multiplier"] = badge_data.get(
                     "points_multiplier", existing["points_multiplier"]

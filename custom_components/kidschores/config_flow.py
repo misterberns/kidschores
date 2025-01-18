@@ -368,6 +368,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "points_multiplier": user_input["points_multiplier"],
                     "icon": user_input.get("icon", ""),
                     "internal_id": internal_id,
+                    "description": user_input.get("badge_description", ""),
                 }
                 LOGGER.debug("Added badge: %s with ID: %s", badge_name, internal_id)
 
@@ -485,6 +486,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 self._penalties_temp[internal_id] = {
                     "name": penalty_name,
+                    "description": user_input.get("penalty_description", ""),
                     "points": -abs(penalty_points),  # Ensure points are negative
                     "icon": user_input.get("icon", ""),
                     "internal_id": internal_id,
