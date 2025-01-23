@@ -297,7 +297,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "recurring_frequency", "none"
                     ),
                     "due_date": (
-                        user_input["due_date"].isoformat()
+                        user_input["due_date"].format()
                         if user_input.get("due_date")
                         else None
                     ),
