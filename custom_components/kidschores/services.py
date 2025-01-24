@@ -1,24 +1,24 @@
 # File: services.py
-"""
-Defines custom services for the KidsChores integration.
+"""Defines custom services for the KidsChores integration.
+
 These services allow direct actions through scripts or automations.
 Includes UI editor support with selectors for dropdowns and text inputs.
 """
 
 import voluptuous as vol
-from homeassistant.core import HomeAssistant, ServiceCall, Context
+from homeassistant.core import HomeAssistant, ServiceCall
 from typing import Optional
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.auth.models import User
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    CHORE_STATE_PENDING,
+    DATA_PENDING_CHORE_APPROVALS,
     DOMAIN,
     ERROR_CHORE_NOT_FOUND_FMT,
     ERROR_KID_NOT_FOUND_FMT,
     ERROR_NOT_AUTHORIZED_FMT,
-    ERROR_PENALTY_NOT_FOUND_FMT,
-    ERROR_REWARD_NOT_FOUND_FMT,
     FIELD_CHORE_NAME,
     FIELD_KID_NAME,
     FIELD_PARENT_NAME,
@@ -34,6 +34,8 @@ from .const import (
     SERVICE_DISAPPROVE_CHORE,
     SERVICE_DISAPPROVE_REWARD,
     SERVICE_REDEEM_REWARD,
+    SERVICE_RESET_ALL_CHORES,
+    SERVICE_RESET_ALL_DATA,
 )
 from .coordinator import KidsChoresDataCoordinator
 
@@ -102,6 +104,10 @@ APPROVE_REWARD_SCHEMA = vol.Schema(
         vol.Required(FIELD_REWARD_NAME): cv.string,
     }
 )
+
+RESET_ALL_DATA_SCHEMA = vol.Schema({})
+
+RESET_ALL_CHORES_SCHEMA = vol.Schema({})
 
 
 def async_setup_services(hass: HomeAssistant):
@@ -255,7 +261,7 @@ def async_setup_services(hass: HomeAssistant):
             chore_id=chore_id,
         )
         LOGGER.info(
-            "Chore '%s' disapproved for kid '%s' by parent '%s'.",
+            "Chore '%s' disapproved for kid '%s' by parent '%s'",
             chore_name,
             kid_name,
             parent_name,
@@ -437,7 +443,7 @@ def async_setup_services(hass: HomeAssistant):
             reward_id=reward_id,
         )
         LOGGER.info(
-            "Reward '%s' disapproved for kid '%s' by parent '%s'.",
+            "Reward '%s' disapproved for kid '%s' by parent '%s'",
             reward_name,
             kid_name,
             parent_name,
@@ -503,6 +509,60 @@ def async_setup_services(hass: HomeAssistant):
                 f"Failed to apply penalty '{penalty_name}' for kid '{kid_name}'."
             )
 
+    async def handle_reset_all_data(call: ServiceCall):
+        """Handle manually resetting ALL data in KidsChores."""
+        entry_id = _get_first_kidschores_entry(hass)
+        if not entry_id:
+            LOGGER.warning("Reset All Data: No KidsChores entry found")
+            return
+
+        data = hass.data[DOMAIN].get(entry_id)
+        if not data:
+            LOGGER.warning("Reset All Data: No coordinator data found")
+            return
+
+        coordinator: KidsChoresDataCoordinator = data["coordinator"]
+
+        # Clear everything from storage
+        await coordinator.storage_manager.async_clear_data()
+
+        # Re-init the coordinator with reload config entry
+        hass.config_entries.async_reload(entry_id)
+
+        coordinator.async_set_updated_data(coordinator._data)
+        LOGGER.info("Manually reset all KidsChores data. Integration is now cleared")
+
+    async def handle_reset_all_chores(call: ServiceCall):
+        """Handle manually resetting all chores to pending, clearing claims/approvals."""
+        entry_id = _get_first_kidschores_entry(hass)
+        if not entry_id:
+            LOGGER.warning("Reset All Chores: No KidsChores entry found")
+            return
+
+        data = hass.data[DOMAIN].get(entry_id)
+        if not data:
+            LOGGER.warning("Reset All Chores: No coordinator data found")
+            return
+
+        coordinator: KidsChoresDataCoordinator = data["coordinator"]
+
+        # Loop over all chores, reset them to pending
+        for chore_id, chore_info in coordinator.chores_data.items():
+            chore_info["state"] = CHORE_STATE_PENDING
+
+        # Remove all chore approvals/claims for each kid
+        for kid_id, kid_info in coordinator.kids_data.items():
+            kid_info["claimed_chores"] = []
+            kid_info["approved_chores"] = []
+
+        # Clear the pending approvals queue
+        coordinator._data[DATA_PENDING_CHORE_APPROVALS] = []
+
+        # Persist & notify
+        coordinator._persist()
+        coordinator.async_set_updated_data(coordinator._data)
+        LOGGER.info("Manually reset all chores to pending, removed claims/approvals")
+
     # --- Register Services ---
     hass.services.async_register(
         DOMAIN, SERVICE_CLAIM_CHORE, handle_claim_chore, schema=CLAIM_CHORE_SCHEMA
@@ -534,6 +594,19 @@ def async_setup_services(hass: HomeAssistant):
     hass.services.async_register(
         DOMAIN, SERVICE_APPLY_PENALTY, handle_apply_penalty, schema=APPLY_PENALTY_SCHEMA
     )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESET_ALL_DATA,
+        handle_reset_all_data,
+        schema=RESET_ALL_DATA_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESET_ALL_CHORES,
+        handle_reset_all_chores,
+        schema=RESET_ALL_CHORES_SCHEMA,
+    )
 
     LOGGER.info("KidsChores services have been registered successfully")
 
@@ -548,6 +621,8 @@ async def async_unload_services(hass: HomeAssistant):
         SERVICE_DISAPPROVE_REWARD,
         SERVICE_APPLY_PENALTY,
         SERVICE_APPROVE_REWARD,
+        SERVICE_RESET_ALL_DATA,
+        SERVICE_RESET_ALL_CHORES,
     ]
 
     for service in services:
@@ -568,7 +643,7 @@ def _get_first_kidschores_entry(hass: HomeAssistant) -> Optional[str]:
 def _get_kid_id_by_name(
     coordinator: KidsChoresDataCoordinator, kid_name: str
 ) -> Optional[str]:
-    """Helper function to get kid_id by kid_name."""
+    """Help function to get kid_id by kid_name."""
     for kid_id, kid_info in coordinator.kids_data.items():
         if kid_info.get("name") == kid_name:
             return kid_id
@@ -578,7 +653,7 @@ def _get_kid_id_by_name(
 def _get_chore_id_by_name(
     coordinator: KidsChoresDataCoordinator, chore_name: str
 ) -> Optional[str]:
-    """Helper function to get chore_id by chore_name."""
+    """Help function to get chore_id by chore_name."""
     for chore_id, chore_info in coordinator.chores_data.items():
         if chore_info.get("name") == chore_name:
             return chore_id
@@ -588,7 +663,7 @@ def _get_chore_id_by_name(
 def _get_reward_id_by_name(
     coordinator: KidsChoresDataCoordinator, reward_name: str
 ) -> Optional[str]:
-    """Helper function to get reward_id by reward_name."""
+    """Help function to get reward_id by reward_name."""
     for reward_id, reward_info in coordinator.rewards_data.items():
         if reward_info.get("name") == reward_name:
             return reward_id
@@ -598,7 +673,7 @@ def _get_reward_id_by_name(
 def _get_penalty_id_by_name(
     coordinator: KidsChoresDataCoordinator, penalty_name: str
 ) -> Optional[str]:
-    """Helper function to get penalty_id by penalty_name."""
+    """Help function to get penalty_id by penalty_name."""
     for penalty_id, penalty_info in coordinator.penalties_data.items():
         if penalty_info.get("name") == penalty_name:
             return penalty_id
@@ -609,10 +684,9 @@ def _get_penalty_id_by_name(
 async def is_user_authorized_for_kid(
     hass: HomeAssistant, user_id: str, kid_id: str
 ) -> bool:
-    """
-    Check if the user is authorized to manage chores for the kid.
+    """Check if the user is authorized to manage chores for the kid.
+
     By default, only admin or the linked Home Assistant user is authorized.
-    Customize as needed.
     """
     if not user_id:
         return False  # Disallow if no user context

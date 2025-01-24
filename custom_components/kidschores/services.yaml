@@ -188,3 +188,13 @@ apply_penalty:
       required: true
       selector:
         text:
+
+reset_all_data:
+  name: "Reset All Data"
+  description: "Completely clears the KidsChores data from storage."
+  fields: {}
+
+reset_all_chores:
+  name: "Reset All Chores"
+  description: "Manually reset chores to pending state, removing claims and approvals."
+  fields: {}

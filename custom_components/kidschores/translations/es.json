@@ -562,6 +562,14 @@
           "example": "Gritar"
         }
       }
+    },
+    "reset_all_data": {
+      "name": "Resetear todos los datos",
+      "description": "Resetear completamente todos los datos de KidsChores."
+    },
+    "reset_all_chores": {
+      "name": "Resetear todas las tareas",
+      "description": "Resetear manualmente todas las tareas para un estado de Pendiente, eliminando estados reclamadas y aprobadas."
     }
   },
   "entity": {
@@ -603,7 +611,7 @@
         "state_attributes": {
           "kid_name": { "name": "Nombre del Niño/a" },
           "all_earned_badges": { "name": "Todas las Insignias Ganadas" },
-          "highest_badge_threshold_value": { "name": "Insignia Más Alta" }
+          "highest_badge_threshold_value": { "name": "Valor Insignia Más Alta" }
         }
       }
     },

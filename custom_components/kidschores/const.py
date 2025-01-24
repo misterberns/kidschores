@@ -1,6 +1,5 @@
 # File: const.py
-"""
-Constants for the KidsChores integration.
+"""Constants for the KidsChores integration.
 
 This file centralizes configuration keys, defaults, labels, domain names,
 event names, and platform identifiers for consistency across the integration.
@@ -9,6 +8,7 @@ services, and options flow.
 """
 
 import logging
+
 from homeassistant.const import Platform
 
 # Integration Domain and Logging
@@ -19,6 +19,7 @@ LOGGER = logging.getLogger(__package__)  # Logger for debugging
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 
@@ -94,6 +95,12 @@ CHORE_STATE_PARTIAL = "partial"  # Chore approved with partial points
 CHORE_STATE_OVERDUE = "overdue"  # Chore not completed before the due date
 CHORE_STATE_UNKNOWN = "unknown"
 
+# Reward States
+REWARD_STATE_NOT_CLAIMED = "not claimed"  # Default state: reward not claimed
+REWARD_STATE_CLAIMED = "claimed"  # Reward claimed by a kid
+REWARD_STATE_APPROVED = "approved"  # Reward fully approved
+REWARD_STATE_UNKNOWN = "unknown"  # Unknown reward state
+
 # Badge Threshold Types
 BADGE_THRESHOLD_TYPE_POINTS = "points"  # Badges awarded for reaching points
 BADGE_THRESHOLD_TYPE_CHORE_COUNT = (
@@ -137,12 +144,21 @@ ATTR_GLOBAL_STATE = "global_state"
 ATTR_DUE_DATE = "due_date"
 ATTR_DEFAULT_POINTS = "default_points"
 ATTR_DESCRIPTION = "description"
+ATTR_PARTIAL_ALLOWED = "partial_allowed"
+ATTR_ALLOW_MULTIPLE_CLAIMS_PER_DAY = "allow_multiple_claims_per_day"
+ATTR_ASSIGNED_KIDS = "assigned_kids"
 ATTR_ALL_EARNED_BADGES = "all_earned_badges"
 ATTR_HIGHEST_BADGE_THRESHOLD_VALUE = "highest_badge_threshold_value"
 ATTR_CLAIMED_ON = "Claimed on"
 ATTR_REDEEMED_ON = "Redeemed on"
 ATTR_REWARD_NAME = "reward_name"
 ATTR_BADGES = "badges"
+ATTR_PENALTY_NAME = "penalty_name"
+ATTR_PENALTY_POINTS = "penalty_points"
+ATTR_COST = "cost"
+ATTR_POINTS_MULTIPLIER = "points_multiplier"
+ATTR_KIDS_EARNED = "kids_earned"
+ATTR_THRESHOLD_TYPE = "threshold_type"
 
 # Custom Services
 SERVICE_CLAIM_CHORE = "claim_chore"  # Claim chore service
@@ -152,6 +168,8 @@ SERVICE_APPLY_PENALTY = "apply_penalty"  # Apply penalty service
 SERVICE_APPROVE_REWARD = "approve_reward"  # Approve reward service
 SERVICE_DISAPPROVE_CHORE = "disapprove_chore"  # Disapprove chore service
 SERVICE_DISAPPROVE_REWARD = "disapprove_reward"  # Disapprove reward service
+SERVICE_RESET_ALL_DATA = "reset_all_data"  # Reset all data service
+SERVICE_RESET_ALL_CHORES = "reset_all_chores"  # Reset all chores service
 
 # Field Names (for consistency across services)
 FIELD_KID_NAME = "kid_name"
@@ -206,15 +224,15 @@ ERROR_PENALTY_NOT_FOUND = "Penalty not found."  # Error for missing penalty
 ERROR_USER_NOT_AUTHORIZED = (
     "User is not authorized to perform this action."  # Auth error
 )
-ERROR_KID_NOT_FOUND_FMT = "Kid '{}' not found"
-ERROR_CHORE_NOT_FOUND_FMT = "Chore '{}' not found"
-ERROR_REWARD_NOT_FOUND_FMT = "Reward '{}' not found"
-ERROR_PENALTY_NOT_FOUND_FMT = "Penalty '{}' not found"
-ERROR_NOT_AUTHORIZED_FMT = "User not authorized to {} for this kid."
-ERROR_NOT_AUTHORIZED_ACTION_FMT = "Not authorized to {}."
-UNKNOWN_KID = "Unknown Kid"
-UNKNOWN_CHORE = "Unknown Chore"
-UNKNOWN_REWARD = "Unknown Reward"
+ERROR_KID_NOT_FOUND_FMT = "Kid '{}' not found"  # Error for missing kid
+ERROR_CHORE_NOT_FOUND_FMT = "Chore '{}' not found"  # Error for missing chore
+ERROR_REWARD_NOT_FOUND_FMT = "Reward '{}' not found"  # Error for missing reward
+ERROR_PENALTY_NOT_FOUND_FMT = "Penalty '{}' not found"  # Error for missing penalty
+ERROR_NOT_AUTHORIZED_FMT = "User not authorized to {} for this kid."  # Auth error
+ERROR_NOT_AUTHORIZED_ACTION_FMT = "Not authorized to {}."  # Auth error
+UNKNOWN_KID = "Unknown Kid"  # Error for unknown kid
+UNKNOWN_CHORE = "Unknown Chore"  # Error for unknown chore
+UNKNOWN_REWARD = "Unknown Reward"  # Error for unknown reward
 
 # Parent Approval Workflow
 PARENT_APPROVAL_REQUIRED = True  # Enable parent approval for certain actions

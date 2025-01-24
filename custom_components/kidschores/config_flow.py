@@ -1,16 +1,18 @@
 # File: config_flow.py
-"""
-Multi-step config flow for the KidsChores integration, storing entities by internal_id.
+"""Multi-step config flow for the KidsChores integration, storing entities by internal_id.
+
 Ensures that all add/edit/delete operations reference entities via internal_id for consistency.
 """
 
-from typing import Any, Dict, Optional
+import datetime
 import uuid
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.helpers import selector, config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.util import dt as dt_util
+from typing import Any, Optional
 
 from .const import (
     DOMAIN,
@@ -44,13 +46,13 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._data: Dict[str, Any] = {}
-        self._kids_temp: Dict[str, Dict[str, Any]] = {}
-        self._parents_temp: Dict[str, Dict[str, Any]] = {}
-        self._chores_temp: Dict[str, Dict[str, Any]] = {}
-        self._badges_temp: Dict[str, Dict[str, Any]] = {}
-        self._rewards_temp: Dict[str, Dict[str, Any]] = {}
-        self._penalties_temp: Dict[str, Dict[str, Any]] = {}
+        self._data: dict[str, Any] = {}
+        self._kids_temp: dict[str, dict[str, Any]] = {}
+        self._parents_temp: dict[str, dict[str, Any]] = {}
+        self._chores_temp: dict[str, dict[str, Any]] = {}
+        self._badges_temp: dict[str, dict[str, Any]] = {}
+        self._rewards_temp: dict[str, dict[str, Any]] = {}
+        self._penalties_temp: dict[str, dict[str, Any]] = {}
 
         self._kid_count: int = 0
         self._parents_count: int = 0
@@ -66,7 +68,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reward_index: int = 0
         self._penalty_index: int = 0
 
-    async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None):
+    async def async_step_user(self, user_input: Optional[dict[str, Any]] = None):
         """Start the config flow with an intro step."""
 
         # Check if there's an existing KidsChores entry
@@ -128,8 +130,8 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_kids(self, user_input=None):
-        """
-        Collect each kid's info using internal_id as the primary key.
+        """Collect each kid's info using internal_id as the primary key.
+
         Store in self._kids_temp as a dict keyed by internal_id.
         """
         errors = {}
@@ -265,14 +267,36 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_chores(self, user_input=None):
-        """
-        Collect chore details using internal_id as the primary key.
+        """Collect chore details using internal_id as the primary key.
+
         Store in self._chores_temp as a dict keyed by internal_id.
         """
         errors = {}
+
         if user_input is not None:
             chore_name = user_input["chore_name"].strip()
             internal_id = user_input.get("internal_id", str(uuid.uuid4()))
+
+            if user_input.get("due_date"):
+                raw_due = user_input["due_date"]
+                # `raw_due` can be a datetime or a string
+                if isinstance(raw_due, datetime.datetime):
+                    # Convert to UTC
+                    raw_due_utc = dt_util.as_utc(raw_due)
+                    due_date_str = raw_due_utc.isoformat()
+                else:
+                    # It's a string -> parse it
+                    try:
+                        parsed = dt_util.parse_datetime(raw_due)
+                        if not parsed:
+                            # fallback parse
+                            parsed = datetime.datetime.fromisoformat(raw_due)
+                        due_date_str = dt_util.as_utc(parsed).isoformat()
+                    except ValueError:
+                        # If parse fails, store None or handle differently
+                        due_date_str = None
+            else:
+                due_date_str = None
 
             if not chore_name:
                 errors["chore_name"] = "invalid_chore_name"
@@ -296,11 +320,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "recurring_frequency": user_input.get(
                         "recurring_frequency", "none"
                     ),
-                    "due_date": (
-                        user_input["due_date"].format()
-                        if user_input.get("due_date")
-                        else None
-                    ),
+                    "due_date": due_date_str,
                     "internal_id": internal_id,
                 }
                 LOGGER.debug("Added chore: %s with ID: %s", chore_name, internal_id)
@@ -344,8 +364,8 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_badges(self, user_input=None):
-        """
-        Collect badge details using internal_id as the primary key.
+        """Collect badge details using internal_id as the primary key.
+
         Store in self._badges_temp as a dict keyed by internal_id.
         """
         errors = {}
@@ -406,8 +426,8 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_rewards(self, user_input=None):
-        """
-        Collect reward details using internal_id as the primary key.
+        """Collect reward details using internal_id as the primary key.
+
         Store in self._rewards_temp as a dict keyed by internal_id.
         """
         errors = {}
@@ -466,8 +486,8 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_penalties(self, user_input=None):
-        """
-        Collect penalty details using internal_id as the primary key.
+        """Collect penalty details using internal_id as the primary key.
+
         Store in self._penalties_temp as a dict keyed by internal_id.
         """
         errors = {}
@@ -507,7 +527,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # FINISH
     # --------------------------------------------------------------------------
     async def async_step_finish(self, user_input=None):
-        """Final summary & create the config entry."""
+        """Finalize summary and create the config entry."""
         if user_input is not None:
             return self._create_entry()
 

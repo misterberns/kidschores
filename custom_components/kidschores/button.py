@@ -10,11 +10,10 @@ Features:
 
 """
 
-from typing import Optional
 from homeassistant.auth.models import User
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, Context
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.exceptions import HomeAssistantError
@@ -192,8 +191,8 @@ async def async_setup_entry(
 
 # ------------------ Authorization (Optional) ------------------
 async def is_user_authorized(hass: HomeAssistant, user_id: str, action: str) -> bool:
-    """
-    Validate if a user is authorized to perform an action (penalty, reward, points adjust).
+    """Validate if a user is authorized to perform an action (penalty, reward, points adjust).
+
     By default, only admin is authorized. Customize as needed.
     """
     if not user_id:
@@ -201,23 +200,21 @@ async def is_user_authorized(hass: HomeAssistant, user_id: str, action: str) -> 
 
     user: User = await hass.auth.async_get_user(user_id)
     if not user:
-        LOGGER.warning("%s: Invalid user ID '%s'.", action, user_id)
+        LOGGER.warning("%s: Invalid user ID '%s'", action, user_id)
         return False
 
     if user.is_admin:
         return True  # Admin => authorized
 
     LOGGER.warning(
-        "%s: Non-admin user '%s' is not authorized in this logic.", action, user.name
+        "%s: Non-admin user '%s' is not authorized in this logic", action, user.name
     )
     return False
 
 
 # ------------------ Chore Buttons ------------------
 class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
-    """
-    Button to claim a chore as done (set chore state=claimed).
-    """
+    """Button to claim a chore as done (set chore state=claimed)."""
 
     def __init__(
         self,
@@ -229,6 +226,8 @@ class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
         chore_name: str,
         icon: str,
     ):
+        """Initialize the claim chore button."""
+
         super().__init__(coordinator)
         self._entry = entry
         self._kid_id = kid_id
@@ -240,6 +239,7 @@ class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
         self._attr_icon = icon
 
     async def async_press(self):
+        """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
             if user_id and not await is_user_authorized(
@@ -258,7 +258,7 @@ class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
                 user_name=user_name,
             )
             LOGGER.info(
-                "Chore '%s' claimed by kid '%s' (user: %s).",
+                "Chore '%s' claimed by kid '%s' (user: %s)",
                 self._chore_name,
                 self._kid_name,
                 user_name,
@@ -282,9 +282,7 @@ class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
 
 
 class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
-    """
-    Button to approve a claimed chore for a kid (set chore state=approved or partial).
-    """
+    """Button to approve a claimed chore for a kid (set chore state=approved or partial)."""
 
     def __init__(
         self,
@@ -296,6 +294,8 @@ class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
         chore_name: str,
         icon: str,
     ):
+        """Initialize the approve chore button."""
+
         super().__init__(coordinator)
         self._entry = entry
         self._kid_id = kid_id
@@ -307,6 +307,7 @@ class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
         self._attr_icon = icon
 
     async def async_press(self):
+        """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
             if user_id and not await is_user_authorized(
@@ -323,7 +324,7 @@ class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
                 chore_id=self._chore_id,
             )
             LOGGER.info(
-                "Chore '%s' approved for kid '%s'.",
+                "Chore '%s' approved for kid '%s'",
                 self._chore_name,
                 self._kid_name,
             )
@@ -358,6 +359,8 @@ class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
         chore_name: str,
         icon: str = DEFAULT_DISAPPROVE_ICON,
     ):
+        """Initialize the disapprove chore button."""
+
         super().__init__(coordinator)
         self._kid_id = kid_id
         self._kid_name = kid_name
@@ -383,6 +386,7 @@ class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
         return False
 
     async def async_press(self):
+        """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
             if user_id and not await is_user_authorized(
@@ -401,7 +405,7 @@ class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
                 chore_id=self._chore_id,
             )
             LOGGER.info(
-                "Chore '%s' disapproved for kid '%s' by parent '%s'.",
+                "Chore '%s' disapproved for kid '%s' by parent '%s'",
                 self._chore_name,
                 self._kid_name,
                 parent_name,
@@ -426,8 +430,8 @@ class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
 
 # ------------------ Reward Buttons ------------------
 class RewardButton(CoordinatorEntity, ButtonEntity):
-    """
-    Button to redeem a reward for a kid.
+    """Button to redeem a reward for a kid.
+
     Uses user-defined or default reward icon.
     """
 
@@ -441,6 +445,7 @@ class RewardButton(CoordinatorEntity, ButtonEntity):
         reward_name: str,
         icon: str,
     ):
+        """Initialize the reward button."""
         super().__init__(coordinator)
         self._entry = entry
         self._kid_id = kid_id
@@ -454,6 +459,7 @@ class RewardButton(CoordinatorEntity, ButtonEntity):
         self._attr_icon = icon
 
     async def async_press(self):
+        """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
             if user_id and not await is_user_authorized(
@@ -472,7 +478,7 @@ class RewardButton(CoordinatorEntity, ButtonEntity):
                 reward_id=self._reward_id,
             )
             LOGGER.info(
-                "Reward '%s' redeemed for kid '%s' by parent '%s'.",
+                "Reward '%s' redeemed for kid '%s' by parent '%s'",
                 self._reward_name,
                 self._kid_name,
                 parent_name,
@@ -496,8 +502,8 @@ class RewardButton(CoordinatorEntity, ButtonEntity):
 
 
 class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
-    """
-    Button for parents to approve a reward claimed by a kid.
+    """Button for parents to approve a reward claimed by a kid.
+
     Prevents unauthorized or premature reward approvals.
     """
 
@@ -511,6 +517,8 @@ class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
         reward_name: str,
         icon: str,
     ):
+        """Initialize the approve reward button."""
+
         super().__init__(coordinator)
         self._entry = entry
         self._kid_id = kid_id
@@ -522,6 +530,7 @@ class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
         self._attr_icon = icon
 
     async def async_press(self):
+        """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
             if user_id and not await is_user_authorized(
@@ -542,7 +551,7 @@ class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
             )
 
             LOGGER.info(
-                "Reward '%s' approved for kid '%s' by parent '%s'.",
+                "Reward '%s' approved for kid '%s' by parent '%s'",
                 self._reward_name,
                 self._kid_name,
                 parent_name,
@@ -573,7 +582,7 @@ class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
             # Send a persistent notification for the unexpected error
             if user_id:
                 self.hass.components.persistent_notification.create(
-                    f"An unexpected error occurred while approving reward '{self._reward_name}' for {self._kid_name}.",
+                    f"An unexpected error occurred while approving reward '{self._reward_name}' for {self._kid_name}",
                     title="Reward Approval Error",
                     notification_id=f"approve_reward_unexpected_error_{self._reward_id}",
                 )
@@ -592,6 +601,8 @@ class DisapproveRewardButton(CoordinatorEntity, ButtonEntity):
         reward_name: str,
         icon: str = DEFAULT_DISAPPROVE_ICON,
     ):
+        """Initialize the disapprove reward button."""
+
         super().__init__(coordinator)
         self._kid_id = kid_id
         self._kid_name = kid_name
@@ -619,6 +630,7 @@ class DisapproveRewardButton(CoordinatorEntity, ButtonEntity):
         return False
 
     async def async_press(self):
+        """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
             if user_id and not await is_user_authorized(
@@ -637,7 +649,7 @@ class DisapproveRewardButton(CoordinatorEntity, ButtonEntity):
                 reward_id=self._reward_id,
             )
             LOGGER.info(
-                "Reward '%s' disapproved for kid '%s' by parent '%s'.",
+                "Reward '%s' disapproved for kid '%s' by parent '%s'",
                 self._reward_name,
                 self._kid_name,
                 parent_name,
@@ -662,8 +674,8 @@ class DisapproveRewardButton(CoordinatorEntity, ButtonEntity):
 
 # ------------------ Penalty Button ------------------
 class PenaltyButton(CoordinatorEntity, ButtonEntity):
-    """
-    Button to apply a penalty for a kid.
+    """Button to apply a penalty for a kid.
+
     Uses user-defined or default penalty icon.
     """
 
@@ -677,6 +689,8 @@ class PenaltyButton(CoordinatorEntity, ButtonEntity):
         penalty_name: str,
         icon: str,
     ):
+        """Initialize the penalty button."""
+
         super().__init__(coordinator)
         self._entry = entry
         self._kid_id = kid_id
@@ -690,6 +704,7 @@ class PenaltyButton(CoordinatorEntity, ButtonEntity):
         self._attr_icon = icon
 
     async def async_press(self):
+        """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
             if user_id and not await is_user_authorized(
@@ -708,7 +723,7 @@ class PenaltyButton(CoordinatorEntity, ButtonEntity):
                 penalty_id=self._penalty_id,
             )
             LOGGER.info(
-                "Penalty '%s' applied to kid '%s' by '%s'.",
+                "Penalty '%s' applied to kid '%s' by '%s'",
                 self._penalty_name,
                 self._kid_name,
                 parent_name,
@@ -733,8 +748,8 @@ class PenaltyButton(CoordinatorEntity, ButtonEntity):
 
 # ------------------ Points Adjust Button ------------------
 class PointsAdjustButton(CoordinatorEntity, ButtonEntity):
-    """
-    Button that increments or decrements a kid's points by 'delta'.
+    """Button that increments or decrements a kid's points by 'delta'.
+
     For example: +1, -1, +10, -10, etc.
     Uses icons from const.py for plus/minus, or fallback if desired.
     """
@@ -748,6 +763,8 @@ class PointsAdjustButton(CoordinatorEntity, ButtonEntity):
         delta: int,
         points_label: str,
     ):
+        """Initialize the points adjust buttons."""
+
         super().__init__(coordinator)
         self._entry = entry
         self._kid_id = kid_id
@@ -766,6 +783,7 @@ class PointsAdjustButton(CoordinatorEntity, ButtonEntity):
             self._attr_icon = DEFAULT_POINTS_ADJUST_MINUS_ICON
 
     async def async_press(self):
+        """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
             if user_id and not await is_user_authorized(
@@ -779,10 +797,10 @@ class PointsAdjustButton(CoordinatorEntity, ButtonEntity):
             new_points = current_points + self._delta
             self.coordinator.update_kid_points(
                 kid_id=self._kid_id,
-                points=new_points,
+                new_points=new_points,
             )
             LOGGER.info(
-                "Adjusted points for kid '%s' by %d => total %d.",
+                "Adjusted points for kid '%s' by %d => total %d",
                 self._kid_name,
                 self._delta,
                 new_points,
