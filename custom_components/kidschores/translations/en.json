@@ -650,7 +650,7 @@
       },
       "reward_state": {
         "state": {
-          "not claimed": "Not Claimed",
+          "not_claimed": "Not Claimed",
           "approved": "Approved",
           "claimed": "Claimed",
           "unknown": "Unknown",

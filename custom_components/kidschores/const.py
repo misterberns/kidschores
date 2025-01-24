@@ -96,7 +96,7 @@ CHORE_STATE_OVERDUE = "overdue"  # Chore not completed before the due date
 CHORE_STATE_UNKNOWN = "unknown"
 
 # Reward States
-REWARD_STATE_NOT_CLAIMED = "not claimed"  # Default state: reward not claimed
+REWARD_STATE_NOT_CLAIMED = "not_claimed"  # Default state: reward not claimed
 REWARD_STATE_CLAIMED = "claimed"  # Reward claimed by a kid
 REWARD_STATE_APPROVED = "approved"  # Reward fully approved
 REWARD_STATE_UNKNOWN = "unknown"  # Unknown reward state
