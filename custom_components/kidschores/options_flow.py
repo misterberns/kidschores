@@ -5,6 +5,7 @@ Handles add/edit/delete operations with entities referenced internally by intern
 Ensures consistency and reloads the integration upon changes.
 """
 
+import datetime
 import uuid
 import voluptuous as vol
 from homeassistant import config_entries
@@ -211,7 +212,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required("entity_name"): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=entity_names,
-                            mode=selector.SelectSelectorMode.LIST,
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                            sort=True,
                         )
                     )
                 }
@@ -235,7 +237,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         key = entity_type_to_conf.get(self._entity_type)
         if key is None:
             LOGGER.error(
-                "Unknown entity_type '%s'. Cannot retrieve entity dictionary.",
+                "Unknown entity_type '%s'. Cannot retrieve entity dictionary",
                 self._entity_type,
             )
             return {}
@@ -338,6 +340,24 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             chore_name = user_input["chore_name"].strip()
             internal_id = user_input.get("internal_id", str(uuid.uuid4()))
 
+            if user_input.get("due_date"):
+                raw_due = user_input["due_date"]
+
+                if isinstance(raw_due, datetime.datetime):
+                    raw_due_utc = dt_util.as_utc(raw_due)
+                    due_date_str = raw_due_utc.isoformat()
+                else:
+                    try:
+                        parsed = dt_util.parse_datetime(raw_due)
+                        if not parsed:
+                            parsed = datetime.datetime.fromisoformat(raw_due)
+                        due_date_str = dt_util.as_utc(parsed).isoformat()
+
+                    except ValueError:
+                        due_date_str = None
+            else:
+                due_date_str = None
+
             if any(
                 chore_data["name"] == chore_name for chore_data in chores_dict.values()
             ):
@@ -357,16 +377,17 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     "recurring_frequency": user_input.get(
                         "recurring_frequency", "none"
                     ),
-                    "due_date": (
-                        user_input["due_date"].isoformat()
-                        if user_input.get("due_date")
-                        else None
-                    ),
+                    "due_date": due_date_str,
                     "internal_id": internal_id,
                 }
                 self._entry_options[CONF_CHORES] = chores_dict
 
                 LOGGER.debug("Added chore '%s' with ID: %s", chore_name, internal_id)
+                LOGGER.debug(
+                    "Final stored 'due_date' for chore '%s': %s",
+                    chore_name,
+                    due_date_str,
+                )
                 await self._update_and_reload()
                 return await self.async_step_init()
 
@@ -607,6 +628,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             new_name = user_input["chore_name"].strip()
+            raw_due = user_input.get("due_date")
 
             # Check for duplicate names excluding current chore
             if any(
@@ -628,11 +650,20 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 chore_data["recurring_frequency"] = user_input.get(
                     "recurring_frequency", "none"
                 )
-                chore_data["due_date"] = (
-                    user_input["due_date"].isoformat()
-                    if user_input.get("due_date")
-                    else None
-                )
+                if raw_due:
+                    if isinstance(raw_due, datetime.datetime):
+                        chore_data["due_date"] = dt_util.as_utc(raw_due).isoformat()
+                    else:
+                        try:
+                            parsed = dt_util.parse_datetime(raw_due)
+                            if not parsed:
+                                parsed = datetime.datetime.fromisoformat(raw_due)
+                            chore_data["due_date"] = dt_util.as_utc(parsed).isoformat()
+                        except ValueError:
+                            chore_data["due_date"] = None
+                else:
+                    chore_data["due_date"] = None
+                    LOGGER.debug("No date/time provided; defaulting to None")
 
                 self._entry_options[CONF_CHORES] = chores_dict
 
@@ -645,7 +676,24 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             data["name"]: eid
             for eid, data in self._entry_options.get(CONF_KIDS, {}).items()
         }
-        schema = build_chore_schema(kids_dict, default=chore_data)
+
+        # Convert stored string to datetime
+        existing_due_str = chore_data.get("due_date")
+        existing_due_date = None
+        if existing_due_str:
+            # Attempt dt_util.parse_datetime (works if it has +00:00)
+            parsed = dt_util.parse_datetime(existing_due_str)
+            if not parsed:
+                # fallback
+                try:
+                    parsed = datetime.datetime.fromisoformat(existing_due_str)
+                except ValueError:
+                    parsed = None
+            existing_due_date = parsed
+
+        schema = build_chore_schema(
+            kids_dict, default={**chore_data, "due_date": existing_due_date}
+        )
         return self.async_show_form(
             step_id="edit_chore", data_schema=schema, errors=errors
         )

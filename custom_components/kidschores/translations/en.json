@@ -565,6 +565,14 @@
           "example": "Yelling"
         }
       }
+    },
+    "reset_all_data": {
+      "name": "Reset All Data",
+      "description": "Completely clears the KidsChores data from storage."
+    },
+    "reset_all_chores": {
+      "name": "Reset All Chores",
+      "description": "Manually reset chores to pending state, removing claims and approvals."
     }
   },
   "entity": {
@@ -574,6 +582,7 @@
           "pending": "Pending",
           "approved": "Approved",
           "claimed": "Claimed",
+          "overdue": "Overdue",
           "unknown": "Unknown",
           "none": "None"
         },
@@ -596,17 +605,62 @@
               "pending": "Pending",
               "approved": "Approved",
               "claimed": "Claimed",
+              "overdue": "Overdue",
               "unknown": "Unknown",
               "none": "None"
             }
-          }
+          },
+          "partial_allowed": {
+            "name": "Partially Allowed",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "allow_multiple_claims_per_day": {
+            "name": "Allow Multiple Claims per Day",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "assigned_kids": { "name": "Assigned Kids" }
         }
       },
       "kids_highest_badge": {
         "state_attributes": {
           "kid_name": { "name": "Kid Name" },
           "all_earned_badges": { "name": "All Earned Badges" },
-          "highest_badge_threshold_value": { "name": "Highest Badge" }
+          "highest_badge_threshold_value": { "name": "Highest Badge Threshold" }
+        }
+      },
+      "badge_sensor_state": {
+        "state_attributes": {
+          "threshold_type": {
+            "name": "Threshold Type",
+            "state": {
+              "points": "Points",
+              "chore_count": "Chore Count"
+            }
+          },
+          "points_multiplier": { "name": "Points Multiplier" },
+          "icodescriptionn": { "name": "Description" },
+          "kids_earned": { "name": "Kids Earned" }
+        }
+      },
+      "reward_state": {
+        "state": {
+          "not_claimed": "Not Claimed",
+          "approved": "Approved",
+          "claimed": "Claimed",
+          "unknown": "Unknown",
+          "none": "None"
+        },
+        "state_attributes": {
+          "kid_name": { "name": "Kid Name" },
+          "reward_name": { "name": "Reward Name" },
+          "reward_cost": { "name": "Reward Cost" },
+          "description": { "name": "Description" }
         }
       }
     },
@@ -632,6 +686,7 @@
               "pending": "Pending",
               "approved": "Approved",
               "claimed": "Claimed",
+              "overdue": "Overdue",
               "unknown": "Unknown",
               "none": "None"
             }
@@ -642,6 +697,7 @@
               "pending": "Pending",
               "approved": "Approved",
               "claimed": "Claimed",
+              "overdue": "Overdue",
               "unknown": "Unknown",
               "none": "None"
             }
