@@ -134,9 +134,9 @@ def build_chore_schema(kids_dict, default=None):
                     translation_key="recurring_frequency",
                 )
             ),
-            vol.Optional(
-                "due_date", default=default.get("due_date")
-            ): selector.DateTimeSelector(),
+            vol.Optional("due_date", default=default.get("due_date")): vol.Any(
+                None, selector.DateTimeSelector()
+            ),
             vol.Optional("internal_id", default=internal_id_default): str,
         }
     )
