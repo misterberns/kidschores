@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from typing import Optional
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.auth.models import User
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -38,6 +37,7 @@ from .const import (
     SERVICE_RESET_ALL_DATA,
 )
 from .coordinator import KidsChoresDataCoordinator
+from .kc_helpers import is_user_authorized_for_global_action, is_user_authorized_for_kid
 
 
 # --- Service Schemas ---
@@ -185,7 +185,9 @@ def async_setup_services(hass: HomeAssistant):
             raise HomeAssistantError(f"Chore '{chore_name}' not found")
 
         # Check if user is authorized
-        if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
+        if user_id and not await is_user_authorized_for_global_action(
+            hass, user_id, kid_id
+        ):
             LOGGER.warning("Approve Chore: User not authorized")
             raise HomeAssistantError(
                 "You are not authorized to approve chores for this kid."
@@ -248,7 +250,9 @@ def async_setup_services(hass: HomeAssistant):
 
         # Check if user is authorized
         user_id = call.context.user_id
-        if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
+        if user_id and not await is_user_authorized_for_global_action(
+            hass, user_id, kid_id
+        ):
             LOGGER.warning("Disapprove Chore: User not authorized")
             raise HomeAssistantError(
                 "You are not authorized to disapprove chores for this kid."
@@ -371,7 +375,9 @@ def async_setup_services(hass: HomeAssistant):
             raise HomeAssistantError(f"Reward '{reward_name}' not found")
 
         # Check if user is authorized
-        if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
+        if user_id and not await is_user_authorized_for_global_action(
+            hass, user_id, kid_id
+        ):
             LOGGER.warning("Approve Reward: User not authorized")
             raise HomeAssistantError(
                 "You are not authorized to approve rewards for this kid."
@@ -430,7 +436,9 @@ def async_setup_services(hass: HomeAssistant):
 
         # Check if user is authorized
         user_id = call.context.user_id
-        if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
+        if user_id and not await is_user_authorized_for_global_action(
+            hass, user_id, kid_id
+        ):
             LOGGER.warning("Disapprove Reward: User not authorized")
             raise HomeAssistantError(
                 "You are not authorized to disapprove rewards for this kid."
@@ -477,7 +485,9 @@ def async_setup_services(hass: HomeAssistant):
 
         # Check if user is authorized
         user_id = call.context.user_id
-        if user_id and not await is_user_authorized_for_kid(hass, user_id, kid_id):
+        if user_id and not await is_user_authorized_for_global_action(
+            hass, user_id, kid_id
+        ):
             LOGGER.warning("Apply Penalty: User not authorized")
             raise HomeAssistantError(
                 "You are not authorized to apply penalties for this kid."
@@ -678,42 +688,3 @@ def _get_penalty_id_by_name(
         if penalty_info.get("name") == penalty_name:
             return penalty_id
     return None
-
-
-# ------------------ Authorization Helpers ------------------
-async def is_user_authorized_for_kid(
-    hass: HomeAssistant, user_id: str, kid_id: str
-) -> bool:
-    """Check if the user is authorized to manage chores for the kid.
-
-    By default, only admin or the linked Home Assistant user is authorized.
-    """
-    if not user_id:
-        return False  # Disallow if no user context
-
-    user: User = await hass.auth.async_get_user(user_id)
-    if not user:
-        LOGGER.warning("Authorization: Invalid user ID '%s'", user_id)
-        return False
-
-    if user.is_admin:
-        return True  # Admin => authorized
-
-    coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][
-        _get_first_kidschores_entry(hass)
-    ]["coordinator"]
-    kid_info = coordinator.kids_data.get(kid_id)
-    if not kid_info:
-        LOGGER.warning("Authorization: Kid ID '%s' not found", kid_id)
-        return False
-
-    linked_ha_id = kid_info.get("ha_user_id")
-    if linked_ha_id and linked_ha_id == user.id:
-        return True
-
-    LOGGER.warning(
-        "Authorization: User '%s' is not authorized to manage kid '%s'",
-        user.name,
-        kid_info.get("name"),
-    )
-    return False

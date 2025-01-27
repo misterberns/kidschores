@@ -759,6 +759,13 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             kid_id,
         )
 
+        # Handle rescheduling if chore has a recurring frequency and a due_date
+        freq = chore_info.get("recurring_frequency", "none")
+        due_date_str = chore_info.get("due_date")
+        if freq != "none" and due_date_str:
+            # Reschedule next due date based on the original due date and frequency
+            self._reschedule_next_due_date(chore_info)
+
         # Persist
         self._persist()
         self.async_set_updated_data(self._data)
@@ -807,19 +814,27 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         if chore_info.get("shared_chore", False):
             # For shared chores, allow each kid to claim independently
             # Chore state should reflect if any kid has claimed it
-            chore_info["state"] = (
-                CHORE_STATE_CLAIMED  # Reflect that at least one kid has claimed it
-            )
-            LOGGER.debug(
-                "Chore ID '%s' claimed by kid ID '%s' as a shared chore. Chore state set to '%s'",
-                chore_id,
-                kid_id,
-                CHORE_STATE_CLAIMED,
-            )
+            if chore_info["state"] == CHORE_STATE_OVERDUE:
+                chore_info["state"] = CHORE_STATE_CLAIMED
+                LOGGER.debug(
+                    "Chore ID '%s' was overdue and is now set to '%s' due to claim by kid ID '%s'",
+                    chore_id,
+                    CHORE_STATE_CLAIMED,
+                    kid_id,
+                )
+            elif chore_info["state"] != CHORE_STATE_APPROVED:
+                chore_info["state"] = CHORE_STATE_APPROVED
+                LOGGER.debug(
+                    "Chore ID '%s' is a shared chore. Global state set to '%s' due to approval by kid ID '%s'",
+                    chore_id,
+                    CHORE_STATE_APPROVED,
+                    kid_id,
+                )
         else:
             # For non-shared chores, add to kid's claimed chores
             if chore_id not in kid_info.get("claimed_chores", []):
                 kid_info.setdefault("claimed_chores", []).append(chore_id)
+                chore_info["state"] = CHORE_STATE_CLAIMED
                 LOGGER.debug(
                     "Chore ID '%s' claimed by kid ID '%s'. Added to claimed chores",
                     chore_id,
@@ -881,7 +896,16 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         if chore_id in kid_info.get("approved_chores", []):
             kid_info["approved_chores"].remove(chore_id)
             LOGGER.debug(
-                "Chore ID '%s' removed from approved_chores for kid ID '%s'",
+                "Chore ID '%s' removed from approved chores for kid ID '%s'",
+                chore_id,
+                kid_id,
+            )
+
+        # Also remove from claimed chores
+        if chore_id in kid_info.get("claimed_chores", []):
+            kid_info["claimed_chores"].remove(chore_id)
+            LOGGER.debug(
+                "Chore ID '%s' removed from claimed chores for kid ID '%s'",
                 chore_id,
                 kid_id,
             )
@@ -945,6 +969,101 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self._persist()
         self.async_set_updated_data(self._data)
 
+    def _reschedule_next_due_date(self, chore_info: dict):
+        """Reschedule the next due date based on the recurring frequency.
+
+        Args:
+            chore_info (dict): The chore's data.
+
+        """
+        freq = chore_info.get("recurring_frequency", "none")
+        due_date_str = chore_info.get("due_date")
+        if not due_date_str:
+            LOGGER.warning(
+                "Chore '%s' has recurring frequency '%s' but no due_date set.",
+                chore_info.get("name", chore_info.get("internal_id")),
+                freq,
+            )
+            return
+
+        try:
+            original_due = dt_util.parse_datetime(
+                due_date_str
+            ) or datetime.fromisoformat(due_date_str)
+        except ValueError:
+            LOGGER.warning(
+                "Unable to parse due_date '%s' for chore '%s'",
+                due_date_str,
+                chore_info.get("internal_id"),
+            )
+            return
+
+        next_due = original_due
+
+        # Calculate the next due date based on frequency
+        if freq == "daily":
+            next_due += timedelta(days=1)
+        elif freq == "weekly":
+            next_due += timedelta(weeks=1)
+        elif freq == "monthly":
+            next_due = self._add_one_month(next_due)
+        else:
+            LOGGER.warning(
+                "Unknown recurring_frequency '%s' for chore '%s'",
+                freq,
+                chore_info.get("internal_id"),
+            )
+            return
+
+        now = dt_util.utcnow()
+
+        # Ensure the next_due is in the future
+        while next_due <= now:
+            if freq == "daily":
+                next_due += timedelta(days=1)
+            elif freq == "weekly":
+                next_due += timedelta(weeks=1)
+            elif freq == "monthly":
+                next_due = self._add_one_month(next_due)
+
+        # Update the chore's due_date and state
+        chore_info["due_date"] = next_due.isoformat()
+        chore_info["state"] = CHORE_STATE_PENDING  # Reset to pending for the new cycle
+
+        LOGGER.debug(
+            "Rescheduled chore '%s' to next due date '%s'",
+            chore_info.get("name", chore_info.get("internal_id")),
+            chore_info["due_date"],
+        )
+
+    def _add_one_month(self, dt_in: datetime) -> datetime:
+        """Help to add one month to a datetime.
+
+        Args:
+            dt_in (datetime): The original datetime.
+
+        Returns:
+            datetime: The new datetime with one month added.
+
+        """
+        year = dt_in.year
+        month = dt_in.month
+        day = dt_in.day
+
+        # Increment month by 1
+        new_month = month + 1
+        new_year = year
+        if new_month > 12:
+            new_month = 1
+            new_year += 1
+
+        # Handle day overflow
+        days_in_new_month = monthrange(new_year, new_month)[1]
+        if day > days_in_new_month:
+            day = days_in_new_month
+
+        return dt_in.replace(year=new_year, month=new_month, day=day)
+
     def _handle_recurring_chore(self, chore_info: dict):
         """If chore is daily/weekly/monthly, reset & set next due date."""
         freq = chore_info.get("recurring_frequency", "none")
@@ -1003,20 +1122,17 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
     def _handle_scheduled_tasks(self):
         """Check overdue chores, handle recurring resets."""
         now = dt_util.utcnow()
-        for c_id, c_info in self.chores_data.items():
+        for chore_id, chore_info in self.chores_data.items():
             # Overdue check
-            due_str = c_info.get("due_date")
-            if due_str and c_info["state"] in [
-                CHORE_STATE_PENDING,
-                CHORE_STATE_CLAIMED,
-            ]:
+            due_str = chore_info.get("due_date")
+            if due_str and chore_info["state"] == CHORE_STATE_PENDING:
                 due_date = dt_util.parse_datetime(due_str)
                 # Fallback parse if parse_datetime returned None:
                 if not due_date:
                     due_date = datetime.fromisoformat(due_str)
                 if now > due_date:
-                    c_info["state"] = CHORE_STATE_OVERDUE
-                    LOGGER.info("Chore ID '%s' is overdue", c_id)
+                    chore_info["state"] = CHORE_STATE_OVERDUE
+                    LOGGER.info("Chore ID '%s' is overdue", chore_id)
 
     def update_kid_points(self, kid_id: str, new_points: float):
         """Set a kid's points to 'new_points', updating daily/weekly/monthly counters accordingly."""
@@ -1608,9 +1724,21 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         if frequency == "daily":
             await self._reset_daily_chore_statuses(target_frequencies)
 
-        # Update due dates for recurring chores
+        # Update due dates for recurring chores that have a due_date
         for chore_id, chore_info in self.chores_data.items():
-            if chore_info.get("recurring_frequency") == frequency:
+            freq_chore = chore_info.get("recurring_frequency", "none")
+            due_date_str = chore_info.get("due_date")
+            if freq_chore == frequency and due_date_str:
+                # Chores with a recurring frequency and a due_date are handled upon approval only
+                LOGGER.debug(
+                    "Skipping auto-reset for chore '%s' with frequency '%s' and due_date '%s'",
+                    chore_info.get("name", chore_id),
+                    freq_chore,
+                    due_date_str,
+                )
+                continue
+            elif freq_chore == frequency and not due_date_str:
+                # Chores with recurring frequency but no due_date are handled normally
                 self._handle_recurring_chore(chore_info)
 
         # Persist the changes
@@ -1689,6 +1817,67 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
         # Persist all changes
         self._persist()
+
+    def _reschedule_next_due_date_on_approval(self, chore_info: dict):
+        """Reschedule the next due date based on the recurring frequency after approval.
+
+        Args:
+            chore_info (dict): The chore's data.
+        """
+        freq = chore_info.get("recurring_frequency", "none")
+        due_date_str = chore_info.get("due_date")
+        if not freq or freq == "none" or not due_date_str:
+            # No recurring frequency or no due_date set; nothing to do
+            return
+
+        # Parse the original due_date
+        try:
+            original_due = dt_util.parse_datetime(
+                due_date_str
+            ) or datetime.fromisoformat(due_date_str)
+        except ValueError:
+            LOGGER.warning(
+                "Unable to parse due_date '%s' for chore '%s'",
+                due_date_str,
+                chore_info.get("internal_id"),
+            )
+            return
+
+        # Calculate the next due date based on frequency
+        if freq == "daily":
+            next_due = original_due + timedelta(days=1)
+        elif freq == "weekly":
+            next_due = original_due + timedelta(weeks=1)
+        elif freq == "monthly":
+            next_due = self._add_one_month(original_due)
+        else:
+            LOGGER.warning(
+                "Unknown recurring_frequency '%s' for chore '%s'",
+                freq,
+                chore_info.get("internal_id"),
+            )
+            return
+
+        now = dt_util.utcnow()
+        # If the new due date is in the past, keep adding frequency until it's in the future
+        while next_due <= now:
+            if freq == "daily":
+                next_due += timedelta(days=1)
+            elif freq == "weekly":
+                next_due += timedelta(weeks=1)
+            elif freq == "monthly":
+                next_due = self._add_one_month(next_due)
+
+        # Update the chore's due_date and state
+        chore_info["due_date"] = next_due.isoformat()
+        chore_info["state"] = CHORE_STATE_PENDING  # Reset to pending for the new cycle
+
+        LOGGER.debug(
+            "Rescheduled chore '%s' to next due date '%s' based on frequency '%s'",
+            chore_info.get("name", chore_info.get("internal_id")),
+            chore_info["due_date"],
+            freq,
+        )
 
     # ------------------ STORAGE ------------------
     def _persist(self):

@@ -17,7 +17,6 @@ LOGGER = logging.getLogger(__package__)  # Logger for debugging
 
 # Supported Platforms
 PLATFORMS = [
-    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.SELECT,
     Platform.SENSOR,
