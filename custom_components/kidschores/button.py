@@ -39,6 +39,7 @@ from .const import (
     LOGGER,
 )
 from .coordinator import KidsChoresDataCoordinator
+from .kc_helpers import is_user_authorized_for_global_action, is_user_authorized_for_kid
 
 
 async def async_setup_entry(
@@ -189,29 +190,6 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-# ------------------ Authorization (Optional) ------------------
-async def is_user_authorized(hass: HomeAssistant, user_id: str, action: str) -> bool:
-    """Validate if a user is authorized to perform an action (penalty, reward, points adjust).
-
-    By default, only admin is authorized. Customize as needed.
-    """
-    if not user_id:
-        return False  # Disallow if no user context
-
-    user: User = await hass.auth.async_get_user(user_id)
-    if not user:
-        LOGGER.warning("%s: Invalid user ID '%s'", action, user_id)
-        return False
-
-    if user.is_admin:
-        return True  # Admin => authorized
-
-    LOGGER.warning(
-        "%s: Non-admin user '%s' is not authorized in this logic", action, user.name
-    )
-    return False
-
-
 # ------------------ Chore Buttons ------------------
 class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
     """Button to claim a chore as done (set chore state=claimed)."""
@@ -242,8 +220,8 @@ class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
         """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
-            if user_id and not await is_user_authorized(
-                self.hass, user_id, "claim_chore"
+            if user_id and not await is_user_authorized_for_kid(
+                self.hass, user_id, self._kid_id
             ):
                 raise HomeAssistantError(
                     ERROR_NOT_AUTHORIZED_ACTION_FMT.format("claim chores")
@@ -310,7 +288,7 @@ class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
         """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
-            if user_id and not await is_user_authorized(
+            if user_id and not await is_user_authorized_for_global_action(
                 self.hass, user_id, "approve_chore"
             ):
                 raise HomeAssistantError(
@@ -389,7 +367,7 @@ class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
         """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
-            if user_id and not await is_user_authorized(
+            if user_id and not await is_user_authorized_for_global_action(
                 self.hass, user_id, "disapprove_chore"
             ):
                 raise HomeAssistantError(
@@ -462,8 +440,8 @@ class RewardButton(CoordinatorEntity, ButtonEntity):
         """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
-            if user_id and not await is_user_authorized(
-                self.hass, user_id, "redeem_reward"
+            if user_id and not await is_user_authorized_for_kid(
+                self.hass, user_id, self._kid_id
             ):
                 raise HomeAssistantError(
                     ERROR_NOT_AUTHORIZED_ACTION_FMT.format("redeem rewards")
@@ -533,7 +511,7 @@ class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
         """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
-            if user_id and not await is_user_authorized(
+            if user_id and not await is_user_authorized_for_global_action(
                 self.hass, user_id, "approve_reward"
             ):
                 raise HomeAssistantError(
@@ -633,7 +611,7 @@ class DisapproveRewardButton(CoordinatorEntity, ButtonEntity):
         """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
-            if user_id and not await is_user_authorized(
+            if user_id and not await is_user_authorized_for_global_action(
                 self.hass, user_id, "disapprove_reward"
             ):
                 raise HomeAssistantError(
@@ -707,7 +685,7 @@ class PenaltyButton(CoordinatorEntity, ButtonEntity):
         """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
-            if user_id and not await is_user_authorized(
+            if user_id and not await is_user_authorized_for_global_action(
                 self.hass, user_id, "apply_penalty"
             ):
                 raise HomeAssistantError(
@@ -786,7 +764,7 @@ class PointsAdjustButton(CoordinatorEntity, ButtonEntity):
         """Handle the button press event."""
         try:
             user_id = self._context.user_id if self._context else None
-            if user_id and not await is_user_authorized(
+            if user_id and not await is_user_authorized_for_global_action(
                 self.hass, user_id, "adjust_points"
             ):
                 raise HomeAssistantError(
