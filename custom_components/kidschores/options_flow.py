@@ -677,19 +677,28 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             for eid, data in self._entry_options.get(CONF_KIDS, {}).items()
         }
 
-        # Convert stored string to datetime
+        # Convert stored string to datetime for DateTimeSelector
         existing_due_str = chore_data.get("due_date")
         existing_due_date = None
+
         if existing_due_str:
-            # Attempt dt_util.parse_datetime (works if it has +00:00)
-            parsed = dt_util.parse_datetime(existing_due_str)
-            if not parsed:
-                # fallback
-                try:
-                    parsed = datetime.datetime.fromisoformat(existing_due_str)
-                except ValueError:
-                    parsed = None
-            existing_due_date = parsed
+            try:
+                # Attempt to parse using dt_util or fallback to fromisoformat
+                parsed_date = dt_util.parse_datetime(
+                    existing_due_str
+                ) or datetime.datetime.fromisoformat(existing_due_str)
+                # Convert to the required format for DateTimeSelector
+                existing_due_date = dt_util.as_local(parsed_date).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+                LOGGER.debug(
+                    "Processed existing_due_date for DateTimeSelector: %s",
+                    existing_due_date,
+                )
+            except ValueError as e:
+                LOGGER.error(
+                    "Failed to parse existing_due_date '%s': %s", existing_due_str, e
+                )
 
         schema = build_chore_schema(
             kids_dict, default={**chore_data, "due_date": existing_due_date}
