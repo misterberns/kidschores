@@ -45,6 +45,7 @@ from .const import (
     ATTR_DESCRIPTION,
     ATTR_DUE_DATE,
     ATTR_HIGHEST_BADGE_THRESHOLD_VALUE,
+    ATTR_GLOBAL_STATE,
     ATTR_KID_NAME,
     ATTR_KIDS_EARNED,
     ATTR_PARTIAL_ALLOWED,
@@ -240,19 +241,11 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the chore's state based on shared or individual tracking."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
-        current_state = chore_info.get("state", CHORE_STATE_UNKNOWN)
-        shared = chore_info.get("shared_chore", False)
+        global_state = chore_info.get("state", CHORE_STATE_UNKNOWN)
 
-        # If the chore is explicitly marked as overdue
-        if current_state == CHORE_STATE_OVERDUE:
+        if global_state == CHORE_STATE_OVERDUE:
             return CHORE_STATE_OVERDUE
 
-        # If it's a shared chore,  return the global chore state
-        if shared:
-            # If no explicit state found, fallback to 'unknown'
-            return current_state or CHORE_STATE_UNKNOWN
-
-        # For non-shared chores, check the kid's lists
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         if self._chore_id in kid_info.get("approved_chores", []):
             return CHORE_STATE_APPROVED
@@ -265,8 +258,8 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Include points, description, etc."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
-        current_state = chore_info.get("state", CHORE_STATE_UNKNOWN)
         shared = chore_info.get("shared_chore", False)
+        global_state = chore_info.get("state", CHORE_STATE_UNKNOWN)
 
         assigned_kids_ids = chore_info.get("assigned_kids", [])
         assigned_kids_names = [
@@ -277,32 +270,17 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
         attributes = {
             ATTR_KID_NAME: self._kid_name,
             ATTR_CHORE_NAME: self._chore_name,
+            ATTR_DESCRIPTION: chore_info.get("description", ""),
             ATTR_SHARED_CHORE: shared,
+            ATTR_GLOBAL_STATE: global_state,
             ATTR_DUE_DATE: chore_info.get("due_date", DUE_DATE_NOT_SET),
             ATTR_DEFAULT_POINTS: chore_info.get("default_points", 0),
-            ATTR_DESCRIPTION: chore_info.get("description", ""),
             ATTR_PARTIAL_ALLOWED: chore_info.get("partial_allowed", False),
             ATTR_ALLOW_MULTIPLE_CLAIMS_PER_DAY: chore_info.get(
                 "allow_multiple_claims_per_day", False
             ),
             ATTR_ASSIGNED_KIDS: assigned_kids_names,
         }
-
-        # If chore is overdue, reflect that
-        if current_state == CHORE_STATE_OVERDUE:
-            attributes["state"] = CHORE_STATE_OVERDUE
-        elif shared:
-            attributes["state"] = current_state or CHORE_STATE_UNKNOWN
-        else:
-            # Non-shared => check if kid has it claimed or approved
-            kid_info = self.coordinator.kids_data.get(self._kid_id, {})
-            if self._chore_id in kid_info.get("approved_chores", []):
-                attributes["state"] = CHORE_STATE_APPROVED
-            elif self._chore_id in kid_info.get("claimed_chores", []):
-                attributes["state"] = CHORE_STATE_CLAIMED
-            else:
-                attributes["state"] = CHORE_STATE_PENDING
-
         return attributes
 
     @property
@@ -644,9 +622,9 @@ class BadgeSensor(CoordinatorEntity, SensorEntity):
                 kids_earned_names.append(f"Kid {kid_id} (not found)")
 
         return {
+            ATTR_DESCRIPTION: description,
             ATTR_THRESHOLD_TYPE: threshold_type,
             ATTR_POINTS_MULTIPLIER: points_multiplier,
-            ATTR_DESCRIPTION: description,
             ATTR_KIDS_EARNED: kids_earned_names,
         }
 
@@ -869,8 +847,8 @@ class RewardStatusSensor(CoordinatorEntity, SensorEntity):
         attributes = {
             ATTR_KID_NAME: self._kid_name,
             ATTR_REWARD_NAME: self._reward_name,
-            ATTR_COST: reward_info.get("cost", DEFAULT_REWARD_COST),
             ATTR_DESCRIPTION: reward_info.get("description", ""),
+            ATTR_COST: reward_info.get("cost", DEFAULT_REWARD_COST),
         }
 
         return attributes
@@ -966,8 +944,8 @@ class PenaltyAppliesSensor(CoordinatorEntity, SensorEntity):
         return {
             ATTR_KID_NAME: self._kid_name,
             ATTR_PENALTY_NAME: self._penalty_name,
-            ATTR_PENALTY_POINTS: penalty_info.get("points", DEFAULT_PENALTY_POINTS),
             ATTR_DESCRIPTION: penalty_info.get("description", ""),
+            ATTR_PENALTY_POINTS: penalty_info.get("points", DEFAULT_PENALTY_POINTS),
         }
 
     @property

@@ -584,7 +584,9 @@
           "claimed": "Reclamada",
           "overdue": "Atrasada",
           "unknown": "Desconocida",
-          "none": "Ninguna"
+          "none": "Ninguna",
+          "approved_in_part": "Aprobada (en parte)",
+          "claimed_in_part": "Reclamada (en parte)"
         },
         "state_attributes": {
           "kid_name": { "name": "Nombre del Niño" },
@@ -599,8 +601,8 @@
           "due_date": { "name": "Fecha de Vencimiento" },
           "default_points": { "name": "Puntos Predeterminados" },
           "description": { "name": "Descripción" },
-          "state": {
-            "name": "Estado",
+          "global_state": {
+            "name": "Estado Global",
             "state": {
               "pending": "Pendiente",
               "approved": "Aprobada",
@@ -662,50 +664,6 @@
           "kid_name": { "name": "Nombre del Niño" },
           "reward_name": { "name": "Nombre de la Recompensa" },
           "reward_cost": { "name": "Costo de la Recompensa" },
-          "description": { "name": "Descripción" }
-        }
-      }
-    },
-    "binary_sensor": {
-      "chore_claim_bs": {
-        "state": {
-          "on": "Aprobada",
-          "off": "No Reclamada"
-        },
-        "state_attributes": {
-          "kid_name": { "name": "Nombre del Niño" },
-          "chore_name": { "name": "Nombre de la Tarea" },
-          "shared_chore": {
-            "name": "Tarea Compartida",
-            "state": {
-              "true": "Sí",
-              "false": "No"
-            }
-          },
-          "kid_state": {
-            "name": "Estado del Niño",
-            "state": {
-              "pending": "Pendiente",
-              "approved": "Aprobada",
-              "claimed": "Reclamada",
-              "overdue": "Atrasada",
-              "unknown": "Desconocida",
-              "none": "Ninguna"
-            }
-          },
-          "global_state": {
-            "name": "Estado Global",
-            "state": {
-              "pending": "Pendiente",
-              "approved": "Aprobada",
-              "claimed": "Reclamada",
-              "overdue": "Atrasada",
-              "unknown": "Desconocida",
-              "none": "Ninguna"
-            }
-          },
-          "due_date": { "name": "Fecha de Vencimiento" },
-          "default_points": { "name": "Puntos Predeterminados" },
           "description": { "name": "Descripción" }
         }
       }
