@@ -474,10 +474,10 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         )
         chore_info["due_date"] = chore_data.get("due_date", chore_info["due_date"])
         chore_info["last_completed"] = chore_data.get(
-            "last_completed", chore_info.get["last_completed"]
+            "last_completed", chore_info.get("last_completed")
         )
         chore_info["last_claimed"] = chore_data.get(
-            "last_claimed", chore_info.get["last_claimed"]
+            "last_claimed", chore_info.get("last_claimed")
         )
 
         LOGGER.debug("Updated chore '%s' with ID: %s", chore_info["name"], chore_id)
