@@ -11,8 +11,13 @@ from homeassistant.helpers import selector, config_validation as cv
 from .const import (
     CONF_POINTS_LABEL,
     CONF_POINTS_ICON,
+    DEFAULT_POINTS_MULTIPLIER,
     DEFAULT_POINTS_LABEL,
     DEFAULT_POINTS_ICON,
+    FREQUENCY_DAILY,
+    FREQUENCY_MONTHLY,
+    FREQUENCY_NONE,
+    FREQUENCY_WEEKLY,
 )
 
 
@@ -46,7 +51,7 @@ def build_kid_schema(
                     multiple=False,
                 )
             ),
-            vol.Optional("internal_id", default=internal_id or str(uuid.uuid4())): str,
+            vol.Required("internal_id", default=internal_id or str(uuid.uuid4())): str,
         }
     )
 
@@ -84,7 +89,7 @@ def build_parent_schema(
                     multiple=True,
                 )
             ),
-            vol.Optional("internal_id", default=internal_id or str(uuid.uuid4())): str,
+            vol.Required("internal_id", default=internal_id or str(uuid.uuid4())): str,
         }
     )
 
@@ -127,17 +132,22 @@ def build_chore_schema(kids_dict, default=None):
             ): selector.IconSelector(),
             vol.Required(
                 "recurring_frequency",
-                default=default.get("recurring_frequency", "none"),
+                default=default.get("recurring_frequency", FREQUENCY_NONE),
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
-                    options=["none", "daily", "weekly", "monthly"],
+                    options=[
+                        FREQUENCY_NONE,
+                        FREQUENCY_DAILY,
+                        FREQUENCY_WEEKLY,
+                        FREQUENCY_MONTHLY,
+                    ],
                     translation_key="recurring_frequency",
                 )
             ),
             vol.Optional("due_date", default=default.get("due_date")): vol.Any(
                 None, selector.DateTimeSelector()
             ),
-            vol.Optional("internal_id", default=internal_id_default): str,
+            vol.Required("internal_id", default=internal_id_default): str,
         }
     )
 
@@ -147,7 +157,9 @@ def build_badge_schema(default=None):
     default = default or {}
     badge_name_default = default.get("name", "")
     internal_id_default = default.get("internal_id", str(uuid.uuid4()))
-    points_multiplier_default = default.get("points_multiplier", 1.0)
+    points_multiplier_default = default.get(
+        "points_multiplier", DEFAULT_POINTS_MULTIPLIER
+    )
 
     return vol.Schema(
         {
@@ -174,7 +186,7 @@ def build_badge_schema(default=None):
             vol.Optional(
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
-            vol.Optional("internal_id", default=internal_id_default): str,
+            vol.Required("internal_id", default=internal_id_default): str,
         }
     )
 
@@ -197,7 +209,7 @@ def build_reward_schema(default=None):
             vol.Optional(
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
-            vol.Optional("internal_id", default=internal_id_default): str,
+            vol.Required("internal_id", default=internal_id_default): str,
         }
     )
 
@@ -226,7 +238,7 @@ def build_penalty_schema(default=None):
             vol.Optional(
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
-            vol.Optional("internal_id", default=internal_id_default): str,
+            vol.Required("internal_id", default=internal_id_default): str,
         }
     )
 

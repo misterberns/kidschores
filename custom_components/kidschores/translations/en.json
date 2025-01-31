@@ -584,7 +584,9 @@
           "claimed": "Claimed",
           "overdue": "Overdue",
           "unknown": "Unknown",
-          "none": "None"
+          "none": "None",
+          "approved_in_part": "Approved (in-part)",
+          "claimed_in_part": "Claimed (in-part)"
         },
         "state_attributes": {
           "kid_name": { "name": "Kid Name" },
@@ -599,15 +601,17 @@
           "due_date": { "name": "Due Date" },
           "default_points": { "name": "Default Points" },
           "description": { "name": "Description" },
-          "state": {
-            "name": "State",
+          "global_state": {
+            "name": "Global State",
             "state": {
               "pending": "Pending",
               "approved": "Approved",
               "claimed": "Claimed",
               "overdue": "Overdue",
               "unknown": "Unknown",
-              "none": "None"
+              "none": "None",
+              "approved_in_part": "Approved (in-part)",
+              "claimed_in_part": "Claimed (in-part)"
             }
           },
           "partial_allowed": {
@@ -660,50 +664,6 @@
           "kid_name": { "name": "Kid Name" },
           "reward_name": { "name": "Reward Name" },
           "reward_cost": { "name": "Reward Cost" },
-          "description": { "name": "Description" }
-        }
-      }
-    },
-    "binary_sensor": {
-      "chore_claim_bs": {
-        "state": {
-          "on": "Approved",
-          "off": "Not Claimed"
-        },
-        "state_attributes": {
-          "kid_name": { "name": "Kid Name" },
-          "chore_name": { "name": "Chore Name" },
-          "shared_chore": {
-            "name": "Shared Chore",
-            "state": {
-              "true": "Yes",
-              "false": "No"
-            }
-          },
-          "kid_state": {
-            "name": "Kid State",
-            "state": {
-              "pending": "Pending",
-              "approved": "Approved",
-              "claimed": "Claimed",
-              "overdue": "Overdue",
-              "unknown": "Unknown",
-              "none": "None"
-            }
-          },
-          "global_state": {
-            "name": "Global State",
-            "state": {
-              "pending": "Pending",
-              "approved": "Approved",
-              "claimed": "Claimed",
-              "overdue": "Overdue",
-              "unknown": "Unknown",
-              "none": "None"
-            }
-          },
-          "due_date": { "name": "Due Date" },
-          "default_points": { "name": "Default Points" },
           "description": { "name": "Description" }
         }
       }

@@ -1,3 +1,4 @@
+# File: kc_helpers.py
 """KidsChores helper functions and shared logic."""
 
 from homeassistant.core import HomeAssistant
