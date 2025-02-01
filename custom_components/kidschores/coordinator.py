@@ -95,6 +95,51 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self._data: dict[str, Any] = {}
 
     # -------------------------------------------------------------------------------------
+    # Migrate Data and Converters
+    # -------------------------------------------------------------------------------------
+
+    def _migrate_datetime(self, dt_str: str) -> str:
+        """Convert a datetime string to a UTC-aware ISO string.
+
+        If the string is naive (lacking tzinfo), assume it represents local time.
+        """
+        try:
+            # Try to parse using Home Assistant’s utility first:
+            dt_obj = dt_util.parse_datetime(dt_str)
+            if dt_obj is None:
+                # Fallback using fromisoformat
+                dt_obj = datetime.fromisoformat(dt_str)
+            # If naive, assume local time and make it aware:
+            if dt_obj.tzinfo is None:
+                dt_obj = dt_util.make_aware(dt_obj, dt_util.get_local_time_zone())
+            # Convert to UTC
+            dt_obj_utc = dt_util.as_utc(dt_obj)
+            return dt_obj_utc.isoformat()
+        except Exception as err:
+            LOGGER.warning("Error migrating datetime '%s': %s", dt_str, err)
+            return dt_str
+
+    def _migrate_stored_datetimes(self):
+        """Walk through stored data and convert known datetime fields to UTC-aware ISO strings."""
+        # For each chore, migrate due_date, last_completed, and last_claimed
+        for chore in self._data.get(DATA_CHORES, {}).values():
+            if chore.get("due_date"):
+                chore["due_date"] = self._migrate_datetime(chore["due_date"])
+            if chore.get("last_completed"):
+                chore["last_completed"] = self._migrate_datetime(
+                    chore["last_completed"]
+                )
+            if chore.get("last_claimed"):
+                chore["last_claimed"] = self._migrate_datetime(chore["last_claimed"])
+        # Also, migrate timestamps in pending approvals
+        for approval in self._data.get(DATA_PENDING_CHORE_APPROVALS, []):
+            if approval.get("timestamp"):
+                approval["timestamp"] = self._migrate_datetime(approval["timestamp"])
+        for approval in self._data.get(DATA_PENDING_REWARD_APPROVALS, []):
+            if approval.get("timestamp"):
+                approval["timestamp"] = self._migrate_datetime(approval["timestamp"])
+
+    # -------------------------------------------------------------------------------------
     # Periodic + First Refresh
     # -------------------------------------------------------------------------------------
 
@@ -121,6 +166,10 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         stored_data = self.storage_manager.get_data()
         if stored_data:
             self._data = stored_data
+
+            # Migrate any datetime fields in stored data to UTC-aware strings
+            self._migrate_stored_datetimes()
+
         else:
             self._data = {
                 DATA_KIDS: {},
