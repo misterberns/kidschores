@@ -511,21 +511,27 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         badge_info = self._data[DATA_BADGES][badge_id]
         badge_info["name"] = badge_data.get("name", badge_info["name"])
         badge_info["threshold_type"] = badge_data.get(
-            "threshold_type", badge_info["threshold_type"]
+            "threshold_type",
+            badge_info.get("threshold_type", BADGE_THRESHOLD_TYPE_POINTS),
         )
         badge_info["threshold_value"] = badge_data.get(
-            "threshold_value", badge_info["threshold_value"]
+            "threshold_value",
+            badge_info.get("threshold_value", DEFAULT_BADGE_THRESHOLD),
         )
         badge_info["chore_count_type"] = badge_data.get(
-            "chore_count_type", badge_info["chore_count_type"]
+            "chore_count_type", badge_info.get("chore_count_type", FREQUENCY_NONE)
         )
         badge_info["points_multiplier"] = badge_data.get(
-            "points_multiplier", badge_info["points_multiplier"]
+            "points_multiplier",
+            badge_info.get("points_multiplier", DEFAULT_POINTS_MULTIPLIER),
         )
-        badge_info["icon"] = badge_data.get("icon", badge_info["icon"])
+        badge_info["icon"] = badge_data.get(
+            "icon", badge_info.get("icon", DEFAULT_ICON)
+        )
         badge_info["description"] = badge_data.get(
-            "description", badge_info["description"]
+            "description", badge_info.get("description", "")
         )
+
         LOGGER.debug("Updated badge '%s' with ID: %s", badge_info["name"], badge_id)
 
     # -- Rewards
@@ -704,7 +710,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         if chore_id not in kid_info.get("claimed_chores", []):
             kid_info.setdefault("claimed_chores", []).append(chore_id)
 
-        chore_info["last_claimed"] = datetime.now().isoformat()
+        chore_info["last_claimed"] = dt_util.utcnow().isoformat()
 
         # increment chore_claims
         if chore_id in kid_info["chore_claims"]:
@@ -717,7 +723,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             {
                 "kid_id": kid_id,
                 "chore_id": chore_id,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": dt_util.utcnow().isoformat(),
             }
         )
 
@@ -812,7 +818,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         kid_info["completed_chores_monthly"] += 1
         kid_info["completed_chores_total"] += 1
 
-        chore_info["last_completed"] = datetime.now().isoformat()
+        chore_info["last_completed"] = dt_util.utcnow().isoformat()
 
         # remove from pending approvals
         self._data[DATA_PENDING_CHORE_APPROVALS] = [
@@ -1007,7 +1013,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             {
                 "kid_id": kid_id,
                 "reward_id": reward_id,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": dt_util.utcnow().isoformat(),
             }
         )
 
@@ -1529,7 +1535,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         if freq == FREQUENCY_NONE:
             return
         # daily, weekly, monthly logic if chore lacks a due_date
-        now = datetime.now()
+        now = dt_util.utcnow()
         if freq == FREQUENCY_DAILY:
             next_due = now + timedelta(days=1)
         elif freq == FREQUENCY_WEEKLY:
