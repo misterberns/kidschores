@@ -27,7 +27,10 @@
         "data": {
           "kid_name": "Kid Name",
           "internal_id": "Internal ID",
-          "ha_user": "Home Assistant User"
+          "ha_user": "Home Assistant User",
+          "enable_mobile_notifications": "Enable Mobile Notifications",
+          "mobile_notify_service": "Notify Service",
+          "enable_persistent_notifications": "Enable Persistent Notifications"
         }
       },
       "parent_count": {
@@ -44,6 +47,9 @@
           "parent_name": "Parent Name",
           "ha_user_id": "Home Assistant User",
           "associated_kids": "Associated Kids",
+          "enable_mobile_notifications": "Enable Mobile Notifications",
+          "mobile_notify_service": "Notify Service",
+          "enable_persistent_notifications": "Enable Persistent Notifications",
           "internal_id": "Internal ID"
         }
       },
@@ -127,6 +133,54 @@
           "icon": "Icon (mdi:xxx)"
         }
       },
+      "achievement_count": {
+        "title": "Number of Achievements",
+        "description": "How many achievements do you want to define?",
+        "data": {
+          "achievement_count": "Achievement Count"
+        }
+      },
+      "achievements": {
+        "title": "Define Achievement",
+        "description": "Enter details for each achievement.",
+        "data": {
+          "name": "Achievement Name",
+          "description": "Description (optional)",
+          "icon": "Icon (mdi:xxx)",
+          "assigned_kids": "Assigned Kids",
+          "type": "Type of Achievement",
+          "selected_chore_id": "Select Chore Associated with Streak",
+          "criteria": "Criteria (optional)",
+          "target_value": "Achievement Target",
+          "reward_points": "Extra Points for Completing Achievement",
+          "internal_id": "Internal ID"
+        }
+      },
+      "challenge_count": {
+        "title": "Number of Challenges",
+        "description": "How many challenges do you want to define?",
+        "data": {
+          "achievement_count": "Challenge Count"
+        }
+      },
+      "challenges": {
+        "title": "Define Challenge",
+        "description": "Enter details for each challenge.",
+        "data": {
+          "name": "Challenge Name",
+          "description": "Description (optional)",
+          "icon": "Icon (mdi:xxx)",
+          "assigned_kids": "Assigned Kids",
+          "type": "Type of Challenge",
+          "selected_chore_id": "Select Chore Associated with Challenge (Optional)",
+          "criteria": "Criteria (optional)",
+          "target_value": "Challenges Target",
+          "reward_points": "Extra Points for Completing Challenge",
+          "start_date": "Start Date",
+          "end_date": "End Date",
+          "internal_id": "Internal ID"
+        }
+      },
       "finish": {
         "title": "Review & Finish",
         "description": "Review the setup:\n{summary}\nClick Submit to finalize."
@@ -195,6 +249,9 @@
         "data": {
           "kid_name": "Kid Name",
           "ha_user": "Home Assistant User",
+          "enable_mobile_notifications": "Enable Mobile Notifications",
+          "mobile_notify_service": "Notify Service",
+          "enable_persistent_notifications": "Enable Persistent Notifications",
           "internal_id": "Internal ID"
         }
       },
@@ -205,6 +262,9 @@
           "parent_name": "Parent Name",
           "ha_user_id": "Home Assistant User",
           "associated_kids": "Associated Kids",
+          "enable_mobile_notifications": "Enable Mobile Notifications",
+          "mobile_notify_service": "Notify Service",
+          "enable_persistent_notifications": "Enable Persistent Notifications",
           "internal_id": "Internal ID"
         }
       },
@@ -260,12 +320,49 @@
           "icon": "Icon (mdi:xxx)"
         }
       },
+      "add_achievement": {
+        "title": "Define Achievement",
+        "description": "Enter details for each achievement.",
+        "data": {
+          "name": "Achievement Name",
+          "description": "Description (optional)",
+          "icon": "Icon (mdi:xxx)",
+          "assigned_kids": "Assigned Kids",
+          "type": "Type of Achievement",
+          "selected_chore_id": "Select Chore Associated with Streak",
+          "criteria": "Criteria (optional)",
+          "target_value": "Achievement Target",
+          "reward_points": "Extra Points for Completing Achievement",
+          "internal_id": "Internal ID"
+        }
+      },
+      "add_challenge": {
+        "title": "Define Challenge",
+        "description": "Enter details for each challenge.",
+        "data": {
+          "name": "Challenge Name",
+          "description": "Description (optional)",
+          "icon": "Icon (mdi:xxx)",
+          "assigned_kids": "Assigned Kids",
+          "type": "Type of Challenge",
+          "selected_chore_id": "Select Chore Associated with Challenge (Optional)",
+          "criteria": "Criteria (optional)",
+          "target_value": "Challenges Target",
+          "reward_points": "Extra Points for Completing Challenge",
+          "start_date": "Start Date",
+          "end_date": "End Date",
+          "internal_id": "Internal ID"
+        }
+      },
       "edit_kid": {
         "title": "Edit Kid",
         "description": "Modify the details of the selected kid.",
         "data": {
           "kid_name": "Kid Name",
           "ha_user": "Home Assistant User",
+          "enable_mobile_notifications": "Enable Mobile Notifications",
+          "mobile_notify_service": "Notify Service",
+          "enable_persistent_notifications": "Enable Persistent Notifications",
           "internal_id": "Internal ID"
         }
       },
@@ -276,6 +373,9 @@
           "parent_name": "Parent Name",
           "ha_user_id": "Home Assistant User",
           "associated_kids": "Associated Kids",
+          "enable_mobile_notifications": "Enable Mobile Notifications",
+          "mobile_notify_service": "Notify Service",
+          "enable_persistent_notifications": "Enable Persistent Notifications",
           "internal_id": "Internal ID"
         }
       },
@@ -331,6 +431,40 @@
           "icon": "Icon (mdi:xxx)"
         }
       },
+      "edit_achievement": {
+        "title": "Define Achievement",
+        "description": "Enter details for each achievement.",
+        "data": {
+          "name": "Achievement Name",
+          "description": "Description (optional)",
+          "icon": "Icon (mdi:xxx)",
+          "assigned_kids": "Assigned Kids",
+          "type": "Type of Achievement",
+          "selected_chore_id": "Select Chore Associated with Streak",
+          "criteria": "Criteria (optional)",
+          "target_value": "Achievement Target",
+          "reward_points": "Extra Points for Completing Achievement",
+          "internal_id": "Internal ID"
+        }
+      },
+      "edit_challenge": {
+        "title": "Define Challenge",
+        "description": "Enter details for each challenge.",
+        "data": {
+          "name": "Challenge Name",
+          "description": "Description (optional)",
+          "icon": "Icon (mdi:xxx)",
+          "assigned_kids": "Assigned Kids",
+          "type": "Type of Challenge",
+          "selected_chore_id": "Select Chore Associated with Challenge (Optional)",
+          "criteria": "Criteria (optional)",
+          "target_value": "Challenges Target",
+          "reward_points": "Extra Points for Completing Challenge",
+          "start_date": "Start Date",
+          "end_date": "End Date",
+          "internal_id": "Internal ID"
+        }
+      },
       "delete_kid": {
         "title": "Delete Kid",
         "description": "Are you sure you want to delete the kid {kid_name}?",
@@ -359,6 +493,16 @@
       "delete_penalty": {
         "title": "Delete Penalty",
         "description": "Are you sure you want to delete the penalty {penalty_name}?",
+        "data": {}
+      },
+      "delete_achievement": {
+        "title": "Delete Achievement",
+        "description": "Are you sure you want to delete the achievement {achievement_name}?",
+        "data": {}
+      },
+      "delete_challenge": {
+        "title": "Delete Challenge",
+        "description": "Are you sure you want to delete the challenge {challenge_name}?",
         "data": {}
       }
     },
@@ -392,6 +536,8 @@
         "manage_badge": "Manage Badge",
         "manage_reward": "Manage Reward",
         "manage_penalty": "Manage Penalty",
+        "manage_achievement": "Manage Achievement",
+        "manage_challenge": "Manage Challenge",
         "done": "Finish Setup"
       }
     },
@@ -648,8 +794,31 @@
             }
           },
           "points_multiplier": { "name": "Points Multiplier" },
-          "icodescriptionn": { "name": "Description" },
+          "descriptionn": { "name": "Description" },
           "kids_earned": { "name": "Kids Earned" }
+        }
+      },
+      "shared_chore_global_state": {
+        "state": {
+          "pending": "Pending",
+          "approved": "Approved",
+          "claimed": "Claimed",
+          "overdue": "Overdue",
+          "unknown": "Unknown",
+          "none": "None",
+          "approved_in_part": "Approved (in-part)",
+          "claimed_in_part": "Claimed (in-part)"
+        },
+        "state_attributes": {
+          "due_date": { "name": "Due Date" },
+          "default_points": { "name": "Default Points" },
+          "shared_chore": {
+            "name": "Shared Chore",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          }
         }
       },
       "reward_state": {
@@ -665,6 +834,72 @@
           "reward_name": { "name": "Reward Name" },
           "reward_cost": { "name": "Reward Cost" },
           "description": { "name": "Description" }
+        }
+      },
+      "penalty_applies": {
+        "state_attributes": {
+          "kid_name": { "name": "Kid Name" },
+          "penalty_name": { "name": "Penalty Name" },
+          "descriptionn": { "name": "Description" },
+          "penalty_points": { "name": "Penalty Points" }
+        }
+      },
+      "achievement_state": {
+        "state_attributes": {
+          "target_value": { "name": "Target" },
+          "reward_points": { "name": "Reward Points" },
+          "type": { "name": "Type" },
+          "earned_by": { "name": "Earned by" }
+        }
+      },
+      "challenge_state": {
+        "state_attributes": {
+          "target_value": { "name": "Target" },
+          "reward_points": { "name": "Reward Points" },
+          "start_date": "Start Date",
+          "end_date": "End Date",
+          "type": { "name": "Type" },
+          "earned_by": { "name": "Earned by" }
+        }
+      },
+      "achievement_progress": {
+        "state_attributes": {
+          "achievement_name": { "name": "Name" },
+          "target_value": { "name": "Target" },
+          "raw_progress": { "name": "Progress" },
+          "awarded": {
+            "name": "Awarded",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          }
+        }
+      },
+      "challenge_progress": {
+        "state_attributes": {
+          "challenge_name": { "name": "Name" },
+          "target_value": { "name": "Target" },
+          "raw_progress": { "name": "Progress" },
+          "challenge_type": { "name": "Type" },
+          "awarded": {
+            "name": "Awarded",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          }
+        }
+      },
+      "kid_highest_streak": {
+        "state_attributes": {
+          "streaks_by_achievement": { "name": "Streaks by Achievement" }
+        }
+      },
+      "chore_streak": {
+        "state_attributes": {
+          "last_date": { "name": "Last Date" },
+          "raw_streak": { "name": "Current Streak" }
         }
       }
     }

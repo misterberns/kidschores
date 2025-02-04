@@ -32,7 +32,9 @@ UPDATE_INTERVAL = 5  # Update interval for coordinator (in minutes)
 
 # -------------------- Configuration --------------------
 # Configuration Keys
+CONF_ACHIEVEMENTS = "achievements"
 CONF_BADGES = "badges"  # Key for badges configuration
+CONF_CHALLENGES = "challenges"
 CONF_CHORES = "chores"  # Key for chores configuration
 CONF_GLOBAL = "global"
 CONF_KIDS = "kids"  # Key for kids configuration
@@ -43,7 +45,9 @@ CONF_POINTS_LABEL = "points_label"  # Custom label for points
 CONF_REWARDS = "rewards"  # Key for rewards configuration
 
 # Options Flow Management
+OPTIONS_FLOW_ACHIEVEMENTS = "manage_achievements"  # Edit achivements step
 OPTIONS_FLOW_BADGES = "manage_badges"  # Edit badges step
+OPTIONS_FLOW_CHALLENGES = "manage_challenges"  # Edit challenges step
 OPTIONS_FLOW_CHORES = "manage_chores"  # Edit chores step
 OPTIONS_FLOW_KIDS = "manage_kids"  # Edit kids step
 OPTIONS_FLOW_PARENTS = "manage_parents"  # Edit parents step
@@ -56,9 +60,29 @@ VALIDATION_PARTIAL_ALLOWED = "partial_allowed"  # Allow partial points in chores
 VALIDATION_THRESHOLD_TYPE = "threshold_type"  # Badge criteria type
 VALIDATION_THRESHOLD_VALUE = "threshold_value"  # Badge criteria value
 
+# Notification configuration keys
+CONF_ENABLE_MOBILE_NOTIFICATIONS = "enable_mobile_notifications"
+CONF_MOBILE_NOTIFY_SERVICE = "mobile_notify_service"
+CONF_ENABLE_PERSISTENT_NOTIFICATIONS = "enable_persistent_notifications"
+
+NOTIFICATION_EVENT = "mobile_app_notification_action"
+
+# Achievement types
+ACHIEVEMENT_TYPE_STREAK = "chore_streak"  # e.g., “Make bed 20 days in a row”
+ACHIEVEMENT_TYPE_TOTAL = "chore_total"  # e.g., “Complete 100 chores overall”
+
+# Challenge types
+CHALLENGE_TYPE_TOTAL_WITHIN_WINDOW = (
+    "total_within_window"  # e.g., “Complete 50 chores in 30 days”
+)
+CHALLENGE_TYPE_DAILY_MIN = "daily_minimum"  # e.g., “Do 2 chores each day for 14 days”
+
+
 # -------------------- Defaults --------------------
 # Default Icons
-DEFAULT_BADGE_BINARY_ICON = "mdi:shield-star-outline"  # For kid-has-any-badge sensor
+DEFAULT_ACHIEVEMENTS_ICON = "mdi:trophy-award"  # Default icon for achievements
+DEFAULT_BADGE_ICON = "mdi:shield-star-outline"
+DEFAULT_CHALLENGES_ICON = "mdi:trophy"  # Default icon for achievements
 DEFAULT_CHORE_APPROVE_ICON = "mdi:checkbox-marked-circle-outline"
 DEFAULT_CHORE_BINARY_ICON = (
     "mdi:checkbox-blank-circle-outline"  # For chore status binary sensor
@@ -74,7 +98,8 @@ DEFAULT_ICON = "mdi:star-outline"  # Default icon for general points display
 DEFAULT_PENALTY_ICON = "mdi:alert-outline"  # Default icon for penalties
 DEFAULT_POINTS_ADJUST_MINUS_ICON = "mdi:minus-circle-outline"
 DEFAULT_POINTS_ADJUST_PLUS_ICON = "mdi:plus-circle-outline"
-DEFAULT_POINTS_ICON = "mdi:star-outline"
+DEFAULT_POINTS_ICON = "mdi:star-outline"  # Default icon for points
+DEFAULT_STREAK_ICON = "mdi:blur-linear"  # Default icon for streaks
 DEFAULT_REWARD_ICON = "mdi:gift-outline"  # Default icon for rewards
 DEFAULT_TROPHY_ICON = "mdi:trophy"  # For highest-badge sensor fallback
 DEFAULT_TROPHY_OUTLINE = "mdi:trophy-outline"
@@ -87,6 +112,7 @@ DEFAULT_POINTS = 5  # Default points awarded for each chore
 DEFAULT_POINTS_MULTIPLIER = 1  # Default points multiplier for badges
 DEFAULT_POINTS_LABEL = "Points"  # Default label for points displayed in UI
 DEFAULT_PENALTY_POINTS = 2  # Default points deducted for each penalty
+DEFAULT_REMINDER_DELAY = 30  # Default reminder delay in minutes
 DEFAULT_REWARD_COST = 10  # Default cost for each reward
 DEFAULT_DAILY_RESET_TIME = {
     "hour": 0,
@@ -104,7 +130,9 @@ FREQUENCY_WEEKLY = "weekly"
 
 # -------------------- Data Keys --------------------
 # Data Keys for Coordinator and Storage
+DATA_ACHIEVEMENTS = "achievements"  # Key for storing achievements data
 DATA_BADGES = "badges"  # Key for storing badges data
+DATA_CHALLENGES = "challenges"  # Key for storing challenges data
 DATA_CHORES = "chores"  # Key for storing chores data
 DATA_KIDS = "kids"  # Key for storing kids data in storage
 DATA_PARENTS = "parents"  # Key for storing parent data
@@ -140,6 +168,19 @@ REWARD_STATE_UNKNOWN = "unknown"  # Unknown reward state
 # Event Names
 EVENT_CHORE_COMPLETED = "kidschores_chore_completed"  # Event for chore completion
 EVENT_REWARD_REDEEMED = "kidschores_reward_redeemed"  # Event for redeeming a reward
+
+# -------------------- Actions --------------------
+# Action titles for notifications
+ACTION_TITLE_APPROVE = "Approve"
+ACTION_TITLE_DISAPPROVE = "Disapprove"
+ACTION_TITLE_REMIND_30 = "Remind in 30 mins"
+
+# Action identifiers
+ACTION_APPROVE_CHORE = "APPROVE_CHORE"
+ACTION_DISAPPROVE_CHORE = "DISAPPROVE_CHORE"
+ACTION_APPROVE_REWARD = "APPROVE_REWARD"
+ACTION_DISAPPROVE_REWARD = "DISAPPROVE_REWARD"
+ACTION_REMIND_30 = "REMIND_30"
 
 # -------------------- Sensors --------------------
 # Sensor Attributes
