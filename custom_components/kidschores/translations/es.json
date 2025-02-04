@@ -858,8 +858,8 @@
         "state_attributes": {
           "target_value": { "name": "Meta" },
           "reward_points": { "name": "Puntos de Recompensa" },
-          "start_date": "Fecha de Inicio",
-          "end_date": "Fecha de Fin",
+          "start_date": { "name": "Fecha de Inicio" },
+          "end_date": { "name": "Fecha de Fin" },
           "type": { "name": "Tipo" },
           "earned_by": { "name": "Obtenido por" }
         }

@@ -856,8 +856,8 @@
         "state_attributes": {
           "target_value": { "name": "Target" },
           "reward_points": { "name": "Reward Points" },
-          "start_date": "Start Date",
-          "end_date": "End Date",
+          "start_date": { "name": "Start Date" },
+          "end_date": { "name": "End Date" },
           "type": { "name": "Type" },
           "earned_by": { "name": "Earned by" }
         }
