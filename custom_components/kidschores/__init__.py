@@ -20,10 +20,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import (
     DOMAIN,
     LOGGER,
+    NOTIFICATION_EVENT,
     STORAGE_KEY,
     PLATFORMS,
 )
 from .coordinator import KidsChoresDataCoordinator
+from .notification_action_handler import async_handle_notification_action
 from .storage_manager import KidsChoresStorageManager
 from .services import async_setup_services, async_unload_services
 
@@ -81,6 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Forward the setup to supported platforms (sensors, buttons, etc.).
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Listen for notification actions from the companion app.
+    hass.bus.async_listen(NOTIFICATION_EVENT, async_handle_notification_action)
 
     LOGGER.info("KidsChores setup complete for entry: %s", entry.entry_id)
     return True

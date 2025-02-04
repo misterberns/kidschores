@@ -4,11 +4,11 @@
     "step": {
       "intro": {
         "title": "Bienvenido a KidsChores",
-        "description": "Este asistente le guiará para configurar KidsChores."
+        "description": "Este asistente te guiará en la configuración de KidsChores."
       },
       "points_label": {
         "title": "Etiqueta de Puntos",
-        "description": "Elija una etiqueta e icono para los puntos.",
+        "description": "Elige una etiqueta e icono para los puntos.",
         "data": {
           "points_label": "Etiqueta de Puntos",
           "points_icon": "Icono de Puntos"
@@ -16,47 +16,53 @@
       },
       "kid_count": {
         "title": "Número de Niños",
-        "description": "¿Cuántos niños desea gestionar?",
+        "description": "¿Cuántos niños deseas gestionar?",
         "data": {
           "kid_count": "Número de Niños"
         }
       },
       "kids": {
         "title": "Definir Niño",
-        "description": "Ingrese el nombre de cada niño.",
+        "description": "Introduce el nombre de cada niño.",
         "data": {
           "kid_name": "Nombre del Niño",
           "internal_id": "ID Interno",
-          "ha_user": "Usuario de Home Assistant"
+          "ha_user": "Usuario de Home Assistant",
+          "enable_mobile_notifications": "Habilitar Notificaciones Móviles",
+          "mobile_notify_service": "Servicio de Notificación",
+          "enable_persistent_notifications": "Habilitar Notificaciones Persistentes"
         }
       },
       "parent_count": {
         "title": "Número de Padres",
-        "description": "¿Cuántos padres desea definir inicialmente?",
+        "description": "¿Cuántos padres deseas definir inicialmente?",
         "data": {
           "parent_count": "Número de Padres"
         }
       },
       "parents": {
         "title": "Definir Padre",
-        "description": "Ingrese detalles para cada padre.",
+        "description": "Introduce los detalles para cada padre.",
         "data": {
           "parent_name": "Nombre del Padre",
           "ha_user_id": "Usuario de Home Assistant",
           "associated_kids": "Niños Asociados",
+          "enable_mobile_notifications": "Habilitar Notificaciones Móviles",
+          "mobile_notify_service": "Servicio de Notificación",
+          "enable_persistent_notifications": "Habilitar Notificaciones Persistentes",
           "internal_id": "ID Interno"
         }
       },
       "chore_count": {
         "title": "Número de Tareas",
-        "description": "¿Cuántas tareas desea definir?",
+        "description": "¿Cuántas tareas deseas definir?",
         "data": {
           "chore_count": "Número de Tareas"
         }
       },
       "chores": {
         "title": "Definir Tarea",
-        "description": "Ingrese detalles para cada tarea.",
+        "description": "Introduce los detalles para cada tarea.",
         "data": {
           "chore_name": "Nombre de la Tarea",
           "internal_id": "ID Interno",
@@ -73,19 +79,19 @@
       },
       "badge_count": {
         "title": "Número de Insignias",
-        "description": "¿Cuántas insignias desea definir?",
+        "description": "¿Cuántas insignias deseas definir?",
         "data": {
-          "badge_count": "Número de Insignias"
+          "badge_count": "Cantidad de Insignias"
         }
       },
       "badges": {
         "title": "Definir Insignia",
-        "description": "Ingrese detalles para cada insignia.",
+        "description": "Introduce los detalles para cada insignia.",
         "data": {
           "badge_name": "Nombre de la Insignia",
           "internal_id": "ID Interno",
           "threshold_type": "Tipo de Umbral",
-          "threshold_value": "Valor de Umbral",
+          "threshold_value": "Valor del Umbral",
           "points_multiplier": "Multiplicador de Puntos",
           "icon": "Icono (mdi:xxx)",
           "badge_description": "Descripción (opcional)"
@@ -93,14 +99,14 @@
       },
       "reward_count": {
         "title": "Número de Recompensas",
-        "description": "¿Cuántas recompensas desea definir?",
+        "description": "¿Cuántas recompensas deseas definir?",
         "data": {
-          "reward_count": "Número de Recompensas"
+          "reward_count": "Cantidad de Recompensas"
         }
       },
       "rewards": {
         "title": "Definir Recompensa",
-        "description": "Ingrese detalles para cada recompensa.",
+        "description": "Introduce los detalles para cada recompensa.",
         "data": {
           "reward_name": "Nombre de la Recompensa",
           "internal_id": "ID Interno",
@@ -111,14 +117,14 @@
       },
       "penalty_count": {
         "title": "Número de Penalizaciones",
-        "description": "¿Cuántas penalizaciones desea definir?",
+        "description": "¿Cuántas penalizaciones deseas definir?",
         "data": {
-          "penalty_count": "Número de Penalizaciones"
+          "penalty_count": "Cantidad de Penalizaciones"
         }
       },
       "penalties": {
         "title": "Definir Penalización",
-        "description": "Ingrese detalles para cada penalización.",
+        "description": "Introduce los detalles para cada penalización.",
         "data": {
           "penalty_name": "Nombre de la Penalización",
           "penalty_description": "Descripción (opcional)",
@@ -127,17 +133,65 @@
           "icon": "Icono (mdi:xxx)"
         }
       },
+      "achievement_count": {
+        "title": "Número de Logros",
+        "description": "¿Cuántos logros deseas definir?",
+        "data": {
+          "achievement_count": "Cantidad de Logros"
+        }
+      },
+      "achievements": {
+        "title": "Definir Logro",
+        "description": "Introduce los detalles para cada logro.",
+        "data": {
+          "name": "Nombre del Logro",
+          "description": "Descripción (opcional)",
+          "icon": "Icono (mdi:xxx)",
+          "assigned_kids": "Niños Asignados",
+          "type": "Tipo de Logro",
+          "selected_chore_id": "Selecciona la Tarea Asociada al Racha",
+          "criteria": "Criterio (opcional)",
+          "target_value": "Meta del Logro",
+          "reward_points": "Puntos Extra por Completar el Logro",
+          "internal_id": "ID Interno"
+        }
+      },
+      "challenge_count": {
+        "title": "Número de Desafíos",
+        "description": "¿Cuántos desafíos deseas definir?",
+        "data": {
+          "achievement_count": "Cantidad de Desafíos"
+        }
+      },
+      "challenges": {
+        "title": "Definir Desafío",
+        "description": "Introduce los detalles para cada desafío.",
+        "data": {
+          "name": "Nombre del Desafío",
+          "description": "Descripción (opcional)",
+          "icon": "Icono (mdi:xxx)",
+          "assigned_kids": "Niños Asignados",
+          "type": "Tipo de Desafío",
+          "selected_chore_id": "Selecciona la Tarea Asociada al Desafío (Opcional)",
+          "criteria": "Criterio (opcional)",
+          "target_value": "Meta del Desafío",
+          "reward_points": "Puntos Extra por Completar el Desafío",
+          "start_date": "Fecha de Inicio",
+          "end_date": "Fecha de Fin",
+          "internal_id": "ID Interno"
+        }
+      },
       "finish": {
         "title": "Revisar y Finalizar",
-        "description": "Revise la configuración:\n{summary}\nHaga clic en Enviar para finalizar."
+        "description": "Revisa la configuración:\n{summary}\nHaz clic en Enviar para finalizar."
       }
     },
     "error": {
-      "invalid_kid_count": "Cantidad de niños inválida",
-      "invalid_chore_count": "Cantidad de tareas inválida",
-      "invalid_badge_count": "Cantidad de insignias inválida",
-      "invalid_reward_count": "Cantidad de recompensas inválida",
-      "invalid_penalty_count": "Cantidad de penalizaciones inválida",
+      "invalid_kid_count": "Número de niños inválido",
+      "invalid_chore_count": "Número de tareas inválido",
+      "invalid_badge_count": "Número de insignias inválido",
+      "invalid_reward_count": "Número de recompensas inválido",
+      "invalid_penalty_count": "Número de penalizaciones inválido",
       "invalid_kid_name": "Nombre de niño inválido",
       "duplicate_kid": "Ya existe un niño con este nombre",
       "duplicate_chore": "Ya existe una tarea con este nombre",
@@ -155,35 +209,35 @@
       "no_penalties": "No hay penalizaciones disponibles."
     },
     "abort": {
-      "single_instance_allowed": "Solo se permite una instancia de KidsChores."
+      "single_instance_allowed": "Solo se puede configurar una única instancia de KidsChores."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Opciones de KidsChores",
-        "description": "Gestione niños, tareas, insignias, recompensas, penalizaciones, o finalice.",
+        "description": "Gestiona niños, tareas, insignias, recompensas, penalizaciones o finaliza.",
         "data": {
-          "menu_selection": "Seleccione una Opción"
+          "menu_selection": "Selecciona una Opción"
         }
       },
       "manage_entity": {
-        "title": "Seleccione Acción",
-        "description": "Agregar, editar o eliminar opciones.",
+        "title": "Selecciona Acción",
+        "description": "Agrega, edita o elimina opciones.",
         "data": {
-          "manage_action": "Seleccione una Acción"
+          "manage_action": "Selecciona una Acción"
         }
       },
       "select_entity": {
-        "title": "Seleccione {entity_type}",
-        "description": "Seleccione el {entity_type} que desea {action}.",
+        "title": "Selecciona {entity_type}",
+        "description": "Selecciona el/la {entity_type} que deseas {action}.",
         "data": {
           "entity_name": "Nombre"
         }
       },
       "manage_points": {
         "title": "Editar Etiqueta e Icono de Puntos",
-        "description": "Cambie la etiqueta y el icono usados para representar puntos.",
+        "description": "Cambia la etiqueta e icono que representan los puntos.",
         "data": {
           "points_label": "Etiqueta de Puntos",
           "points_icon": "Icono de Puntos"
@@ -191,26 +245,32 @@
       },
       "add_kid": {
         "title": "Agregar Niño",
-        "description": "Proporcione los detalles para el nuevo niño.",
+        "description": "Proporciona los detalles para el nuevo niño.",
         "data": {
           "kid_name": "Nombre del Niño",
           "ha_user": "Usuario de Home Assistant",
+          "enable_mobile_notifications": "Habilitar Notificaciones Móviles",
+          "mobile_notify_service": "Servicio de Notificación",
+          "enable_persistent_notifications": "Habilitar Notificaciones Persistentes",
           "internal_id": "ID Interno"
         }
       },
       "add_parent": {
         "title": "Agregar Padre",
-        "description": "Proporcione los detalles para el nuevo padre.",
+        "description": "Proporciona los detalles para el nuevo padre.",
         "data": {
           "parent_name": "Nombre del Padre",
           "ha_user_id": "Usuario de Home Assistant",
           "associated_kids": "Niños Asociados",
+          "enable_mobile_notifications": "Habilitar Notificaciones Móviles",
+          "mobile_notify_service": "Servicio de Notificación",
+          "enable_persistent_notifications": "Habilitar Notificaciones Persistentes",
           "internal_id": "ID Interno"
         }
       },
       "add_chore": {
         "title": "Agregar Tarea",
-        "description": "Proporcione los detalles para la nueva tarea.",
+        "description": "Proporciona los detalles para la nueva tarea.",
         "data": {
           "chore_name": "Nombre de la Tarea",
           "internal_id": "ID Interno",
@@ -227,12 +287,12 @@
       },
       "add_badge": {
         "title": "Agregar Insignia",
-        "description": "Proporcione los detalles para la nueva insignia.",
+        "description": "Proporciona los detalles para la nueva insignia.",
         "data": {
           "badge_name": "Nombre de la Insignia",
           "internal_id": "ID Interno",
           "threshold_type": "Tipo de Umbral",
-          "threshold_value": "Valor de Umbral",
+          "threshold_value": "Valor del Umbral",
           "points_multiplier": "Multiplicador de Puntos",
           "icon": "Icono (mdi:xxx)",
           "badge_description": "Descripción (opcional)"
@@ -240,7 +300,7 @@
       },
       "add_reward": {
         "title": "Agregar Recompensa",
-        "description": "Proporcione los detalles para la nueva recompensa.",
+        "description": "Proporciona los detalles para la nueva recompensa.",
         "data": {
           "reward_name": "Nombre de la Recompensa",
           "internal_id": "ID Interno",
@@ -251,7 +311,7 @@
       },
       "add_penalty": {
         "title": "Agregar Penalización",
-        "description": "Proporcione los detalles para la nueva penalización.",
+        "description": "Proporciona los detalles para la nueva penalización.",
         "data": {
           "penalty_name": "Nombre de la Penalización",
           "penalty_description": "Descripción (opcional)",
@@ -260,28 +320,68 @@
           "icon": "Icono (mdi:xxx)"
         }
       },
+      "add_achievement": {
+        "title": "Definir Logro",
+        "description": "Introduce los detalles para cada logro.",
+        "data": {
+          "name": "Nombre del Logro",
+          "description": "Descripción (opcional)",
+          "icon": "Icono (mdi:xxx)",
+          "assigned_kids": "Niños Asignados",
+          "type": "Tipo de Logro",
+          "selected_chore_id": "Selecciona la Tarea Asociada al Racha",
+          "criteria": "Criterio (opcional)",
+          "target_value": "Meta del Logro",
+          "reward_points": "Puntos Extra por Completar el Logro",
+          "internal_id": "ID Interno"
+        }
+      },
+      "add_challenge": {
+        "title": "Definir Desafío",
+        "description": "Introduce los detalles para cada desafío.",
+        "data": {
+          "name": "Nombre del Desafío",
+          "description": "Descripción (opcional)",
+          "icon": "Icono (mdi:xxx)",
+          "assigned_kids": "Niños Asignados",
+          "type": "Tipo de Desafío",
+          "selected_chore_id": "Selecciona la Tarea Asociada al Desafío (Opcional)",
+          "criteria": "Criterio (opcional)",
+          "target_value": "Meta del Desafío",
+          "reward_points": "Puntos Extra por Completar el Desafío",
+          "start_date": "Fecha de Inicio",
+          "end_date": "Fecha de Fin",
+          "internal_id": "ID Interno"
+        }
+      },
       "edit_kid": {
         "title": "Editar Niño",
-        "description": "Modifique los detalles del niño seleccionado.",
+        "description": "Modifica los detalles del niño seleccionado.",
         "data": {
           "kid_name": "Nombre del Niño",
           "ha_user": "Usuario de Home Assistant",
+          "enable_mobile_notifications": "Habilitar Notificaciones Móviles",
+          "mobile_notify_service": "Servicio de Notificación",
+          "enable_persistent_notifications": "Habilitar Notificaciones Persistentes",
           "internal_id": "ID Interno"
         }
       },
       "edit_parent": {
         "title": "Editar Padre",
-        "description": "Modifique los detalles del padre seleccionado.",
+        "description": "Modifica los detalles del padre seleccionado.",
         "data": {
           "parent_name": "Nombre del Padre",
           "ha_user_id": "Usuario de Home Assistant",
           "associated_kids": "Niños Asociados",
+          "enable_mobile_notifications": "Habilitar Notificaciones Móviles",
+          "mobile_notify_service": "Servicio de Notificación",
+          "enable_persistent_notifications": "Habilitar Notificaciones Persistentes",
           "internal_id": "ID Interno"
         }
       },
       "edit_chore": {
         "title": "Editar Tarea",
-        "description": "Modifique los detalles de la tarea seleccionada.",
+        "description": "Modifica los detalles de la tarea seleccionada.",
         "data": {
           "chore_name": "Nombre de la Tarea",
           "internal_id": "ID Interno",
@@ -298,12 +398,12 @@
       },
       "edit_badge": {
         "title": "Editar Insignia",
-        "description": "Modifique los detalles de la insignia seleccionada.",
+        "description": "Modifica los detalles de la insignia seleccionada.",
         "data": {
           "badge_name": "Nombre de la Insignia",
           "internal_id": "ID Interno",
           "threshold_type": "Tipo de Umbral",
-          "threshold_value": "Valor de Umbral",
+          "threshold_value": "Valor del Umbral",
           "points_multiplier": "Multiplicador de Puntos",
           "icon": "Icono (mdi:xxx)",
           "badge_description": "Descripción (opcional)"
@@ -311,7 +411,7 @@
       },
       "edit_reward": {
         "title": "Editar Recompensa",
-        "description": "Modifique los detalles de la recompensa seleccionada.",
+        "description": "Modifica los detalles de la recompensa seleccionada.",
         "data": {
           "reward_name": "Nombre de la Recompensa",
           "internal_id": "ID Interno",
@@ -322,7 +422,7 @@
       },
       "edit_penalty": {
         "title": "Editar Penalización",
-        "description": "Modifique los detalles de la penalización seleccionada.",
+        "description": "Modifica los detalles de la penalización seleccionada.",
         "data": {
           "penalty_name": "Nombre de la Penalización",
           "penalty_description": "Descripción (opcional)",
@@ -331,39 +431,83 @@
           "icon": "Icono (mdi:xxx)"
         }
       },
+      "edit_achievement": {
+        "title": "Definir Logro",
+        "description": "Introduce los detalles para cada logro.",
+        "data": {
+          "name": "Nombre del Logro",
+          "description": "Descripción (opcional)",
+          "icon": "Icono (mdi:xxx)",
+          "assigned_kids": "Niños Asignados",
+          "type": "Tipo de Logro",
+          "selected_chore_id": "Selecciona la Tarea Asociada al Racha",
+          "criteria": "Criterio (opcional)",
+          "target_value": "Meta del Logro",
+          "reward_points": "Puntos Extra por Completar el Logro",
+          "internal_id": "ID Interno"
+        }
+      },
+      "edit_challenge": {
+        "title": "Definir Desafío",
+        "description": "Introduce los detalles para cada desafío.",
+        "data": {
+          "name": "Nombre del Desafío",
+          "description": "Descripción (opcional)",
+          "icon": "Icono (mdi:xxx)",
+          "assigned_kids": "Niños Asignados",
+          "type": "Tipo de Desafío",
+          "selected_chore_id": "Selecciona la Tarea Asociada al Desafío (Opcional)",
+          "criteria": "Criterio (opcional)",
+          "target_value": "Meta del Desafío",
+          "reward_points": "Puntos Extra por Completar el Desafío",
+          "start_date": "Fecha de Inicio",
+          "end_date": "Fecha de Fin",
+          "internal_id": "ID Interno"
+        }
+      },
       "delete_kid": {
         "title": "Eliminar Niño",
-        "description": "¿Está seguro de que desea eliminar al niño {kid_name}?",
+        "description": "¿Estás seguro de que deseas eliminar al niño {kid_name}?",
         "data": {}
       },
       "delete_parent": {
         "title": "Eliminar Padre",
-        "description": "¿Está seguro de que desea eliminar al padre {parent_name}?",
+        "description": "¿Estás seguro de que deseas eliminar al padre {parent_name}?",
         "data": {}
       },
       "delete_chore": {
         "title": "Eliminar Tarea",
-        "description": "¿Está seguro de que desea eliminar la tarea {chore_name}?",
+        "description": "¿Estás seguro de que deseas eliminar la tarea {chore_name}?",
         "data": {}
       },
       "delete_badge": {
         "title": "Eliminar Insignia",
-        "description": "¿Está seguro de que desea eliminar la insignia {badge_name}?",
+        "description": "¿Estás seguro de que deseas eliminar la insignia {badge_name}?",
         "data": {}
       },
       "delete_reward": {
         "title": "Eliminar Recompensa",
-        "description": "¿Está seguro de que desea eliminar la recompensa {reward_name}?",
+        "description": "¿Estás seguro de que deseas eliminar la recompensa {reward_name}?",
         "data": {}
       },
       "delete_penalty": {
         "title": "Eliminar Penalización",
-        "description": "¿Está seguro de que desea eliminar la penalización {penalty_name}?",
+        "description": "¿Estás seguro de que deseas eliminar la penalización {penalty_name}?",
+        "data": {}
+      },
+      "delete_achievement": {
+        "title": "Eliminar Logro",
+        "description": "¿Estás seguro de que deseas eliminar el logro {achievement_name}?",
+        "data": {}
+      },
+      "delete_challenge": {
+        "title": "Eliminar Desafío",
+        "description": "¿Estás seguro de que deseas eliminar el desafío {challenge_name}?",
         "data": {}
       }
     },
     "error": {
-      "invalid_entity": "La entidad seleccionada es inválida.",
+      "invalid_entity": "La entidad seleccionada no es válida.",
       "no_kids": "No hay niños disponibles.",
       "no_chores": "No hay tareas disponibles.",
       "no_badges": "No hay insignias disponibles.",
@@ -385,13 +529,15 @@
   "selector": {
     "main_menu": {
       "options": {
-        "manage_points": "Administrar Puntos",
-        "manage_kid": "Administrar Niño",
-        "manage_parent": "Administrar Padre",
-        "manage_chore": "Administrar Tarea",
-        "manage_badge": "Administrar Insignia",
-        "manage_reward": "Administrar Recompensa",
-        "manage_penalty": "Administrar Penalización",
+        "manage_points": "Gestionar Puntos",
+        "manage_kid": "Gestionar Niño",
+        "manage_parent": "Gestionar Padre",
+        "manage_chore": "Gestionar Tarea",
+        "manage_badge": "Gestionar Insignia",
+        "manage_reward": "Gestionar Recompensa",
+        "manage_penalty": "Gestionar Penalización",
+        "manage_achievement": "Gestionar Logro",
+        "manage_challenge": "Gestionar Desafío",
         "done": "Finalizar Configuración"
       }
     },
@@ -406,22 +552,22 @@
     "recurring_frequency": {
       "options": {
         "none": "Ninguna",
-        "daily": "Diariamente",
-        "weekly": "Semanalmente",
-        "monthly": "Mensualmente"
+        "daily": "Diaria",
+        "weekly": "Semanal",
+        "monthly": "Mensual"
       }
     },
     "threshold_type": {
       "options": {
         "points": "Puntos",
-        "chore_count": "Recuento de Tareas"
+        "chore_count": "Cantidad de Tareas"
       }
     }
   },
   "services": {
     "claim_chore": {
       "name": "Reclamar Tarea",
-      "description": "Un niño reclama una tarea, marcándola como 'reclamada' a la espera de aprobación parental.",
+      "description": "Un niño reclama una tarea, marcándola como 'reclamada' para la aprobación de los padres.",
       "fields": {
         "kid_name": {
           "name": "Nombre del Niño",
@@ -431,7 +577,7 @@
         "chore_name": {
           "name": "Nombre de la Tarea",
           "description": "El nombre de la tarea a reclamar.",
-          "example": "Lavar los platos"
+          "example": "Lavar los Platos"
         }
       }
     },
@@ -452,33 +598,33 @@
         "chore_name": {
           "name": "Nombre de la Tarea",
           "description": "El nombre de la tarea que se aprueba.",
-          "example": "Lavar los platos"
+          "example": "Lavar los Platos"
         },
         "points_awarded": {
           "name": "Puntos Otorgados",
-          "description": "Puntos a otorgar (opcional; predeterminado a los puntos de la tarea).",
+          "description": "Puntos a otorgar (opcional; por defecto se usan los puntos de la tarea).",
           "example": 3
         }
       }
     },
     "disapprove_chore": {
-      "name": "Desaprobar Tarea",
-      "description": "El padre desaprueba una tarea para un niño, revirtiendo su estado.",
+      "name": "Rechazar Tarea",
+      "description": "El padre rechaza una tarea de un niño, revirtiendo su estado.",
       "fields": {
         "parent_name": {
           "name": "Nombre del Padre",
-          "description": "El padre que desaprueba la tarea.",
+          "description": "El padre que rechaza la tarea.",
           "example": "Mamá"
         },
         "kid_name": {
           "name": "Nombre del Niño",
-          "description": "El nombre del niño cuya tarea se desaprueba.",
-          "example": "Bob"
+          "description": "El nombre del niño cuya tarea se rechaza.",
+          "example": "Roberto"
         },
         "chore_name": {
           "name": "Nombre de la Tarea",
-          "description": "El nombre de la tarea que se desaprueba.",
-          "example": "Limpiar habitación"
+          "description": "El nombre de la tarea que se rechaza.",
+          "example": "Limpiar la Habitación"
         }
       }
     },
@@ -499,13 +645,13 @@
         "reward_name": {
           "name": "Nombre de la Recompensa",
           "description": "El nombre de la recompensa a canjear.",
-          "example": "Tiempo adicional de pantalla"
+          "example": "Tiempo Extra de Pantalla"
         }
       }
     },
     "approve_reward": {
       "name": "Aprobar Recompensa",
-      "description": "El padre aprueba una recompensa reclamada por un niño.",
+      "description": "El padre aprueba la recompensa reclamada por un niño.",
       "fields": {
         "parent_name": {
           "name": "Nombre del Padre",
@@ -520,28 +666,28 @@
         "reward_name": {
           "name": "Nombre de la Recompensa",
           "description": "El nombre de la recompensa que se aprueba.",
-          "example": "Tiempo adicional de pantalla"
+          "example": "Tiempo Extra de Pantalla"
         }
       }
     },
     "disapprove_reward": {
-      "name": "Desaprobar Recompensa",
-      "description": "El padre desaprueba el canje de una recompensa para un niño.",
+      "name": "Rechazar Recompensa",
+      "description": "El padre rechaza el canje de una recompensa para un niño.",
       "fields": {
         "parent_name": {
           "name": "Nombre del Padre",
-          "description": "El padre que desaprueba la recompensa.",
+          "description": "El padre que rechaza la recompensa.",
           "example": "Papá"
         },
         "kid_name": {
           "name": "Nombre del Niño",
-          "description": "El niño cuyo canje de recompensa se está desaprobando.",
-          "example": "Bob"
+          "description": "El niño cuyo canje de recompensa se rechaza.",
+          "example": "Roberto"
         },
         "reward_name": {
           "name": "Nombre de la Recompensa",
-          "description": "El nombre de la recompensa desaprobada.",
-          "example": "Tiempo adicional de pantalla"
+          "description": "El nombre de la recompensa que se rechaza.",
+          "example": "Tiempo Extra de Pantalla"
         }
       }
     },
@@ -557,7 +703,7 @@
         "kid_name": {
           "name": "Nombre del Niño",
           "description": "El niño que recibe la penalización.",
-          "example": "Bob"
+          "example": "Roberto"
         },
         "penalty_name": {
           "name": "Nombre de la Penalización",
@@ -567,12 +713,12 @@
       }
     },
     "reset_all_data": {
-      "name": "Reiniciar Todos los Datos",
-      "description": "Borra completamente los datos de KidsChores del almacenamiento."
+      "name": "Restablecer Todos los Datos",
+      "description": "Borra por completo los datos de KidsChores del almacenamiento."
     },
     "reset_all_chores": {
-      "name": "Reiniciar Todas las Tareas",
-      "description": "Restablece manualmente las tareas al estado pendiente, eliminando reclamos y aprobaciones."
+      "name": "Restablecer Todas las Tareas",
+      "description": "Restablece manualmente las tareas a estado pendiente, eliminando reclamos y aprobaciones."
     }
   },
   "entity": {
@@ -582,11 +728,11 @@
           "pending": "Pendiente",
           "approved": "Aprobada",
           "claimed": "Reclamada",
-          "overdue": "Atrasada",
+          "overdue": "Vencida",
           "unknown": "Desconocida",
           "none": "Ninguna",
-          "approved_in_part": "Aprobada (en parte)",
-          "claimed_in_part": "Reclamada (en parte)"
+          "approved_in_part": "Aprobada (parcialmente)",
+          "claimed_in_part": "Reclamada (parcialmente)"
         },
         "state_attributes": {
           "kid_name": { "name": "Nombre del Niño" },
@@ -607,13 +753,15 @@
               "pending": "Pendiente",
               "approved": "Aprobada",
               "claimed": "Reclamada",
-              "overdue": "Atrasada",
+              "overdue": "Vencida",
               "unknown": "Desconocida",
-              "none": "Ninguna"
+              "none": "Ninguna",
+              "approved_in_part": "Aprobada (parcialmente)",
+              "claimed_in_part": "Reclamada (parcialmente)"
             }
           },
           "partial_allowed": {
-            "name": "Puntos Parciales Permitidos",
+            "name": "Permitido Parcialmente",
             "state": {
               "true": "Sí",
               "false": "No"
@@ -634,7 +782,7 @@
           "kid_name": { "name": "Nombre del Niño" },
           "all_earned_badges": { "name": "Todas las Insignias Obtenidas" },
           "highest_badge_threshold_value": {
-            "name": "Umbral Más Alto de Insignia"
+            "name": "Umbral Máximo de Insignia"
           }
         }
       },
@@ -644,17 +792,40 @@
             "name": "Tipo de Umbral",
             "state": {
               "points": "Puntos",
-              "chore_count": "Recuento de Tareas"
+              "chore_count": "Cantidad de Tareas"
             }
           },
           "points_multiplier": { "name": "Multiplicador de Puntos" },
-          "icodescriptionn": { "name": "Descripción" },
-          "kids_earned": { "name": "Niños que la Obtuvo" }
+          "descriptionn": { "name": "Descripción" },
+          "kids_earned": { "name": "Niños que lo han Obtenido" }
+        }
+      },
+      "shared_chore_global_state": {
+        "state": {
+          "pending": "Pendiente",
+          "approved": "Aprobada",
+          "claimed": "Reclamada",
+          "overdue": "Vencida",
+          "unknown": "Desconocida",
+          "none": "Ninguna",
+          "approved_in_part": "Aprobada (parcialmente)",
+          "claimed_in_part": "Reclamada (parcialmente)"
+        },
+        "state_attributes": {
+          "due_date": { "name": "Fecha de Vencimiento" },
+          "default_points": { "name": "Puntos Predeterminados" },
+          "shared_chore": {
+            "name": "Tarea Compartida",
+            "state": {
+              "true": "Sí",
+              "false": "No"
+            }
+          }
         }
       },
       "reward_state": {
         "state": {
-          "not claimed": "No Reclamada",
+          "not_claimed": "No Reclamada",
           "approved": "Aprobada",
           "claimed": "Reclamada",
           "unknown": "Desconocida",
@@ -665,6 +836,72 @@
           "reward_name": { "name": "Nombre de la Recompensa" },
           "reward_cost": { "name": "Costo de la Recompensa" },
           "description": { "name": "Descripción" }
+        }
+      },
+      "penalty_applies": {
+        "state_attributes": {
+          "kid_name": { "name": "Nombre del Niño" },
+          "penalty_name": { "name": "Nombre de la Penalización" },
+          "descriptionn": { "name": "Descripción" },
+          "penalty_points": { "name": "Puntos de Penalización" }
+        }
+      },
+      "achievement_state": {
+        "state_attributes": {
+          "target_value": { "name": "Meta" },
+          "reward_points": { "name": "Puntos de Recompensa" },
+          "type": { "name": "Tipo" },
+          "earned_by": { "name": "Obtenido por" }
+        }
+      },
+      "challenge_state": {
+        "state_attributes": {
+          "target_value": { "name": "Meta" },
+          "reward_points": { "name": "Puntos de Recompensa" },
+          "start_date": { "name": "Fecha de Inicio" },
+          "end_date": { "name": "Fecha de Fin" },
+          "type": { "name": "Tipo" },
+          "earned_by": { "name": "Obtenido por" }
+        }
+      },
+      "achievement_progress": {
+        "state_attributes": {
+          "achievement_name": { "name": "Nombre" },
+          "target_value": { "name": "Meta" },
+          "raw_progress": { "name": "Progreso" },
+          "awarded": {
+            "name": "Otorgado",
+            "state": {
+              "true": "Sí",
+              "false": "No"
+            }
+          }
+        }
+      },
+      "challenge_progress": {
+        "state_attributes": {
+          "challenge_name": { "name": "Nombre" },
+          "target_value": { "name": "Meta" },
+          "raw_progress": { "name": "Progreso" },
+          "challenge_type": { "name": "Tipo" },
+          "awarded": {
+            "name": "Otorgado",
+            "state": {
+              "true": "Sí",
+              "false": "No"
+            }
+          }
+        }
+      },
+      "kid_highest_streak": {
+        "state_attributes": {
+          "streaks_by_achievement": { "name": "Rachas por Logro" }
+        }
+      },
+      "chore_streak": {
+        "state_attributes": {
+          "last_date": { "name": "Última Fecha" },
+          "raw_streak": { "name": "Racha Actual" }
         }
       }
     }

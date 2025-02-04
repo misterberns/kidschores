@@ -15,27 +15,31 @@ from homeassistant.util import dt as dt_util
 from typing import Any, Optional
 
 from .const import (
-    DOMAIN,
-    LOGGER,
-    CONF_POINTS_LABEL,
-    CONF_KIDS,
-    CONF_CHORES,
+    CONF_ACHIEVEMENTS,
     CONF_BADGES,
-    CONF_REWARDS,
+    CONF_CHALLENGES,
+    CONF_CHORES,
+    CONF_KIDS,
     CONF_PARENTS,
     CONF_PENALTIES,
     CONF_POINTS_ICON,
+    CONF_POINTS_LABEL,
+    CONF_REWARDS,
     DEFAULT_POINTS_ICON,
     DEFAULT_POINTS_LABEL,
+    DOMAIN,
+    LOGGER,
 )
 from .flow_helpers import (
+    build_points_schema,
     build_kid_schema,
     build_parent_schema,
     build_chore_schema,
     build_badge_schema,
     build_reward_schema,
     build_penalty_schema,
-    build_points_schema,
+    build_achievement_schema,
+    build_challenge_schema,
 )
 
 
@@ -52,6 +56,8 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._chores_temp: dict[str, dict[str, Any]] = {}
         self._badges_temp: dict[str, dict[str, Any]] = {}
         self._rewards_temp: dict[str, dict[str, Any]] = {}
+        self._achievements_temp: dict[str, dict[str, Any]] = {}
+        self._challenges_temp: dict[str, dict[str, Any]] = {}
         self._penalties_temp: dict[str, dict[str, Any]] = {}
 
         self._kid_count: int = 0
@@ -59,6 +65,8 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._chore_count: int = 0
         self._badge_count: int = 0
         self._reward_count: int = 0
+        self._achievement_count: int = 0
+        self._challenge_count: int = 0
         self._penalty_count: int = 0
 
         self._kid_index: int = 0
@@ -66,6 +74,8 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._chore_index: int = 0
         self._badge_index: int = 0
         self._reward_index: int = 0
+        self._achievement_index: int = 0
+        self._challenge_index: int = 0
         self._penalty_index: int = 0
 
     async def async_step_user(self, user_input: Optional[dict[str, Any]] = None):
@@ -138,6 +148,11 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             kid_name = user_input["kid_name"].strip()
             ha_user_id = user_input.get("ha_user")
+            enable_mobile_notifications = user_input.get(
+                "enable_mobile_notifications", True
+            )
+            notify_service = user_input.get("mobile_notify_service")
+            enable_persist = user_input.get("enable_persistent_notifications", True)
 
             if not kid_name:
                 errors["kid_name"] = "invalid_kid_name"
@@ -150,6 +165,9 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._kids_temp[internal_id] = {
                     "name": kid_name,
                     "ha_user_id": ha_user_id,
+                    "enable_notifications": enable_mobile_notifications,
+                    "mobile_notify_service": notify_service,
+                    "use_persistent_notifications": enable_persist,
                     "internal_id": internal_id,
                 }
                 LOGGER.debug("Added kid: %s with ID: %s", kid_name, internal_id)
@@ -162,7 +180,13 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Retrieve HA users for linking
         users = await self.hass.auth.async_get_users()
         kid_schema = build_kid_schema(
-            users=users, default_kid_name="", default_ha_user_id=None
+            self.hass,
+            users=users,
+            default_kid_name="",
+            default_ha_user_id=None,
+            default_enable_mobile_notifications=False,
+            default_mobile_notify_service=None,
+            default_enable_persistent_notifications=False,
         )
         return self.async_show_form(
             step_id="kids", data_schema=kid_schema, errors=errors
@@ -201,6 +225,11 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             parent_name = user_input["parent_name"].strip()
             ha_user_id = user_input.get("ha_user_id")
             associated_kids = user_input.get("associated_kids", [])
+            enable_mobile_notifications = user_input.get(
+                "enable_mobile_notifications", True
+            )
+            notify_service = user_input.get("mobile_notify_service")
+            enable_persist = user_input.get("enable_persistent_notifications", True)
 
             if not parent_name:
                 errors["parent_name"] = "invalid_parent_name"
@@ -215,6 +244,9 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "name": parent_name,
                     "ha_user_id": ha_user_id,
                     "associated_kids": associated_kids,
+                    "enable_notifications": enable_mobile_notifications,
+                    "mobile_notify_service": notify_service,
+                    "use_persistent_notifications": enable_persist,
                     "internal_id": internal_id,
                 }
                 LOGGER.debug("Added parent: %s with ID: %s", parent_name, internal_id)
@@ -232,11 +264,15 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         users = await self.hass.auth.async_get_users()
 
         parent_schema = build_parent_schema(
+            self.hass,
             users=users,
             kids_dict=kids_dict,
             default_parent_name="",
             default_ha_user_id=None,
             default_associated_kids=[],
+            default_enable_mobile_notifications=False,
+            default_mobile_notify_service=None,
+            default_enable_persistent_notifications=False,
             internal_id=None,
         )
         return self.async_show_form(
@@ -515,12 +551,161 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._penalty_index += 1
             if self._penalty_index >= self._penalty_count:
-                return await self.async_step_finish()
+                return await self.async_step_achievement_count()
             return await self.async_step_penalties()
 
         penalty_schema = build_penalty_schema()
         return self.async_show_form(
             step_id="penalties", data_schema=penalty_schema, errors=errors
+        )
+
+    # --------------------------------------------------------------------------
+    # ACHIEVEMENTS
+    # --------------------------------------------------------------------------
+    async def async_step_achievement_count(self, user_input=None):
+        """Ask how many achievements to define initially."""
+        errors = {}
+        if user_input is not None:
+            try:
+                self._achievement_count = int(user_input["achievement_count"])
+                if self._achievement_count < 0:
+                    raise ValueError
+                if self._achievement_count == 0:
+                    return await self.async_step_challenge_count()
+                self._achievement_index = 0
+                return await self.async_step_achievements()
+            except ValueError:
+                errors["base"] = "invalid_achievement_count"
+        schema = vol.Schema(
+            {vol.Required("achievement_count", default=1): vol.Coerce(int)}
+        )
+        return self.async_show_form(
+            step_id="achievement_count", data_schema=schema, errors=errors
+        )
+
+    async def async_step_achievements(self, user_input=None):
+        """Collect each achievement's details using internal_id as the key."""
+        errors = {}
+
+        if user_input is not None:
+            achievement_name = user_input["name"].strip()
+            if not achievement_name:
+                errors["name"] = "invalid_achievement_name"
+            elif any(
+                achievement_data["name"] == achievement_name
+                for achievement_data in self._achievements_temp.values()
+            ):
+                errors["name"] = "duplicate_achievement"
+            else:
+                _type = user_input["type"]
+                if _type == "chore":
+                    chore_id = user_input.get("selected_chore_id")
+                    final_criteria = chore_id
+                else:
+                    final_criteria = user_input["criteria"]
+
+                internal_id = user_input.get("internal_id", str(uuid.uuid4()))
+                self._achievements_temp[internal_id] = {
+                    "name": achievement_name,
+                    "description": user_input.get("description", ""),
+                    "icon": user_input.get("icon", ""),
+                    "assigned_kids": user_input["assigned_kids"],
+                    "type": _type,
+                    "criteria": final_criteria,
+                    "target_value": user_input["target_value"],
+                    "reward_points": user_input["reward_points"],
+                    "internal_id": internal_id,
+                    "progress": {},
+                }
+            self._achievement_index += 1
+            if self._achievement_index >= self._achievement_count:
+                return await self.async_step_challenge_count()
+            return await self.async_step_achievements()
+
+        kids_dict = {
+            kid_data["name"]: kid_id for kid_id, kid_data in self._kids_temp.items()
+        }
+        all_chores = self._chores_temp
+        achievement_schema = build_achievement_schema(
+            kids_dict=kids_dict, chores_dict=all_chores, default=None
+        )
+        return self.async_show_form(
+            step_id="achievements", data_schema=achievement_schema, errors=errors
+        )
+
+    # --------------------------------------------------------------------------
+    # CHALLENGES
+    # --------------------------------------------------------------------------
+    async def async_step_challenge_count(self, user_input=None):
+        """Ask how many challenges to define initially."""
+        errors = {}
+        if user_input is not None:
+            try:
+                self._challenge_count = int(user_input["challenge_count"])
+                if self._challenge_count < 0:
+                    raise ValueError
+                if self._challenge_count == 0:
+                    return await self.async_step_finish()
+                self._challenge_index = 0
+                return await self.async_step_challenges()
+            except ValueError:
+                errors["base"] = "invalid_challenge_count"
+        schema = vol.Schema(
+            {vol.Required("challenge_count", default=1): vol.Coerce(int)}
+        )
+        return self.async_show_form(
+            step_id="challenge_count", data_schema=schema, errors=errors
+        )
+
+    async def async_step_challenges(self, user_input=None):
+        """Collect each challenge's details using internal_id as the key."""
+        errors = {}
+        if user_input is not None:
+            challenge_name = user_input["name"].strip()
+            if not challenge_name:
+                errors["name"] = "invalid_challenge_name"
+            elif any(
+                challenge_data["name"] == challenge_name
+                for challenge_data in self._challenges_temp.values()
+            ):
+                errors["name"] = "duplicate_challenge"
+            else:
+                _type = user_input["type"]
+                if _type == "chore":
+                    chore_id = user_input.get("selected_chore_id")
+                    final_criteria = chore_id
+                else:
+                    final_criteria = user_input["criteria"]
+
+                internal_id = user_input.get("internal_id", str(uuid.uuid4()))
+                self._challenges_temp[internal_id] = {
+                    "name": challenge_name,
+                    "description": user_input.get("description", ""),
+                    "icon": user_input.get("icon", ""),
+                    "assigned_kids": user_input["assigned_kids"],
+                    "type": _type,
+                    "criteria": final_criteria,
+                    "target_value": user_input["target_value"],
+                    "reward_points": user_input["reward_points"],
+                    "start_date": user_input.get("start_date"),
+                    "end_date": user_input.get("end_date"),
+                    "internal_id": internal_id,
+                    "progress": {},
+                }
+            self._challenge_index += 1
+            if self._challenge_index >= self._challenge_count:
+                return await self.async_step_finish()
+            return await self.async_step_challenges()
+
+        kids_dict = {
+            kid_data["name"]: kid_id for kid_id, kid_data in self._kids_temp.items()
+        }
+        all_chores = self._chores_temp
+        challenge_schema = build_challenge_schema(
+            kids_dict=kids_dict, chores_dict=all_chores, default=None
+        )
+        return self.async_show_form(
+            step_id="challenges", data_schema=challenge_schema, errors=errors
         )
 
     # --------------------------------------------------------------------------
@@ -556,6 +741,8 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             f"Badges: {', '.join(badge_data['name'] for badge_data in self._badges_temp.values()) or 'None'}\n"
             f"Rewards: {', '.join(reward_data['name'] for reward_data in self._rewards_temp.values()) or 'None'}\n"
             f"Penalties: {', '.join(penalty_data['name'] for penalty_data in self._penalties_temp.values()) or 'None'}"
+            f"Achievements: {', '.join(achievement_data['name'] for achievement_data in self._achievements_temp.values()) or 'None'}"
+            f"Challenges: {', '.join(challenge_data['name'] for challenge_data in self._challenges_temp.values()) or 'None'}"
         )
         return self.async_show_form(
             step_id="finish",
@@ -575,6 +762,8 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_BADGES: self._badges_temp,
             CONF_REWARDS: self._rewards_temp,
             CONF_PENALTIES: self._penalties_temp,
+            CONF_ACHIEVEMENTS: self._achievements_temp,
+            CONF_CHALLENGES: self._challenges_temp,
         }
 
         LOGGER.debug(

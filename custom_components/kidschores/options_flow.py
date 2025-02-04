@@ -13,26 +13,31 @@ from homeassistant.helpers import selector
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    LOGGER,
-    CONF_KIDS,
-    CONF_CHORES,
+    CONF_ACHIEVEMENTS,
     CONF_BADGES,
-    CONF_REWARDS,
+    CONF_CHALLENGES,
+    CONF_CHORES,
+    CONF_KIDS,
     CONF_PARENTS,
     CONF_PENALTIES,
     CONF_POINTS_ICON,
     CONF_POINTS_LABEL,
+    CONF_REWARDS,
     DEFAULT_POINTS_ICON,
     DEFAULT_POINTS_LABEL,
+    DOMAIN,
+    LOGGER,
 )
 from .flow_helpers import (
+    build_points_schema,
     build_kid_schema,
     build_parent_schema,
     build_chore_schema,
     build_badge_schema,
     build_reward_schema,
     build_penalty_schema,
-    build_points_schema,
+    build_achievement_schema,
+    build_challenge_schema,
 )
 
 
@@ -83,6 +88,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             "manage_badge",
             "manage_reward",
             "manage_penalty",
+            "manage_achievement",
+            "manage_challenge",
             "done",
         ]
 
@@ -233,6 +240,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             "badge": CONF_BADGES,
             "reward": CONF_REWARDS,
             "penalty": CONF_PENALTIES,
+            "achievement": CONF_ACHIEVEMENTS,
+            "challenge": CONF_CHALLENGES,
         }
         key = entity_type_to_conf.get(self._entity_type)
         if key is None:
@@ -254,6 +263,11 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             kid_name = user_input["kid_name"].strip()
             ha_user_id = user_input.get("ha_user")
+            enable_mobile_notifications = user_input.get(
+                "enable_mobile_notifications", True
+            )
+            notify_service = user_input.get("mobile_notify_service")
+            enable_persist = user_input.get("enable_persistent_notifications", True)
 
             if any(kid_data["name"] == kid_name for kid_data in kids_dict.values()):
                 errors["kid_name"] = "duplicate_kid"
@@ -262,6 +276,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 kids_dict[internal_id] = {
                     "name": kid_name,
                     "ha_user_id": ha_user_id,
+                    "enable_notifications": enable_mobile_notifications,
+                    "mobile_notify_service": notify_service,
+                    "use_persistent_notifications": enable_persist,
                     "internal_id": internal_id,
                 }
                 self._entry_options[CONF_KIDS] = kids_dict
@@ -273,7 +290,13 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         # Retrieve HA users for linking
         users = await self.hass.auth.async_get_users()
         schema = build_kid_schema(
-            users=users, default_kid_name="", default_ha_user_id=None
+            self.hass,
+            users=users,
+            default_kid_name="",
+            default_ha_user_id=None,
+            default_enable_mobile_notifications=False,
+            default_mobile_notify_service=None,
+            default_enable_persistent_notifications=False,
         )
         return self.async_show_form(
             step_id="add_kid", data_schema=schema, errors=errors
@@ -290,6 +313,11 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             parent_name = user_input["parent_name"].strip()
             ha_user_id = user_input.get("ha_user_id")
             associated_kids = user_input.get("associated_kids", [])
+            enable_mobile_notifications = user_input.get(
+                "enable_mobile_notifications", True
+            )
+            notify_service = user_input.get("mobile_notify_service")
+            enable_persist = user_input.get("enable_persistent_notifications", True)
 
             if any(
                 parent_data["name"] == parent_name
@@ -302,6 +330,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     "name": parent_name,
                     "ha_user_id": ha_user_id,
                     "associated_kids": associated_kids,
+                    "enable_notifications": enable_mobile_notifications,
+                    "mobile_notify_service": notify_service,
+                    "use_persistent_notifications": enable_persist,
                     "internal_id": internal_id,
                 }
                 self._entry_options[CONF_PARENTS] = parents_dict
@@ -318,11 +349,15 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         }
 
         parent_schema = build_parent_schema(
+            self.hass,
             users=users,
             kids_dict=kids_dict,
             default_parent_name="",
             default_ha_user_id=None,
             default_associated_kids=[],
+            default_enable_mobile_notifications=False,
+            default_mobile_notify_service=None,
+            default_enable_persistent_notifications=False,
             internal_id=None,
         )
         return self.async_show_form(
@@ -510,6 +545,112 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="add_penalty", data_schema=schema, errors=errors
         )
 
+    async def async_step_add_achievement(self, user_input=None):
+        """Add a new achievement."""
+        self._entry_options = dict(self.config_entry.options)
+
+        errors = {}
+        achievements_dict = self._entry_options.setdefault(CONF_ACHIEVEMENTS, {})
+
+        chores_dict = self._entry_options.get(CONF_CHORES, {})
+
+        if user_input is not None:
+            achievement_name = user_input["name"].strip()
+            if any(
+                data["name"] == achievement_name for data in achievements_dict.values()
+            ):
+                errors["name"] = "duplicate_achievement"
+            else:
+                internal_id = user_input.get("internal_id", str(uuid.uuid4()))
+
+                _type = user_input["type"]
+                if _type == "chore":
+                    chosen_chore_id = user_input.get("selected_chore_id")
+                    final_criteria = chosen_chore_id
+                else:
+                    final_criteria = user_input.get("criteria", "")
+
+                achievements_dict[internal_id] = {
+                    "name": achievement_name,
+                    "description": user_input.get("description", ""),
+                    "icon": user_input.get("icon", ""),
+                    "assigned_kids": user_input["assigned_kids"],
+                    "type": _type,
+                    "criteria": final_criteria,
+                    "target_value": user_input["target_value"],
+                    "reward_points": user_input["reward_points"],
+                    "internal_id": internal_id,
+                    "progress": {},
+                }
+                self._entry_options[CONF_ACHIEVEMENTS] = achievements_dict
+                LOGGER.debug(
+                    "Added achievement '%s' with ID: %s", achievement_name, internal_id
+                )
+                await self._update_and_reload()
+                return await self.async_step_init()
+
+        kids_dict = {
+            data["name"]: kid_id
+            for kid_id, data in self._entry_options.get(CONF_KIDS, {}).items()
+        }
+        achievement_schema = build_achievement_schema(
+            kids_dict, chores_dict, default=None
+        )
+        return self.async_show_form(
+            step_id="add_achievement", data_schema=achievement_schema, errors=errors
+        )
+
+    async def async_step_add_challenge(self, user_input=None):
+        """Add a new challenge."""
+        self._entry_options = dict(self.config_entry.options)
+
+        errors = {}
+        challenges_dict = self._entry_options.setdefault(CONF_CHALLENGES, {})
+
+        chores_dict = self._entry_options.get(CONF_CHORES, {})
+
+        if user_input is not None:
+            challenge_name = user_input["name"].strip()
+            if any(data["name"] == challenge_name for data in challenges_dict.values()):
+                errors["name"] = "duplicate_challenge"
+            else:
+                internal_id = user_input.get("internal_id", str(uuid.uuid4()))
+
+                _type = user_input["type"]
+                if _type == "chore":
+                    final_criteria = user_input.get("selected_chore_id")
+                else:
+                    final_criteria = user_input.get("criteria", "")
+
+                challenges_dict[internal_id] = {
+                    "name": challenge_name,
+                    "description": user_input.get("description", ""),
+                    "icon": user_input.get("icon", ""),
+                    "assigned_kids": user_input["assigned_kids"],
+                    "type": _type,
+                    "criteria": final_criteria,
+                    "target_value": user_input["target_value"],
+                    "reward_points": user_input["reward_points"],
+                    "start_date": user_input.get("start_date"),
+                    "end_date": user_input.get("end_date"),
+                    "internal_id": internal_id,
+                    "progress": {},
+                }
+                self._entry_options[CONF_CHALLENGES] = challenges_dict
+                LOGGER.debug(
+                    "Added challenge '%s' with ID: %s", challenge_name, internal_id
+                )
+                await self._update_and_reload()
+                return await self.async_step_init()
+        kids_dict = {
+            data["name"]: kid_id
+            for kid_id, data in self._entry_options.get(CONF_KIDS, {}).items()
+        }
+        challenge_schema = build_challenge_schema(kids_dict, chores_dict, default=None)
+        return self.async_show_form(
+            step_id="add_challenge", data_schema=challenge_schema, errors=errors
+        )
+
     # ------------------ EDIT ENTITY ------------------
     async def async_step_edit_kid(self, user_input=None):
         """Edit an existing kid."""
@@ -528,6 +669,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             new_name = user_input["kid_name"].strip()
             ha_user_id = user_input.get("ha_user")
+            enable_notifications = user_input.get("enable_mobile_notifications", True)
+            mobile_notify_service = user_input.get("mobile_notify_service")
+            use_persistent = user_input.get("enable_persistent_notifications", True)
 
             # Check for duplicate names excluding current kid
             if any(
@@ -538,6 +682,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             else:
                 kid_data["name"] = new_name
                 kid_data["ha_user_id"] = ha_user_id
+                kid_data["enable_notifications"] = enable_notifications
+                kid_data["mobile_notify_service"] = mobile_notify_service
+                kid_data["use_persistent_notifications"] = use_persistent
 
                 self._entry_options[CONF_KIDS] = kids_dict
 
@@ -548,9 +695,17 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         # Retrieve HA users for linking
         users = await self.hass.auth.async_get_users()
         schema = build_kid_schema(
+            self.hass,
             users=users,
             default_kid_name=kid_data["name"],
             default_ha_user_id=kid_data.get("ha_user_id"),
+            default_enable_mobile_notifications=kid_data.get(
+                "enable_notifications", True
+            ),
+            default_mobile_notify_service=kid_data.get("mobile_notify_service"),
+            default_enable_persistent_notifications=kid_data.get(
+                "use_persistent_notifications", True
+            ),
             internal_id=internal_id,
         )
         return self.async_show_form(
@@ -575,6 +730,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             new_name = user_input["parent_name"].strip()
             ha_user_id = user_input.get("ha_user_id")
             associated_kids = user_input.get("associated_kids", [])
+            enable_notifications = user_input.get("enable_mobile_notifications", True)
+            mobile_notify_service = user_input.get("mobile_notify_service")
+            use_persistent = user_input.get("enable_persistent_notifications", True)
 
             # Check for duplicate names excluding current parent
             if any(
@@ -586,6 +744,9 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 parent_data["name"] = new_name
                 parent_data["ha_user_id"] = ha_user_id
                 parent_data["associated_kids"] = associated_kids
+                parent_data["enable_notifications"] = enable_notifications
+                parent_data["mobile_notify_service"] = mobile_notify_service
+                parent_data["use_persistent_notifications"] = use_persistent
 
                 self._entry_options[CONF_PARENTS] = parents_dict
 
@@ -601,11 +762,19 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         }
 
         parent_schema = build_parent_schema(
+            self.hass,
             users=users,
             kids_dict=kids_dict,
             default_parent_name=parent_data["name"],
             default_ha_user_id=parent_data.get("ha_user_id"),
             default_associated_kids=parent_data.get("associated_kids", []),
+            default_enable_mobile_notifications=parent_data.get(
+                "enable_notifications", True
+            ),
+            default_mobile_notify_service=parent_data.get("mobile_notify_service"),
+            default_enable_persistent_notifications=parent_data.get(
+                "use_persistent_notifications", True
+            ),
             internal_id=internal_id,
         )
         return self.async_show_form(
@@ -835,6 +1004,119 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="edit_penalty", data_schema=schema, errors=errors
         )
 
+    async def async_step_edit_achievement(self, user_input=None):
+        """Edit an existing achievement."""
+        self._entry_options = dict(self.config_entry.options)
+
+        errors = {}
+        achievements_dict = self._entry_options.get(CONF_ACHIEVEMENTS, {})
+
+        internal_id = self.context.get("internal_id")
+        if not internal_id or internal_id not in achievements_dict:
+            LOGGER.error("Edit achievement: Invalid internal_id '%s'", internal_id)
+            return self.async_abort(reason="invalid_achievement")
+
+        achievement_data = achievements_dict[internal_id]
+
+        if user_input is not None:
+            new_name = user_input["name"].strip()
+            if any(
+                data["name"] == new_name and eid != internal_id
+                for eid, data in achievements_dict.items()
+            ):
+                errors["name"] = "duplicate_achievement"
+            else:
+                _type = user_input["type"]
+                if _type == "chore":
+                    final_criteria = user_input.get("selected_chore_id")
+                else:
+                    final_criteria = user_input.get("criteria", "")
+
+                achievement_data["name"] = new_name
+                achievement_data["description"] = user_input.get("description", "")
+                achievement_data["icon"] = user_input.get("icon", "")
+                achievement_data["assigned_kids"] = user_input["assigned_kids"]
+                achievement_data["type"] = _type
+                achievement_data["criteria"] = final_criteria
+                achievement_data["target_value"] = user_input["target_value"]
+                achievement_data["reward_points"] = user_input["reward_points"]
+                achievements_dict[internal_id] = achievement_data
+                self._entry_options[CONF_ACHIEVEMENTS] = achievements_dict
+                LOGGER.debug(
+                    "Edited achievement '%s' with ID: %s", new_name, internal_id
+                )
+                await self._update_and_reload()
+                return await self.async_step_init()
+
+        kids_dict = {
+            data["name"]: kid_id
+            for kid_id, data in self._entry_options.get(CONF_KIDS, {}).items()
+        }
+        chores_dict = self._entry_options.get(CONF_CHORES, {})
+
+        achievement_schema = build_achievement_schema(
+            kids_dict, chores_dict, default=achievement_data
+        )
+        return self.async_show_form(
+            step_id="edit_achievement", data_schema=achievement_schema, errors=errors
+        )
+
+    async def async_step_edit_challenge(self, user_input=None):
+        """Edit an existing challenge."""
+        self._entry_options = dict(self.config_entry.options)
+        errors = {}
+        challenges_dict = self._entry_options.get(CONF_CHALLENGES, {})
+        internal_id = self.context.get("internal_id")
+
+        if not internal_id or internal_id not in challenges_dict:
+            LOGGER.error("Edit challenge: Invalid internal_id '%s'", internal_id)
+            return self.async_abort(reason="invalid_challenge")
+
+        challenge_data = challenges_dict[internal_id]
+
+        if user_input is not None:
+            new_name = user_input["name"].strip()
+            if any(
+                data["name"] == new_name and eid != internal_id
+                for eid, data in challenges_dict.items()
+            ):
+                errors["name"] = "duplicate_challenge"
+            else:
+                _type = user_input["type"]
+                if _type == "chore":
+                    final_criteria = user_input.get("selected_chore_id")
+                else:
+                    final_criteria = user_input.get("criteria", "")
+
+                challenge_data["name"] = new_name
+                challenge_data["description"] = user_input.get("description", "")
+                challenge_data["icon"] = user_input.get("icon", "")
+                challenge_data["assigned_kids"] = user_input["assigned_kids"]
+                challenge_data["type"] = _type
+                challenge_data["criteria"] = final_criteria
+                challenge_data["target_value"] = user_input["target_value"]
+                challenge_data["reward_points"] = user_input["reward_points"]
+                challenge_data["start_date"] = user_input.get("start_date")
+                challenge_data["end_date"] = user_input.get("end_date")
+                challenges_dict[internal_id] = challenge_data
+                self._entry_options[CONF_CHALLENGES] = challenges_dict
+                LOGGER.debug("Edited challenge '%s' with ID: %s", new_name, internal_id)
+                await self._update_and_reload()
+                return await self.async_step_init()
+
+        kids_dict = {
+            data["name"]: kid_id
+            for kid_id, data in self._entry_options.get(CONF_KIDS, {}).items()
+        }
+        chores_dict = self._entry_options.get(CONF_CHORES, {})
+
+        challenge_schema = build_challenge_schema(
+            kids_dict, chores_dict, default=challenge_data
+        )
+        return self.async_show_form(
+            step_id="edit_challenge", data_schema=challenge_schema, errors=errors
+        )
+
     # ------------------ DELETE ENTITY ------------------
     async def async_step_delete_kid(self, user_input=None):
         """Delete a kid."""
@@ -1002,6 +1284,62 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="delete_penalty",
             data_schema=vol.Schema({}),
             description_placeholders={"penalty_name": penalty_name},
+        )
+
+    async def async_step_delete_achievement(self, user_input=None):
+        """Delete an achievement."""
+        self._entry_options = dict(self.config_entry.options)
+
+        achievements_dict = self._entry_options.get(CONF_ACHIEVEMENTS, {})
+        internal_id = self.context.get("internal_id")
+
+        if not internal_id or internal_id not in achievements_dict:
+            LOGGER.error("Delete achievement: Invalid internal_id '%s'", internal_id)
+            return self.async_abort(reason="invalid_achievement")
+
+        achievement_name = achievements_dict[internal_id]["name"]
+        if user_input is not None:
+            achievements_dict.pop(internal_id, None)
+            self._entry_options[CONF_ACHIEVEMENTS] = achievements_dict
+            LOGGER.debug(
+                "Deleted achievement '%s' with ID: %s", achievement_name, internal_id
+            )
+
+            await self._update_and_reload()
+            return await self.async_step_init()
+
+        return self.async_show_form(
+            step_id="delete_achievement",
+            data_schema=vol.Schema({}),
+            description_placeholders={"achievement_name": achievement_name},
+        )
+
+    async def async_step_delete_challenge(self, user_input=None):
+        """Delete a challenge."""
+        self._entry_options = dict(self.config_entry.options)
+
+        challenges_dict = self._entry_options.get(CONF_CHALLENGES, {})
+        internal_id = self.context.get("internal_id")
+
+        if not internal_id or internal_id not in challenges_dict:
+            LOGGER.error("Delete challenge: Invalid internal_id '%s'", internal_id)
+            return self.async_abort(reason="invalid_challenge")
+
+        challenge_name = challenges_dict[internal_id]["name"]
+        if user_input is not None:
+            challenges_dict.pop(internal_id, None)
+            self._entry_options[CONF_CHALLENGES] = challenges_dict
+            LOGGER.debug(
+                "Deleted challenge '%s' with ID: %s", challenge_name, internal_id
+            )
+
+            await self._update_and_reload()
+            return await self.async_step_init()
+
+        return self.async_show_form(
+            step_id="delete_challenge",
+            data_schema=vol.Schema({}),
+            description_placeholders={"challenge_name": challenge_name},
         )
 
     # ------------------ HELPER METHODS ------------------

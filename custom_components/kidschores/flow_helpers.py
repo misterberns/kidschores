@@ -6,11 +6,20 @@ Provides schema builders and input-processing logic for internal_id-based manage
 
 import uuid
 import voluptuous as vol
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector, config_validation as cv
 
 from .const import (
+    ACHIEVEMENT_TYPE_STREAK,
+    ACHIEVEMENT_TYPE_TOTAL,
+    CHALLENGE_TYPE_DAILY_MIN,
+    CHALLENGE_TYPE_TOTAL_WITHIN_WINDOW,
+    CONF_ENABLE_MOBILE_NOTIFICATIONS,
+    CONF_ENABLE_PERSISTENT_NOTIFICATIONS,
+    CONF_MOBILE_NOTIFY_SERVICE,
     CONF_POINTS_LABEL,
     CONF_POINTS_ICON,
+    DOMAIN,
     DEFAULT_POINTS_MULTIPLIER,
     DEFAULT_POINTS_LABEL,
     DEFAULT_POINTS_ICON,
@@ -36,10 +45,18 @@ def build_points_schema(
 
 
 def build_kid_schema(
-    users, default_kid_name="", default_ha_user_id=None, internal_id=None
+    hass,
+    users,
+    default_kid_name="",
+    default_ha_user_id=None,
+    internal_id=None,
+    default_enable_mobile_notifications=False,
+    default_mobile_notify_service=None,
+    default_enable_persistent_notifications=False,
 ):
     """Build a Voluptuous schema for adding/editing a Kid, keyed by internal_id in the dict."""
     user_options = [{"value": user.id, "label": user.name} for user in users]
+    notify_options = _get_notify_services(hass)
 
     return vol.Schema(
         {
@@ -51,17 +68,36 @@ def build_kid_schema(
                     multiple=False,
                 )
             ),
+            vol.Required(
+                CONF_ENABLE_MOBILE_NOTIFICATIONS,
+                default=default_enable_mobile_notifications,
+            ): bool,
+            vol.Optional(CONF_MOBILE_NOTIFY_SERVICE): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=notify_options,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    multiple=False,
+                )
+            ),
+            vol.Required(
+                CONF_ENABLE_PERSISTENT_NOTIFICATIONS,
+                default=default_enable_persistent_notifications,
+            ): bool,
             vol.Required("internal_id", default=internal_id or str(uuid.uuid4())): str,
         }
     )
 
 
 def build_parent_schema(
+    hass,
     users,
     kids_dict,
     default_parent_name="",
     default_ha_user_id=None,
     default_associated_kids=None,
+    default_enable_mobile_notifications=False,
+    default_mobile_notify_service=None,
+    default_enable_persistent_notifications=False,
     internal_id=None,
 ):
     """Build a Voluptuous schema for adding/editing a Parent, keyed by internal_id in the dict."""
@@ -69,6 +105,7 @@ def build_parent_schema(
     kid_options = [
         {"value": kid_id, "label": kid_name} for kid_name, kid_id in kids_dict.items()
     ]
+    notify_options = _get_notify_services(hass)
 
     return vol.Schema(
         {
@@ -89,6 +126,21 @@ def build_parent_schema(
                     multiple=True,
                 )
             ),
+            vol.Required(
+                CONF_ENABLE_MOBILE_NOTIFICATIONS,
+                default=default_enable_mobile_notifications,
+            ): bool,
+            vol.Optional(CONF_MOBILE_NOTIFY_SERVICE): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=notify_options,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    multiple=False,
+                )
+            ),
+            vol.Required(
+                CONF_ENABLE_PERSISTENT_NOTIFICATIONS,
+                default=default_enable_persistent_notifications,
+            ): bool,
             vol.Required("internal_id", default=internal_id or str(uuid.uuid4())): str,
         }
     )
@@ -214,6 +266,132 @@ def build_reward_schema(default=None):
     )
 
 
+def build_achievement_schema(kids_dict, chores_dict, default=None):
+    """Build a schema for achievements, keyed by internal_id."""
+    default = default or {}
+    achievement_name_default = default.get("name", "")
+    internal_id_default = default.get("internal_id", str(uuid.uuid4()))
+
+    kid_choices = {k: k for k in kids_dict}
+
+    chore_options = []
+    for chore_id, chore_data in chores_dict.items():
+        chore_name = chore_data.get("name", f"Chore {chore_id[:6]}")
+        chore_options.append({"value": chore_id, "label": chore_name})
+
+    return vol.Schema(
+        {
+            vol.Required("name", default=achievement_name_default): str,
+            vol.Optional("description", default=default.get("description", "")): str,
+            vol.Optional(
+                "icon", default=default.get("icon", "")
+            ): selector.IconSelector(),
+            vol.Required(
+                "assigned_kids", default=default.get("assigned_kids", [])
+            ): cv.multi_select(kid_choices),
+            vol.Required(
+                "type", default=default.get("type", ACHIEVEMENT_TYPE_STREAK)
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        {"value": ACHIEVEMENT_TYPE_STREAK, "label": "Chore Streak"},
+                        {"value": ACHIEVEMENT_TYPE_TOTAL, "label": "Chore Total"},
+                    ],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            # If type == "chore_streak", let the user choose the chore to track:
+            vol.Optional(
+                "selected_chore_id", default=default.get("selected_chore_id")
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=chore_options,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    multiple=False,
+                )
+            ),
+            # For non-streak achievements the user can type criteria freely:
+            vol.Optional("criteria", default=default.get("criteria", "")): str,
+            vol.Required(
+                "target_value", default=default.get("target_value", 1)
+            ): vol.Coerce(float),
+            vol.Required(
+                "reward_points", default=default.get("reward_points", 0)
+            ): vol.Coerce(float),
+            vol.Required("internal_id", default=internal_id_default): str,
+        }
+    )
+
+
+def build_challenge_schema(kids_dict, chores_dict, default=None):
+    """Build a schema for challenges, keyed by internal_id."""
+    default = default or {}
+    challenge_name_default = default.get("name", "")
+    internal_id_default = default.get("internal_id", str(uuid.uuid4()))
+
+    kid_choices = {k: k for k in kids_dict}
+
+    chore_options = []
+    for chore_id, chore_data in chores_dict.items():
+        chore_name = chore_data.get("name", f"Chore {chore_id[:6]}")
+        chore_options.append({"value": chore_id, "label": chore_name})
+
+    return vol.Schema(
+        {
+            vol.Required("name", default=challenge_name_default): str,
+            vol.Optional("description", default=default.get("description", "")): str,
+            vol.Optional(
+                "icon", default=default.get("icon", "")
+            ): selector.IconSelector(),
+            vol.Required(
+                "assigned_kids", default=default.get("assigned_kids", [])
+            ): cv.multi_select(kid_choices),
+            vol.Required(
+                "type", default=default.get("type", CHALLENGE_TYPE_DAILY_MIN)
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        {
+                            "value": CHALLENGE_TYPE_DAILY_MIN,
+                            "label": "Minimum Chores per Day",
+                        },
+                        {
+                            "value": CHALLENGE_TYPE_TOTAL_WITHIN_WINDOW,
+                            "label": "Total Chores within Period",
+                        },
+                    ],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            # If type == "chore_streak", let the user choose the chore to track:
+            vol.Optional(
+                "selected_chore_id", default=default.get("selected_chore_id")
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=chore_options,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    multiple=False,
+                )
+            ),
+            # For non-streak achievements the user can type criteria freely:
+            vol.Optional("criteria", default=default.get("criteria", "")): str,
+            vol.Required(
+                "target_value", default=default.get("target_value", 1)
+            ): vol.Coerce(float),
+            vol.Required(
+                "reward_points", default=default.get("reward_points", 0)
+            ): vol.Coerce(float),
+            vol.Optional("start_date", default=default.get("start_date")): vol.Any(
+                None, selector.DateTimeSelector()
+            ),
+            vol.Optional("end_date", default=default.get("end_date")): vol.Any(
+                None, selector.DateTimeSelector()
+            ),
+            vol.Required("internal_id", default=internal_id_default): str,
+        }
+    )
+
+
 def build_penalty_schema(default=None):
     """Build a schema for penalties, keyed by internal_id in the dict.
 
@@ -243,8 +421,24 @@ def build_penalty_schema(default=None):
     )
 
 
+# ----------------- HELPERS -----------------
+
+
+# Penalty points are stored as negative internally, but displayed as positive in the form.
 def process_penalty_form_input(user_input: dict) -> dict:
     """Ensure penalty points are negative internally."""
     data = dict(user_input)
     data["points"] = -abs(data["penalty_points"])
     return data
+
+
+# Get notify services from HA
+def _get_notify_services(hass: HomeAssistant) -> list[dict[str, str]]:
+    """Return a list of all notify.* services as [{'value': 'notify.foo', 'label': 'notify.foo'}, ...]."""
+    services_list = []
+    all_services = hass.services.async_services()
+    if "notify" in all_services:
+        for service_name in all_services["notify"].keys():
+            fullname = f"notify.{service_name}"
+            services_list.append({"value": fullname, "label": fullname})
+    return services_list
