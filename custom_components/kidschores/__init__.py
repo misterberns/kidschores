@@ -12,6 +12,8 @@ Key Features:
 
 from __future__ import annotations
 
+import asyncio
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
@@ -85,7 +87,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Listen for notification actions from the companion app.
-    hass.bus.async_listen(NOTIFICATION_EVENT, async_handle_notification_action)
+    hass.bus.async_listen(
+        NOTIFICATION_EVENT,
+        lambda event: asyncio.run_coroutine_threadsafe(
+            async_handle_notification_action(hass, event), hass.loop
+        ),
+    )
 
     LOGGER.info("KidsChores setup complete for entry: %s", entry.entry_id)
     return True
