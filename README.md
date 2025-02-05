@@ -1,4 +1,4 @@
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 ![GitHub Release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/ad-ha/kidschores-ha?include_prereleases)
 ![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/ad-ha/kidschores-ha/latest/total)
 
@@ -9,174 +9,195 @@
 <h1>KidsChores</h1>
 
 <p align="center">
-   <img src="https://github.com/user-attachments/assets/e95bdb54-2c4c-4a84-96b4-f47a46a1228a">
+  <img src="https://github.com/user-attachments/assets/e95bdb54-2c4c-4a84-96b4-f47a46a1228a" alt="KidsChores logo" width="300">
 </p>
 <p align="center">
-   <a href="https://buymeacoffee.com/varetas3d" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+  <a href="https://buymeacoffee.com/varetas3d" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174">
+  </a>
 </p>
 <p>
-   <br>
+  <br>
 </p>
 
-**Important Notes:** 
-- **This integration is in beta. You may encounter bugs or unexpected behaviors. Please report any issues through [Issues](https://github.com/ad-ha/kidschores-ha/issues).**
-- **The integration requires initial setup through the Home Assistant wizard. Ensure you follow the installation steps carefully.**
+**Important Notes:**  
+- **This integration is in beta.** Bugs and unexpected behaviors may occur. Please report any issues via [GitHub Issues](https://github.com/ad-ha/kidschores-ha/issues).  
+- **Setup:** The integration must be configured through the Home Assistant wizard. Follow the installation steps carefully.
 
-## **INSTALLATION**
+---
+
+## INSTALLATION
 
 ### - **HACS (Home Assistant Community Store)**
 
-1. **Ensure HACS is installed.** If you haven't installed HACS yet, follow the [HACS installation guide](https://hacs.xyz/docs/installation/manual).
-2. **Navigate to HACS** in your Home Assistant interface.
-3. **Click on the three-dot menu** in the top right corner and select "Custom repositories."
-   
+1. **Ensure HACS is installed.** If you haven't yet installed HACS, follow the [HACS installation guide](https://hacs.xyz/docs/installation/manual).
+2. In Home Assistant, navigate to **HACS**.
+3. Click the three-dot menu in the top-right corner and select **"Custom repositories"**.  
    ![Add Repository](https://github.com/user-attachments/assets/0c36fafb-8b1f-424f-b9bb-3b32f674c0ea)
-
-
-4. **Enter the repository URL:** `https://github.com/ad-ha/kidschores-ha`
-5. **Select "Integration"** from the "Category" dropdown and click "ADD."
-
-   ![Select Category](https://github.com/user-attachments/assets/d5480cc6-efb1-4238-b5d1-a31193d3353d)
-
-
-6. **Search for "KidsChores"** in HACS and install the integration.
+4. Enter the repository URL:  
+   `https://github.com/ad-ha/kidschores-ha`
+5. Select **"Integration"** from the Category dropdown and click **"ADD"**.  
+![Select Category](https://github.com/user-attachments/assets/d5480cc6-efb1-4238-b5d1-a31193d3353d)
+6. Search for **"KidsChores"** in HACS and install the integration.
 7. **Restart Home Assistant** to apply the changes.
 
 ### - **Manual Installation**
 
-1. **Download the latest release** from the [KidsChores GitHub repository](https://github.com/ad-ha/kidschores-ha/releases).
-2. **Unzip the downloaded file** and copy the `kidschores` directory to the `custom_components` folder in your Home Assistant configuration directory.
+1. Download the latest release from the [KidsChores GitHub repository](https://github.com/ad-ha/kidschores-ha/releases).
+2. Unzip the downloaded file and copy the `kidschores` directory to the `custom_components` folder in your Home Assistant configuration directory.
 3. **Restart Home Assistant** to recognize the new integration.
 
-## **CONFIGURATION**
+---
 
-[<img src="https://github.com/user-attachments/assets/36459daa-a780-448a-82a5-19ee07ccd3f6">](https://my.home-assistant.io/redirect/config_flow_start?domain=kidschores)
+## CONFIGURATION
 
-1. **Go to `Configuration` > `Integrations`** in Home Assistant.
-2. **Click on the "+ Add Integration"** button.
-3. **Search for "KidsChores"** and select the integration.
-4. **Follow the setup wizard:**
-   - **Define Points Label:** Choose a label for points (e.g., Stars, Bucks).
-   - **Add Kids:** Enter the number of kids and define each kid with their name and optionally link to a Home Assistant user.
-   - **Add Parents:** Enter the number of parents that you want to manage this integration.
-   - **Add Chores, Badges, Rewards, and Penalties:** Define each with relevant details like names, descriptions, points, icons, etc.
-5. **Finish the setup** and start managing your kids' chores and rewards directly from Home Assistant.
+[<img src="https://github.com/user-attachments/assets/36459daa-a780-448a-82a5-19ee07ccd3f6" alt="Configuration Flow">](https://my.home-assistant.io/redirect/config_flow_start?domain=kidschores)
 
-## **KIDSCHORES FEATURES**
+1. Go to **Configuration > Integrations** in Home Assistant.
+2. Click **"+ Add Integration"** and search for **"KidsChores"**.
+3. Follow the setup wizard:
+- **Define Points Label:** Choose your points name (e.g., Stars, Bucks, Coins).
+- **Add Kids & Parents:** Create profiles for your kids and assign parents.
+- **Define Chores, Badges, Rewards, Penalties, Achievements, and Challenges:** Provide detailed settings such as names, descriptions, points, icons, due dates, and recurring schedules.
+4. Finish the setup to start managing your kids’ chores and rewards directly from Home Assistant.
+5. Use the **Options Flow** to edit, add, or delete any entities as needed.
 
-### 🌟 **KidsChores Features:**
+---
 
-* 👧👦 **Manage Multiple Kids Effortlessly**
-  * Create and customize profiles for each child.
-  * Track individual progress and achievements.
-  * Manage multiple kids with ease.
+## KIDSCHORES FEATURES
 
-* 🧹 **Assign & Track Chores:**
-  * Define chores with detailed descriptions, icons, and due dates.
-  * Assign tasks to one or multiple kids and monitor completion status.
-  * Track the status of each chore *(pending, claimed, approved, overdue...)* with sensors for each chore and kid.
+### 🌟 **Core Features**
 
-* 🏅 **Award Badges & Rewards:**
-  * Set up badges based on chore completion milestones.
-  * Automatically assign badges when milestones are achieved.
-  * Allow kids to redeem rewards using their earned points, motivating them to stay engaged.
-  * Reward your kids with badges and incentives.
+* 👧👦 **Multi-User Management:**  
+  - Create and manage profiles for multiple kids.  
+  - Track individual progress and achievements.
 
-* ⚖️ **Apply Penalties When Needed:**
-  * Implement penalties for missed chores to encourage accountability.
-  * Automatically adjust points based on performance.*Maintain accountability with penalties.*
+* 🧹 **Chore Management:**  
+  - **Assign & Track:** Define chores with descriptions, icons, due dates, and recurring schedules (daily/weekly/monthly).  
+  - **Chore States:** Monitor each chore's status *(pending, claimed, approved, overdue, etc.)* both individually and globally (for shared chores).
 
-* 🔄 **Recurring Chores:**
-  * Schedule chores to recur daily, weekly, or monthly.
+* 🏅 **Rewards, Badges, & Achievements:**  
+  - **Reward Redemption:** Kids can claim rewards that require parental approval before points are deducted.  
+  - **Badge Awards:** Automatically award badges when milestones are reached.  
+  - **Achievements & Challenges:** Track streaks and overall totals with progress sensors.
 
-* 🔒 **Parents' Approval Workflows:**
-  * **Chore Approval:** Kids can claim chores, which then require parental approval before points are awarded.
-  * **Reward Approval:** Parents can review and approve reward redemptions to ensure fair usage.
+* ⚖️ **Penalty Application:**  
+  - Apply penalties for missed chores and adjust points accordingly.
 
-* 📈 **Long-Term Statistics with Built-In Storage:**
-  * Track historical data on chore completions, points earned, and rewards redeemed.
-  * Analyze trends and patterns to better understand your kids' progress over time.
+* 🔄 **Recurring Chores:**  
+  - Schedule recurring chores with automated due date resets.
 
-* 🛠 **Customizable Points Naming:**
-  * Personalize the points system by choosing your own naming conventions (e.g., Stars, Bucks, Coins) to make it more relatable and motivating for your kids.
+* 📢 **Actionable Notifications:**  
+  - **Context-Encoded Actions:** Notifications include buttons with encoded context (e.g., `DISAPPROVE_CHORE|kid123|chore456`).  
+  - **Reminder Actions:** Custom reminder buttons that also pass full context for pending approvals.
 
-  #### 🎨 **Customizable & User-Friendly:**
-   * 🔧 **Easy Setup:** UI Setup, with a step-by-step Wizard, and several menu options for UI configuration once the integration is set up.
+* 🎯 **Points Customization:**  
+  - Personalize the points system by choosing custom names and icons (e.g., Stars, Bucks, Coins).
 
-  * 🌐 **Multilingual Support**
+* 📈 **Detailed Statistics:**
+  - Comprehensive sensors track daily, weekly, monthly, and total metrics for chores, points, rewards, badges, penalties, achievements, and challenges.
 
-### 📸 **Stay Tuned for More!**
+* 🔧 **Dynamic Buttons & Actions:**  
+  - Use buttons to claim, approve, disapprove, redeem, adjust points, and more—all with built-in authorization checks.
 
-* I am aiming to finalize the integration for a beta release within the upcoming week. Can't wait to share it with you all. Keep an eye out for the release.
+* 🔐 **Security & Privacy:**  
+  - All data is stored locally on your Home Assistant instance with no external data sharing.
 
-### 📢 **Community Feedback:** 
-* Share your thoughts and feature requests to help shape **KidsChores** into the perfect family management tool.
+---
 
-Thank you all.
+## AVAILABLE SENSORS
 
-Cheers :beers:
+### **Kid & Points Sensors**
+- **KidPointsSensor:** Displays each kid's total points.
+- **KidPointsEarnedDailySensor:** Net points earned by a kid today.
+- **KidPointsEarnedWeeklySensor:** Points earned during the week.
+- **KidPointsEarnedMonthlySensor:** Points earned during the month.
+- **KidMaxPointsEverSensor:** The highest points total ever reached by a kid.
 
-## **AVAILABLE SENSORS**
+### **Chore Sensors**
+- **CompletedChoresTotalSensor:** Total chores completed by a kid.
+- **CompletedChoresDailySensor:** Chores completed today.
+- **CompletedChoresWeeklySensor:** Chores completed this week.
+- **CompletedChoresMonthlySensor:** Chores completed this month.
+- **ChoreStatusSensor:** For each (kid, chore) – shows current status (pending, claimed, approved, overdue).
+- **ChoreStreakSensor:** Current streak (in days) for a chore per kid.
+- **SharedChoreGlobalStateSensor:** Global state for shared chores.
 
-**KidsChores** provides a variety of sensors and binary sensors to manage and track your children's chores and rewards directly from Home Assistant.
+### **Badge, Reward & Penalty Sensors**
+- **KidBadgesSensor:** Number of badges earned by a kid.
+- **KidHighestBadgeSensor:** The highest badge achieved by a kid (by threshold).
+- **BadgeSensor:** One sensor per badge (threshold value, who earned it).
+- **RewardClaimsSensor:** Number of times a reward has been claimed.
+- **RewardApprovalsSensor:** Number of times a reward has been approved.
+- **RewardStatusSensor:** Current reward status per kid *(Not Claimed, Claimed, Approved)*.
+- **ChoreClaimsSensor:** Number of times a chore has been claimed.
+- **ChoreApprovalsSensor:** Number of times a chore has been approved.
+- **PenaltyAppliesSensor:** Tracks how many times each penalty was applied.
 
-### **SENSORS**
+### **Approval & Progress Sensors**
+- **PendingChoreApprovalsSensor:** Lists chores awaiting approval.
+- **PendingRewardApprovalsSensor:** Lists rewards awaiting approval.
+- **AchievementSensor:** Details an achievement (name, target, reward, kids awarded).
+- **ChallengeSensor:** Details a challenge (name, target, reward, completion count).
+- **AchievementProgressSensor:** Progress (in percentage) toward an achievement per kid.
+- **ChallengeProgressSensor:** Progress (in percentage) toward a challenge per kid.
+- **KidHighestStreakSensor:** Highest current streak among streak achievements.
 
-#### **General**
-- **Kid Points Sensor:** Total points balance for each child.
-- **Completed Chores Sensors:** Daily, weekly, and monthly completed chores.
-- **Kid Badges Sensor:** Number of badges earned by each child.
-- **Kid Highest Badge Sensor:** Highest earned badge based on thresholds.
-- **Reward Claims and Approvals Sensors:** Track how many times rewards have been claimed and approved.
-- **Chore Claims and Approvals Sensors:** Track how many times chores have been claimed and approved.
-- **Penalty Applies Sensors:** Track how many times penalties have been applied to each child.
-- **Pending Chore Approvals Sensor:** Lists all chores pending approval.
-- **Pending Reward Approvals Sensor:** Lists all rewards pending approval.
+---
 
-### **BINARY SENSORS**
+## AVAILABLE BUTTONS
 
-#### **Chore Status**
-- **Chore Status Binary Sensor:** Indicates if a chore is approved or not claimed for each child.
+Dynamic buttons are provided for direct actions from the Home Assistant UI:
+- **Chore Buttons:** Claim, Approve, and Disapprove chores.
+- **Reward Buttons:** Redeem, Approve, and Disapprove rewards.
+- **Penalty Buttons:** Apply penalties.
+- **Points Adjust Buttons:** Increment or decrement points (e.g., +1, -1, +10, -10).
+- **Workflow Buttons:** For parental approval and reward workflows.
 
-#### **Badges Earned**
-- **Badges Earned Binary Sensor:** Indicates if a child has earned any badges.
+*Note: All buttons enforce authorization via Home Assistant user IDs and provide contextual actionable notifications with encoded context (e.g., `REMIND_30|kid123|chore456`).*
 
-## **AVAILABLE ACTIONS**
+---
 
-**KidsChores** offers various actions (services) that you can use to manage chores and rewards for your children directly from Home Assistant:
+## OPTIONS FLOW
 
-- **Claim Chore**
-- **Approve Chore**
-- **Disapprove Chore**
-- **Redeem Reward**
-- **Approve Reward**
-- **Disapprove Reward**
-- **Apply Penalty**
+The integration includes an interactive Options Flow that allows you to add, edit, or delete:
+- Kids  
+- Parents  
+- Chores  
+- Badges  
+- Rewards  
+- Penalties  
+- Achievements  
+- Challenges  
 
-**Note:** Actions can be accessed and activated from the **Actions** menu under **Developer Tools**.
+This flow uses internal IDs for consistency and to preserve historical data, making configuration and updates seamless.
 
+---
 
-## **SECURITY AND PRIVACY**
+## SECURITY & PRIVACY
 
-- **Local Data Storage:** All **KidsChores** data is stored locally on your Home Assistant instance, ensuring your family's information is secure.
-- **No External Data:** No data is sent to external servers or shared with third parties.
+- **Local Data Storage:** All data is stored on your Home Assistant instance.
+- **No External Data Sharing:** Your family's information remains local and private.
 
+---
 
-## **CONTRIBUTING**
+## CONTRIBUTING
 
-Contributions are welcome! If you have suggestions or find any issues, please open an [issue](https://github.com/ad-ha/kidschores-ha/issues) or a [pull request](https://github.com/ad-ha/kidschores-ha/pulls).
-
-
-## **CREDITS**
-
-This integration was made possible thanks to the support and contributions of the Home Assistant community and dedicated developers.
-
-
-## **LICENSE**
-
-This project is licensed under the [MIT License](LICENSE). See the LICENSE file for details.
+Contributions are very welcome! If you have suggestions or encounter any issues:
+- Open an [issue](https://github.com/ad-ha/kidschores-ha/issues).
+- Submit a [pull request](https://github.com/ad-ha/kidschores-ha/pulls).
 
 
-## **DISCLAIMER**
+---
 
-THIS PROJECT IS NOT IN ANY WAY ASSOCIATED WITH OR RELATED TO ANY OFFICIAL ENTITY. The information here and online is for educational and resource purposes only, and the developers do not endorse or condone any inappropriate use of it, and take no legal responsibility for the functionality or security of your devices.
+## LICENSE
+
+This project is licensed under the [GPL-3.0 license](LICENSE). See the LICENSE file for details.
+
+---
+
+## DISCLAIMER
+
+THIS PROJECT IS NOT AFFILIATED WITH OR ENDORSED BY ANY OFFICIAL ENTITY. The information provided is for educational purposes only, and the developers assume no legal responsibility for the functionality or security of your devices.
+
+   
