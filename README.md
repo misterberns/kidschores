@@ -88,14 +88,15 @@
   - Schedule recurring chores with automated due date resets.
 
 * 📢 **Actionable Notifications:**  
-  - **Context-Encoded Actions:** Notifications include buttons with encoded context (e.g., `DISAPPROVE_CHORE|kid123|chore456`).  
-  - **Reminder Actions:** Custom reminder buttons that also pass full context for pending approvals.
+  - **Context-Encoded Actions:** Notifications include actionable buttons. 
+  - **Reminder Actions:** 30 minute Reminder buttons for pending approvals.
 
 * 🎯 **Points Customization:**  
   - Personalize the points system by choosing custom names and icons (e.g., Stars, Bucks, Coins).
 
 * 📈 **Detailed Statistics:**
   - Comprehensive sensors track daily, weekly, monthly, and total metrics for chores, points, rewards, badges, penalties, achievements, and challenges.
+  - Build your own statistics from the sensors available and options inside Home Assistant.
 
 * 🔧 **Dynamic Buttons & Actions:**  
   - Use buttons to claim, approve, disapprove, redeem, adjust points, and more—all with built-in authorization checks.
