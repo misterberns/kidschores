@@ -1000,9 +1000,18 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
         # Send a notification to the parents that a kid claimed a chore
         actions = [
-            {"action": ACTION_APPROVE_CHORE, "title": ACTION_TITLE_APPROVE},
-            {"action": ACTION_DISAPPROVE_CHORE, "title": ACTION_TITLE_DISAPPROVE},
-            {"action": ACTION_REMIND_30, "title": ACTION_TITLE_REMIND_30},
+            {
+                "action": f"{ACTION_APPROVE_CHORE}|{kid_id}|{chore_id}",
+                "title": ACTION_TITLE_APPROVE,
+            },
+            {
+                "action": f"{ACTION_DISAPPROVE_CHORE}|{kid_id}|{chore_id}",
+                "title": ACTION_TITLE_DISAPPROVE,
+            },
+            {
+                "action": f"{ACTION_REMIND_30}|{kid_id}|{chore_id}",
+                "title": ACTION_TITLE_REMIND_30,
+            },
         ]
         # Pass extra context so the event handler can route the action.
         extra_data = {
@@ -1330,9 +1339,18 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
         # Send a notification to the parents that a kid claimed a reward
         actions = [
-            {"action": ACTION_APPROVE_REWARD, "title": ACTION_TITLE_APPROVE},
-            {"action": ACTION_DISAPPROVE_REWARD, "title": ACTION_TITLE_DISAPPROVE},
-            {"action": ACTION_REMIND_30, "title": ACTION_TITLE_REMIND_30},
+            {
+                "action": f"{ACTION_APPROVE_REWARD}|{kid_id}|{reward_id}",
+                "title": ACTION_TITLE_APPROVE,
+            },
+            {
+                "action": f"{ACTION_DISAPPROVE_REWARD}|{kid_id}|{reward_id}",
+                "title": ACTION_TITLE_DISAPPROVE,
+            },
+            {
+                "action": f"{ACTION_REMIND_30}|{kid_id}|{reward_id}",
+                "title": ACTION_TITLE_REMIND_30,
+            },
         ]
         extra_data = {"kid_id": kid_id, "reward_id": reward_id}
         self.hass.async_create_task(
@@ -1931,15 +1949,15 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                         extra_data = {"kid_id": kid_id, "chore_id": chore_id}
                         actions = [
                             {
-                                "action": ACTION_APPROVE_CHORE,
+                                "action": f"{ACTION_APPROVE_CHORE}|{kid_id}|{chore_id}",
                                 "title": ACTION_TITLE_APPROVE,
                             },
                             {
-                                "action": ACTION_DISAPPROVE_CHORE,
+                                "action": f"{ACTION_DISAPPROVE_CHORE}|{kid_id}|{chore_id}",
                                 "title": ACTION_TITLE_DISAPPROVE,
                             },
                             {
-                                "action": ACTION_REMIND_30,
+                                "action": f"{ACTION_REMIND_30}|{kid_id}|{chore_id}",
                                 "title": ACTION_TITLE_REMIND_30,
                             },
                         ]
@@ -2423,15 +2441,24 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 )
                 return
             actions = [
-                {"action": ACTION_APPROVE_CHORE, "title": ACTION_TITLE_APPROVE},
-                {"action": ACTION_DISAPPROVE_CHORE, "title": ACTION_TITLE_DISAPPROVE},
-                {"action": ACTION_REMIND_30, "title": ACTION_TITLE_REMIND_30},
+                {
+                    "action": f"{ACTION_APPROVE_CHORE}|{kid_id}|{chore_id}",
+                    "title": ACTION_TITLE_APPROVE,
+                },
+                {
+                    "action": f"{ACTION_DISAPPROVE_CHORE}|{kid_id}|{chore_id}",
+                    "title": ACTION_TITLE_DISAPPROVE,
+                },
+                {
+                    "action": f"{ACTION_REMIND_30}|{kid_id}|{chore_id}",
+                    "title": ACTION_TITLE_REMIND_30,
+                },
             ]
             extra_data = {"kid_id": kid_id, "chore_id": chore_id}
             await self._notify_parents(
                 kid_id,
                 title="KidsChores: Reminder for Pending Chore",
-                message=f"Reminder: {kid_info.get('name', 'A kid')} still has pending chore '{chore_info.get('name', 'Unnamed Chore')}'.",
+                message=f"Reminder: {kid_info.get('name', 'A kid')} has '{chore_info.get('name', 'Unnamed Chore')}' chore pending approval.",
                 actions=actions,
                 extra_data=extra_data,
             )
@@ -2446,9 +2473,18 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 )
                 return
             actions = [
-                {"action": ACTION_APPROVE_REWARD, "title": ACTION_TITLE_APPROVE},
-                {"action": ACTION_DISAPPROVE_REWARD, "title": ACTION_TITLE_DISAPPROVE},
-                {"action": ACTION_REMIND_30, "title": ACTION_TITLE_REMIND_30},
+                {
+                    "action": f"{ACTION_APPROVE_REWARD}|{kid_id}|{reward_id}",
+                    "title": ACTION_TITLE_APPROVE,
+                },
+                {
+                    "action": f"{ACTION_DISAPPROVE_REWARD}|{kid_id}|{reward_id}",
+                    "title": ACTION_TITLE_DISAPPROVE,
+                },
+                {
+                    "action": f"{ACTION_REMIND_30}|{kid_id}|{reward_id}",
+                    "title": ACTION_TITLE_REMIND_30,
+                },
             ]
             extra_data = {"kid_id": kid_id, "reward_id": reward_id}
             reward = self.rewards_data.get(reward_id, {})
@@ -2456,7 +2492,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             await self._notify_parents(
                 kid_id,
                 title="KidsChores: Reminder for Pending Reward",
-                message=f"Reminder: {kid_info.get('name', 'A kid')} still has pending reward '{reward_name}'.",
+                message=f"Reminder: {kid_info.get('name', 'A kid')} has '{reward_name}' reward pending approval.",
                 actions=actions,
                 extra_data=extra_data,
             )
