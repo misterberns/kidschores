@@ -20,7 +20,6 @@
   <br>
   <br>
 </p>
-KidsChores
 
 KidsChores is a powerful Home Assistant integration that transforms family chore management into a fun, engaging, and secure experience. Designed with both kids and parents in mind, it helps you assign tasks, track progress, and reward achievements—all while keeping your data local and private.
 
