@@ -18,10 +18,14 @@
 </p>
 <p>
   <br>
+  <br>
 </p>
+KidsChores
+
+KidsChores is a powerful Home Assistant integration that transforms family chore management into a fun, engaging, and secure experience. Designed with both kids and parents in mind, it helps you assign tasks, track progress, and reward achievements—all while keeping your data local and private.
 
 **Important Notes:**  
-- **This integration is in beta.** Bugs and unexpected behaviors may occur. Please report any issues via [GitHub Issues](https://github.com/ad-ha/kidschores-ha/issues).  
+- lease report any issues via [GitHub Issues](https://github.com/ad-ha/kidschores-ha/issues).  
 - **Setup:** The integration must be configured through the Home Assistant wizard. Follow the installation steps carefully.
 
 ---
@@ -64,121 +68,151 @@
 
 ---
 
-## KIDSCHORES FEATURES
 
-### 🌟 **Core Features**
+## 🌟 Key Features
 
-* 👧👦 **Multi-User Management:**  
-  - Create and manage profiles for multiple kids.  
-  - Track individual progress and achievements.
+### 👧👦 Multi-User Management
+- **Profile Creation & Customization:**  
+  - Create and manage individual profiles for multiple kids and parents.
+  - Track each child’s progress, achievements, and performance with ease.
+  
+- **Effortless Management:**  
+  - Handle multiple kids with a single integration while monitoring individual statistics and trends.
 
-* 🧹 **Chore Management:**  
-  - **Assign & Track:** Define chores with descriptions, icons, due dates, and recurring schedules (daily/weekly/monthly).  
-  - **Chore States:** Monitor each chore's status *(pending, claimed, approved, overdue, etc.)* both individually and globally (for shared chores).
+### ⭐ CUSTOMIZABLE POINTS SYSTEM
+  - Personalize the points system by choosing your own name and icon (e.g., Stars, Bucks, Coins) to better resonate with your family.
 
-* 🏅 **Rewards, Badges, & Achievements:**  
-  - **Reward Redemption:** Kids can claim rewards that require parental approval before points are deducted.  
-  - **Badge Awards:** Automatically award badges when milestones are reached.  
-  - **Achievements & Challenges:** Track streaks and overall totals with progress sensors.
+### 🧹 Chore Management
+- **Assign & Track Chores:**  
+  - Define chores with detailed descriptions, icons, due dates, and recurring schedules (daily, weekly, or monthly).  
+  - Assign tasks to one or multiple kids and monitor each chore’s status *(pending, claimed, approved, overdue, etc.)* in real time.
+  
+- **Dynamic Chore States & Actions:**  
+  - Leverage dynamic buttons to claim, approve, or disapprove chores—completion with built-in authorization and contextual notifications.
+  - Monitor progress with sensors that update on a per-kid and global level.
 
-* ⚖️ **Penalty Application:**  
-  - Apply penalties for missed chores and adjust points accordingly.
+### 🏅 Rewards, Badges, Achievements & Challenges
+- **Automated Rewards & Incentives:**  
+  - Award badges automatically when chore milestones are achieved.
+  - Enhance kids motivation with badge points multipliers.
+  - Track progress through streaks and cumulative totals, and even assign extra points for special achievements.
+  
+- **Reward Redemption:**  
+  - Kids can redeem rewards using their earned points. Parental approval is required to finalize any reward, ensuring accountability.
+  
+### ⚖️ Penalty Application
+- **Accountability Measures:**  
+  - Apply penalties for missed chores or behavior, automatically adjusting points and encouraging responsibility.
+  - Use penalty buttons for manual intervention when needed.
 
-* 🔄 **Recurring Chores:**  
-  - Schedule recurring chores with automated due date resets.
+### 🔄 Recurring Chores
+- **Scheduled Task Management:**  
+  - Set up recurring chores with automated due date resets so that daily, weekly, or monthly tasks are always on track.
 
-* 📢 **Actionable Notifications:**  
-  - **Context-Encoded Actions:** Notifications include actionable buttons. 
-  - **Reminder Actions:** 30 minute Reminder buttons for pending approvals.
+### 🔒 Parental Approval Workflows
+- **Approval Processes:**  
+  - Both chores and reward redemptions require parental approval, adding an extra layer of oversight.
+  - Actionable notifications include contextual buttons (e.g., approve, disapprove and 30-minute reminder actions) to streamline the approval process.
 
-* 🎯 **Points Customization:**  
-  - Personalize the points system by choosing custom names and icons (e.g., Stars, Bucks, Coins).
-
-* 📈 **Detailed Statistics:**
-  - Comprehensive sensors track daily, weekly, monthly, and total metrics for chores, points, rewards, badges, penalties, achievements, and challenges.
+### 📈 Detailed Statistics & Analytics
+- **Comprehensive Sensors:**  
+  - Track daily, weekly, monthly, and cumulative metrics on chore completions, points earned, rewards redeemed, badges awarded, penalties applied, and more.
+  
+- **Historical Data & Trends:**  
+  - Analyze long-term progress to identify trends, celebrate improvements, or pinpoint areas that need attention.
   - Build your own statistics from the sensors available and options inside Home Assistant.
 
-* 🔧 **Dynamic Buttons & Actions:**  
-  - Use buttons to claim, approve, disapprove, redeem, adjust points, and more—all with built-in authorization checks.
-
-* 🔐 **Security & Privacy:**  
-  - All data is stored locally on your Home Assistant instance with no external data sharing.
+### 🛠 Customization & User-Friendly Interface
+- **🛠 Dynamic Buttons & Actions:**  
+  - Manage chores and points directly from the Home Assistant UI with buttons for claiming, approving, redeeming, and adjusting points.
+  
+- **🔧 Easy Setup & Maintenance:**  
+  - Enjoy a user-friendly setup wizard and comprehensive configuration menus to add, edit, or delete kids, chores, badges, rewards, penalties, achievements, and challenges.
+  
+- **🌐 Multilingual Support:**  
+  - Currently available in English and Spanish to cater to a diverse user base.
 
 ---
 
-## AVAILABLE SENSORS
+## 📸 Available Sensors & Buttons
 
-### **Kid & Points Sensors**
+### **Sensors**
+
+#### Kid & Points Sensors
 - **KidPointsSensor:** Displays each kid's total points.
-- **KidPointsEarnedDailySensor:** Net points earned by a kid today.
-- **KidPointsEarnedWeeklySensor:** Points earned during the week.
-- **KidPointsEarnedMonthlySensor:** Points earned during the month.
-- **KidMaxPointsEverSensor:** The highest points total ever reached by a kid.
+- **KidPointsEarnedDaily/Weekly/MonthlySensor:** Monitor points earned over various time frames.
+- **KidMaxPointsEverSensor:** Shows the highest points total ever reached by a kid.
 
-### **Chore Sensors**
-- **CompletedChoresTotalSensor:** Total chores completed by a kid.
-- **CompletedChoresDailySensor:** Chores completed today.
-- **CompletedChoresWeeklySensor:** Chores completed this week.
-- **CompletedChoresMonthlySensor:** Chores completed this month.
-- **ChoreStatusSensor:** For each (kid, chore) – shows current status (pending, claimed, approved, overdue).
-- **ChoreStreakSensor:** Current streak (in days) for a chore per kid.
-- **SharedChoreGlobalStateSensor:** Global state for shared chores.
+#### Chore Sensors
+- **CompletedChoresTotal/Daily/Weekly/MonthlySensor:** Track chore completions over different periods.
+- **ChoreStatusSensor:** Displays the current status *(pending, claimed, approved, overdue)* for each chore and kid.
+- **ChoreStreakSensor:** Tracks the current streak (in days) for a chore per kid.
+- **SharedChoreGlobalStateSensor:** Provides a global view of shared chore statuses.
 
-### **Badge, Reward & Penalty Sensors**
-- **KidBadgesSensor:** Number of badges earned by a kid.
-- **KidHighestBadgeSensor:** The highest badge achieved by a kid (by threshold).
-- **BadgeSensor:** One sensor per badge (threshold value, who earned it).
-- **RewardClaimsSensor:** Number of times a reward has been claimed.
-- **RewardApprovalsSensor:** Number of times a reward has been approved.
-- **RewardStatusSensor:** Current reward status per kid *(Not Claimed, Claimed, Approved)*.
-- **ChoreClaimsSensor:** Number of times a chore has been claimed.
-- **ChoreApprovalsSensor:** Number of times a chore has been approved.
-- **PenaltyAppliesSensor:** Tracks how many times each penalty was applied.
+#### Badge, Reward & Penalty Sensors
+- **KidBadgesSensor & KidHighestBadgeSensor:** Monitor the number of badges earned and the highest badge achieved.
+- **BadgeSensor:** Individual sensor per badge, detailing threshold values and recipients.
+- **RewardClaimsSensor, RewardApprovalsSensor & RewardStatusSensor:** Track reward claims, approvals, and current reward statuses per kid.
+- **ChoreClaimsSensor & ChoreApprovalsSensor:** Count how many times a chore has been claimed or approved.
+- **PenaltyAppliesSensor:** Logs the number of times each penalty is applied.
 
-### **Approval & Progress Sensors**
-- **PendingChoreApprovalsSensor:** Lists chores awaiting approval.
-- **PendingRewardApprovalsSensor:** Lists rewards awaiting approval.
-- **AchievementSensor:** Details an achievement (name, target, reward, kids awarded).
-- **ChallengeSensor:** Details a challenge (name, target, reward, completion count).
-- **AchievementProgressSensor:** Progress (in percentage) toward an achievement per kid.
-- **ChallengeProgressSensor:** Progress (in percentage) toward a challenge per kid.
-- **KidHighestStreakSensor:** Highest current streak among streak achievements.
+#### Approval & Progress Sensors
+- **PendingChore/RewardApprovalsSensor:** Lists chores or rewards awaiting parental approval.
+- **AchievementSensor & ChallengeSensor:** Provide details on specific achievements or challenges (including names, targets, rewards, and counts).
+- **AchievementProgressSensor & ChallengeProgressSensor:** Show progress percentages toward each target per kid.
+- **KidHighestStreakSensor:** Displays the highest current streak among streak-based achievements.
 
----
+### **Buttons**
 
-## AVAILABLE BUTTONS
-
-Dynamic buttons are provided for direct actions from the Home Assistant UI:
-- **Chore Buttons:** Claim, Approve, and Disapprove chores.
-- **Reward Buttons:** Redeem, Approve, and Disapprove rewards.
-- **Penalty Buttons:** Apply penalties.
-- **Points Adjust Buttons:** Increment or decrement points (e.g., +1, -1, +10, -10).
-- **Workflow Buttons:** For parental approval and reward workflows.
-
-*Note: All buttons enforce authorization via Home Assistant user IDs and provide contextual actionable notifications with encoded context (e.g., `REMIND_30|kid123|chore456`).*
+- **Chore Actions:**  
+  Claim, approve, and disapprove chores directly from the Home Assistant interface.
+  
+- **Reward Actions:**  
+  Redeem rewards, with subsequent parental approval steps built in.
+  
+- **Penalty & Points Adjustments:**  
+  Apply penalties or adjust points (e.g., +1, -1, +10, -10) using dedicated buttons.
+  
+- **Workflow Buttons:**  
+  Utilize contextual, actionable notifications to streamline approvals.
 
 ---
 
-## OPTIONS FLOW
+## 🚀 Options Flow
 
-The integration includes an interactive Options Flow that allows you to add, edit, or delete:
-- Kids  
-- Parents  
-- Chores  
-- Badges  
-- Rewards  
-- Penalties  
-- Achievements  
-- Challenges  
+KidsChores includes an interactive Options Flow that lets you easily manage:
+- **Kids & Parents**
+- **Chores**
+- **Badges**
+- **Rewards**
+- **Penalties**
+- **Achievements**
+- **Challenges**
 
-This flow uses internal IDs for consistency and to preserve historical data, making configuration and updates seamless.
 
 ---
 
-## SECURITY & PRIVACY
+## 🔐 Security & Privacy
 
-- **Local Data Storage:** All data is stored on your Home Assistant instance.
-- **No External Data Sharing:** Your family's information remains local and private.
+- **Local Data Storage:**  
+  All data is stored securely on your Home Assistant instance, ensuring your family’s information remains private.
+  
+- **No External Data Sharing:**  
+  Your data never leaves your local network, keeping it safe from external access.
+
+---
+
+## 📢 Community
+
+- **Community Feedback:**  
+  Share your thoughts, feature requests, and improvements to help make KidsChores the ultimate family management tool.
+
+---
+
+KidsChores is designed to bring fun, structure, and accountability into your home. Whether you’re looking to better manage your kids’ daily routines or simply want to engage them with a rewarding system, KidsChores is here to help.
+
+**Get started today and transform how your family handles chores, rewards, and more!**
+
 
 ---
 
