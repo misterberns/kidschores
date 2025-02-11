@@ -4,29 +4,40 @@
 Provides schema builders and input-processing logic for internal_id-based management.
 """
 
+import datetime
 import uuid
 import voluptuous as vol
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector, config_validation as cv
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ACHIEVEMENT_TYPE_STREAK,
     ACHIEVEMENT_TYPE_TOTAL,
     CHALLENGE_TYPE_DAILY_MIN,
     CHALLENGE_TYPE_TOTAL_WITHIN_WINDOW,
+    CONF_APPLICABLE_DAYS,
     CONF_ENABLE_MOBILE_NOTIFICATIONS,
     CONF_ENABLE_PERSISTENT_NOTIFICATIONS,
     CONF_MOBILE_NOTIFY_SERVICE,
+    CONF_NOTIFY_ON_APPROVAL,
+    CONF_NOTIFY_ON_CLAIM,
+    CONF_NOTIFY_ON_DISAPPROVAL,
     CONF_POINTS_LABEL,
     CONF_POINTS_ICON,
-    DOMAIN,
+    DEFAULT_APPLICABLE_DAYS,
+    DEFAULT_NOTIFY_ON_APPROVAL,
+    DEFAULT_NOTIFY_ON_CLAIM,
+    DEFAULT_NOTIFY_ON_DISAPPROVAL,
     DEFAULT_POINTS_MULTIPLIER,
     DEFAULT_POINTS_LABEL,
     DEFAULT_POINTS_ICON,
+    DOMAIN,
     FREQUENCY_DAILY,
     FREQUENCY_MONTHLY,
     FREQUENCY_NONE,
     FREQUENCY_WEEKLY,
+    WEEKDAY_OPTIONS,
 )
 
 
@@ -55,13 +66,17 @@ def build_kid_schema(
     default_enable_persistent_notifications=False,
 ):
     """Build a Voluptuous schema for adding/editing a Kid, keyed by internal_id in the dict."""
-    user_options = [{"value": user.id, "label": user.name} for user in users]
-    notify_options = _get_notify_services(hass)
+    user_options = [{"value": "", "label": "None"}] + [
+        {"value": user.id, "label": user.name} for user in users
+    ]
+    notify_options = [{"value": "", "label": "None"}] + _get_notify_services(hass)
 
     return vol.Schema(
         {
             vol.Required("kid_name", default=default_kid_name): str,
-            vol.Optional("ha_user"): selector.SelectSelector(
+            vol.Optional(
+                "ha_user", default=default_ha_user_id or ""
+            ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=user_options,
                     mode=selector.SelectSelectorMode.DROPDOWN,
@@ -72,7 +87,9 @@ def build_kid_schema(
                 CONF_ENABLE_MOBILE_NOTIFICATIONS,
                 default=default_enable_mobile_notifications,
             ): bool,
-            vol.Optional(CONF_MOBILE_NOTIFY_SERVICE): selector.SelectSelector(
+            vol.Optional(
+                CONF_MOBILE_NOTIFY_SERVICE, default=default_mobile_notify_service or ""
+            ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=notify_options,
                     mode=selector.SelectSelectorMode.DROPDOWN,
@@ -101,16 +118,20 @@ def build_parent_schema(
     internal_id=None,
 ):
     """Build a Voluptuous schema for adding/editing a Parent, keyed by internal_id in the dict."""
-    user_options = [{"value": user.id, "label": user.name} for user in users]
+    user_options = [{"value": "", "label": "None"}] + [
+        {"value": user.id, "label": user.name} for user in users
+    ]
     kid_options = [
         {"value": kid_id, "label": kid_name} for kid_name, kid_id in kids_dict.items()
     ]
-    notify_options = _get_notify_services(hass)
+    notify_options = [{"value": "", "label": "None"}] + _get_notify_services(hass)
 
     return vol.Schema(
         {
             vol.Required("parent_name", default=default_parent_name): str,
-            vol.Optional("ha_user_id"): selector.SelectSelector(
+            vol.Optional(
+                "ha_user_id", default=default_ha_user_id or ""
+            ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=user_options,
                     mode=selector.SelectSelectorMode.DROPDOWN,
@@ -130,7 +151,9 @@ def build_parent_schema(
                 CONF_ENABLE_MOBILE_NOTIFICATIONS,
                 default=default_enable_mobile_notifications,
             ): bool,
-            vol.Optional(CONF_MOBILE_NOTIFY_SERVICE): selector.SelectSelector(
+            vol.Optional(
+                CONF_MOBILE_NOTIFY_SERVICE, default=default_mobile_notify_service or ""
+            ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=notify_options,
                     mode=selector.SelectSelectorMode.DROPDOWN,
@@ -196,9 +219,38 @@ def build_chore_schema(kids_dict, default=None):
                     translation_key="recurring_frequency",
                 )
             ),
+            vol.Optional(
+                CONF_APPLICABLE_DAYS,
+                default=default.get(CONF_APPLICABLE_DAYS, DEFAULT_APPLICABLE_DAYS),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        {"value": key, "label": WEEKDAY_OPTIONS[key]}
+                        for key in WEEKDAY_OPTIONS
+                    ],
+                    multiple=True,
+                    translation_key="applicable_days",
+                )
+            ),
             vol.Optional("due_date", default=default.get("due_date")): vol.Any(
                 None, selector.DateTimeSelector()
             ),
+            vol.Optional(
+                CONF_NOTIFY_ON_CLAIM,
+                default=default.get(CONF_NOTIFY_ON_CLAIM, DEFAULT_NOTIFY_ON_CLAIM),
+            ): bool,
+            vol.Optional(
+                CONF_NOTIFY_ON_APPROVAL,
+                default=default.get(
+                    CONF_NOTIFY_ON_APPROVAL, DEFAULT_NOTIFY_ON_APPROVAL
+                ),
+            ): bool,
+            vol.Optional(
+                CONF_NOTIFY_ON_DISAPPROVAL,
+                default=default.get(
+                    CONF_NOTIFY_ON_DISAPPROVAL, DEFAULT_NOTIFY_ON_DISAPPROVAL
+                ),
+            ): bool,
             vol.Required("internal_id", default=internal_id_default): str,
         }
     )
@@ -272,12 +324,20 @@ def build_achievement_schema(kids_dict, chores_dict, default=None):
     achievement_name_default = default.get("name", "")
     internal_id_default = default.get("internal_id", str(uuid.uuid4()))
 
-    kid_choices = {k: k for k in kids_dict}
+    kid_options = [
+        {"value": kid_id, "label": kid_name} for kid_name, kid_id in kids_dict.items()
+    ]
 
-    chore_options = []
+    chore_options = [{"value": "", "label": "None"}]
     for chore_id, chore_data in chores_dict.items():
         chore_name = chore_data.get("name", f"Chore {chore_id[:6]}")
         chore_options.append({"value": chore_id, "label": chore_name})
+
+    default_selected_chore = default.get("selected_chore_id", "")
+    default_criteria = default.get("criteria", "")
+    default_assigned_kids = default.get("assigned_kids", [])
+    if not isinstance(default_assigned_kids, list):
+        default_assigned_kids = [default_assigned_kids]
 
     return vol.Schema(
         {
@@ -287,8 +347,14 @@ def build_achievement_schema(kids_dict, chores_dict, default=None):
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
             vol.Required(
-                "assigned_kids", default=default.get("assigned_kids", [])
-            ): cv.multi_select(kid_choices),
+                "assigned_kids", default=default_assigned_kids
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=kid_options,
+                    translation_key="assigned_kids",
+                    multiple=True,
+                )
+            ),
             vol.Required(
                 "type", default=default.get("type", ACHIEVEMENT_TYPE_STREAK)
             ): selector.SelectSelector(
@@ -302,7 +368,7 @@ def build_achievement_schema(kids_dict, chores_dict, default=None):
             ),
             # If type == "chore_streak", let the user choose the chore to track:
             vol.Optional(
-                "selected_chore_id", default=default.get("selected_chore_id")
+                "selected_chore_id", default=default_selected_chore
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=chore_options,
@@ -311,7 +377,7 @@ def build_achievement_schema(kids_dict, chores_dict, default=None):
                 )
             ),
             # For non-streak achievements the user can type criteria freely:
-            vol.Optional("criteria", default=default.get("criteria", "")): str,
+            vol.Optional("criteria", default=default_criteria): str,
             vol.Required(
                 "target_value", default=default.get("target_value", 1)
             ): vol.Coerce(float),
@@ -329,12 +395,20 @@ def build_challenge_schema(kids_dict, chores_dict, default=None):
     challenge_name_default = default.get("name", "")
     internal_id_default = default.get("internal_id", str(uuid.uuid4()))
 
-    kid_choices = {k: k for k in kids_dict}
+    kid_options = [
+        {"value": kid_id, "label": kid_name} for kid_name, kid_id in kids_dict.items()
+    ]
 
-    chore_options = []
+    chore_options = [{"value": "", "label": "None"}]
     for chore_id, chore_data in chores_dict.items():
         chore_name = chore_data.get("name", f"Chore {chore_id[:6]}")
         chore_options.append({"value": chore_id, "label": chore_name})
+
+    default_selected_chore = default.get("selected_chore_id", "")
+    default_criteria = default.get("criteria", "")
+    default_assigned_kids = default.get("assigned_kids", [])
+    if not isinstance(default_assigned_kids, list):
+        default_assigned_kids = [default_assigned_kids]
 
     return vol.Schema(
         {
@@ -344,8 +418,14 @@ def build_challenge_schema(kids_dict, chores_dict, default=None):
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
             vol.Required(
-                "assigned_kids", default=default.get("assigned_kids", [])
-            ): cv.multi_select(kid_choices),
+                "assigned_kids", default=default_assigned_kids
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=kid_options,
+                    translation_key="assigned_kids",
+                    multiple=True,
+                )
+            ),
             vol.Required(
                 "type", default=default.get("type", CHALLENGE_TYPE_DAILY_MIN)
             ): selector.SelectSelector(
@@ -365,7 +445,7 @@ def build_challenge_schema(kids_dict, chores_dict, default=None):
             ),
             # If type == "chore_streak", let the user choose the chore to track:
             vol.Optional(
-                "selected_chore_id", default=default.get("selected_chore_id")
+                "selected_chore_id", default=default_selected_chore
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=chore_options,
@@ -374,7 +454,7 @@ def build_challenge_schema(kids_dict, chores_dict, default=None):
                 )
             ),
             # For non-streak achievements the user can type criteria freely:
-            vol.Optional("criteria", default=default.get("criteria", "")): str,
+            vol.Optional("criteria", default=default_criteria): str,
             vol.Required(
                 "target_value", default=default.get("target_value", 1)
             ): vol.Coerce(float),
@@ -442,3 +522,24 @@ def _get_notify_services(hass: HomeAssistant) -> list[dict[str, str]]:
             fullname = f"notify.{service_name}"
             services_list.append({"value": fullname, "label": fullname})
     return services_list
+
+
+# Ensure aware datetime objects
+def ensure_utc_datetime(hass: HomeAssistant, dt_value: any) -> str:
+    """Convert a datetime input (or a datetime string) into an ISO string that is timezone aware (in UTC).
+
+    If dt_value is naive, assume it is in the local timezone.
+    """
+    # Convert dt_value to a datetime object if necessary
+    if not isinstance(dt_value, datetime.datetime):
+        dt_value = dt_util.parse_datetime(dt_value)
+        if dt_value is None:
+            raise ValueError(f"Unable to parse datetime from {dt_value}")
+
+    # If the datetime is naive, assume local time using hass.config.time_zone
+    if dt_value.tzinfo is None:
+        local_tz = dt_util.get_time_zone(hass.config.time_zone)
+        dt_value = dt_value.replace(tzinfo=local_tz)
+
+    # Convert to UTC and return the ISO string
+    return dt_util.as_utc(dt_value).isoformat()

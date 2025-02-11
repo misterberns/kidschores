@@ -33,6 +33,7 @@ UPDATE_INTERVAL = 5  # Update interval for coordinator (in minutes)
 # -------------------- Configuration --------------------
 # Configuration Keys
 CONF_ACHIEVEMENTS = "achievements"
+CONF_APPLICABLE_DAYS = "applicable_days"
 CONF_BADGES = "badges"  # Key for badges configuration
 CONF_CHALLENGES = "challenges"
 CONF_CHORES = "chores"  # Key for chores configuration
@@ -64,6 +65,10 @@ VALIDATION_THRESHOLD_VALUE = "threshold_value"  # Badge criteria value
 CONF_ENABLE_MOBILE_NOTIFICATIONS = "enable_mobile_notifications"
 CONF_MOBILE_NOTIFY_SERVICE = "mobile_notify_service"
 CONF_ENABLE_PERSISTENT_NOTIFICATIONS = "enable_persistent_notifications"
+CONF_NOTIFY_ON_CLAIM = "notify_on_claim"
+CONF_NOTIFY_ON_APPROVAL = "notify_on_approval"
+CONF_NOTIFY_ON_DISAPPROVAL = "notify_on_disapproval"
+CONF_CHORE_NOTIFY_SERVICE = "chore_notify_service"
 
 NOTIFICATION_EVENT = "mobile_app_notification_action"
 
@@ -98,6 +103,8 @@ DEFAULT_ICON = "mdi:star-outline"  # Default icon for general points display
 DEFAULT_PENALTY_ICON = "mdi:alert-outline"  # Default icon for penalties
 DEFAULT_POINTS_ADJUST_MINUS_ICON = "mdi:minus-circle-outline"
 DEFAULT_POINTS_ADJUST_PLUS_ICON = "mdi:plus-circle-outline"
+DEFAULT_POINTS_ADJUST_MINUS_MULTIPLE_ICON = "mdi:minus-circle-multiple-outline"
+DEFAULT_POINTS_ADJUST_PLUS_MULTIPLE_ICON = "mdi:plus-circle-multiple-outline"
 DEFAULT_POINTS_ICON = "mdi:star-outline"  # Default icon for points
 DEFAULT_STREAK_ICON = "mdi:blur-linear"  # Default icon for streaks
 DEFAULT_REWARD_ICON = "mdi:gift-outline"  # Default icon for rewards
@@ -105,6 +112,7 @@ DEFAULT_TROPHY_ICON = "mdi:trophy"  # For highest-badge sensor fallback
 DEFAULT_TROPHY_OUTLINE = "mdi:trophy-outline"
 
 # Default Values
+DEFAULT_APPLICABLE_DAYS = []  # Empty means the chore applies every day.
 DEFAULT_BADGE_THRESHOLD = 50  # Default points threshold for badges
 DEFAULT_MULTIPLE_CLAIMS_PER_DAY = False  # Allow only one chore claim per day
 DEFAULT_PARTIAL_ALLOWED = False  # Partial points not allowed by default
@@ -121,6 +129,9 @@ DEFAULT_DAILY_RESET_TIME = {
 }  # Daily reset at midnight
 DEFAULT_MONTHLY_RESET_DAY = 1  # Monthly reset on the 1st day
 DEFAULT_WEEKLY_RESET_DAY = 0  # Weekly reset on Monday (0 = Monday, 6 = Sunday)
+DEFAULT_NOTIFY_ON_CLAIM = True
+DEFAULT_NOTIFY_ON_APPROVAL = True
+DEFAULT_NOTIFY_ON_DISAPPROVAL = True
 
 # -------------------- Recurring Frequencies --------------------
 FREQUENCY_DAILY = "daily"
@@ -184,29 +195,42 @@ ACTION_REMIND_30 = "REMIND_30"
 
 # -------------------- Sensors --------------------
 # Sensor Attributes
+ATTR_ACHIEVEMENT_NAME = "achievement_name"
 ATTR_ALL_EARNED_BADGES = "all_earned_badges"
 ATTR_ALLOW_MULTIPLE_CLAIMS_PER_DAY = "allow_multiple_claims_per_day"
+ATTR_AWARDED = "awarded"
 ATTR_ASSIGNED_KIDS = "assigned_kids"
 ATTR_BADGES = "badges"
+ATTR_CHALLENGE_NAME = "challenge_name"
+ATTR_CHALLENGE_TYPE = "challenge_type"
 ATTR_CHORE_NAME = "chore_name"
 ATTR_CLAIMED_ON = "Claimed on"
 ATTR_COST = "cost"
 ATTR_DEFAULT_POINTS = "default_points"
 ATTR_DESCRIPTION = "description"
 ATTR_DUE_DATE = "due_date"
+ATTR_END_DATE = "end_date"
 ATTR_GLOBAL_STATE = "global_state"
 ATTR_HIGHEST_BADGE_THRESHOLD_VALUE = "highest_badge_threshold_value"
 ATTR_KID_NAME = "kid_name"
 ATTR_KID_STATE = "kid_state"
 ATTR_KIDS_EARNED = "kids_earned"
+ATTR_LAST_DATE = "last_date"
 ATTR_PARTIAL_ALLOWED = "partial_allowed"
 ATTR_PENALTY_NAME = "penalty_name"
 ATTR_PENALTY_POINTS = "penalty_points"
 ATTR_POINTS_MULTIPLIER = "points_multiplier"
+ATTR_RAW_PROGRESS = "raw_progress"
+ATTR_RAW_STREAK = "raw_streak"
+ATTR_RECURRING_FREQUENCY = "recurring_frequency"
 ATTR_REDEEMED_ON = "Redeemed on"
 ATTR_REWARD_NAME = "reward_name"
+ATTR_REWARD_POINTS = "reward_points"
+ATTR_START_DATE = "start_date"
 ATTR_SHARED_CHORE = "shared_chore"
+ATTR_TARGET_VALUE = "target_value"
 ATTR_THRESHOLD_TYPE = "threshold_type"
+ATTR_TYPE = "type"
 
 # Sensor Types
 SENSOR_TYPE_BADGES = "badges"  # Sensor tracking earned badges
@@ -232,6 +256,7 @@ SENSOR_TYPE_PENDING_REWARD_APPROVALS = (
 SENSOR_TYPE_REWARD_APPROVALS = "reward_approvals"  # Reward approvals sensor
 SENSOR_TYPE_REWARD_CLAIMS = "reward_claims"  # Reward claims sensor
 
+
 # -------------------- Services --------------------
 # Custom Services
 SERVICE_APPLY_PENALTY = "apply_penalty"  # Apply penalty service
@@ -243,8 +268,10 @@ SERVICE_DISAPPROVE_REWARD = "disapprove_reward"  # Disapprove reward service
 SERVICE_REDEEM_REWARD = "redeem_reward"  # Redeem reward service
 SERVICE_RESET_ALL_CHORES = "reset_all_chores"  # Reset all chores service
 SERVICE_RESET_ALL_DATA = "reset_all_data"  # Reset all data service
+SERVICE_RESET_OVERDUE_CHORES = "reset_overdue_chores"  # Reset overdue chores
 
 # Field Names (for consistency across services)
+FIELD_CHORE_ID = "chore_id"
 FIELD_CHORE_NAME = "chore_name"
 FIELD_KID_NAME = "kid_name"
 FIELD_PARENT_NAME = "parent_name"
@@ -301,3 +328,15 @@ UNKNOWN_REWARD = "Unknown Reward"  # Error for unknown reward
 # -------------------- Parent Approval Workflow --------------------
 PARENT_APPROVAL_REQUIRED = True  # Enable parent approval for certain actions
 HA_USERNAME_LINK_ENABLED = True  # Enable linking kids to HA usernames
+
+
+# ---------------------------- Weekdays -----------------------------
+WEEKDAY_OPTIONS = {
+    "mon": "Monday",
+    "tue": "Tuesday",
+    "wed": "Wednesday",
+    "thu": "Thursday",
+    "fri": "Friday",
+    "sat": "Saturday",
+    "sun": "Sunday",
+}

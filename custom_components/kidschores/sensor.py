@@ -44,28 +44,41 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ACHIEVEMENT_TYPE_STREAK,
     ACHIEVEMENT_TYPE_TOTAL,
+    ATTR_ACHIEVEMENT_NAME,
     ATTR_ALL_EARNED_BADGES,
     ATTR_ALLOW_MULTIPLE_CLAIMS_PER_DAY,
     ATTR_ASSIGNED_KIDS,
+    ATTR_AWARDED,
     ATTR_BADGES,
+    ATTR_CHALLENGE_NAME,
+    ATTR_CHALLENGE_TYPE,
     ATTR_CLAIMED_ON,
     ATTR_CHORE_NAME,
     ATTR_COST,
     ATTR_DEFAULT_POINTS,
     ATTR_DESCRIPTION,
     ATTR_DUE_DATE,
+    ATTR_END_DATE,
     ATTR_HIGHEST_BADGE_THRESHOLD_VALUE,
     ATTR_GLOBAL_STATE,
     ATTR_KID_NAME,
     ATTR_KIDS_EARNED,
+    ATTR_LAST_DATE,
     ATTR_PARTIAL_ALLOWED,
     ATTR_PENALTY_NAME,
     ATTR_PENALTY_POINTS,
     ATTR_POINTS_MULTIPLIER,
+    ATTR_RECURRING_FREQUENCY,
+    ATTR_RAW_PROGRESS,
+    ATTR_RAW_STREAK,
     ATTR_REDEEMED_ON,
     ATTR_REWARD_NAME,
+    ATTR_REWARD_POINTS,
+    ATTR_START_DATE,
     ATTR_SHARED_CHORE,
+    ATTR_TARGET_VALUE,
     ATTR_THRESHOLD_TYPE,
+    ATTR_TYPE,
     CHALLENGE_TYPE_DAILY_MIN,
     CHALLENGE_TYPE_TOTAL_WITHIN_WINDOW,
     CHORE_STATE_APPROVED,
@@ -209,6 +222,8 @@ async def async_setup_entry(
 
         # Chore Claims and Approvals
         for chore_id, chore_info in coordinator.chores_data.items():
+            if kid_id not in chore_info.get("assigned_kids", []):
+                continue
             chore_name = chore_info.get("name", f"Chore {chore_id}")
             entities.append(
                 ChoreClaimsSensor(
@@ -241,26 +256,35 @@ async def async_setup_entry(
 
         # Achivement Progress per Kid
         for achievement_id, achievement in coordinator.achievements_data.items():
-            achievement_name = achievement.get("name", f"Achievement {achievement_id}")
-            entities.append(
-                AchievementProgressSensor(
-                    coordinator,
-                    entry,
-                    kid_id,
-                    kid_name,
-                    achievement_id,
-                    achievement_name,
+            if kid_id in achievement.get("assigned_kids", []):
+                achievement_name = achievement.get(
+                    "name", f"Achievement {achievement_id}"
                 )
-            )
+                entities.append(
+                    AchievementProgressSensor(
+                        coordinator,
+                        entry,
+                        kid_id,
+                        kid_name,
+                        achievement_id,
+                        achievement_name,
+                    )
+                )
 
         # Challenge Progress per Kid
         for challenge_id, challenge in coordinator.challenges_data.items():
-            challenge_name = challenge.get("name", f"Challenge {challenge_id}")
-            entities.append(
-                ChallengeProgressSensor(
-                    coordinator, entry, kid_id, kid_name, challenge_id, challenge_name
+            if kid_id in challenge.get("assigned_kids", []):
+                challenge_name = challenge.get("name", f"Challenge {challenge_id}")
+                entities.append(
+                    ChallengeProgressSensor(
+                        coordinator,
+                        entry,
+                        kid_id,
+                        kid_name,
+                        challenge_id,
+                        challenge_name,
+                    )
                 )
-            )
 
         # Highest Streak Sensor per Kid
         entities.append(KidHighestStreakSensor(coordinator, entry, kid_id, kid_name))
@@ -324,6 +348,9 @@ async def async_setup_entry(
 class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
     """Sensor for chore status: pending/claimed/approved/etc."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "chore_status_sensor"
+
     def __init__(self, coordinator, entry, kid_id, kid_name, chore_id, chore_name):
         """Initialize the sensor."""
 
@@ -334,7 +361,11 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
         self._chore_name = chore_name
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{chore_id}_status"
-        self._attr_name = f"{kid_name} - Status - {chore_name}"
+        self.entity_id = f"sensor.kc_{kid_name}_chore_status_{chore_name}"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "chore_name": chore_name,
+        }
 
     @property
     def native_value(self):
@@ -372,6 +403,7 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
             ATTR_DESCRIPTION: chore_info.get("description", ""),
             ATTR_SHARED_CHORE: shared,
             ATTR_GLOBAL_STATE: global_state,
+            ATTR_RECURRING_FREQUENCY: chore_info.get("recurring_frequency", "None"),
             ATTR_DUE_DATE: chore_info.get("due_date", DUE_DATE_NOT_SET),
             ATTR_DEFAULT_POINTS: chore_info.get("default_points", 0),
             ATTR_PARTIAL_ALLOWED: chore_info.get("partial_allowed", False),
@@ -388,15 +420,13 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
         return chore_info.get("icon", DEFAULT_CHORE_SENSOR_ICON)
 
-    @property
-    def translation_key(self):
-        """Return the translation key for the sensor."""
-        return "chore_state"
-
 
 # ------------------------------------------------------------------------------------------
 class KidPointsSensor(CoordinatorEntity, SensorEntity):
     """Sensor for a kid's total points balance."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "kid_points_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name, points_label, points_icon):
         """Initialize the sensor."""
@@ -407,8 +437,12 @@ class KidPointsSensor(CoordinatorEntity, SensorEntity):
         self._points_label = points_label
         self._points_icon = points_icon
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_points"
-        self._attr_name = f"{kid_name} - {self._points_label}"
         self._attr_state_class = "measurement"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "points": self._points_label,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_points"
 
     @property
     def native_value(self):
@@ -426,18 +460,13 @@ class KidPointsSensor(CoordinatorEntity, SensorEntity):
         """Use the points' custom icon if set, else fallback."""
         return self._points_icon or DEFAULT_POINTS_ICON
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "kid_points"
-
 
 # ------------------------------------------------------------------------------------------
 class KidMaxPointsEverSensor(CoordinatorEntity, SensorEntity):
-    """Sensor showing the maximum points a kid has ever reached.
+    """Sensor showing the maximum points a kid has ever reached."""
 
-    This value only increases when the kid's current points exceed the old max.
-    """
+    _attr_has_entity_name = True
+    _attr_translation_key = "kid_max_points_ever_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name, points_label, points_icon):
         """Initialize the sensor."""
@@ -448,9 +477,9 @@ class KidMaxPointsEverSensor(CoordinatorEntity, SensorEntity):
         self._points_label = points_label
         self._points_icon = points_icon
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_max_points_ever"
-        self._attr_name = f"{kid_name} - Max Points Ever"
-        self._attr_native_unit_of_measurement = "points"
         self._entry = entry
+        self._attr_translation_placeholders = {"kid_name": kid_name}
+        self.entity_id = f"sensor.kc_{kid_name}_max_points_ever"
 
     @property
     def native_value(self):
@@ -468,15 +497,13 @@ class KidMaxPointsEverSensor(CoordinatorEntity, SensorEntity):
         """Optionally display the same points label for consistency."""
         return self._points_label or LABEL_POINTS
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "kid_max_points_ever"
-
 
 # ------------------------------------------------------------------------------------------
 class CompletedChoresTotalSensor(CoordinatorEntity, SensorEntity):
     """Sensor tracking the total number of chores a kid has completed since integration start."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "chores_completed_total_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
         """Initialize the sensor."""
@@ -485,9 +512,10 @@ class CompletedChoresTotalSensor(CoordinatorEntity, SensorEntity):
         self._kid_id = kid_id
         self._kid_name = kid_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_completed_total"
-        self._attr_name = f"{kid_name} - Total Chores Completed"
         self._attr_native_unit_of_measurement = "chores"
         self._attr_icon = "mdi:clipboard-check-outline"
+        self._attr_translation_placeholders = {"kid_name": kid_name}
+        self.entity_id = f"sensor.kc_{kid_name}_chores_completed_total"
 
     @property
     def native_value(self):
@@ -495,15 +523,13 @@ class CompletedChoresTotalSensor(CoordinatorEntity, SensorEntity):
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return kid_info.get("completed_chores_total", 0)
 
-    @property
-    def translation_key(self):
-        """Return the translation key for the sensor."""
-        return "total_chores_completed"
-
 
 # ------------------------------------------------------------------------------------------
 class CompletedChoresDailySensor(CoordinatorEntity, SensorEntity):
     """How many chores kid completed today."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "chores_completed_daily_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
         """Initialize the sensor."""
@@ -512,8 +538,9 @@ class CompletedChoresDailySensor(CoordinatorEntity, SensorEntity):
         self._kid_id = kid_id
         self._kid_name = kid_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_completed_daily"
-        self._attr_name = f"{kid_name} - Chores Completed Today"
         self._attr_native_unit_of_measurement = "chores"
+        self._attr_translation_placeholders = {"kid_name": kid_name}
+        self.entity_id = f"sensor.kc_{kid_name}_chores_completed_daily"
 
     @property
     def native_value(self):
@@ -521,15 +548,13 @@ class CompletedChoresDailySensor(CoordinatorEntity, SensorEntity):
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return kid_info.get("completed_chores_today", 0)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "completed_chores_daily"
-
 
 # ------------------------------------------------------------------------------------------
 class CompletedChoresWeeklySensor(CoordinatorEntity, SensorEntity):
     """How many chores kid completed this week."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "chores_completed_weekly_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
         """Initialize the sensor."""
@@ -538,8 +563,9 @@ class CompletedChoresWeeklySensor(CoordinatorEntity, SensorEntity):
         self._kid_id = kid_id
         self._kid_name = kid_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_completed_weekly"
-        self._attr_name = f"{kid_name} - Chores Completed This Week"
         self._attr_native_unit_of_measurement = "chores"
+        self._attr_translation_placeholders = {"kid_name": kid_name}
+        self.entity_id = f"sensor.kc_{kid_name}_chores_completed_weekly"
 
     @property
     def native_value(self):
@@ -547,15 +573,13 @@ class CompletedChoresWeeklySensor(CoordinatorEntity, SensorEntity):
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return kid_info.get("completed_chores_weekly", 0)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "completed_chores_weekly"
-
 
 # ------------------------------------------------------------------------------------------
 class CompletedChoresMonthlySensor(CoordinatorEntity, SensorEntity):
     """How many chores kid completed this month."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "chores_completed_monthly_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
         """Initialize the sensor."""
@@ -564,8 +588,9 @@ class CompletedChoresMonthlySensor(CoordinatorEntity, SensorEntity):
         self._kid_id = kid_id
         self._kid_name = kid_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_completed_monthly"
-        self._attr_name = f"{kid_name} - Chores Completed This Month"
         self._attr_native_unit_of_measurement = "chores"
+        self._attr_translation_placeholders = {"kid_name": kid_name}
+        self.entity_id = f"sensor.kc_{kid_name}_chores_completed_monthly"
 
     @property
     def native_value(self):
@@ -573,15 +598,13 @@ class CompletedChoresMonthlySensor(CoordinatorEntity, SensorEntity):
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return kid_info.get("completed_chores_monthly", 0)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "completed_chores_monthly"
-
 
 # ------------------------------------------------------------------------------------------
 class KidBadgesSensor(CoordinatorEntity, SensorEntity):
     """Sensor: number of badges earned + attribute with the list."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "kid_badges_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
         """Initialize the sensor."""
@@ -590,7 +613,8 @@ class KidBadgesSensor(CoordinatorEntity, SensorEntity):
         self._kid_id = kid_id
         self._kid_name = kid_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_badges"
-        self._attr_name = f"{kid_name} - Badges Earned"
+        self._attr_translation_placeholders = {"kid_name": kid_name}
+        self.entity_id = f"sensor.kc_{kid_name}_badges"
 
     @property
     def native_value(self):
@@ -604,19 +628,13 @@ class KidBadgesSensor(CoordinatorEntity, SensorEntity):
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
         return {ATTR_BADGES: kid_info.get("badges", [])}
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "kid_badges"
-
 
 # ------------------------------------------------------------------------------------------
 class KidHighestBadgeSensor(CoordinatorEntity, SensorEntity):
-    """Sensor that returns the "highest" badge the kid currently has, based on the threshold_value in coordinator.badges_data.
+    """Sensor that returns the "highest" badge the kid currently has."""
 
-    - If the kid has no badges, the sensor is "None".
-    - If multiple badges are tied for the highest threshold, it picks one with that top threshold.
-    """
+    _attr_has_entity_name = True
+    _attr_translation_key = "kids_highest_badge_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name):
         """Initialize the sensor."""
@@ -626,7 +644,8 @@ class KidHighestBadgeSensor(CoordinatorEntity, SensorEntity):
         self._kid_id = kid_id
         self._kid_name = kid_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_highest_badge"
-        self._attr_name = f"{kid_name} - Highest Badge"
+        self._attr_translation_placeholders = {"kid_name": kid_name}
+        self.entity_id = f"sensor.kc_{kid_name}_highest_badge"
 
     def _find_highest_badge(self):
         """Determine which badge has the highest ranking."""
@@ -699,19 +718,13 @@ class KidHighestBadgeSensor(CoordinatorEntity, SensorEntity):
             ATTR_HIGHEST_BADGE_THRESHOLD_VALUE: highest_val if highest_badge else 0,
         }
 
-    @property
-    def translation_key(self):
-        """Return the translation key for the sensor."""
-        return "kids_highest_badge"
-
 
 # ------------------------------------------------------------------------------------------
 class BadgeSensor(CoordinatorEntity, SensorEntity):
-    """Sensor representing a single badge in KidsChores.
+    """Sensor representing a single badge in KidsChores."""
 
-    The sensor's 'state' is the badge's threshold_value (the numeric requirement).
-    Attributes include which kids have earned it, threshold type, and more.
-    """
+    _attr_has_entity_name = True
+    _attr_translation_key = "badge_sensor"
 
     def __init__(
         self,
@@ -727,7 +740,8 @@ class BadgeSensor(CoordinatorEntity, SensorEntity):
         self._badge_id = badge_id
         self._badge_name = badge_name
         self._attr_unique_id = f"{entry.entry_id}_{badge_id}_badge_sensor"
-        self._attr_name = f"Badge - {badge_name}"
+        self._attr_translation_placeholders = {"badge_name": badge_name}
+        self.entity_id = f"sensor.kc_{badge_name}_badge"
 
     @property
     def native_value(self) -> float:
@@ -770,23 +784,21 @@ class BadgeSensor(CoordinatorEntity, SensorEntity):
         badge_info = self.coordinator.badges_data.get(self._badge_id, {})
         return badge_info.get("icon", DEFAULT_BADGE_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Optional: Provide a translation key if you want localized states."""
-        return "badge_sensor_state"
-
 
 # ------------------------------------------------------------------------------------------
 class PendingChoreApprovalsSensor(CoordinatorEntity, SensorEntity):
     """Sensor listing all pending chore approvals."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "pending_chores_approvals_sensor"
 
     def __init__(self, coordinator, entry):
         """Initialize the sensor."""
 
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_pending_chore_approvals"
-        self._attr_name = "Pending Chore Approvals"
         self._attr_icon = "mdi:clipboard-check-outline"
+        self.entity_id = f"sensor.kc_pending_chore_approvals"
 
     @property
     def native_value(self):
@@ -821,23 +833,21 @@ class PendingChoreApprovalsSensor(CoordinatorEntity, SensorEntity):
 
         return grouped_by_kid
 
-    @property
-    def translation_key(self):
-        """Return the translation key for the sensor."""
-        return "pending_chores_approvals"
-
 
 # ------------------------------------------------------------------------------------------
 class PendingRewardApprovalsSensor(CoordinatorEntity, SensorEntity):
     """Sensor listing all pending reward approvals."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "pending_rewards_approvals_sensor"
 
     def __init__(self, coordinator, entry):
         """Initialize the sensor."""
 
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_pending_reward_approvals"
-        self._attr_name = "Pending Reward Approvals"
         self._attr_icon = "mdi:gift-open-outline"
+        self.entity_id = f"sensor.kc_pending_reward_approvals"
 
     @property
     def native_value(self):
@@ -872,15 +882,13 @@ class PendingRewardApprovalsSensor(CoordinatorEntity, SensorEntity):
 
         return grouped_by_kid
 
-    @property
-    def translation_key(self):
-        """Return the translation key for the sensor."""
-        return "pending_rewards_approvals"
-
 
 # ------------------------------------------------------------------------------------------
 class RewardClaimsSensor(CoordinatorEntity, SensorEntity):
     """Sensor tracking how many times each reward has been claimed by a kid."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "reward_claims_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name, reward_id, reward_name):
         """Initialize the sensor."""
@@ -891,7 +899,11 @@ class RewardClaimsSensor(CoordinatorEntity, SensorEntity):
         self._reward_id = reward_id
         self._reward_name = reward_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{reward_id}_reward_claims"
-        self._attr_name = f"{kid_name} - '{reward_name}' Claims"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "reward_name": reward_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_reward_claims_{reward_name}"
 
     @property
     def native_value(self):
@@ -905,15 +917,13 @@ class RewardClaimsSensor(CoordinatorEntity, SensorEntity):
         reward_info = self.coordinator.rewards_data.get(self._reward_id, {})
         return reward_info.get("icon", DEFAULT_REWARD_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "reward_claims"
-
 
 # ------------------------------------------------------------------------------------------
 class RewardApprovalsSensor(CoordinatorEntity, SensorEntity):
     """Sensor tracking how many times each reward has been approved for a kid."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "reward_approvals_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name, reward_id, reward_name):
         """Initialize the sensor."""
@@ -924,7 +934,11 @@ class RewardApprovalsSensor(CoordinatorEntity, SensorEntity):
         self._reward_id = reward_id
         self._reward_name = reward_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{reward_id}_reward_approvals"
-        self._attr_name = f"{kid_name} - '{reward_name}' Approvals"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "reward_name": reward_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_reward_approvals_{reward_name}"
 
     @property
     def native_value(self):
@@ -938,15 +952,13 @@ class RewardApprovalsSensor(CoordinatorEntity, SensorEntity):
         reward_info = self.coordinator.rewards_data.get(self._reward_id, {})
         return reward_info.get("icon", DEFAULT_REWARD_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "reward_approvals"
-
 
 # ------------------------------------------------------------------------------------------
 class SharedChoreGlobalStateSensor(CoordinatorEntity, SensorEntity):
     """Sensor that shows the global state of a shared chore."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "shared_chore_global_status_sensor"
 
     def __init__(
         self,
@@ -961,7 +973,10 @@ class SharedChoreGlobalStateSensor(CoordinatorEntity, SensorEntity):
         self._chore_id = chore_id
         self._chore_name = chore_name
         self._attr_unique_id = f"{entry.entry_id}_{chore_id}_global_state"
-        self._attr_name = f"Global State - {chore_name}"
+        self._attr_translation_placeholders = {
+            "chore_name": chore_name,
+        }
+        self.entity_id = f"sensor.kc_chore_global_status_{chore_name}"
 
     @property
     def native_value(self) -> str:
@@ -973,10 +988,23 @@ class SharedChoreGlobalStateSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self) -> dict:
         """Return additional attributes for the chore."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
+        assigned_kids_ids = chore_info.get("assigned_kids", [])
+        assigned_kids_names = [
+            self.coordinator._get_kid_name_by_id(k_id) or f"Kid {k_id}"
+            for k_id in assigned_kids_ids
+        ]
+
         return {
-            "due_date": chore_info.get("due_date", "Not set"),
-            "default_points": chore_info.get("default_points", 0),
-            "shared_chore": chore_info.get("shared_chore", False),
+            ATTR_CHORE_NAME: self._chore_name,
+            ATTR_DESCRIPTION: chore_info.get("description", ""),
+            ATTR_RECURRING_FREQUENCY: chore_info.get("recurring_frequency", "None"),
+            ATTR_DUE_DATE: chore_info.get("due_date", "Not set"),
+            ATTR_DEFAULT_POINTS: chore_info.get("default_points", 0),
+            ATTR_PARTIAL_ALLOWED: chore_info.get("partial_allowed", False),
+            ATTR_ALLOW_MULTIPLE_CLAIMS_PER_DAY: chore_info.get(
+                "allow_multiple_claims_per_day", False
+            ),
+            ATTR_ASSIGNED_KIDS: assigned_kids_names,
         }
 
     @property
@@ -985,22 +1013,13 @@ class SharedChoreGlobalStateSensor(CoordinatorEntity, SensorEntity):
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
         return chore_info.get("icon", DEFAULT_CHORE_SENSOR_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "shared_chore_global_state"
-
 
 # ------------------------------------------------------------------------------------------
 class RewardStatusSensor(CoordinatorEntity, SensorEntity):
-    """Shows the status of a reward for a particular kid.
+    """Shows the status of a reward for a particular kid."""
 
-    Status can be:
-    - "Not Claimed" if the reward is neither pending nor approved
-    - "Claimed" if the reward is in kid_info['pending_rewards']
-    - "Approved" if the reward is in kid_info['redeemed_rewards']
-
-    """
+    _attr_has_entity_name = True
+    _attr_translation_key = "reward_status_sensor"
 
     def __init__(
         self,
@@ -1020,7 +1039,11 @@ class RewardStatusSensor(CoordinatorEntity, SensorEntity):
         self._reward_id = reward_id
         self._reward_name = reward_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{reward_id}_reward_status"
-        self._attr_name = f"{kid_name} - Reward Status - {reward_name}"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "reward_name": reward_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_reward_status_{reward_name}"
 
     @property
     def native_value(self) -> str:
@@ -1053,15 +1076,13 @@ class RewardStatusSensor(CoordinatorEntity, SensorEntity):
         reward_info = self.coordinator.rewards_data.get(self._reward_id, {})
         return reward_info.get("icon", DEFAULT_REWARD_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Optional: Return a translation key if you want to customize or localize states."""
-        return "reward_state"
-
 
 # ------------------------------------------------------------------------------------------
 class ChoreClaimsSensor(CoordinatorEntity, SensorEntity):
     """Sensor tracking how many times each chore has been claimed by a kid."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "chore_claims_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name, chore_id, chore_name):
         """Initialize the sensor."""
@@ -1071,7 +1092,11 @@ class ChoreClaimsSensor(CoordinatorEntity, SensorEntity):
         self._chore_id = chore_id
         self._chore_name = chore_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{chore_id}_chore_claims"
-        self._attr_name = f"{kid_name} - '{chore_name}' Claims"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "chore_name": chore_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_chore_claims_{chore_name}"
 
     @property
     def native_value(self):
@@ -1085,15 +1110,13 @@ class ChoreClaimsSensor(CoordinatorEntity, SensorEntity):
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
         return chore_info.get("icon", DEFAULT_CHORE_SENSOR_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "chore_claims"
-
 
 # ------------------------------------------------------------------------------------------
 class ChoreApprovalsSensor(CoordinatorEntity, SensorEntity):
     """Sensor tracking how many times each chore has been approved for a kid."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "chore_approvals_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name, chore_id, chore_name):
         """Initialize the sensor."""
@@ -1103,7 +1126,11 @@ class ChoreApprovalsSensor(CoordinatorEntity, SensorEntity):
         self._chore_id = chore_id
         self._chore_name = chore_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{chore_id}_chore_approvals"
-        self._attr_name = f"{kid_name} - '{chore_name}' Approvals"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "chore_name": chore_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_chore_approvals_{chore_name}"
 
     @property
     def native_value(self):
@@ -1117,15 +1144,13 @@ class ChoreApprovalsSensor(CoordinatorEntity, SensorEntity):
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
         return chore_info.get("icon", DEFAULT_CHORE_SENSOR_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "chore_approvals"
-
 
 # ------------------------------------------------------------------------------------------
 class PenaltyAppliesSensor(CoordinatorEntity, SensorEntity):
     """Sensor tracking how many times each penalty has been applied to a kid."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "penalty_applies_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name, penalty_id, penalty_name):
         """Initialize the sensor."""
@@ -1135,7 +1160,11 @@ class PenaltyAppliesSensor(CoordinatorEntity, SensorEntity):
         self._penalty_id = penalty_id
         self._penalty_name = penalty_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{penalty_id}_penalty_applies"
-        self._attr_name = f"{kid_name} - '{penalty_name}' Penalties Applied"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "penalty_name": penalty_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_penalties_applied_{penalty_name}"
 
     @property
     def native_value(self):
@@ -1161,15 +1190,13 @@ class PenaltyAppliesSensor(CoordinatorEntity, SensorEntity):
         penalty_info = self.coordinator.penalties_data.get(self._penalty_id, {})
         return penalty_info.get("icon", DEFAULT_PENALTY_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "penalty_applies"
-
 
 # ------------------------------------------------------------------------------------------
 class KidPointsEarnedDailySensor(CoordinatorEntity, SensorEntity):
     """Sensor for how many net points a kid earned today."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "kid_points_earned_daily_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name, points_label, points_icon):
         """Initialize the sensor."""
@@ -1179,9 +1206,10 @@ class KidPointsEarnedDailySensor(CoordinatorEntity, SensorEntity):
         self._points_label = points_label
         self._points_icon = points_icon
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_points_earned_daily"
-        self._attr_name = f"{kid_name} - Points Earned Today"
-        self._attr_native_unit_of_measurement = "points"
-        self._entry = entry
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_points_earned_daily"
 
     @property
     def native_value(self):
@@ -1199,15 +1227,13 @@ class KidPointsEarnedDailySensor(CoordinatorEntity, SensorEntity):
         """Use the points' custom icon if set, else fallback."""
         return self._points_icon or DEFAULT_POINTS_ICON
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "kid_points_earned_daily"
-
 
 # ------------------------------------------------------------------------------------------
 class KidPointsEarnedWeeklySensor(CoordinatorEntity, SensorEntity):
     """Sensor for how many net points a kid earned this week."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "kid_points_earned_weekly_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name, points_label, points_icon):
         """Initialize the sensor."""
@@ -1218,8 +1244,10 @@ class KidPointsEarnedWeeklySensor(CoordinatorEntity, SensorEntity):
         self._points_label = points_label
         self._points_icon = points_icon
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_points_earned_weekly"
-        self._attr_name = f"{kid_name} - Points Earned This Week"
-        self._attr_native_unit_of_measurement = "points"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_points_earned_weekly"
 
     @property
     def native_value(self):
@@ -1237,15 +1265,13 @@ class KidPointsEarnedWeeklySensor(CoordinatorEntity, SensorEntity):
         """Use the points' custom icon if set, else fallback."""
         return self._points_icon or DEFAULT_POINTS_ICON
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "kid_points_earned_weekly"
-
 
 # ------------------------------------------------------------------------------------------
 class KidPointsEarnedMonthlySensor(CoordinatorEntity, SensorEntity):
     """Sensor for how many net points a kid earned this month."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "kid_points_earned_monthly_sensor"
 
     def __init__(self, coordinator, entry, kid_id, kid_name, points_label, points_icon):
         """Initialize the sensor."""
@@ -1256,8 +1282,10 @@ class KidPointsEarnedMonthlySensor(CoordinatorEntity, SensorEntity):
         self._points_label = points_label
         self._points_icon = points_icon
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_points_earned_monthly"
-        self._attr_name = f"{kid_name} - Points Earned This Month"
-        self._attr_native_unit_of_measurement = "points"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_points_earned_monthly"
 
     @property
     def native_value(self):
@@ -1275,19 +1303,13 @@ class KidPointsEarnedMonthlySensor(CoordinatorEntity, SensorEntity):
         """Use the points' custom icon if set, else fallback."""
         return self._points_icon or DEFAULT_POINTS_ICON
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "kid_points_earned_monthly"
-
 
 # ------------------------------------------------------------------------------------------
 class AchievementSensor(CoordinatorEntity, SensorEntity):
-    """Sensor representing an achievement.
+    """Sensor representing an achievement."""
 
-    This sensor shows the achievement’s name, its target value,
-    the reward points it gives, and the number (and list) of kids that have earned it.
-    """
+    _attr_has_entity_name = True
+    _attr_translation_key = "achievement_state_sensor"
 
     def __init__(self, coordinator, entry, achievement_id, achievement_name):
         """Initialize the AchievementSensor."""
@@ -1296,8 +1318,11 @@ class AchievementSensor(CoordinatorEntity, SensorEntity):
         self._achievement_id = achievement_id
         self._achievement_name = achievement_name
         self._attr_unique_id = f"{entry.entry_id}_{achievement_id}_achievement"
-        self._attr_name = f"Achievement: {achievement_name}"
         self._attr_native_unit_of_measurement = "Kids"
+        self._attr_translation_placeholders = {
+            "achievement_name": achievement_name,
+        }
+        self.entity_id = f"sensor.kc_{achievement_name}_status"
 
     @property
     def native_value(self):
@@ -1320,10 +1345,10 @@ class AchievementSensor(CoordinatorEntity, SensorEntity):
                 kid_name = self.coordinator._get_kid_name_by_id(kid_id) or kid_id
                 earned_by.append(kid_name)
         return {
-            "target_value": achievement.get("target_value"),
-            "reward_points": achievement.get("reward_points"),
-            "type": achievement.get("type"),
-            "earned_by": earned_by,
+            ATTR_TARGET_VALUE: achievement.get("target_value"),
+            ATTR_REWARD_POINTS: achievement.get("reward_points"),
+            ATTR_TYPE: achievement.get("type"),
+            ATTR_KIDS_EARNED: earned_by,
         }
 
     @property
@@ -1334,19 +1359,13 @@ class AchievementSensor(CoordinatorEntity, SensorEntity):
         )
         return achievement_info.get("icon", DEFAULT_ACHIEVEMENTS_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "achievement_state"
-
 
 # ------------------------------------------------------------------------------------------
 class ChallengeSensor(CoordinatorEntity, SensorEntity):
-    """Sensor representing a challenge.
+    """Sensor representing a challenge."""
 
-    This sensor shows the challenge’s name, its target and reward,
-    and how many kids have completed (been awarded) this challenge.
-    """
+    _attr_has_entity_name = True
+    _attr_translation_key = "challenge_state_sensor"
 
     def __init__(self, coordinator, entry, challenge_id, challenge_name):
         """Initialize the ChallengeSensor."""
@@ -1355,8 +1374,11 @@ class ChallengeSensor(CoordinatorEntity, SensorEntity):
         self._challenge_id = challenge_id
         self._challenge_name = challenge_name
         self._attr_unique_id = f"{entry.entry_id}_{challenge_id}_challenge"
-        self._attr_name = f"Challenge: {challenge_name}"
         self._attr_native_unit_of_measurement = "Kids"
+        self._attr_translation_placeholders = {
+            "challenge_name": challenge_name,
+        }
+        self.entity_id = f"sensor.kc_{challenge_name}_status"
 
     @property
     def native_value(self):
@@ -1377,12 +1399,12 @@ class ChallengeSensor(CoordinatorEntity, SensorEntity):
                 kid_name = self.coordinator._get_kid_name_by_id(kid_id) or kid_id
                 earned_by.append(kid_name)
         return {
-            "target_value": challenge.get("target_value"),
-            "reward_points": challenge.get("reward_points"),
-            "start_date": challenge.get("start_date"),
-            "end_date": challenge.get("end_date"),
-            "type": challenge.get("type"),
-            "earned_by": earned_by,
+            ATTR_TARGET_VALUE: challenge.get("target_value"),
+            ATTR_REWARD_POINTS: challenge.get("reward_points"),
+            ATTR_START_DATE: challenge.get("start_date"),
+            ATTR_END_DATE: challenge.get("end_date"),
+            ATTR_TYPE: challenge.get("type"),
+            ATTR_KIDS_EARNED: earned_by,
         }
 
     @property
@@ -1391,15 +1413,13 @@ class ChallengeSensor(CoordinatorEntity, SensorEntity):
         challenge_info = self.coordinator.challenges_data.get(self._challenge_id, {})
         return challenge_info.get("icon", DEFAULT_ACHIEVEMENTS_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "challenge_state"
-
 
 # ------------------------------------------------------------------------------------------
 class AchievementProgressSensor(CoordinatorEntity, SensorEntity):
     """Sensor representing a kid's progress toward a specific achievement."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "achievement_progress_sensor"
 
     def __init__(
         self,
@@ -1420,8 +1440,12 @@ class AchievementProgressSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = (
             f"{entry.entry_id}_{kid_id}_{achievement_id}_achievement_progress"
         )
-        self._attr_name = f"{kid_name} - {achievement_name} Progress"
         self._attr_native_unit_of_measurement = PERCENTAGE
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "achievement_name": achievement_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_achievement_status_{achievement_name}"
 
     @property
     def native_value(self) -> float:
@@ -1473,10 +1497,10 @@ class AchievementProgressSensor(CoordinatorEntity, SensorEntity):
             )
 
         return {
-            "achievement_name": self._achievement_name,
-            "target_value": target,
-            "raw_progress": raw_progress,
-            "awarded": awarded,
+            ATTR_ACHIEVEMENT_NAME: self._achievement_name,
+            ATTR_TARGET_VALUE: target,
+            ATTR_RAW_PROGRESS: raw_progress,
+            ATTR_AWARDED: awarded,
         }
 
     @property
@@ -1488,15 +1512,13 @@ class AchievementProgressSensor(CoordinatorEntity, SensorEntity):
         achievement = self.coordinator.achievements_data.get(self._achievement_id, {})
         return achievement.get("icon", DEFAULT_ACHIEVEMENTS_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "achievement_progress"
-
 
 # ------------------------------------------------------------------------------------------
 class ChallengeProgressSensor(CoordinatorEntity, SensorEntity):
     """Sensor representing a kid's progress toward a specific challenge."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "challenge_progress_sensor"
 
     def __init__(
         self,
@@ -1517,8 +1539,12 @@ class ChallengeProgressSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = (
             f"{entry.entry_id}_{kid_id}_{challenge_id}_challenge_progress"
         )
-        self._attr_name = f"{kid_name} - {challenge_name} Progress"
         self._attr_native_unit_of_measurement = PERCENTAGE
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "challenge_name": challenge_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_challenge_status_{challenge_name}"
 
     @property
     def native_value(self) -> float:
@@ -1585,11 +1611,11 @@ class ChallengeProgressSensor(CoordinatorEntity, SensorEntity):
             raw_progress = 0
 
         return {
-            "challenge_name": self._challenge_name,
-            "target_value": target,
-            "raw_progress": raw_progress,
-            "challenge_type": challenge_type,
-            "awarded": awarded,
+            ATTR_CHALLENGE_NAME: self._challenge_name,
+            ATTR_TARGET_VALUE: target,
+            ATTR_RAW_PROGRESS: raw_progress,
+            ATTR_CHALLENGE_TYPE: challenge_type,
+            ATTR_AWARDED: awarded,
         }
 
     @property
@@ -1601,15 +1627,13 @@ class ChallengeProgressSensor(CoordinatorEntity, SensorEntity):
         challenge = self.coordinator.challenges_data.get(self._challenge_id, {})
         return challenge.get("icon", DEFAULT_CHALLENGES_ICON)
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "challenge_progress"
-
 
 # ------------------------------------------------------------------------------------------
 class KidHighestStreakSensor(CoordinatorEntity, SensorEntity):
     """Sensor returning the highest current streak among streak-type achievements for a kid."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "kid_highest_streak_sensor"
 
     def __init__(
         self,
@@ -1624,8 +1648,11 @@ class KidHighestStreakSensor(CoordinatorEntity, SensorEntity):
         self._kid_id = kid_id
         self._kid_name = kid_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_highest_streak"
-        self._attr_name = f"{kid_name} - Highest Streak"
         self._attr_native_unit_of_measurement = UnitOfTime.DAYS
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_highest_streak"
 
     @property
     def native_value(self) -> int:
@@ -1671,15 +1698,13 @@ class KidHighestStreakSensor(CoordinatorEntity, SensorEntity):
         """Return an icon for 'highest streak'. You can choose any default or allow config overrides."""
         return DEFAULT_STREAK_ICON
 
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "kid_highest_streak"
-
 
 # ------------------------------------------------------------------------------------------
 class ChoreStreakSensor(CoordinatorEntity, SensorEntity):
     """Sensor returning the current streak for a specific chore for a given kid."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "chore_streak_sensor"
 
     def __init__(
         self,
@@ -1698,8 +1723,12 @@ class ChoreStreakSensor(CoordinatorEntity, SensorEntity):
         self._chore_id = chore_id
         self._chore_name = chore_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{chore_id}_streak"
-        self._attr_name = f"{kid_name} - Streak - {chore_name}"
         self._attr_native_unit_of_measurement = UnitOfTime.DAYS
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "chore_name": chore_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_chore_streak_{chore_name}"
 
     @property
     def native_value(self) -> int:
@@ -1732,12 +1761,14 @@ class ChoreStreakSensor(CoordinatorEntity, SensorEntity):
                 progress_for_kid = achievement.get("progress", {}).get(self._kid_id)
 
                 if isinstance(progress_for_kid, dict):
-                    attributes["last_date"] = progress_for_kid.get("last_date")
-                    attributes["raw_streak"] = progress_for_kid.get("current_streak", 0)
+                    attributes[ATTR_LAST_DATE] = progress_for_kid.get("last_date")
+                    attributes[ATTR_RAW_STREAK] = progress_for_kid.get(
+                        "current_streak", 0
+                    )
 
                 elif isinstance(progress_for_kid, int):
-                    attributes["last_date"] = None
-                    attributes["raw_streak"] = progress_for_kid
+                    attributes[ATTR_LAST_DATE] = None
+                    attributes[ATTR_RAW_STREAK] = progress_for_kid
                 break
         return attributes
 
@@ -1746,8 +1777,3 @@ class ChoreStreakSensor(CoordinatorEntity, SensorEntity):
         """Return the chore's custom icon if set, else fallback."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
         return chore_info.get("icon", DEFAULT_CHORE_SENSOR_ICON)
-
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key for the sensor."""
-        return "chore_streak"

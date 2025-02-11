@@ -31,7 +31,9 @@ from .const import (
     DEFAULT_DISAPPROVE_ICON,
     DEFAULT_PENALTY_ICON,
     DEFAULT_POINTS_ADJUST_MINUS_ICON,
+    DEFAULT_POINTS_ADJUST_MINUS_MULTIPLE_ICON,
     DEFAULT_POINTS_ADJUST_PLUS_ICON,
+    DEFAULT_POINTS_ADJUST_PLUS_MULTIPLE_ICON,
     DEFAULT_POINTS_LABEL,
     DEFAULT_REWARD_ICON,
     DOMAIN,
@@ -63,7 +65,7 @@ async def async_setup_entry(
 
     entities = []
 
-    # 1) Create buttons for chores (Claim, Approve & Disapprove)
+    # Create buttons for chores (Claim, Approve & Disapprove)
     for chore_id, chore_info in coordinator.chores_data.items():
         chore_name = chore_info.get("name", f"Chore {chore_id}")
         assigned_kids_ids = chore_info.get("assigned_kids", [])
@@ -111,7 +113,7 @@ async def async_setup_entry(
                 )
             )
 
-    # 2) Create reward buttons (Redeem, Approve & Disapprove)
+    # Create reward buttons (Redeem, Approve & Disapprove)
     for kid_id, kid_info in coordinator.kids_data.items():
         kid_name = kid_info.get("name", f"Kid {kid_id}")
         for reward_id, reward_info in coordinator.rewards_data.items():
@@ -153,7 +155,7 @@ async def async_setup_entry(
                 )
             )
 
-    # 3) Create penalty buttons
+    # Create penalty buttons
     for kid_id, kid_info in coordinator.kids_data.items():
         kid_name = kid_info.get("name", f"Kid {kid_id}")
         for penalty_id, penalty_info in coordinator.penalties_data.items():
@@ -171,7 +173,7 @@ async def async_setup_entry(
                 )
             )
 
-    # 4) Create "points adjustment" buttons for each kid (±1, ±2, ±10, etc.)
+    # Create "points adjustment" buttons for each kid (±1, ±2, ±10, etc.)
     POINT_DELTAS = [+1, -1, +2, -2, +10, -10]
     for kid_id, kid_info in coordinator.kids_data.items():
         kid_name = kid_info.get("name", f"Kid {kid_id}")
@@ -194,6 +196,9 @@ async def async_setup_entry(
 class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
     """Button to claim a chore as done (set chore state=claimed)."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "claim_chore_button"
+
     def __init__(
         self,
         coordinator: KidsChoresDataCoordinator,
@@ -213,8 +218,12 @@ class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
         self._chore_id = chore_id
         self._chore_name = chore_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{chore_id}_claim"
-        self._attr_name = f"{kid_name} - Claim Chore: {chore_name}"
         self._attr_icon = icon
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "chore_name": chore_name,
+        }
+        self.entity_id = f"button.kc_{kid_name}_chore_claim_{chore_name}"
 
     async def async_press(self):
         """Handle the button press event."""
@@ -262,6 +271,9 @@ class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
 class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
     """Button to approve a claimed chore for a kid (set chore state=approved or partial)."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "approve_chore_button"
+
     def __init__(
         self,
         coordinator: KidsChoresDataCoordinator,
@@ -281,8 +293,12 @@ class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
         self._chore_id = chore_id
         self._chore_name = chore_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{chore_id}_approve"
-        self._attr_name = f"{kid_name} - Approve Chore: {chore_name}"
         self._attr_icon = icon
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "chore_name": chore_name,
+        }
+        self.entity_id = f"button.kc_{kid_name}_chore_approval_{chore_name}"
 
     async def async_press(self):
         """Handle the button press event."""
@@ -327,6 +343,9 @@ class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
 class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
     """Button to disapprove a chore."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "disapprove_chore_button"
+
     def __init__(
         self,
         coordinator: KidsChoresDataCoordinator,
@@ -347,8 +366,12 @@ class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
         self._attr_unique_id = (
             f"{entry.entry_id}_{BUTTON_DISAPPROVE_CHORE_PREFIX}{kid_id}_{chore_id}"
         )
-        self._attr_name = f"{kid_name} - Disapprove Chore: {chore_name}"
         self._attr_icon = icon
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "chore_name": chore_name,
+        }
+        self.entity_id = f"button.kc_{kid_name}_chore_disapproval_{chore_name}"
 
     @property
     def available(self) -> bool:
@@ -408,10 +431,10 @@ class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
 
 # ------------------ Reward Buttons ------------------
 class RewardButton(CoordinatorEntity, ButtonEntity):
-    """Button to redeem a reward for a kid.
+    """Button to redeem a reward for a kid."""
 
-    Uses user-defined or default reward icon.
-    """
+    _attr_has_entity_name = True
+    _attr_translation_key = "claim_reward_button"
 
     def __init__(
         self,
@@ -433,8 +456,12 @@ class RewardButton(CoordinatorEntity, ButtonEntity):
         self._attr_unique_id = (
             f"{entry.entry_id}_{BUTTON_REWARD_PREFIX}{kid_id}_{reward_id}"
         )
-        self._attr_name = f"{kid_name} - Redeem Reward: {reward_name}"
         self._attr_icon = icon
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "reward_name": reward_name,
+        }
+        self.entity_id = f"button.kc_{kid_name}_reward_claim_{reward_name}"
 
     async def async_press(self):
         """Handle the button press event."""
@@ -485,6 +512,9 @@ class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
     Prevents unauthorized or premature reward approvals.
     """
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "approve_reward_button"
+
     def __init__(
         self,
         coordinator: KidsChoresDataCoordinator,
@@ -504,8 +534,12 @@ class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
         self._reward_id = reward_id
         self._reward_name = reward_name
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{reward_id}_approve_reward"
-        self._attr_name = f"{kid_name} - Approve Reward: {reward_name}"
         self._attr_icon = icon
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "reward_name": reward_name,
+        }
+        self.entity_id = f"button.kc_{kid_name}_reward_approval_{reward_name}"
 
     async def async_press(self):
         """Handle the button press event."""
@@ -569,6 +603,9 @@ class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
 class DisapproveRewardButton(CoordinatorEntity, ButtonEntity):
     """Button to disapprove a reward."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "disapprove_reward_button"
+
     def __init__(
         self,
         coordinator: KidsChoresDataCoordinator,
@@ -589,8 +626,12 @@ class DisapproveRewardButton(CoordinatorEntity, ButtonEntity):
         self._attr_unique_id = (
             f"{entry.entry_id}_{BUTTON_DISAPPROVE_REWARD_PREFIX}{kid_id}_{reward_id}"
         )
-        self._attr_name = f"{kid_name} - Disapprove Reward: {reward_name}"
         self._attr_icon = icon
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "reward_name": reward_name,
+        }
+        self.entity_id = f"button.kc_{kid_name}_reward_disapproval_{reward_name}"
 
     @property
     def available(self) -> bool:
@@ -657,6 +698,9 @@ class PenaltyButton(CoordinatorEntity, ButtonEntity):
     Uses user-defined or default penalty icon.
     """
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "penalty_button"
+
     def __init__(
         self,
         coordinator: KidsChoresDataCoordinator,
@@ -678,8 +722,12 @@ class PenaltyButton(CoordinatorEntity, ButtonEntity):
         self._attr_unique_id = (
             f"{entry.entry_id}_{BUTTON_PENALTY_PREFIX}{kid_id}_{penalty_id}"
         )
-        self._attr_name = f"{kid_name} - Apply Penalty: {penalty_name}"
         self._attr_icon = icon
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "penalty_name": penalty_name,
+        }
+        self.entity_id = f"button.kc_{kid_name}_penalty_{penalty_name}"
 
     async def async_press(self):
         """Handle the button press event."""
@@ -732,6 +780,9 @@ class PointsAdjustButton(CoordinatorEntity, ButtonEntity):
     Uses icons from const.py for plus/minus, or fallback if desired.
     """
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "manual_adjustment_button"
+
     def __init__(
         self,
         coordinator: KidsChoresDataCoordinator,
@@ -750,15 +801,27 @@ class PointsAdjustButton(CoordinatorEntity, ButtonEntity):
         self._delta = delta
         self._points_label = points_label
 
-        sign_label = f"+{delta}" if delta >= 0 else str(delta)
+        sign_label = f"+{delta}" if delta >= 0 else f"-{delta}"
+        sign_text = f"plus_{delta}" if delta >= 0 else f"minus_{delta}"
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_adjust_points_{delta}"
-        self._attr_name = f"{kid_name} {sign_label} {self._points_label}"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "sign_label": sign_label,
+            "points_label": points_label,
+        }
+        self.entity_id = f"button.kc_{kid_name}_{sign_text}_{points_label}"
 
         # Decide the icon based on whether delta is positive or negative
-        if delta >= 0:
+        if delta >= 2:
+            self._attr_icon = DEFAULT_POINTS_ADJUST_PLUS_MULTIPLE_ICON
+        elif delta > 0:
             self._attr_icon = DEFAULT_POINTS_ADJUST_PLUS_ICON
-        else:
+        elif delta <= -2:
+            self._attr_icon = DEFAULT_POINTS_ADJUST_MINUS_MULTIPLE_ICON
+        elif delta < 0:
             self._attr_icon = DEFAULT_POINTS_ADJUST_MINUS_ICON
+        else:
+            self._attr_icon = DEFAULT_POINTS_ADJUST_PLUS_ICON
 
     async def async_press(self):
         """Handle the button press event."""
