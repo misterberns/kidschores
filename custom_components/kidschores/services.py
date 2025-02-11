@@ -18,6 +18,7 @@ from .const import (
     ERROR_CHORE_NOT_FOUND_FMT,
     ERROR_KID_NOT_FOUND_FMT,
     ERROR_NOT_AUTHORIZED_FMT,
+    FIELD_CHORE_ID,
     FIELD_CHORE_NAME,
     FIELD_KID_NAME,
     FIELD_PARENT_NAME,
@@ -35,6 +36,7 @@ from .const import (
     SERVICE_REDEEM_REWARD,
     SERVICE_RESET_ALL_CHORES,
     SERVICE_RESET_ALL_DATA,
+    SERVICE_RESET_OVERDUE_CHORES,
 )
 from .coordinator import KidsChoresDataCoordinator
 from .kc_helpers import is_user_authorized_for_global_action, is_user_authorized_for_kid
@@ -102,6 +104,14 @@ APPROVE_REWARD_SCHEMA = vol.Schema(
         vol.Required(FIELD_PARENT_NAME): cv.string,
         vol.Required(FIELD_KID_NAME): cv.string,
         vol.Required(FIELD_REWARD_NAME): cv.string,
+    }
+)
+
+RESET_OVERDUE_CHORES_SCHEMA = vol.Schema(
+    {
+        vol.Optional(FIELD_CHORE_ID): cv.string,
+        vol.Optional(FIELD_CHORE_NAME): cv.string,
+        vol.Optional(FIELD_KID_NAME): cv.string,
     }
 )
 
@@ -544,6 +554,7 @@ def async_setup_services(hass: HomeAssistant):
 
     async def handle_reset_all_chores(call: ServiceCall):
         """Handle manually resetting all chores to pending, clearing claims/approvals."""
+
         entry_id = _get_first_kidschores_entry(hass)
         if not entry_id:
             LOGGER.warning("Reset All Chores: No KidsChores entry found")
@@ -572,6 +583,43 @@ def async_setup_services(hass: HomeAssistant):
         coordinator._persist()
         coordinator.async_set_updated_data(coordinator._data)
         LOGGER.info("Manually reset all chores to pending, removed claims/approvals")
+
+    async def handle_reset_overdue_chores(call: ServiceCall) -> None:
+        """Handle resetting overdue chores."""
+
+        entry_id = _get_first_kidschores_entry(hass)
+        if not entry_id:
+            LOGGER.warning("Reset Overdue Chores: %s", MSG_NO_ENTRY_FOUND)
+            return
+
+        coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
+            "coordinator"
+        ]
+
+        # Get parameters
+        chore_id = call.data.get("chore_id")
+        chore_name = call.data.get("chore_name")
+        kid_name = call.data.get("kid_name")
+
+        # If chore_id not provided but chore_name is, map it to chore_id.
+        if not chore_id and chore_name:
+            chore_id = _get_chore_id_by_name(coordinator, chore_name)
+            if not chore_id:
+                LOGGER.warning("Reset Overdue Chores: Chore '%s' not found", chore_name)
+                raise HomeAssistantError(f"Chore '{chore_name}' not found.")
+
+        # If kid_name provided, map it to kid_id.
+        kid_id: Optional[str] = None
+        if kid_name:
+            kid_id = _get_kid_id_by_name(coordinator, kid_name)
+            if not kid_id:
+                LOGGER.warning("Reset Overdue Chores: Kid '%s' not found", kid_name)
+                raise HomeAssistantError(f"Kid '{kid_name}' not found.")
+
+        # Call the coordinator’s new reset_overdue_chores method.
+        coordinator.reset_overdue_chores(chore_id=chore_id, kid_id=kid_id)
+        LOGGER.info("Reset overdue chores (chore_id=%s, kid_id=%s)", chore_id, kid_id)
+        await coordinator.async_request_refresh()
 
     # --- Register Services ---
     hass.services.async_register(
@@ -618,6 +666,13 @@ def async_setup_services(hass: HomeAssistant):
         schema=RESET_ALL_CHORES_SCHEMA,
     )
 
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESET_OVERDUE_CHORES,
+        handle_reset_overdue_chores,
+        schema=RESET_OVERDUE_CHORES_SCHEMA,
+    )
+
     LOGGER.info("KidsChores services have been registered successfully")
 
 
@@ -633,6 +688,7 @@ async def async_unload_services(hass: HomeAssistant):
         SERVICE_APPROVE_REWARD,
         SERVICE_RESET_ALL_DATA,
         SERVICE_RESET_ALL_CHORES,
+        SERVICE_RESET_OVERDUE_CHORES,
     ]
 
     for service in services:

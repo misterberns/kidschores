@@ -74,7 +74,11 @@
           "chore_description": "Description (optional)",
           "icon": "Icon (mdi:xxx)",
           "recurring_frequency": "Recurring Frequency",
-          "due_date": "Due Date"
+          "applicable_days": "Applicable Days",
+          "due_date": "Due Date",
+          "notify_on_claim": "Notify on Claim",
+          "notify_on_approval": "Notify on Approval",
+          "notify_on_disapproval": "Notify on Disapproval"
         }
       },
       "badge_count": {
@@ -160,7 +164,7 @@
         "title": "Number of Challenges",
         "description": "How many challenges do you want to define?",
         "data": {
-          "achievement_count": "Challenge Count"
+          "challenge_count": "Challenge Count"
         }
       },
       "challenges": {
@@ -282,7 +286,11 @@
           "chore_description": "Description (optional)",
           "icon": "Icon (mdi:xxx)",
           "recurring_frequency": "Recurring Frequency",
-          "due_date": "Due Date"
+          "applicable_days": "Applicable Days",
+          "due_date": "Due Date",
+          "notify_on_claim": "Notify on Claim",
+          "notify_on_approval": "Notify on Approval",
+          "notify_on_disapproval": "Notify on Disapproval"
         }
       },
       "add_badge": {
@@ -393,7 +401,11 @@
           "chore_description": "Description (optional)",
           "icon": "Icon (mdi:xxx)",
           "recurring_frequency": "Recurring Frequency",
-          "due_date": "Due Date"
+          "applicable_days": "Applicable Days",
+          "due_date": "Due Date",
+          "notify_on_claim": "Notify on Claim",
+          "notify_on_approval": "Notify on Approval",
+          "notify_on_disapproval": "Notify on Disapproval"
         }
       },
       "edit_badge": {
@@ -557,6 +569,17 @@
         "monthly": "Monthly"
       }
     },
+    "applicable_days": {
+      "options": {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
+      }
+    },
     "threshold_type": {
       "options": {
         "points": "Points",
@@ -619,7 +642,7 @@
         "kid_name": {
           "name": "Kid Name",
           "description": "The name of the kid whose chore is being disapproved.",
-          "example": "Bob"
+          "example": "Alice"
         },
         "chore_name": {
           "name": "Chore Name",
@@ -682,7 +705,7 @@
         "kid_name": {
           "name": "Kid Name",
           "description": "The kid whose reward redemption is being disapproved.",
-          "example": "Bob"
+          "example": "Alice"
         },
         "reward_name": {
           "name": "Reward Name",
@@ -703,7 +726,7 @@
         "kid_name": {
           "name": "Kid Name",
           "description": "The kid receiving the penalty.",
-          "example": "Bob"
+          "example": "Alice"
         },
         "penalty_name": {
           "name": "Penalty Name",
@@ -719,11 +742,33 @@
     "reset_all_chores": {
       "name": "Reset All Chores",
       "description": "Manually reset chores to pending state, removing claims and approvals."
+    },
+    "reset_overdue_chores": {
+      "name": "Reset Overdue Chores",
+      "description": "Reset overdue chore(s) back to the Pending state and reschedule them based on their recurring frequency and previous due date. You may optionally provide a chore_id (or chore_name) to reset a specific chore and optionally a kid_name to reset the chore only for that kid.",
+      "fields": {
+        "chore_id": {
+          "name": "Chore ID",
+          "description": "The internal ID of the chore to reset (optional if chore_name is provided).",
+          "example": "abc123"
+        },
+        "chore_name": {
+          "name": "Chore Name",
+          "description": "The name of the chore to reset (optional if chore_id is provided).",
+          "example": "Wash Dishes"
+        },
+        "kid_name": {
+          "name": "Kid Name",
+          "description": "The kid receiving the penalty.",
+          "example": "Alice"
+        }
+      }
     }
   },
   "entity": {
     "sensor": {
-      "chore_state": {
+      "chore_status_sensor": {
+        "name": "{kid_name} - Status - {chore_name}",
         "state": {
           "pending": "Pending",
           "approved": "Approved",
@@ -742,6 +787,15 @@
             "state": {
               "true": "Yes",
               "false": "No"
+            }
+          },
+          "recurring_frequency": {
+            "name": "Recurring Frequency",
+            "state": {
+              "none": "None",
+              "daily": "Daily",
+              "weekly": "Weekly",
+              "monthly": "Monthly"
             }
           },
           "due_date": { "name": "Due Date" },
@@ -777,14 +831,37 @@
           "assigned_kids": { "name": "Assigned Kids" }
         }
       },
-      "kids_highest_badge": {
+      "kid_points_sensor": {
+        "name": "{kid_name} - {points}"
+      },
+      "kid_max_points_ever_sensor": {
+        "name": "{kid_name} - Maximum Points Ever"
+      },
+      "chores_completed_total_sensor": {
+        "name": "{kid_name} - Chores Completed - Total"
+      },
+      "chores_completed_daily_sensor": {
+        "name": "{kid_name} - Chores Completed - Daily"
+      },
+      "chores_completed_weekly_sensor": {
+        "name": "{kid_name} - Chores Completed - Weekly"
+      },
+      "chores_completed_monthly_sensor": {
+        "name": "{kid_name} - Chores Completed - Monthly"
+      },
+      "kid_badges_sensor": {
+        "name": "{kid_name} - Badges Earned"
+      },
+      "kids_highest_badge_sensor": {
+        "name": "{kid_name} - Badge",
         "state_attributes": {
           "kid_name": { "name": "Kid Name" },
           "all_earned_badges": { "name": "All Earned Badges" },
           "highest_badge_threshold_value": { "name": "Highest Badge Threshold" }
         }
       },
-      "badge_sensor_state": {
+      "badge_sensor": {
+        "name": "Badge - {badge_name}",
         "state_attributes": {
           "threshold_type": {
             "name": "Threshold Type",
@@ -798,7 +875,20 @@
           "kids_earned": { "name": "Kids Earned" }
         }
       },
-      "shared_chore_global_state": {
+      "pending_chores_approvals_sensor": {
+        "name": "Pending Chore Approvals"
+      },
+      "pending_rewards_approvals_sensor": {
+        "name": "Pending Reward Approvals"
+      },
+      "reward_claims_sensor": {
+        "name": "{kid_name} - Claims - {reward_name}"
+      },
+      "reward_approvals_sensor": {
+        "name": "{kid_name} - Approvals - {reward_name}"
+      },
+      "shared_chore_global_status_sensor": {
+        "name": "{chore_name} - Global Status",
         "state": {
           "pending": "Pending",
           "approved": "Approved",
@@ -810,18 +900,40 @@
           "claimed_in_part": "Claimed (in-part)"
         },
         "state_attributes": {
+          "chore_name": { "name": "Chore Name" },
+          "description": { "name": "Description" },
+          "recurring_frequency": {
+            "name": "Recurring Frequency",
+            "state": {
+              "none": "None",
+              "daily": "Daily",
+              "weekly": "Weekly",
+              "monthly": "Monthly"
+            }
+          },
           "due_date": { "name": "Due Date" },
           "default_points": { "name": "Default Points" },
-          "shared_chore": {
-            "name": "Shared Chore",
+          "partial_allowed": {
+            "name": "Partially Allowed",
             "state": {
               "true": "Yes",
               "false": "No"
             }
+          },
+          "allow_multiple_claims_per_day": {
+            "name": "Allow Multiple Claims per Day",
+            "state": {
+              "true": "Yes",
+              "false": "No"
+            }
+          },
+          "assigned_kids": {
+            "name": "Assigned Kids"
           }
         }
       },
-      "reward_state": {
+      "reward_status_sensor": {
+        "name": "{kid_name} - Reward Status - {reward_name}",
         "state": {
           "not_claimed": "Not Claimed",
           "approved": "Approved",
@@ -836,7 +948,14 @@
           "description": { "name": "Description" }
         }
       },
-      "penalty_applies": {
+      "chore_claims_sensor": {
+        "name": "{kid_name} - Claims - {chore_name}"
+      },
+      "chore_approvals_sensor": {
+        "name": "{kid_name} - Approvals - {chore_name}"
+      },
+      "penalty_applies_sensor": {
+        "name": "{kid_name} - Penalties Applied - {penalty_name}",
         "state_attributes": {
           "kid_name": { "name": "Kid Name" },
           "penalty_name": { "name": "Penalty Name" },
@@ -844,25 +963,37 @@
           "penalty_points": { "name": "Penalty Points" }
         }
       },
-      "achievement_state": {
+      "kid_points_earned_daily_sensor": {
+        "name": "{kid_name} - Points Earned - Daily"
+      },
+      "kid_points_earned_weekly_sensor": {
+        "name": "{kid_name} - Points Earned - Weekly"
+      },
+      "kid_points_earned_monthly_sensor": {
+        "name": "{kid_name} - Points Earned - Monthly"
+      },
+      "achievement_state_sensor": {
+        "name": "Achievement - {achievement_name}",
         "state_attributes": {
           "target_value": { "name": "Target" },
           "reward_points": { "name": "Reward Points" },
           "type": { "name": "Type" },
-          "earned_by": { "name": "Earned by" }
+          "kids_earned": { "name": "Earned by" }
         }
       },
-      "challenge_state": {
+      "challenge_state_sensor": {
+        "name": "Challenge - {challenge_name}",
         "state_attributes": {
           "target_value": { "name": "Target" },
           "reward_points": { "name": "Reward Points" },
           "start_date": { "name": "Start Date" },
           "end_date": { "name": "End Date" },
           "type": { "name": "Type" },
-          "earned_by": { "name": "Earned by" }
+          "kids_earned": { "name": "Earned by" }
         }
       },
-      "achievement_progress": {
+      "achievement_progress_sensor": {
+        "name": "{kid_name} - Progress - {achievement_name}",
         "state_attributes": {
           "achievement_name": { "name": "Name" },
           "target_value": { "name": "Target" },
@@ -876,7 +1007,8 @@
           }
         }
       },
-      "challenge_progress": {
+      "challenge_progress_sensor": {
+        "name": "{kid_name} - Progress - {challenge_name}",
         "state_attributes": {
           "challenge_name": { "name": "Name" },
           "target_value": { "name": "Target" },
@@ -891,16 +1023,44 @@
           }
         }
       },
-      "kid_highest_streak": {
+      "kid_highest_streak_sensor": {
+        "name": "{kid_name} - Highest Streak",
         "state_attributes": {
           "streaks_by_achievement": { "name": "Streaks by Achievement" }
         }
       },
-      "chore_streak": {
+      "chore_streak_sensor": {
+        "name": "{kid_name} - Streak - {chore_name}",
         "state_attributes": {
           "last_date": { "name": "Last Date" },
           "raw_streak": { "name": "Current Streak" }
         }
+      }
+    },
+    "button": {
+      "claim_chore_button": {
+        "name": "{kid_name} - Claim Chore - {chore_name}"
+      },
+      "approve_chore_button": {
+        "name": "{kid_name} - Approve Chore - {chore_name}"
+      },
+      "disapprove_chore_button": {
+        "name": "{kid_name} - Disapprove Chore - {chore_name}"
+      },
+      "claim_reward_button": {
+        "name": "{kid_name} - Claim Reward - {reward_name}"
+      },
+      "approve_reward_button": {
+        "name": "{kid_name} - Approve Reward - {reward_name}"
+      },
+      "disapprove_reward_button": {
+        "name": "{kid_name} - Disapprove Reward - {reward_name}"
+      },
+      "penalty_button": {
+        "name": "{kid_name} - Apply Penalty - {penalty_name}"
+      },
+      "manual_adjustment_button": {
+        "name": "{kid_name} {sign_label} {points_label}"
       }
     }
   }

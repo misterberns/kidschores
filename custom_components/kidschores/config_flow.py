@@ -15,16 +15,24 @@ from homeassistant.util import dt as dt_util
 from typing import Any, Optional
 
 from .const import (
+    CONF_APPLICABLE_DAYS,
     CONF_ACHIEVEMENTS,
     CONF_BADGES,
     CONF_CHALLENGES,
     CONF_CHORES,
     CONF_KIDS,
+    CONF_NOTIFY_ON_APPROVAL,
+    CONF_NOTIFY_ON_CLAIM,
+    CONF_NOTIFY_ON_DISAPPROVAL,
     CONF_PARENTS,
     CONF_PENALTIES,
     CONF_POINTS_ICON,
     CONF_POINTS_LABEL,
     CONF_REWARDS,
+    DEFAULT_APPLICABLE_DAYS,
+    DEFAULT_NOTIFY_ON_APPROVAL,
+    DEFAULT_NOTIFY_ON_CLAIM,
+    DEFAULT_NOTIFY_ON_DISAPPROVAL,
     DEFAULT_POINTS_ICON,
     DEFAULT_POINTS_LABEL,
     DOMAIN,
@@ -40,6 +48,7 @@ from .flow_helpers import (
     build_penalty_schema,
     build_achievement_schema,
     build_challenge_schema,
+    ensure_utc_datetime,
 )
 
 
@@ -147,11 +156,11 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             kid_name = user_input["kid_name"].strip()
-            ha_user_id = user_input.get("ha_user")
+            ha_user_id = user_input.get("ha_user") or ""
             enable_mobile_notifications = user_input.get(
                 "enable_mobile_notifications", True
             )
-            notify_service = user_input.get("mobile_notify_service")
+            notify_service = user_input.get("mobile_notify_service") or ""
             enable_persist = user_input.get("enable_persistent_notifications", True)
 
             if not kid_name:
@@ -223,12 +232,12 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             parent_name = user_input["parent_name"].strip()
-            ha_user_id = user_input.get("ha_user_id")
+            ha_user_id = user_input.get("ha_user_id") or ""
             associated_kids = user_input.get("associated_kids", [])
             enable_mobile_notifications = user_input.get(
                 "enable_mobile_notifications", True
             )
-            notify_service = user_input.get("mobile_notify_service")
+            notify_service = user_input.get("mobile_notify_service") or ""
             enable_persist = user_input.get("enable_persistent_notifications", True)
 
             if not parent_name:
@@ -315,22 +324,10 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if user_input.get("due_date"):
                 raw_due = user_input["due_date"]
-                # `raw_due` can be a datetime or a string
-                if isinstance(raw_due, datetime.datetime):
-                    # Convert to UTC
-                    raw_due_utc = dt_util.as_utc(raw_due)
-                    due_date_str = raw_due_utc.isoformat()
-                else:
-                    # It's a string -> parse it
-                    try:
-                        parsed = dt_util.parse_datetime(raw_due)
-                        if not parsed:
-                            # fallback parse
-                            parsed = datetime.datetime.fromisoformat(raw_due)
-                        due_date_str = dt_util.as_utc(parsed).isoformat()
-                    except ValueError:
-                        # If parse fails, store None or handle differently
-                        due_date_str = None
+                try:
+                    due_date_str = ensure_utc_datetime(self.hass, raw_due)
+                except ValueError:
+                    due_date_str = None
             else:
                 due_date_str = None
 
@@ -357,6 +354,18 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "recurring_frequency", "none"
                     ),
                     "due_date": due_date_str,
+                    "applicable_days": user_input.get(
+                        CONF_APPLICABLE_DAYS, DEFAULT_APPLICABLE_DAYS
+                    ),
+                    "notify_on_claim": user_input.get(
+                        CONF_NOTIFY_ON_CLAIM, DEFAULT_NOTIFY_ON_CLAIM
+                    ),
+                    "notify_on_approval": user_input.get(
+                        CONF_NOTIFY_ON_APPROVAL, DEFAULT_NOTIFY_ON_APPROVAL
+                    ),
+                    "notify_on_disapproval": user_input.get(
+                        CONF_NOTIFY_ON_DISAPPROVAL, DEFAULT_NOTIFY_ON_DISAPPROVAL
+                    ),
                     "internal_id": internal_id,
                 }
                 LOGGER.debug("Added chore: %s with ID: %s", chore_name, internal_id)
@@ -677,6 +686,26 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     final_criteria = user_input["criteria"]
 
+                # Process start_date and end_date using the helper:
+                start_date_input = user_input.get("start_date")
+                end_date_input = user_input.get("end_date")
+
+                if start_date_input:
+                    try:
+                        start_date = ensure_utc_datetime(self.hass, start_date_input)
+                    except Exception:
+                        start_date = None
+                else:
+                    start_date = None
+
+                if end_date_input:
+                    try:
+                        end_date = ensure_utc_datetime(self.hass, end_date_input)
+                    except Exception:
+                        end_date = None
+                else:
+                    end_date = None
+
                 internal_id = user_input.get("internal_id", str(uuid.uuid4()))
                 self._challenges_temp[internal_id] = {
                     "name": challenge_name,
@@ -687,8 +716,8 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "criteria": final_criteria,
                     "target_value": user_input["target_value"],
                     "reward_points": user_input["reward_points"],
-                    "start_date": user_input.get("start_date"),
-                    "end_date": user_input.get("end_date"),
+                    "start_date": start_date,
+                    "end_date": end_date,
                     "internal_id": internal_id,
                     "progress": {},
                 }
@@ -735,14 +764,14 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 parents_summary.append(parent["name"])
 
         summary = (
-            f"Kids: {', '.join(kid_data['name'] for kid_data in self._kids_temp.values()) or 'None'}\n"
-            f"Parents: {', '.join(parents_summary) or 'None'}\n"
-            f"Chores: {', '.join(chore_data['name'] for chore_data in self._chores_temp.values()) or 'None'}\n"
-            f"Badges: {', '.join(badge_data['name'] for badge_data in self._badges_temp.values()) or 'None'}\n"
-            f"Rewards: {', '.join(reward_data['name'] for reward_data in self._rewards_temp.values()) or 'None'}\n"
-            f"Penalties: {', '.join(penalty_data['name'] for penalty_data in self._penalties_temp.values()) or 'None'}"
-            f"Achievements: {', '.join(achievement_data['name'] for achievement_data in self._achievements_temp.values()) or 'None'}"
-            f"Challenges: {', '.join(challenge_data['name'] for challenge_data in self._challenges_temp.values()) or 'None'}"
+            f"Kids: {', '.join(kid_data['name'] for kid_data in self._kids_temp.values()) or 'None'}\n\n"
+            f"Parents: {', '.join(parents_summary) or 'None'}\n\n"
+            f"Chores: {', '.join(chore_data['name'] for chore_data in self._chores_temp.values()) or 'None'}\n\n"
+            f"Badges: {', '.join(badge_data['name'] for badge_data in self._badges_temp.values()) or 'None'}\n\n"
+            f"Rewards: {', '.join(reward_data['name'] for reward_data in self._rewards_temp.values()) or 'None'}\n\n"
+            f"Penalties: {', '.join(penalty_data['name'] for penalty_data in self._penalties_temp.values()) or 'None'}\n\n"
+            f"Achievements: {', '.join(achievement_data['name'] for achievement_data in self._achievements_temp.values()) or 'None'}\n\n"
+            f"Challenges: {', '.join(challenge_data['name'] for challenge_data in self._challenges_temp.values()) or 'None'}\n\n"
         )
         return self.async_show_form(
             step_id="finish",

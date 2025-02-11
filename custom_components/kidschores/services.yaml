@@ -198,3 +198,33 @@ reset_all_chores:
   name: "Reset All Chores"
   description: "Manually reset chores to pending state, removing claims and approvals."
   fields: {}
+
+reset_overdue_chores:
+  name: "Reset Overdue Chores"
+  description: >
+    Reset overdue chore(s) back to the Pending state and reschedule them based on
+    their recurring frequency and previous due date. You may optionally provide a
+    chore_id (or chore_name) to reset a specific chore and optionally a kid_name
+    to reset the chore only for that kid.
+  fields:
+    chore_id:
+      name: "Chore ID"
+      description: "The internal ID of the chore to reset (optional if chore_name is provided)."
+      example: "abc123"
+      required: false
+      selector:
+        text:
+    chore_name:
+      name: "Chore Name"
+      description: "The name of the chore to reset (optional if chore_id is provided)."
+      example: "Wash Dishes"
+      required: false
+      selector:
+        text:
+    kid_name:
+      name: "Kid Name"
+      description: "If provided, reset the chore only for this kid."
+      example: "Alice"
+      required: false
+      selector:
+        text:

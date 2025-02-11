@@ -53,6 +53,13 @@ async def is_user_authorized_for_global_action(
     if user.is_admin:
         return True
 
+    # Allow non-admin users if they are registered as a parent in KidsChores.
+    coordinator = _get_kidschores_coordinator(hass)
+    if coordinator:
+        for parent in coordinator.parents_data.values():
+            if parent.get("ha_user_id") == user.id:
+                return True
+
     LOGGER.warning(
         "%s: Non-admin user '%s' is not authorized in this logic", action, user.name
     )

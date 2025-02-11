@@ -46,11 +46,10 @@ async def async_setup_entry(
 
 
 class KidsChoresSelectBase(CoordinatorEntity, SelectEntity):
-    """Base class for the KidsChores select entities.
+    """Base class for the KidsChores select entities."""
 
-    Inherits from CoordinatorEntity to automatically refresh
-    options if chores/rewards/penalties data changes.
-    """
+    _attr_has_entity_name = True
+    _attr_translation_key = "kc_select_base"
 
     def __init__(self, coordinator: KidsChoresDataCoordinator, entry: ConfigEntry):
         """Initialize the base select entity."""
@@ -83,11 +82,15 @@ class KidsChoresSelectBase(CoordinatorEntity, SelectEntity):
 class ChoresSelect(KidsChoresSelectBase):
     """Global select entity listing all defined chores by name."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "chores_select"
+
     def __init__(self, coordinator: KidsChoresDataCoordinator, entry: ConfigEntry):
         """Initialize the Chores select entity."""
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.entry_id}_chores_select"
         self._attr_name = "KidsChores: All Chores"
+        self.entity_id = f"select.kc_all_chores"
 
     @property
     def options(self) -> list[str]:
@@ -104,11 +107,15 @@ class ChoresSelect(KidsChoresSelectBase):
 class RewardsSelect(KidsChoresSelectBase):
     """Global select entity listing all defined rewards by name."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "rewards_select"
+
     def __init__(self, coordinator: KidsChoresDataCoordinator, entry: ConfigEntry):
         """Initialize the Rewards select entity."""
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.entry_id}_rewards_select"
         self._attr_name = "KidsChores: All Rewards"
+        self.entity_id = f"select.kc_all_rewards"
 
     @property
     def options(self) -> list[str]:
@@ -125,11 +132,15 @@ class RewardsSelect(KidsChoresSelectBase):
 class PenaltiesSelect(KidsChoresSelectBase):
     """Global select entity listing all defined penalties by name."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "penalties_select"
+
     def __init__(self, coordinator: KidsChoresDataCoordinator, entry: ConfigEntry):
         """Initialize the Penalties select entity."""
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.entry_id}_penalties_select"
         self._attr_name = "KidsChores: All Penalties"
+        self.entity_id = f"select.kc_all_penalties"
 
     @property
     def options(self) -> list[str]:
