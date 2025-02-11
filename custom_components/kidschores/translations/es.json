@@ -571,13 +571,13 @@
     },
     "applicable_days": {
       "options": {
-        "Monday": "Lunes",
-        "Tuesday": "Martes",
-        "Wednesday": "Miércoles",
-        "Thursday": "Jueves",
-        "Friday": "Viernes",
-        "Saturday": "Sábado",
-        "Sunday": "Domingo"
+        "mon": "Lunes",
+        "tue": "Martes",
+        "wed": "Miércoles",
+        "thu": "Jueves",
+        "fri": "Viernes",
+        "sat": "Sábado",
+        "sun": "Domingo"
       }
     },
     "threshold_type": {
@@ -902,8 +902,8 @@
           "claimed_in_part": "Reclamada (parcialmente)"
         },
         "state_attributes": {
-          "chore_name": "Nombre de la Tarea",
-          "description": "Descripción",
+          "chore_name": { "name": "Nombre de la Tarea" },
+          "description": { "name": "Descripción" },
           "recurring_frequency": {
             "name": "Frecuencia Recurrente",
             "state": {

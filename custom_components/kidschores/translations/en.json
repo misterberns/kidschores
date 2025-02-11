@@ -571,13 +571,13 @@
     },
     "applicable_days": {
       "options": {
-        "Monday": "Monday",
-        "Tuesday": "Tuesday",
-        "Wednesday": "Wednesday",
-        "Thursday": "Thursday",
-        "Friday": "Friday",
-        "Saturday": "Saturday",
-        "Sunday": "Sunday"
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
       }
     },
     "threshold_type": {
@@ -900,8 +900,8 @@
           "claimed_in_part": "Claimed (in-part)"
         },
         "state_attributes": {
-          "chore_name": "Chore Name",
-          "description": "Description",
+          "chore_name": { "name": "Chore Name" },
+          "description": { "name": "Description" },
           "recurring_frequency": {
             "name": "Recurring Frequency",
             "state": {
