@@ -62,8 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Initialize the storage manager to handle persistent data.
     storage_manager = KidsChoresStorageManager(hass, STORAGE_KEY)
-    # If a stale kidschore_data file exists, wipe it out.
-    await storage_manager.async_clear_data()
+
     # Initialize new file.
     await storage_manager.async_initialize()
 
