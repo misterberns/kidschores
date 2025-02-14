@@ -1052,7 +1052,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         )
 
         if chore_info.get("shared_chore", False):
-            # For a shared chore, we now compute the global state
+            # For a shared chore, compute the global state
             new_state = self._compute_shared_chore_state(chore_id)
             chore_info["state"] = new_state
             LOGGER.debug(
@@ -2321,10 +2321,12 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     "due_date": next_due.isoformat()
                 }
             updated_options[DATA_CHORES] = chores_conf
+            new_data = dict(self.config_entry.data)
+            new_data["last_change"] = dt_util.utcnow().isoformat()
 
             # Push the new options to the config entry.
             result = self.hass.config_entries.async_update_entry(
-                self.config_entry, options=updated_options
+                self.config_entry, data=new_data, options=updated_options
             )
             if asyncio.iscoroutine(result):
                 self.hass.async_create_task(result)
@@ -2344,6 +2346,37 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             day = days_in_new_month
         return dt_in.replace(year=new_year, month=new_month, day=day)
 
+    # Skip Chore Due Date
+    def skip_chore_due_date(self, chore_id: str) -> None:
+        """Skip the current due date of a recurring chore and reschedule it."""
+        chore = self.chores_data.get(chore_id)
+        if not chore:
+            raise HomeAssistantError(f"Chore with ID '{chore_id}' not found.")
+
+        if chore.get("recurring_frequency", FREQUENCY_NONE) == FREQUENCY_NONE:
+            raise HomeAssistantError(
+                f"Chore '{chore.get('name', chore_id)}' does not have a recurring frequency."
+            )
+        if not chore.get("due_date"):
+            raise HomeAssistantError(
+                f"Chore '{chore.get('name', chore_id)}' does not have a due date set."
+            )
+
+        if chore.get("state") != CHORE_STATE_PENDING:
+            for kid in self.kids_data.values():
+                if chore_id in kid.get("claimed_chores", []):
+                    kid["claimed_chores"].remove(chore_id)
+                if chore_id in kid.get("approved_chores", []):
+                    kid["approved_chores"].remove(chore_id)
+
+        # Compute the next due date and update the chore options/config.
+        self._reschedule_next_due_date(chore)
+        # Set state to pending so it will be ready for action again.
+        chore["state"] = CHORE_STATE_PENDING
+
+        self._persist()
+        self.async_set_updated_data(self._data)
+
     # Reset Overdue Chores
     def reset_overdue_chores(
         self, chore_id: Optional[str] = None, kid_id: Optional[str] = None
@@ -2351,46 +2384,85 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         """Reset overdue chore(s) to Pending state and reschedule."""
 
         if chore_id:
-            # Process a specific chore.
+            # Specific chore reset (with or without kid_id)
             chore = self.chores_data.get(chore_id)
             if not chore:
                 raise HomeAssistantError(f"Chore with ID '{chore_id}' not found.")
+
             if kid_id:
                 # Reset only for the given kid.
                 kid = self.kids_data.get(kid_id)
-                if kid:
-                    if chore_id in kid.get("claimed_chores", []):
-                        kid["claimed_chores"].remove(chore_id)
-                    if chore_id in kid.get("approved_chores", []):
-                        kid["approved_chores"].remove(chore_id)
-                else:
+                if not kid:
                     raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+                if kid_id not in chore.get("assigned_kids", []):
+                    raise HomeAssistantError(
+                        f"Kid '{kid.get('name', kid_id)}' is not assigned to chore '{chore.get('name', chore_id)}'."
+                    )
+                if chore_id in kid.get("claimed_chores", []):
+                    kid["claimed_chores"].remove(chore_id)
+                if chore_id in kid.get("approved_chores", []):
+                    kid["approved_chores"].remove(chore_id)
             else:
-                # Reset globally for this chore.
-                chore["state"] = CHORE_STATE_PENDING
+                # Reset this chore for all kids.
                 for kid in self.kids_data.values():
                     if chore_id in kid.get("claimed_chores", []):
                         kid["claimed_chores"].remove(chore_id)
                     if chore_id in kid.get("approved_chores", []):
                         kid["approved_chores"].remove(chore_id)
 
-            # If recurring, reschedule the due date.
-            self._reschedule_next_due_date(chore)
+            # In either case, reset the chore's global state.
+            if chore.get("state") == CHORE_STATE_OVERDUE:
+                chore["state"] = CHORE_STATE_PENDING
+                self._reschedule_next_due_date(chore)
+
+        elif kid_id:
+            # Kid-only reset: reset all overdue chores for the specified kid.
+            kid = self.kids_data.get(kid_id)
+            if not kid:
+                raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+            for cid, chore in self.chores_data.items():
+                if kid_id in chore.get("assigned_kids", []):
+                    if chore.get("state") == CHORE_STATE_OVERDUE:
+                        if cid in kid.get("claimed_chores", []):
+                            kid["claimed_chores"].remove(cid)
+                        if cid in kid.get("approved_chores", []):
+                            kid["approved_chores"].remove(cid)
+
+                        # Reset the chore globally and reschedule.
+                        chore["state"] = CHORE_STATE_PENDING
+                        self._reschedule_next_due_date(chore)
 
         else:
-            # Global reset for all chores that are overdue.
+            # Global reset: Reset all chores that are overdue.
             for cid, chore in self.chores_data.items():
                 if chore.get("state") == CHORE_STATE_OVERDUE:
-                    chore["state"] = CHORE_STATE_PENDING
                     for kid in self.kids_data.values():
                         if cid in kid.get("claimed_chores", []):
                             kid["claimed_chores"].remove(cid)
                         if cid in kid.get("approved_chores", []):
                             kid["approved_chores"].remove(cid)
+
+                    chore["state"] = CHORE_STATE_PENDING
                     self._reschedule_next_due_date(chore)
 
         self._persist()
         self.async_set_updated_data(self._data)
+
+    # Persist new due dates on config entries
+    async def _update_all_chore_due_dates_in_config(self) -> None:
+        updated_options = dict(self.config_entry.options)
+        chores_conf = dict(updated_options.get(DATA_CHORES, {}))
+        for chore_id, chore in self.chores_data.items():
+            if "due_date" in chore:
+                existing_options = dict(chores_conf.get(chore_id, {}))
+                existing_options["due_date"] = chore["due_date"]
+                chores_conf[chore_id] = existing_options
+        updated_options[DATA_CHORES] = chores_conf
+        new_data = dict(self.config_entry.data)
+        new_data["last_change"] = dt_util.utcnow().isoformat()
+        await self.hass.config_entries.async_update_entry(
+            self.config_entry, data=new_data, options=updated_options
+        )
 
     # -------------------------------------------------------------------------------------
     # Notifications

@@ -311,7 +311,7 @@ class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
                     ERROR_NOT_AUTHORIZED_ACTION_FMT.format("approve chores")
                 )
 
-            parent_name = "ParentOrAdmin"  # You might want to fetch actual parent name
+            parent_name = "ParentOrAdmin"
             self.coordinator.approve_chore(
                 parent_name=parent_name,
                 kid_id=self._kid_id,
@@ -373,22 +373,22 @@ class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
         }
         self.entity_id = f"button.kc_{kid_name}_chore_disapproval_{chore_name}"
 
-    @property
-    def available(self) -> bool:
-        """Return if the button should be available."""
-        pending_approvals = self.coordinator._data.get(DATA_PENDING_CHORE_APPROVALS, [])
-        # Check if there's a pending approval for this kid and chore
-        for approval in pending_approvals:
-            if (
-                approval["kid_id"] == self._kid_id
-                and approval["chore_id"] == self._chore_id
-            ):
-                return True
-        return False
-
     async def async_press(self):
         """Handle the button press event."""
         try:
+            # Check if there's a pending approval for this kid and chore.
+            pending_approvals = self.coordinator._data.get(
+                DATA_PENDING_CHORE_APPROVALS, []
+            )
+            if not any(
+                approval["kid_id"] == self._kid_id
+                and approval["chore_id"] == self._chore_id
+                for approval in pending_approvals
+            ):
+                raise HomeAssistantError(
+                    f"No pending approval found for chore '{self._chore_name}' for kid '{self._kid_name}'."
+                )
+
             user_id = self._context.user_id if self._context else None
             if user_id and not await is_user_authorized_for_global_action(
                 self.hass, user_id, "disapprove_chore"
@@ -633,24 +633,22 @@ class DisapproveRewardButton(CoordinatorEntity, ButtonEntity):
         }
         self.entity_id = f"button.kc_{kid_name}_reward_disapproval_{reward_name}"
 
-    @property
-    def available(self) -> bool:
-        """Return if the button should be available."""
-        pending_approvals = self.coordinator._data.get(
-            DATA_PENDING_REWARD_APPROVALS, []
-        )
-        # Check if there's a pending approval for this kid and reward
-        for approval in pending_approvals:
-            if (
-                approval["kid_id"] == self._kid_id
-                and approval["reward_id"] == self._reward_id
-            ):
-                return True
-        return False
-
     async def async_press(self):
         """Handle the button press event."""
         try:
+            # Check if there's a pending approval for this kid and reward.
+            pending_approvals = self.coordinator._data.get(
+                DATA_PENDING_REWARD_APPROVALS, []
+            )
+            if not any(
+                approval["kid_id"] == self._kid_id
+                and approval["reward_id"] == self._reward_id
+                for approval in pending_approvals
+            ):
+                raise HomeAssistantError(
+                    f"No pending approval found for reward '{self._reward_name}' for kid '{self._kid_name}'."
+                )
+
             user_id = self._context.user_id if self._context else None
             if user_id and not await is_user_authorized_for_global_action(
                 self.hass, user_id, "disapprove_reward"
@@ -799,7 +797,7 @@ class PointsAdjustButton(CoordinatorEntity, ButtonEntity):
         self._kid_id = kid_id
         self._kid_name = kid_name
         self._delta = delta
-        self._points_label = points_label
+        self._points_label = str(points_label)
 
         sign_label = f"+{delta}" if delta >= 0 else f"-{delta}"
         sign_text = f"plus_{delta}" if delta >= 0 else f"minus_{delta}"

@@ -191,26 +191,41 @@
       }
     },
     "error": {
-      "invalid_kid_count": "Invalid kid count",
-      "invalid_chore_count": "Invalid chore count",
-      "invalid_badge_count": "Invalid badge count",
-      "invalid_reward_count": "Invalid reward count",
-      "invalid_penalty_count": "Invalid penalty count",
-      "invalid_kid_name": "Invalid kid name",
-      "duplicate_kid": "A kid with this name already exists",
-      "duplicate_chore": "A chore with this name already exists",
+      "duplicate_achievement": "An achievement with this name already exists",
       "duplicate_badge": "A badge with this name already exists",
-      "duplicate_reward": "A reward with this name already exists",
+      "duplicate_challenge": "A challenge with this name already exists",
+      "duplicate_chore": "A chore with this name already exists",
+      "duplicate_kid": "A kid with this name already exists",
+      "duplicate_parent": "A parent with this name already exists",
       "duplicate_penalty": "A penalty with this name already exists",
-      "invalid_chore": "Invalid chore",
+      "duplicate_reward": "A reward with this name already exists",
+      "due_date_in_past": "Due date must be in the future.",
+      "end_date_in_past": "End Date must be in the future.",
+      "end_date_not_after_start_date": "End date must be later than start date",
+      "invalid_achievement_count": "Invalid achievement count",
+      "invalid_achievement_name": "Invalid achievement name",
       "invalid_badge": "Invalid badge",
-      "invalid_reward": "Invalid reward",
+      "invalid_badge_count": "Invalid badge count",
+      "invalid_badge_name": "Invalid badge name",
+      "invalid_challenge_count": "Invalid challenge count",
+      "invalid_challenge_name": "Invalid challenge name",
+      "invalid_chore": "Invalid chore",
+      "invalid_chore_count": "Invalid chore count",
+      "invalid_chore_name": "Invalid chore name",
+      "invalid_due_date": "Invalid due date",
+      "invalid_end_date": "Invalid end date.",
+      "invalid_kid_count": "Invalid kid count",
+      "invalid_kid_name": "Invalid kid name",
+      "invalid_parent_count": "Invalid parent count",
+      "invalid_parent_name": "Invalid parent name",
       "invalid_penalty": "Invalid penalty",
-      "no_kids": "No kids are available.",
-      "no_chores": "No chores are available.",
-      "no_badges": "No badges are available.",
-      "no_rewards": "No rewards are available.",
-      "no_penalties": "No penalties are available."
+      "invalid_penalty_count": "Invalid penalty count",
+      "invalid_penalty_name": "Invalid penalty name",
+      "invalid_reward": "Invalid reward",
+      "invalid_reward_count": "Invalid reward count",
+      "invalid_reward_name": "Invalid reward name",
+      "invalid_start_date": "Invalid start date.",
+      "start_date_in_past": "Start Date must be in the future."
     },
     "abort": {
       "single_instance_allowed": "Only a single KidsChores instance can be configured."
@@ -519,23 +534,44 @@
       }
     },
     "error": {
-      "invalid_entity": "The selected entity is invalid.",
-      "no_kids": "No kids are available.",
-      "no_chores": "No chores are available.",
-      "no_badges": "No badges are available.",
-      "no_rewards": "No rewards are available.",
-      "no_penalties": "No penalties are available."
+      "duplicate_achievement": "An achievement with this name already exists",
+      "duplicate_badge": "A badge with this name already exists",
+      "duplicate_challenge": "A challenge with this name already exists",
+      "duplicate_chore": "A chore with this name already exists",
+      "duplicate_kid": "A kid with this name already exists",
+      "duplicate_parent": "A parent with this name already exists",
+      "duplicate_penalty": "A penalty with this name already exists",
+      "duplicate_reward": "A reward with this name already exists",
+      "due_date_in_past": "Due date must be in the future.",
+      "end_date_in_past": "End Date must be in the future.",
+      "end_date_not_after_start_date": "End date must be later than start date",
+      "invalid_badge": "Invalid badge",
+      "invalid_badge_count": "Invalid badge count",
+      "invalid_chore": "Invalid chore",
+      "invalid_chore_count": "Invalid chore count",
+      "invalid_due_date": "Invalid due date",
+      "invalid_end_date": "Invalid end date.",
+      "invalid_kid_count": "Invalid kid count",
+      "invalid_kid_name": "Invalid kid name",
+      "invalid_penalty": "Invalid penalty",
+      "invalid_penalty_count": "Invalid penalty count",
+      "invalid_reward": "Invalid reward",
+      "invalid_reward_count": "Invalid reward count",
+      "invalid_start_date": "Invalid start date.",
+      "start_date_in_past": "Start Date must be in the future."
     },
     "abort": {
-      "setup_complete": "Setup Complete",
       "invalid_action": "Invalid Action",
+      "invalid_achievement": "Invalid Achievement",
+      "invalid_badge": "Invalid Badge",
+      "invalid_challenge": "Invalid Challenge",
+      "invalid_chore": "Invalid Chore",
       "invalid_entity": "Invalid Entity",
       "invalid_kid": "Invalid Kid",
       "invalid_parent": "Invalid Parent",
-      "invalid_chore": "Invalid Chore",
-      "invalid_badge": "Invalid Badge",
+      "invalid_penalty": "Invalid Penalty",
       "invalid_reward": "Invalid Reward",
-      "invalid_penalty": "Invalid Penalty"
+      "setup_complete": "Setup Complete"
     }
   },
   "selector": {
@@ -763,6 +799,38 @@
           "example": "Alice"
         }
       }
+    },
+    "set_chore_due_date": {
+      "name": "Set/Reset Chore Due Date",
+      "description": "Set (or clear) the due date for a chore. Provide the chore name and, if desired, a new due date. If no due date is provided the existing due date will be cleared. The service will reject due dates set in the past.",
+      "fields": {
+        "chore_name": {
+          "name": "Chore Name",
+          "description": "The name of the chore to update",
+          "example": "Wash Dishes"
+        },
+        "due_date": {
+          "name": "Due Date",
+          "description": "The new due date for the chore. Use the date/time selector to choose a valid date and time (in your local timezone). Leave empty to clear the due date.",
+          "example": "2025-03-01T23:59:00Z"
+        }
+      }
+    },
+    "skip_chore_due_date": {
+      "name": "Skip Chore Due Date",
+      "description": "Skip the current due date of a recurring chore. This service immediately reschedules the chore's due date based on its recurring frequency and resets its state to pending. Any pending claims or approvals will be removed.",
+      "fields": {
+        "chore_id": {
+          "name": "Chore ID",
+          "description": "The internal ID of the chore to reset (optional if chore_name is provided).",
+          "example": "abc123"
+        },
+        "chore_name": {
+          "name": "Chore Name",
+          "description": "The name of the chore to reset (optional if chore_id is provided).",
+          "example": "Wash Dishes"
+        }
+      }
     }
   },
   "entity": {
@@ -796,6 +864,18 @@
               "daily": "Daily",
               "weekly": "Weekly",
               "monthly": "Monthly"
+            }
+          },
+          "applicable_days": {
+            "name": "Applicable Days",
+            "state": {
+              "mon": "Monday",
+              "tue": "Tuesday",
+              "wed": "Wednesday",
+              "thu": "Thursday",
+              "fri": "Friday",
+              "sat": "Saturday",
+              "sun": "Sunday"
             }
           },
           "due_date": { "name": "Due Date" },
@@ -871,7 +951,7 @@
             }
           },
           "points_multiplier": { "name": "Points Multiplier" },
-          "descriptionn": { "name": "Description" },
+          "description": { "name": "Description" },
           "kids_earned": { "name": "Kids Earned" }
         }
       },
@@ -909,6 +989,18 @@
               "daily": "Daily",
               "weekly": "Weekly",
               "monthly": "Monthly"
+            }
+          },
+          "applicable_days": {
+            "name": "Applicable Days",
+            "state": {
+              "mon": "Monday",
+              "tue": "Tuesday",
+              "wed": "Wednesday",
+              "thu": "Thursday",
+              "fri": "Friday",
+              "sat": "Saturday",
+              "sun": "Sunday"
             }
           },
           "due_date": { "name": "Due Date" },
@@ -959,7 +1051,7 @@
         "state_attributes": {
           "kid_name": { "name": "Kid Name" },
           "penalty_name": { "name": "Penalty Name" },
-          "descriptionn": { "name": "Description" },
+          "description": { "name": "Description" },
           "penalty_points": { "name": "Penalty Points" }
         }
       },

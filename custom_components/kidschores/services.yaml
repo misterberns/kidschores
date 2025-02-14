@@ -228,3 +228,51 @@ reset_overdue_chores:
       required: false
       selector:
         text:
+
+set_chore_due_date:
+  name: "Set Chore Due Date"
+  description: >
+    Set (or clear) the due date for a chore. Provide the chore name and, if desired,
+    a new due date. If no due date is provided the existing due date will be cleared.
+    The service will reject due dates set in the past.
+  fields:
+    chore_name:
+      name: "Chore Name"
+      description: "The name of the chore to update."
+      example: "Wash Dishes"
+      required: true
+      selector:
+        text:
+    due_date:
+      name: "Due Date"
+      description: >
+        The new due date for the chore. Use the date/time selector to choose a valid
+        date and time (in your local timezone). Leave empty to clear the due date.
+      example: "2025-03-01T23:59:00Z"
+      required: false
+      selector:
+        datetime: {}
+
+skip_chore_due_date:
+  name: "Skip Chore Due Date"
+  description: >
+    Skip the current due date of a recurring chore. This service immediately
+    reschedules the chore's due date based on its recurring frequency and resets
+    its state to pending. Any pending claims or approvals will be removed.
+  fields:
+    chore_id:
+      name: "Chore ID"
+      description: >
+        The internal ID of the chore to update. Optional if you provide a chore name.
+      example: "abc123"
+      required: false
+      selector:
+        text:
+    chore_name:
+      name: "Chore Name"
+      description: >
+        The name of the chore to update. Optional if you provide a chore ID.
+      example: "Weekly Laundry"
+      required: false
+      selector:
+        text:

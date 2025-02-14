@@ -191,26 +191,41 @@
       }
     },
     "error": {
-      "invalid_kid_count": "Número de niños inválido",
-      "invalid_chore_count": "Número de tareas inválido",
-      "invalid_badge_count": "Cantidad de insignias inválida",
-      "invalid_reward_count": "Cantidad de recompensas inválida",
-      "invalid_penalty_count": "Cantidad de penalizaciones inválida",
-      "invalid_kid_name": "Nombre de niño inválido",
-      "duplicate_kid": "Ya existe un niño con ese nombre",
-      "duplicate_chore": "Ya existe una tarea con ese nombre",
-      "duplicate_badge": "Ya existe una insignia con ese nombre",
-      "duplicate_reward": "Ya existe una recompensa con ese nombre",
-      "duplicate_penalty": "Ya existe una penalización con ese nombre",
-      "invalid_chore": "Tarea inválida",
-      "invalid_badge": "Insignia inválida",
-      "invalid_reward": "Recompensa inválida",
-      "invalid_penalty": "Penalización inválida",
-      "no_kids": "No hay niños disponibles.",
-      "no_chores": "No hay tareas disponibles.",
-      "no_badges": "No hay insignias disponibles.",
-      "no_rewards": "No hay recompensas disponibles.",
-      "no_penalties": "No hay penalizaciones disponibles."
+      "duplicate_achievement": "Ya existe un logro con este nombre",
+      "duplicate_badge": "Ya existe una insignia con este nombre",
+      "duplicate_challenge": "Ya existe un desafío con este nombre",
+      "duplicate_chore": "Ya existe una tarea con este nombre",
+      "duplicate_kid": "Ya existe un niño con este nombre",
+      "duplicate_parent": "Ya existe un padre/madre con este nombre",
+      "duplicate_penalty": "Ya existe una penalización con este nombre",
+      "duplicate_reward": "Ya existe una recompensa con este nombre",
+      "due_date_in_past": "La fecha de vencimiento debe estar en el futuro.",
+      "end_date_in_past": "La fecha de fin debe estar en el futuro.",
+      "end_date_not_after_start_date": "La fecha de fin debe ser posterior a la fecha de inicio.",
+      "invalid_achievement_count": "Cantidad de logros no válida",
+      "invalid_achievement_name": "Nombre de logro no válido",
+      "invalid_badge": "Insignia no válida",
+      "invalid_badge_count": "Cantidad de insignias no válida",
+      "invalid_badge_name": "Nombre de insignia no válido",
+      "invalid_challenge_count": "Cantidad de desafíos no válida",
+      "invalid_challenge_name": "Nombre de desafío no válido",
+      "invalid_chore": "Tarea no válida",
+      "invalid_chore_count": "Cantidad de tareas no válida",
+      "invalid_chore_name": "Nombre de tarea no válido",
+      "invalid_due_date": "Fecha de vencimiento no válida",
+      "invalid_end_date": "Fecha de fin no válida.",
+      "invalid_kid_count": "Cantidad de niños no válida",
+      "invalid_kid_name": "Nombre de niño no válido",
+      "invalid_parent_count": "Cantidad de padres no válida",
+      "invalid_parent_name": "Nombre de padre/madre no válido",
+      "invalid_penalty": "Penalización no válida",
+      "invalid_penalty_count": "Cantidad de penalizaciones no válida",
+      "invalid_penalty_name": "Nombre de penalización no válido",
+      "invalid_reward": "Recompensa no válida",
+      "invalid_reward_count": "Cantidad de recompensas no válida",
+      "invalid_reward_name": "Nombre de recompensa no válido",
+      "invalid_start_date": "Fecha de inicio no válida.",
+      "start_date_in_past": "La fecha de inicio debe estar en el futuro."
     },
     "abort": {
       "single_instance_allowed": "Solo se puede configurar una única instancia de KidsChores."
@@ -519,23 +534,44 @@
       }
     },
     "error": {
-      "invalid_entity": "La entidad seleccionada es inválida.",
-      "no_kids": "No hay niños disponibles.",
-      "no_chores": "No hay tareas disponibles.",
-      "no_badges": "No hay insignias disponibles.",
-      "no_rewards": "No hay recompensas disponibles.",
-      "no_penalties": "No hay penalizaciones disponibles."
+      "duplicate_achievement": "Ya existe un logro con este nombre",
+      "duplicate_badge": "Ya existe una insignia con este nombre",
+      "duplicate_challenge": "Ya existe un desafío con este nombre",
+      "duplicate_chore": "Ya existe una tarea con este nombre",
+      "duplicate_kid": "Ya existe un niño con este nombre",
+      "duplicate_parent": "Ya existe un padre/madre con este nombre",
+      "duplicate_penalty": "Ya existe una penalización con este nombre",
+      "duplicate_reward": "Ya existe una recompensa con este nombre",
+      "due_date_in_past": "La fecha de vencimiento debe estar en el futuro.",
+      "end_date_in_past": "La fecha de fin debe estar en el futuro.",
+      "end_date_not_after_start_date": "La fecha de fin debe ser posterior a la fecha de inicio.",
+      "invalid_badge": "Insignia no válida",
+      "invalid_badge_count": "Cantidad de insignias no válida",
+      "invalid_chore": "Tarea no válida",
+      "invalid_chore_count": "Cantidad de tareas no válida",
+      "invalid_due_date": "Fecha de vencimiento no válida",
+      "invalid_end_date": "Fecha de fin no válida.",
+      "invalid_kid_count": "Cantidad de niños no válida",
+      "invalid_kid_name": "Nombre de niño no válido",
+      "invalid_penalty": "Penalización no válida",
+      "invalid_penalty_count": "Cantidad de penalizaciones no válida",
+      "invalid_reward": "Recompensa no válida",
+      "invalid_reward_count": "Cantidad de recompensas no válida",
+      "invalid_start_date": "Fecha de inicio no válida.",
+      "start_date_in_past": "La fecha de inicio debe estar en el futuro."
     },
     "abort": {
-      "setup_complete": "Configuración completada",
-      "invalid_action": "Acción inválida",
-      "invalid_entity": "Entidad inválida",
-      "invalid_kid": "Niño/a inválido",
-      "invalid_parent": "Padre/Madre inválido",
-      "invalid_chore": "Tarea inválida",
-      "invalid_badge": "Insignia inválida",
-      "invalid_reward": "Recompensa inválida",
-      "invalid_penalty": "Penalización inválida"
+      "invalid_action": "Acción no válida",
+      "invalid_achievement": "Logro no válido",
+      "invalid_badge": "Insignia no válida",
+      "invalid_challenge": "Desafío no válido",
+      "invalid_chore": "Tarea no válida",
+      "invalid_entity": "Entidad no válida",
+      "invalid_kid": "Niño no válido",
+      "invalid_parent": "Padre/Madre no válido",
+      "invalid_penalty": "Penalización no válida",
+      "invalid_reward": "Recompensa no válida",
+      "setup_complete": "Configuración Completa"
     }
   },
   "selector": {
@@ -763,6 +799,38 @@
           "example": "Alice"
         }
       }
+    },
+    "set_chore_due_date": {
+      "name": "Establecer/Restablecer Fecha de Vencimiento de la Tarea",
+      "description": "Establece (o borra) la fecha de vencimiento de una tarea. Proporciona el nombre de la tarea y, si lo deseas, una nueva fecha de vencimiento. Si no se proporciona una fecha, se borrará la existente. El servicio rechazará las fechas en el pasado.",
+      "fields": {
+        "chore_name": {
+          "name": "Nombre de la Tarea",
+          "description": "El nombre de la tarea a actualizar",
+          "example": "Lavar Platos"
+        },
+        "due_date": {
+          "name": "Fecha de Vencimiento",
+          "description": "La nueva fecha de vencimiento de la tarea. Usa el selector de fecha/hora para elegir una fecha y hora válidas (en tu zona horaria local). Déjalo vacío para borrar la fecha de vencimiento.",
+          "example": "2025-03-01T23:59:00Z"
+        }
+      }
+    },
+    "skip_chore_due_date": {
+      "name": "Saltar Fecha de Vencimiento de la Tarea",
+      "description": "Salta la fecha de vencimiento actual de una tarea recurrente. Este servicio reprograma inmediatamente la fecha de vencimiento de la tarea según su frecuencia de repetición y restablece su estado a pendiente. Se eliminarán todas las reclamaciones o aprobaciones pendientes.",
+      "fields": {
+        "chore_id": {
+          "name": "ID de la Tarea",
+          "description": "El ID interno de la tarea a restablecer (opcional si se proporciona chore_name).",
+          "example": "abc123"
+        },
+        "chore_name": {
+          "name": "Nombre de la Tarea",
+          "description": "El nombre de la tarea a restablecer (opcional si se proporciona chore_id).",
+          "example": "Lavar Platos"
+        }
+      }
     }
   },
   "entity": {
@@ -796,6 +864,18 @@
               "daily": "Diaria",
               "weekly": "Semanal",
               "monthly": "Mensual"
+            }
+          },
+          "applicable_days": {
+            "name": "Applicable Days",
+            "state": {
+              "mon": "Lunes",
+              "tue": "Martes",
+              "wed": "Miércoles",
+              "thu": "Jueves",
+              "fri": "Viernes",
+              "sat": "Sábado",
+              "sun": "Domingo"
             }
           },
           "due_date": { "name": "Fecha de Vencimiento" },
@@ -911,6 +991,18 @@
               "daily": "Diaria",
               "weekly": "Semanal",
               "monthly": "Mensual"
+            }
+          },
+          "applicable_days": {
+            "name": "Applicable Days",
+            "state": {
+              "mon": "Lunes",
+              "tue": "Martes",
+              "wed": "Miércoles",
+              "thu": "Jueves",
+              "fri": "Viernes",
+              "sat": "Sábado",
+              "sun": "Domingo"
             }
           },
           "due_date": { "name": "Fecha de Vencimiento" },

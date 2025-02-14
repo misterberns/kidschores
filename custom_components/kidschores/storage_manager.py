@@ -17,6 +17,10 @@ from .const import (
     DATA_REWARDS,
     DATA_PENALTIES,
     DATA_PARENTS,
+    DATA_ACHIEVEMENTS,
+    DATA_CHALLENGES,
+    DATA_PENDING_CHORE_APPROVALS,
+    DATA_PENDING_REWARD_APPROVALS,
 )
 
 
@@ -57,6 +61,10 @@ class KidsChoresStorageManager:
                 DATA_REWARDS: {},  # Dictionary of rewards keyed by internal_id.
                 DATA_PENALTIES: {},  # Dictionary of penalties keyed by internal_id.
                 DATA_PARENTS: {},  # Dictionary of parents keyed by internal_id.
+                DATA_ACHIEVEMENTS: {},  # Dictionary of achievements keyed by internal_id.
+                DATA_CHALLENGES: {},  # Dictionary of challenges keyed by internal_id.
+                DATA_PENDING_CHORE_APPROVALS: {},  # Dictionary of pending chore approvals keyed by internal_id.
+                DATA_PENDING_REWARD_APPROVALS: {},  # Dictionary of pending rewar approvals keyed by internal_id.
             }
         else:
             # Load existing data into memory.
@@ -65,85 +73,56 @@ class KidsChoresStorageManager:
 
     @property
     def data(self):
-        """Retrieve the in-memory data cache.
-
-        Returns:
-            dict: The cached data structure.
-
-        """
+        """Retrieve the in-memory data cache."""
         return self._data
 
     def get_data(self):
-        """Retrieve the data structure (alternative getter).
-
-        Returns:
-            dict: The cached data structure.
-
-        """
+        """Retrieve the data structure (alternative getter)."""
         return self._data
 
     def set_data(self, new_data: dict):
-        """Replace the entire in-memory data structure.
-
-        Args:
-            new_data (dict): New data structure to store.
-
-        """
+        """Replace the entire in-memory data structure."""
         self._data = new_data
 
     def get_kids(self):
-        """Retrieve the kids data.
-
-        Returns:
-            dict: Kids data keyed by internal_id.
-
-        """
+        """Retrieve the kids data."""
         return self._data.get(DATA_KIDS, {})
 
     def get_parents(self):
-        """Retrieve the parents data.
-
-        Returns:
-            dict: Parents data keyed by internal_id.
-
-        """
+        """Retrieve the parents data."""
         return self._data.get(DATA_PARENTS, {})
 
     def get_chores(self):
-        """Retrieve the chores data.
-
-        Returns:
-            dict: Chores data keyed by internal_id.
-
-        """
+        """Retrieve the chores data."""
         return self._data.get(DATA_CHORES, {})
 
     def get_badges(self):
-        """Retrieve the badges data.
-
-        Returns:
-            dict: Badges data keyed by internal_id.
-
-        """
+        """Retrieve the badges data."""
         return self._data.get(DATA_BADGES, {})
 
     def get_rewards(self):
-        """Retrieve the rewards data.
-
-        Returns:
-            dict: Rewards data keyed by internal_id.
-
-        """
+        """Retrieve the rewards data."""
         return self._data.get(DATA_REWARDS, {})
 
     def get_penalties(self):
-        """Retrieve the penalties data.
-
-        Returns:
-            dict: Penalties data keyed by internal_id.
-
-        """
+        """Retrieve the penalties data."""
         return self._data.get(DATA_PENALTIES, {})
+
+    def get_achievements(self):
+        """Retrieve the achievements data."""
+        return self._data.get(DATA_ACHIEVEMENTS, {})
+
+    def get_challenges(self):
+        """Retrieve the challenges data."""
+        return self._data.get(DATA_CHALLENGES, {})
+
+    def get_pending_chore_approvals(self):
+        """Retrieve the pending chore approvals data."""
+        return self._data.get(DATA_PENDING_CHORE_APPROVALS, {})
+
+    def get_pending_reward_aprovals(self):
+        """Retrieve the pending reward approvals data."""
+        return self._data.get(DATA_PENDING_REWARD_APPROVALS, {})
 
     async def link_user_to_kid(self, user_id, kid_id):
         """Link a Home Assistant user ID to a specific kid by internal_id."""
@@ -166,10 +145,7 @@ class KidsChoresStorageManager:
         return self._data.get("linked_users", {})
 
     async def async_save(self):
-        """Save the current data structure to storage asynchronously.
-
-        Logs errors if the operation fails.
-        """
+        """Save the current data structure to storage asynchronously."""
         try:
             await self._store.async_save(self._data)
             LOGGER.info("Data saved successfully to storage")
@@ -177,10 +153,8 @@ class KidsChoresStorageManager:
             LOGGER.error("Failed to save data to storage: %s", e)
 
     async def async_clear_data(self):
-        """Clear all stored data and reset to default structure.
+        """Clear all stored data and reset to default structure."""
 
-        This can be used for a full reset if required.
-        """
         LOGGER.warning("Clearing all KidsChores data and resetting storage")
         self._data = {
             DATA_KIDS: {},
@@ -189,17 +163,16 @@ class KidsChoresStorageManager:
             DATA_REWARDS: {},
             DATA_PARENTS: {},
             DATA_PENALTIES: {},
+            DATA_ACHIEVEMENTS: {},
+            DATA_CHALLENGES: {},
+            DATA_PENDING_REWARD_APPROVALS: {},
+            DATA_PENDING_CHORE_APPROVALS: {},
         }
         await self.async_save()
 
     async def async_update_data(self, key, value):
-        """Update a specific section of the data structure.
+        """Update a specific section of the data structure."""
 
-        Args:
-            key (str): Section to update (e.g., DATA_KIDS).
-            value (dict): New value for the specified section.
-
-        """
         if key in self._data:
             LOGGER.debug("Updating data for key: %s", key)
             self._data[key] = value

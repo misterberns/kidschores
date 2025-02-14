@@ -326,7 +326,11 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raw_due = user_input["due_date"]
                 try:
                     due_date_str = ensure_utc_datetime(self.hass, raw_due)
+                    due_dt = dt_util.parse_datetime(due_date_str)
+                    if due_dt and due_dt < dt_util.utcnow():
+                        errors["due_date"] = "due_date_in_past"
                 except ValueError:
+                    errors["due_date"] = "invalid_due_date"
                     due_date_str = None
             else:
                 due_date_str = None
@@ -338,37 +342,49 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for chore_data in self._chores_temp.values()
             ):
                 errors["chore_name"] = "duplicate_chore"
-            else:
-                self._chores_temp[internal_id] = {
-                    "name": chore_name,
-                    "default_points": user_input["default_points"],
-                    "partial_allowed": user_input["partial_allowed"],
-                    "shared_chore": user_input["shared_chore"],
-                    "assigned_kids": user_input["assigned_kids"],
-                    "allow_multiple_claims_per_day": user_input[
-                        "allow_multiple_claims_per_day"
-                    ],
-                    "description": user_input.get("chore_description", ""),
-                    "icon": user_input.get("icon", ""),
-                    "recurring_frequency": user_input.get(
-                        "recurring_frequency", "none"
-                    ),
-                    "due_date": due_date_str,
-                    "applicable_days": user_input.get(
-                        CONF_APPLICABLE_DAYS, DEFAULT_APPLICABLE_DAYS
-                    ),
-                    "notify_on_claim": user_input.get(
-                        CONF_NOTIFY_ON_CLAIM, DEFAULT_NOTIFY_ON_CLAIM
-                    ),
-                    "notify_on_approval": user_input.get(
-                        CONF_NOTIFY_ON_APPROVAL, DEFAULT_NOTIFY_ON_APPROVAL
-                    ),
-                    "notify_on_disapproval": user_input.get(
-                        CONF_NOTIFY_ON_DISAPPROVAL, DEFAULT_NOTIFY_ON_DISAPPROVAL
-                    ),
-                    "internal_id": internal_id,
+
+            if errors:
+                kids_dict = {
+                    kid_data["name"]: kid_id
+                    for kid_id, kid_data in self._kids_temp.items()
                 }
-                LOGGER.debug("Added chore: %s with ID: %s", chore_name, internal_id)
+                # Re-show the form with the user's current input and errors:
+                default_data = user_input.copy()
+                return self.async_show_form(
+                    step_id="chores",
+                    data_schema=build_chore_schema(kids_dict, default_data),
+                    errors=errors,
+                )
+
+            # If no errors, store the chore
+            self._chores_temp[internal_id] = {
+                "name": chore_name,
+                "default_points": user_input["default_points"],
+                "partial_allowed": user_input["partial_allowed"],
+                "shared_chore": user_input["shared_chore"],
+                "assigned_kids": user_input["assigned_kids"],
+                "allow_multiple_claims_per_day": user_input[
+                    "allow_multiple_claims_per_day"
+                ],
+                "description": user_input.get("chore_description", ""),
+                "icon": user_input.get("icon", ""),
+                "recurring_frequency": user_input.get("recurring_frequency", "none"),
+                "due_date": due_date_str,
+                "applicable_days": user_input.get(
+                    CONF_APPLICABLE_DAYS, DEFAULT_APPLICABLE_DAYS
+                ),
+                "notify_on_claim": user_input.get(
+                    CONF_NOTIFY_ON_CLAIM, DEFAULT_NOTIFY_ON_CLAIM
+                ),
+                "notify_on_approval": user_input.get(
+                    CONF_NOTIFY_ON_APPROVAL, DEFAULT_NOTIFY_ON_APPROVAL
+                ),
+                "notify_on_disapproval": user_input.get(
+                    CONF_NOTIFY_ON_DISAPPROVAL, DEFAULT_NOTIFY_ON_DISAPPROVAL
+                ),
+                "internal_id": internal_id,
+            }
+            LOGGER.debug("Added chore: %s with ID: %s", chore_name, internal_id)
 
             self._chore_index += 1
             if self._chore_index >= self._chore_count:
@@ -693,7 +709,11 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if start_date_input:
                     try:
                         start_date = ensure_utc_datetime(self.hass, start_date_input)
+                        start_dt = dt_util.parse_datetime(start_date)
+                        if start_dt and start_dt < dt_util.utcnow():
+                            errors["start_date"] = "start_date_in_past"
                     except Exception:
+                        errors["start_date"] = "invalid_start_date"
                         start_date = None
                 else:
                     start_date = None
@@ -701,10 +721,35 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if end_date_input:
                     try:
                         end_date = ensure_utc_datetime(self.hass, end_date_input)
+                        end_dt = dt_util.parse_datetime(end_date)
+                        if end_dt and end_dt <= dt_util.utcnow():
+                            errors["end_date"] = "end_date_in_past"
+                        if start_date:
+                            # Compare start_dt and end_dt if both are valid
+                            if end_dt and start_dt and end_dt <= start_dt:
+                                errors["end_date"] = "end_date_not_after_start_date"
                     except Exception:
+                        errors["end_date"] = "invalid_end_date"
                         end_date = None
                 else:
                     end_date = None
+
+                if errors:
+                    kids_dict = {
+                        kid_data["name"]: kid_id
+                        for kid_id, kid_data in self._kids_temp.items()
+                    }
+                    all_chores = self._chores_temp
+                    default_data = user_input.copy()
+                    return self.async_show_form(
+                        step_id="challenges",
+                        data_schema=build_challenge_schema(
+                            kids_dict=kids_dict,
+                            chores_dict=all_chores,
+                            default=default_data,
+                        ),
+                        errors=errors,
+                    )
 
                 internal_id = user_input.get("internal_id", str(uuid.uuid4()))
                 self._challenges_temp[internal_id] = {
