@@ -198,6 +198,7 @@ ACTION_REMIND_30 = "REMIND_30"
 ATTR_ACHIEVEMENT_NAME = "achievement_name"
 ATTR_ALL_EARNED_BADGES = "all_earned_badges"
 ATTR_ALLOW_MULTIPLE_CLAIMS_PER_DAY = "allow_multiple_claims_per_day"
+ATTR_APPLICABLE_DAYS = "applicable_days"
 ATTR_AWARDED = "awarded"
 ATTR_ASSIGNED_KIDS = "assigned_kids"
 ATTR_BADGES = "badges"
@@ -269,6 +270,10 @@ SERVICE_REDEEM_REWARD = "redeem_reward"  # Redeem reward service
 SERVICE_RESET_ALL_CHORES = "reset_all_chores"  # Reset all chores service
 SERVICE_RESET_ALL_DATA = "reset_all_data"  # Reset all data service
 SERVICE_RESET_OVERDUE_CHORES = "reset_overdue_chores"  # Reset overdue chores
+SERVICE_SET_CHORE_DUE_DATE = "set_chore_due_date"  # Set or reset chores due date
+SERVICE_SKIP_CHORE_DUE_DATE = (
+    "skip_chore_due_date"  # Skip chores due date and reschedule
+)
 
 # Field Names (for consistency across services)
 FIELD_CHORE_ID = "chore_id"

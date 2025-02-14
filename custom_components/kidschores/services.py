@@ -5,14 +5,19 @@ These services allow direct actions through scripts or automations.
 Includes UI editor support with selectors for dropdowns and text inputs.
 """
 
+import asyncio
 import voluptuous as vol
-from homeassistant.core import HomeAssistant, ServiceCall
+
 from typing import Optional
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    CHORE_STATE_OVERDUE,
     CHORE_STATE_PENDING,
+    DATA_CHORES,
     DATA_PENDING_CHORE_APPROVALS,
     DOMAIN,
     ERROR_CHORE_NOT_FOUND_FMT,
@@ -37,9 +42,12 @@ from .const import (
     SERVICE_RESET_ALL_CHORES,
     SERVICE_RESET_ALL_DATA,
     SERVICE_RESET_OVERDUE_CHORES,
+    SERVICE_SET_CHORE_DUE_DATE,
+    SERVICE_SKIP_CHORE_DUE_DATE,
 )
 from .coordinator import KidsChoresDataCoordinator
 from .kc_helpers import is_user_authorized_for_global_action, is_user_authorized_for_kid
+from .flow_helpers import ensure_utc_datetime
 
 
 # --- Service Schemas ---
@@ -118,6 +126,20 @@ RESET_OVERDUE_CHORES_SCHEMA = vol.Schema(
 RESET_ALL_DATA_SCHEMA = vol.Schema({})
 
 RESET_ALL_CHORES_SCHEMA = vol.Schema({})
+
+SET_CHORE_DUE_DATE_SCHEMA = vol.Schema(
+    {
+        vol.Required("chore_name"): cv.string,
+        vol.Optional("due_date"): vol.Any(cv.string, None),
+    }
+)
+
+SKIP_CHORE_DUE_DATE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("chore_id"): cv.string,
+        vol.Optional("chore_name"): cv.string,
+    }
+)
 
 
 def async_setup_services(hass: HomeAssistant):
@@ -616,9 +638,120 @@ def async_setup_services(hass: HomeAssistant):
                 LOGGER.warning("Reset Overdue Chores: Kid '%s' not found", kid_name)
                 raise HomeAssistantError(f"Kid '{kid_name}' not found.")
 
-        # Call the coordinator’s new reset_overdue_chores method.
         coordinator.reset_overdue_chores(chore_id=chore_id, kid_id=kid_id)
         LOGGER.info("Reset overdue chores (chore_id=%s, kid_id=%s)", chore_id, kid_id)
+        await coordinator.async_request_refresh()
+
+    async def handle_set_chore_due_date(call: ServiceCall):
+        """Handle setting (or clearing) the due date of a chore."""
+        entry_id = _get_first_kidschores_entry(hass)
+        if not entry_id:
+            LOGGER.warning("Set Chore Due Date: %s", MSG_NO_ENTRY_FOUND)
+            return
+
+        coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
+            "coordinator"
+        ]
+        chore_name = call.data["chore_name"]
+        due_date_input = call.data.get("due_date")
+
+        # Look up the chore by name:
+        chore_id = _get_chore_id_by_name(coordinator, chore_name)
+        if not chore_id:
+            LOGGER.warning("Set Chore Due Date: Chore '%s' not found", chore_name)
+            raise HomeAssistantError(ERROR_CHORE_NOT_FOUND_FMT.format(chore_name))
+
+        if due_date_input:
+            try:
+                # Convert the provided date
+                due_date_str = ensure_utc_datetime(hass, due_date_input)
+                due_dt = dt_util.parse_datetime(due_date_str)
+                if due_dt and due_dt < dt_util.utcnow():
+                    raise HomeAssistantError("Due date cannot be set in the past.")
+
+            except Exception as err:
+                LOGGER.error(
+                    "Set Chore Due Date: Invalid due date '%s': %s", due_date_input, err
+                )
+                raise HomeAssistantError("Invalid due date provided.")
+
+            # Update the chore’s due_date:
+            coordinator.chores_data[chore_id]["due_date"] = due_date_str
+            LOGGER.info(
+                "Set due date for chore '%s' (ID: %s) to %s",
+                chore_name,
+                chore_id,
+                due_date_str,
+            )
+        else:
+            # Clear the due date by setting it to None
+            coordinator.chores_data[chore_id]["due_date"] = None
+            LOGGER.info(
+                "Cleared due date for chore '%s' (ID: %s)", chore_name, chore_id
+            )
+
+        # Update the chore state if it is currently pending or overdue.
+        current_state = coordinator.chores_data[chore_id].get(
+            "state", CHORE_STATE_PENDING
+        )
+        if current_state in [CHORE_STATE_PENDING, CHORE_STATE_OVERDUE]:
+            # If a new due date was provided and it's in the future, set state to pending.
+            if due_date_input and due_dt and due_dt > dt_util.utcnow():
+                coordinator.update_chore_state(chore_id, CHORE_STATE_PENDING)
+
+            # If the due date was cleared, also set state to pending.
+            elif not due_date_input:
+                coordinator.update_chore_state(chore_id, CHORE_STATE_PENDING)
+
+        # Update the config entry options with new due date
+        updated_options = dict(coordinator.config_entry.options)
+
+        chores_conf = dict(updated_options.get(DATA_CHORES, {}))
+
+        existing_chore_options = dict(chores_conf.get(chore_id, {}))
+        existing_chore_options["due_date"] = coordinator.chores_data[chore_id][
+            "due_date"
+        ]
+
+        chores_conf[chore_id] = existing_chore_options
+        updated_options[DATA_CHORES] = chores_conf
+
+        coordinator.hass.config_entries.async_update_entry(
+            coordinator.config_entry, options=updated_options
+        )
+
+        coordinator._persist()
+        coordinator.async_set_updated_data(coordinator._data)
+        await coordinator.async_request_refresh()
+
+    async def handle_skip_chore_due_date(call: ServiceCall) -> None:
+        """Handle skipping the due date on a chore by rescheduling it to the next due date."""
+        entry_id = _get_first_kidschores_entry(hass)
+        if not entry_id:
+            LOGGER.warning("Skip Chore Due Date: %s", MSG_NO_ENTRY_FOUND)
+            return
+
+        coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
+            "coordinator"
+        ]
+
+        # Get parameters: either chore_id or chore_name must be provided.
+        chore_id = call.data.get("chore_id")
+        chore_name = call.data.get("chore_name")
+
+        if not chore_id and chore_name:
+            chore_id = _get_chore_id_by_name(coordinator, chore_name)
+            if not chore_id:
+                LOGGER.warning("Skip Chore Due Date: Chore '%s' not found", chore_name)
+                raise HomeAssistantError(f"Chore '{chore_name}' not found.")
+
+        if not chore_id:
+            raise HomeAssistantError(
+                "You must provide either a chore_id or chore_name."
+            )
+
+        coordinator.skip_chore_due_date(chore_id)
+        LOGGER.info("Skipped due date for chore (chore_id=%s)", chore_id)
         await coordinator.async_request_refresh()
 
     # --- Register Services ---
@@ -673,6 +806,20 @@ def async_setup_services(hass: HomeAssistant):
         schema=RESET_OVERDUE_CHORES_SCHEMA,
     )
 
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_CHORE_DUE_DATE,
+        handle_set_chore_due_date,
+        schema=SET_CHORE_DUE_DATE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SKIP_CHORE_DUE_DATE,
+        handle_skip_chore_due_date,
+        schema=SKIP_CHORE_DUE_DATE_SCHEMA,
+    )
+
     LOGGER.info("KidsChores services have been registered successfully")
 
 
@@ -689,6 +836,8 @@ async def async_unload_services(hass: HomeAssistant):
         SERVICE_RESET_ALL_DATA,
         SERVICE_RESET_ALL_CHORES,
         SERVICE_RESET_OVERDUE_CHORES,
+        SERVICE_SET_CHORE_DUE_DATE,
+        SERVICE_SKIP_CHORE_DUE_DATE,
     ]
 
     for service in services:

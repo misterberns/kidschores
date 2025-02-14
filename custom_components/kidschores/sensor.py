@@ -47,6 +47,7 @@ from .const import (
     ATTR_ACHIEVEMENT_NAME,
     ATTR_ALL_EARNED_BADGES,
     ATTR_ALLOW_MULTIPLE_CLAIMS_PER_DAY,
+    ATTR_APPLICABLE_DAYS,
     ATTR_ASSIGNED_KIDS,
     ATTR_AWARDED,
     ATTR_BADGES,
@@ -404,6 +405,7 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
             ATTR_SHARED_CHORE: shared,
             ATTR_GLOBAL_STATE: global_state,
             ATTR_RECURRING_FREQUENCY: chore_info.get("recurring_frequency", "None"),
+            ATTR_APPLICABLE_DAYS: chore_info.get("applicable_days", []),
             ATTR_DUE_DATE: chore_info.get("due_date", DUE_DATE_NOT_SET),
             ATTR_DEFAULT_POINTS: chore_info.get("default_points", 0),
             ATTR_PARTIAL_ALLOWED: chore_info.get("partial_allowed", False),
@@ -479,7 +481,7 @@ class KidMaxPointsEverSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{kid_id}_max_points_ever"
         self._entry = entry
         self._attr_translation_placeholders = {"kid_name": kid_name}
-        self.entity_id = f"sensor.kc_{kid_name}_max_points_ever"
+        self.entity_id = f"sensor.kc_{kid_name}_points_max_ever"
 
     @property
     def native_value(self):
@@ -798,7 +800,7 @@ class PendingChoreApprovalsSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_pending_chore_approvals"
         self._attr_icon = "mdi:clipboard-check-outline"
-        self.entity_id = f"sensor.kc_pending_chore_approvals"
+        self.entity_id = f"sensor.kc_global_chore_pending_approvals"
 
     @property
     def native_value(self):
@@ -976,7 +978,7 @@ class SharedChoreGlobalStateSensor(CoordinatorEntity, SensorEntity):
         self._attr_translation_placeholders = {
             "chore_name": chore_name,
         }
-        self.entity_id = f"sensor.kc_chore_global_status_{chore_name}"
+        self.entity_id = f"sensor.kc_global_chore_status_{chore_name}"
 
     @property
     def native_value(self) -> str:
@@ -998,6 +1000,7 @@ class SharedChoreGlobalStateSensor(CoordinatorEntity, SensorEntity):
             ATTR_CHORE_NAME: self._chore_name,
             ATTR_DESCRIPTION: chore_info.get("description", ""),
             ATTR_RECURRING_FREQUENCY: chore_info.get("recurring_frequency", "None"),
+            ATTR_APPLICABLE_DAYS: chore_info.get("applicable_days", []),
             ATTR_DUE_DATE: chore_info.get("due_date", "Not set"),
             ATTR_DEFAULT_POINTS: chore_info.get("default_points", 0),
             ATTR_PARTIAL_ALLOWED: chore_info.get("partial_allowed", False),
@@ -1322,7 +1325,7 @@ class AchievementSensor(CoordinatorEntity, SensorEntity):
         self._attr_translation_placeholders = {
             "achievement_name": achievement_name,
         }
-        self.entity_id = f"sensor.kc_{achievement_name}_status"
+        self.entity_id = f"sensor.kc_achievement_status_{achievement_name}"
 
     @property
     def native_value(self):
@@ -1378,7 +1381,7 @@ class ChallengeSensor(CoordinatorEntity, SensorEntity):
         self._attr_translation_placeholders = {
             "challenge_name": challenge_name,
         }
-        self.entity_id = f"sensor.kc_{challenge_name}_status"
+        self.entity_id = f"sensor.kc_challenge_status_{challenge_name}"
 
     @property
     def native_value(self):
