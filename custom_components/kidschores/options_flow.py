@@ -28,6 +28,7 @@ from .const import (
     CONF_POINTS_ICON,
     CONF_POINTS_LABEL,
     CONF_REWARDS,
+    CONF_BONUSES,
     DEFAULT_APPLICABLE_DAYS,
     DEFAULT_NOTIFY_ON_APPROVAL,
     DEFAULT_NOTIFY_ON_CLAIM,
@@ -48,6 +49,7 @@ from .flow_helpers import (
     build_achievement_schema,
     build_challenge_schema,
     ensure_utc_datetime,
+    build_bonus_schema,
 )
 
 
@@ -60,7 +62,7 @@ def _ensure_str(value):
 
 
 class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
-    """Options Flow for adding/editing/deleting kids, chores, badges, rewards, and penalties.
+    """Options Flow for adding/editing/deleting kids, chores, badges, rewards, penalties, and bonuses.
 
     Manages entities via internal_id for consistency and historical data preservation.
     """
@@ -98,6 +100,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             "manage_badge",
             "manage_reward",
             "manage_penalty",
+            "manage_bonus",
             "manage_achievement",
             "manage_challenge",
             "done",
@@ -252,6 +255,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             "penalty": CONF_PENALTIES,
             "achievement": CONF_ACHIEVEMENTS,
             "challenge": CONF_CHALLENGES,
+            "bonus": CONF_BONUSES,
         }
         key = entity_type_to_conf.get(self._entity_type)
         if key is None:
@@ -722,6 +726,44 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="add_challenge", data_schema=challenge_schema, errors=errors
         )
 
+    async def async_step_add_bonus(self, user_input=None):
+        """Add a new bonus."""
+        self._entry_options = dict(self.config_entry.options)
+
+        errors = {}
+        bonuses_dict = self._entry_options.setdefault(CONF_BONUSES, {})
+
+        if user_input is not None:
+            bonus_name = user_input["bonus_name"].strip()
+            bonus_points = user_input["bonus_points"]
+            internal_id = user_input.get("internal_id", str(uuid.uuid4()))
+
+            if any(
+                bonus_data["name"] == bonus_name
+                for bonus_data in bonuses_dict.values()
+            ):
+                errors["bonus_name"] = "duplicate_bonus"
+            else:
+                bonuses_dict[internal_id] = {
+                    "name": bonus_name,
+                    "description": user_input.get("bonus_description", ""),
+                    "points": abs(bonus_points),  # Ensure points are positive
+                    "icon": user_input.get("icon", ""),
+                    "internal_id": internal_id,
+                }
+                self._entry_options[CONF_BONUSES] = bonuses_dict
+
+                LOGGER.debug(
+                    "Added bonus '%s' with ID: %s", bonus_name, internal_id
+                )
+                await self._update_and_reload()
+                return await self.async_step_init()
+
+        schema = build_bonus_schema()
+        return self.async_show_form(
+            step_id="add_bonus", data_schema=schema, errors=errors
+        )
+
     # ------------------ EDIT ENTITY ------------------
     async def async_step_edit_kid(self, user_input=None):
         """Edit an existing kid."""
@@ -1101,6 +1143,52 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="edit_penalty", data_schema=schema, errors=errors
         )
+
+    async def async_step_edit_bonus(self, user_input=None):
+        """Edit an existing bonus."""
+        self._entry_options = dict(self.config_entry.options)
+
+        errors = {}
+        bonuses_dict = self._entry_options.get(CONF_BONUSES, {})
+        internal_id = self.context.get("internal_id")
+
+        if not internal_id or internal_id not in bonuses_dict:
+            LOGGER.error("Edit bonus: Invalid internal_id '%s'", internal_id)
+            return self.async_abort(reason="invalid_bonus")
+
+        bonus_data = bonuses_dict[internal_id]
+
+        if user_input is not None:
+            new_name = user_input["bonus_name"].strip()
+            bonus_points = user_input["bonus_points"]
+
+            # Check for duplicate names excluding current penalty
+            if any(
+                data["name"] == new_name and eid != internal_id
+                for eid, data in bonuses_dict.items()
+            ):
+                errors["bonus_name"] = "duplicate_bonus"
+            else:
+                bonus_data["name"] = new_name
+                bonus_data["description"] = user_input.get("bonus_description", "")
+                bonus_data["points"] = abs(
+                    bonus_points
+                )  # Ensure points are positive
+                bonus_data["icon"] = user_input.get("icon", "")
+
+                self._entry_options[CONF_BONUSES] = bonuses_dict
+
+                LOGGER.debug("Edited bonus '%s' with ID: %s", new_name, internal_id)
+                await self._update_and_reload()
+                return await self.async_step_init()
+
+        # Prepare data for schema (convert points to positive for display)
+        display_data = dict(penalty_data)
+        display_data["bonus_points"] = abs(display_data["points"])
+        schema = build_bonus_schema(default=display_data)
+        return self.async_show_form(
+            step_id="edit_bonus", data_schema=schema, errors=errors
+        )    
 
     async def async_step_edit_achievement(self, user_input=None):
         """Edit an existing achievement."""
@@ -1495,6 +1583,34 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="delete_challenge",
             data_schema=vol.Schema({}),
             description_placeholders={"challenge_name": challenge_name},
+        )
+
+    async def async_step_delete_bonus(self, user_input=None):
+        """Delete a bonus."""
+        self._entry_options = dict(self.config_entry.options)
+
+        bonuses_dict = self._entry_options.get(CONF_BONUSES, {})
+        internal_id = self.context.get("internal_id")
+
+        if not internal_id or internal_id not in bonuses_dict:
+            LOGGER.error("Delete bonus: Invalid internal_id '%s'", internal_id)
+            return self.async_abort(reason="invalid_bonus")
+
+        bonus_name = bonuses_dict[internal_id]["name"]
+
+        if user_input is not None:
+            bonuses_dict.pop(internal_id, None)
+
+            self._entry_options[CONF_BONUSES] = bonuses_dict
+
+            LOGGER.debug("Deleted bonus '%s' with ID: %s", bonus_name, internal_id)
+            await self._update_and_reload()
+            return await self.async_step_init()
+
+        return self.async_show_form(
+            step_id="delete_bonus",
+            data_schema=vol.Schema({}),
+            description_placeholders={"bonus_name": bonus_name},
         )
 
     # ------------------ HELPER METHODS ------------------

@@ -29,6 +29,7 @@ from .const import (
     CONF_POINTS_ICON,
     CONF_POINTS_LABEL,
     CONF_REWARDS,
+    CONF_BONUSES,
     DEFAULT_APPLICABLE_DAYS,
     DEFAULT_NOTIFY_ON_APPROVAL,
     DEFAULT_NOTIFY_ON_CLAIM,
@@ -49,6 +50,7 @@ from .flow_helpers import (
     build_achievement_schema,
     build_challenge_schema,
     ensure_utc_datetime,
+    build_bonus_schema,
 )
 
 
@@ -68,6 +70,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._achievements_temp: dict[str, dict[str, Any]] = {}
         self._challenges_temp: dict[str, dict[str, Any]] = {}
         self._penalties_temp: dict[str, dict[str, Any]] = {}
+        self._bonuses_temp: dict[str, dict[str, Any]] = {}
 
         self._kid_count: int = 0
         self._parents_count: int = 0
@@ -77,6 +80,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._achievement_count: int = 0
         self._challenge_count: int = 0
         self._penalty_count: int = 0
+        self._bonus_count: int = 0
 
         self._kid_index: int = 0
         self._parents_index: int = 0
@@ -86,6 +90,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._achievement_index: int = 0
         self._challenge_index: int = 0
         self._penalty_index: int = 0
+        self._bonus_index: int = 0
 
     async def async_step_user(self, user_input: Optional[dict[str, Any]] = None):
         """Start the config flow with an intro step."""
@@ -576,12 +581,75 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._penalty_index += 1
             if self._penalty_index >= self._penalty_count:
-                return await self.async_step_achievement_count()
+                return await self.async_step_bonus_count()
             return await self.async_step_penalties()
 
         penalty_schema = build_penalty_schema()
         return self.async_show_form(
             step_id="penalties", data_schema=penalty_schema, errors=errors
+        )
+
+    # --------------------------------------------------------------------------
+    # BONUSES
+    # --------------------------------------------------------------------------
+    async def async_step_bonus_count(self, user_input=None):
+        """Ask how many bonuses to define."""
+        errors = {}
+        if user_input is not None:
+            try:
+                self._bonus_count = int(user_input["bonus_count"])
+                if self._bonus_count < 0:
+                    raise ValueError
+                if self._bonus_count == 0:
+                    return await self.async_step_achievement_count()
+                self._bonus_index = 0
+                return await self.async_step_bonuses()
+            except ValueError:
+                errors["base"] = "invalid_bonus_count"
+
+        schema = vol.Schema({vol.Required("bonus_count", default=0): vol.Coerce(int)})
+        return self.async_show_form(
+            step_id="bonus_count", data_schema=schema, errors=errors
+        )
+
+    async def async_step_bonuses(self, user_input=None):
+        """Collect bonus details using internal_id as the primary key.
+
+        Store in self._bonuses_temp as a dict keyed by internal_id.
+        """
+        errors = {}
+        if user_input is not None:
+            bonus_name = user_input["bonus_name"].strip()
+            bonus_points = user_input["bonus_points"]
+            internal_id = user_input.get("internal_id", str(uuid.uuid4()))
+
+            if not bonus_name:
+                errors["bonus_name"] = "invalid_bonus_name"
+            elif any(
+                bonus_data["name"] == bonus_name
+                for bonus_data in self._bonuses_temp.values()
+            ):
+                errors["bonus_name"] = "duplicate_bonus"
+            else:
+                self._bonuses_temp[internal_id] = {
+                    "name": bonus_name,
+                    "description": user_input.get("bonus_description", ""),
+                    "points": abs(bonus_points),  # Ensure points are positive
+                    "icon": user_input.get("icon", ""),
+                    "internal_id": internal_id,
+                }
+                LOGGER.debug(
+                    "Added bonus '%s' with ID: %s", bonus_name, internal_id
+                )
+
+            self._bonus_index += 1
+            if self._bonus_index >= self._bonus_count:
+                return await self.async_step_achievement_count()
+            return await self.async_step_bonuses()
+
+        schema = build_bonus_schema()
+        return self.async_show_form(
+            step_id="bonuses", data_schema=schema, errors=errors
         )
 
     # --------------------------------------------------------------------------
@@ -815,6 +883,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             f"Badges: {', '.join(badge_data['name'] for badge_data in self._badges_temp.values()) or 'None'}\n\n"
             f"Rewards: {', '.join(reward_data['name'] for reward_data in self._rewards_temp.values()) or 'None'}\n\n"
             f"Penalties: {', '.join(penalty_data['name'] for penalty_data in self._penalties_temp.values()) or 'None'}\n\n"
+            f"Bonuses: {', '.join(bonus_data['name'] for bonus_data in self._bonuses_temp.values()) or 'None'}\n\n"
             f"Achievements: {', '.join(achievement_data['name'] for achievement_data in self._achievements_temp.values()) or 'None'}\n\n"
             f"Challenges: {', '.join(challenge_data['name'] for challenge_data in self._challenges_temp.values()) or 'None'}\n\n"
         )
@@ -836,6 +905,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_BADGES: self._badges_temp,
             CONF_REWARDS: self._rewards_temp,
             CONF_PENALTIES: self._penalties_temp,
+            CONF_BONUSES: self._bonuses_temp,
             CONF_ACHIEVEMENTS: self._achievements_temp,
             CONF_CHALLENGES: self._challenges_temp,
         }

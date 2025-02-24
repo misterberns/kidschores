@@ -5,8 +5,9 @@ Features:
 1) Chore Buttons (Claim & Approve) with user-defined or default icons.
 2) Reward Buttons using user-defined or default icons.
 3) Penalty Buttons using user-defined or default icons.
-4) PointsAdjustButton: manually increments/decrements a kid's points (e.g., +1, -1, +2, -2, etc.).
-5) ApproveRewardButton: allows parents to approve rewards claimed by kids.
+4) Bonus Buttons using user-defined or default icons.
+5) PointsAdjustButton: manually increments/decrements a kid's points (e.g., +1, -1, +2, -2, etc.).
+6) ApproveRewardButton: allows parents to approve rewards claimed by kids.
 
 """
 
@@ -23,6 +24,7 @@ from .const import (
     BUTTON_DISAPPROVE_REWARD_PREFIX,
     BUTTON_PENALTY_PREFIX,
     BUTTON_REWARD_PREFIX,
+    BUTTON_BONUS_PREFIX,
     CONF_POINTS_LABEL,
     DATA_PENDING_CHORE_APPROVALS,
     DATA_PENDING_REWARD_APPROVALS,
@@ -36,6 +38,7 @@ from .const import (
     DEFAULT_POINTS_ADJUST_PLUS_MULTIPLE_ICON,
     DEFAULT_POINTS_LABEL,
     DEFAULT_REWARD_ICON,
+    DEFAULT_BONUS_ICON,
     DOMAIN,
     ERROR_NOT_AUTHORIZED_ACTION_FMT,
     LOGGER,
@@ -170,6 +173,24 @@ async def async_setup_entry(
                     penalty_id=penalty_id,
                     penalty_name=penalty_info.get("name", f"Penalty {penalty_id}"),
                     icon=penalty_icon,
+                )
+            )
+
+    # Create bonus buttons
+    for kid_id, kid_info in coordinator.kids_data.items():
+        kid_name = kid_info.get("name", f"Kid {kid_id}")
+        for bonus_id, bonus_info in coordinator.bonuses_data.items():
+            # If no user-defined icon, fallback to DEFAULT_BONUS_ICON
+            bonus_icon = bonus_info.get("icon", DEFAULT_BONUS_ICON)
+            entities.append(
+                BonusButton(
+                    coordinator=coordinator,
+                    entry=entry,
+                    kid_id=kid_id,
+                    kid_name=kid_name,
+                    bonus_id=bonus_id,
+                    bonus_name=bonus_info.get("name", f"Bonus {bonus_id}"),
+                    icon=bonus_icon,
                 )
             )
 
@@ -862,3 +883,38 @@ class PointsAdjustButton(CoordinatorEntity, ButtonEntity):
                 self._delta,
                 e,
             )
+
+
+class BonusButton(CoordinatorEntity, ButtonEntity):
+    """Button to apply a bonus for a kid.
+
+    Uses user-defined or default bonus icon.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "bonus_button"
+
+    def __init__(
+        self,
+        coordinator: KidsChoresDataCoordinator,
+        entry: ConfigEntry,
+        kid_id: str,
+        kid_name: str,
+        bonus_id: str,
+        bonus_name: str,
+        icon: str,
+    ):
+        """Initialize the bonus button."""
+        super().__init__(coordinator)
+        self._entry = entry
+        self._kid_id = kid_id
+        self._kid_name = kid_name
+        self._bonus_id = bonus_id
+        self._bonus_name = bonus_name
+        self._attr_unique_id = f"{entry.entry_id}_{BUTTON_BONUS_PREFIX}{kid_id}_{bonus_id}"
+        self._attr_icon = icon
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "bonus_name": bonus_name,
+        }
+        self.entity_id = f"button.kc_{kid_name}_bonus_{bonus_name}"
