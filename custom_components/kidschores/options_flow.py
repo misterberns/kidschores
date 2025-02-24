@@ -1585,6 +1585,34 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             description_placeholders={"challenge_name": challenge_name},
         )
 
+    async def async_step_delete_spotlight(self, user_input=None):
+        """Delete a spotlight."""
+        self._entry_options = dict(self.config_entry.options)
+
+        spotlights_dict = self._entry_options.get(CONF_SPOTLIGHTS, {})
+        internal_id = self.context.get("internal_id")
+
+        if not internal_id or internal_id not in spotlights_dict:
+            LOGGER.error("Delete spotlight: Invalid internal_id '%s'", internal_id)
+            return self.async_abort(reason="invalid_spotlight")
+
+        spotlight_name = spotlights_dict[internal_id]["name"]
+
+        if user_input is not None:
+            spotlights_dict.pop(internal_id, None)
+
+            self._entry_options[CONF_SPOTLIGHTS] = spotlights_dict
+
+            LOGGER.debug("Deleted spotlight '%s' with ID: %s", spotlight_name, internal_id)
+            await self._update_and_reload()
+            return await self.async_step_init()
+
+        return self.async_show_form(
+            step_id="delete_spotlight",
+            data_schema=vol.Schema({}),
+            description_placeholders={"spotlight_name": spotlight_name},
+        )
+
     # ------------------ HELPER METHODS ------------------
     async def _update_and_reload(self):
         """Update the config entry options and reload the integration."""
