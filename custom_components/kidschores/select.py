@@ -186,13 +186,24 @@ class ChoresKidSelect(KidsChoresSelectBase):
 
 
 class SpotlightsSelect(KidsChoresSelectBase):
-    """Select entity for spotlights."""
+    """Global select entity listing all defined spotlights by name."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "spotlights_select"
 
-    def _get_options(self) -> list[str]:
-        """Get list of spotlight names."""
+    def __init__(self, coordinator: KidsChoresDataCoordinator, entry: ConfigEntry):
+        """Initialize the Spotlights select entity."""
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"{entry.entry_id}_spotlights_select"
+        self._attr_name = "KidsChores: All Spotlights"
+        self.entity_id = f"select.kc_all_spotlights"
+
+    @property
+    def options(self) -> list[str]:
+        """Return a list of spotlight names from the coordinator.
+
+        If no spotlights exist, returns an empty list.
+        """
         return [
             spotlight_info.get("name", f"Spotlight {spotlight_id}")
             for spotlight_id, spotlight_info in self.coordinator.spotlights_data.items()

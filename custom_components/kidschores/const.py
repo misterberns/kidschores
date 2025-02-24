@@ -75,12 +75,12 @@ CONF_CHORE_NOTIFY_SERVICE = "chore_notify_service"
 NOTIFICATION_EVENT = "mobile_app_notification_action"
 
 # Achievement types
-ACHIEVEMENT_TYPE_STREAK = "chore_streak"  # e.g., "Make bed 20 days in a row"
-ACHIEVEMENT_TYPE_TOTAL = "chore_total"  # e.g., "Complete 100 chores overall"
+ACHIEVEMENT_TYPE_STREAK = "chore_streak"  # e.g., “Make bed 20 days in a row“
+ACHIEVEMENT_TYPE_TOTAL = "chore_total"  # e.g., “Complete 100 chores overall“
 
 # Challenge types
 CHALLENGE_TYPE_TOTAL_WITHIN_WINDOW = (
-    "total_within_window"  # e.g., "Complete 50 chores in 30 days"
+    "total_within_window"  # e.g., “Complete 50 chores in 30 days“
 )
 CHALLENGE_TYPE_DAILY_MIN = "daily_minimum"  # e.g., "Do 2 chores each day for 14 days"
 
@@ -364,6 +364,3 @@ WEEKDAY_OPTIONS = {
     "sat": "Saturday",
     "sun": "Sunday",
 }
-
-DEFAULT_SPOTLIGHT_POINTS = 2  # Default points added for each spotlight
-DEFAULT_SPOTLIGHT_ICON = "mdi:spotlight"  # Default icon for spotlights

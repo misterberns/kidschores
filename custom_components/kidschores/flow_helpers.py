@@ -38,8 +38,6 @@ from .const import (
     FREQUENCY_NONE,
     FREQUENCY_WEEKLY,
     WEEKDAY_OPTIONS,
-    DEFAULT_SPOTLIGHT_POINTS,
-    DEFAULT_SPOTLIGHT_ICON,
 )
 
 
@@ -564,12 +562,16 @@ def build_penalty_schema(default=None):
 
 
 def build_spotlight_schema(default=None):
-    """Build a schema for spotlights, keyed by internal_id in the dict."""
+    """Build a schema for spotlights, keyed by internal_id in the dict.
+
+    Stores spotlight_points as positive in the form, converted to negative internally.
+    """
     default = default or {}
     spotlight_name_default = default.get("name", "")
     internal_id_default = default.get("internal_id", str(uuid.uuid4()))
 
-    display_points = abs(default.get("points", DEFAULT_SPOTLIGHT_POINTS)) if default else DEFAULT_SPOTLIGHT_POINTS
+    # Display spotlight points as positive for user input
+    display_points = abs(default.get("points", 1)) if default else 1
 
     return vol.Schema(
         {
@@ -587,7 +589,7 @@ def build_spotlight_schema(default=None):
                 )
             ),
             vol.Optional(
-                "icon", default=default.get("icon", DEFAULT_SPOTLIGHT_ICON)
+                "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
             vol.Required("internal_id", default=internal_id_default): str,
         }

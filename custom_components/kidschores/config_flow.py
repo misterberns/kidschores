@@ -613,7 +613,10 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_spotlights(self, user_input=None):
-        """Collect spotlight details using internal_id as the primary key."""
+        """Collect spotlight details using internal_id as the primary key.
+
+        Store in self._spotlights_temp as a dict keyed by internal_id.
+        """
         errors = {}
         if user_input is not None:
             spotlight_name = user_input["spotlight_name"].strip()

@@ -224,27 +224,23 @@
       "invalid_reward": "Invalid reward",
       "invalid_reward_count": "Invalid reward count",
       "invalid_reward_name": "Invalid reward name",
+      "invalid_spotlight": "Invalid spotlight",
+      "invalid_spotlight_count": "Invalid spotlight count",
+      "invalid_spotlight_name": "Invalid spotlight name",
       "invalid_start_date": "Invalid start date.",
-      "start_date_in_past": "Start Date must be in the future.",
-      "invalid_spotlight_count": "Please enter a valid number of spotlights",
-      "invalid_spotlight_name": "Please enter a valid spotlight name",
-      "duplicate_spotlight": "A spotlight with this name already exists"
+      "start_date_in_past": "Start Date must be in the future."
     },
     "abort": {
-      "single_instance_allowed": "Only a single KidsChores instance can be configured.",
-      "no_spotlights": "No Spotlights"
+      "single_instance_allowed": "Only a single KidsChores instance can be configured."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "KidsChores Options",
-        "description": "Manage kids, chores, badges, rewards, penalties, or finish.",
+        "description": "Manage kids, chores, badges, rewards, penalties, spotlights, or finish.",
         "data": {
           "menu_selection": "Select an Option"
-        },
-        "menu_options": {
-          "manage_spotlight": "Manage Spotlights"
         }
       },
       "manage_entity": {
@@ -347,6 +343,17 @@
           "penalty_description": "Description (optional)",
           "internal_id": "Internal ID",
           "penalty_points": "Penalty Points (negative)",
+          "icon": "Icon (mdi:xxx)"
+        }
+      },
+      "add_spotlight": {
+        "title": "Add Spotlight",
+        "description": "Provide the details for the new spotlight.",
+        "data": {
+          "spotlight_name": "Spotlight Name",
+          "spotlight_description": "Description (optional)",
+          "internal_id": "Internal ID",
+          "spotlight_points": "Spotlight Points",
           "icon": "Icon (mdi:xxx)"
         }
       },
@@ -465,6 +472,17 @@
           "icon": "Icon (mdi:xxx)"
         }
       },
+      "edit_spotlight": {
+        "title": "Edit Spotlight",
+        "description": "Modify the details of the selected spotlight.",
+        "data": {
+          "spotlight_name": "Spotlight Name",
+          "spotlight_description": "Description (optional)",
+          "internal_id": "Internal ID",
+          "spotlight_points": "Spotlight Points",
+          "icon": "Icon (mdi:xxx)"
+        }
+      },
       "edit_achievement": {
         "title": "Define Achievement",
         "description": "Enter details for each achievement.",
@@ -529,6 +547,11 @@
         "description": "Are you sure you want to delete the penalty {penalty_name}?",
         "data": {}
       },
+      "delete_spotlight": {
+        "title": "Delete Spotlight",
+        "description": "Are you sure you want to delete the spotlight {spotlight_name}?",
+        "data": {}
+      },
       "delete_achievement": {
         "title": "Delete Achievement",
         "description": "Are you sure you want to delete the achievement {achievement_name}?",
@@ -549,6 +572,7 @@
       "duplicate_parent": "A parent with this name already exists",
       "duplicate_penalty": "A penalty with this name already exists",
       "duplicate_reward": "A reward with this name already exists",
+      "duplicate_spotlight": "A spotlight with this name already exists",
       "due_date_in_past": "Due date must be in the future.",
       "end_date_in_past": "End Date must be in the future.",
       "end_date_not_after_start_date": "End date must be later than start date",
@@ -562,6 +586,8 @@
       "invalid_kid_name": "Invalid kid name",
       "invalid_penalty": "Invalid penalty",
       "invalid_penalty_count": "Invalid penalty count",
+      "invalid_spotlight": "Invalid spotlight",
+      "invalid_spotlight_count": "Invalid spotlight count",
       "invalid_reward": "Invalid reward",
       "invalid_reward_count": "Invalid reward count",
       "invalid_start_date": "Invalid start date.",
@@ -578,12 +604,14 @@
       "invalid_parent": "Invalid Parent",
       "invalid_penalty": "Invalid Penalty",
       "invalid_reward": "Invalid Reward",
+      "invalid_spotlight": "Invalid Spotlight",
       "no_kid": "No Kids are setup for edit. Add one entry first.",
       "no_parent": "No Parents are setup for edit. Add one entry first.",
       "no_chore": "No Chores are setup for edit. Add one entry first.",
       "no_badge": "No Badges are setup for edit. Add one entry first.",
       "no_reward": "No Rewards are setup for edit. Add one entry first.",
       "no_penalty": "No Penalties are setup for edit. Add one entry first.",
+      "no_spotlight": "No Spotlights are setup for edit. Add one entry first.",
       "no_achievement": "No Achievements are setup for edit. Add one entry first.",
       "no_challenge": "No Challenges are setup for edit. Add one entry first.",
       "setup_complete": "Setup Complete"
@@ -599,6 +627,7 @@
         "manage_badge": "Manage Badge",
         "manage_reward": "Manage Reward",
         "manage_penalty": "Manage Penalty",
+        "manage_spotlight": "Manage Spotlight",
         "manage_achievement": "Manage Achievement",
         "manage_challenge": "Manage Challenge",
         "done": "Finish Setup"
@@ -785,7 +814,29 @@
           "example": "Yelling"
         }
       }
+    },  
+    "apply_spotlight": {
+      "name": "Apply Spotlight",
+      "description": "A parent applies a spotlight to a kid, awarding points.",
+      "fields": {
+        "parent_name": {
+          "name": "Parent Name",
+          "description": "The parent applying the spotlight.",
+          "example": "Mom"
+        },
+        "kid_name": {
+          "name": "Kid Name",
+          "description": "The kid receiving the spotlight.",
+          "example": "Alice"
+        },
+        "spotlight_name": {
+          "name": "Spotlight Name",
+          "description": "The name of the spotlight to apply.",
+          "example": "Extra Helpful"
+        }
+      }
     },
+    
     "reset_all_data": {
       "name": "Reset All Data",
       "description": "Completely clears the KidsChores data from storage."

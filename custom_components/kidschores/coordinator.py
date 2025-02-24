@@ -138,7 +138,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             return dt_str
 
         try:
-            # Try to parse using Home Assistant's utility first:
+            # Try to parse using Home Assistant’s utility first:
             dt_obj = dt_util.parse_datetime(dt_str)
             if dt_obj is None:
                 # Fallback using fromisoformat
@@ -265,8 +265,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 DATA_PARENTS: {},
                 DATA_PENALTIES: {},
                 DATA_SPOTLIGHTS: {},
-                DATA_PENDING_CHORE_APPROVALS: [],
-                DATA_PENDING_REWARD_APPROVALS: [],
                 DATA_ACHIEVEMENTS: {},
                 DATA_CHALLENGES: {},
                 DATA_PENDING_CHORE_APPROVALS: [],
@@ -339,8 +337,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             DATA_REWARDS,
             DATA_PENALTIES,
             DATA_SPOTLIGHTS,
-            DATA_PENDING_CHORE_APPROVALS,
-            DATA_PENDING_REWARD_APPROVALS,
             DATA_ACHIEVEMENTS,
             DATA_CHALLENGES,
         ]:
@@ -1061,9 +1057,9 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
     def _create_spotlight(self, spotlight_id: str, spotlight_data: dict[str, Any]):
         self._data[DATA_SPOTLIGHTS][spotlight_id] = {
             "name": spotlight_data.get("name", ""),
-            "points": spotlight_data.get("points", 0),
+            "points": spotlight_data.get("points", DEFAULT_SPOTLIGHT_POINTS),
             "description": spotlight_data.get("description", ""),
-            "icon": spotlight_data.get("icon", DEFAULT_ICON),
+            "icon": spotlight_data.get("icon", DEFAULT_SPOTLIGHT_ICON),
             "internal_id": spotlight_id,
         }
         LOGGER.debug(
@@ -1079,10 +1075,10 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         spotlight_info["description"] = spotlight_data.get(
             "description", spotlight_info["description"]
         )
-        spotlight_info["icon"] = spotlight_data.get(
-            "icon", spotlight_info.get("icon", DEFAULT_ICON)
+        spotlight_info["icon"] = spotlight_data.get("icon", spotlight_info["icon"])
+        LOGGER.debug(
+            "Updated spotlight '%s' with ID: %s", spotlight_info["name"], spotlight_id
         )
-        LOGGER.debug("Updated spotlight '%s' with ID: %s", spotlight_info["name"], spotlight_id)
 
     # -------------------------------------------------------------------------------------
     # Properties for Easy Access
@@ -1528,7 +1524,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         LOGGER.debug(f"Chore ID '{chore_id}' state manually updated to '{state}'")
 
     def _compute_shared_chore_state(self, chore_id: str) -> str:
-        """Compute the global chore state for a shared chore based on each kid's sub-state."""
+        """Compute the global chore state for a shared chore based on each kid’s sub-state."""
         chore_info = self.chores_data[chore_id]
         assigned_kids = chore_info.get("assigned_kids", [])
 
@@ -1972,6 +1968,65 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self._persist()
         self.async_set_updated_data(self._data)
 
+    # -------------------------------------------------------------------------
+    # Spotlights: Apply, Add
+    # -------------------------------------------------------------------------
+
+    def apply_spotlight(self, parent_name: str, kid_id: str, spotlight_id: str):
+        """Apply spotlight => positive points to increase kid's points."""
+        spotlight = self.spotlights_data.get(spotlight_id)
+        if not spotlight:
+            raise HomeAssistantError(f"Spotlight with ID '{spotlight_id}' not found.")
+
+        kid_info = self.kids_data.get(kid_id)
+        if not kid_info:
+            raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+
+        spotlight_pts = spotlight.get("points", 0)
+        new_points = float(kid_info["points"]) + spotlight_pts
+        self.update_kid_points(kid_id, new_points)
+
+        # increment spotlight_applies
+        if spotlight_id in kid_info["spotlight_applies"]:
+            kid_info["spotlight_applies"][spotlight_id] += 1
+        else:
+            kid_info["spotlight_applies"][spotlight_id] = 1 
+        
+        # Send a notification to the kid that a spotlight was applied
+        extra_data = {"kid_id": kid_id, "spotlight_id": spotlight_id}
+        self.hass.async_create_task(
+            self._notify_kid(
+                kid_id,
+                title="KidsChores: Spotlight Applied",
+                message=f"A '{spotlight['name']}' spotlight was applied. Your points changed by {spotlight_pts}.",
+                extra_data=extra_data,
+            )
+        )
+
+        self._persist()
+        self.async_set_updated_data(self._data)
+
+    def add_spotlight(self, spotlight_def: dict[str, Any]):
+        """Add new spotlight at runtime if needed."""
+        spotlight_name = spotlight_def.get("name")
+        if not spotlight_name:
+            LOGGER.warning("Add spotlight: Spotlight must have a name")
+            return  
+        if any(s["name"] == spotlight_name for s in self.spotlights_data.values()):
+            LOGGER.warning("Add spotlight: Spotlight '%s' already exists", spotlight_name)
+            return
+        internal_id = str(uuid.uuid4())
+        self.spotlights_data[internal_id] = {
+            "name": spotlight_name,
+            "points": spotlight_def.get("points", DEFAULT_SPOTLIGHT_POINTS),
+            "description": spotlight_def.get("description", ""),
+            "icon": spotlight_def.get("icon", DEFAULT_SPOTLIGHT_ICON),
+            "internal_id": internal_id,
+        }
+        LOGGER.debug("Added new spotlight '%s' with ID: %s", spotlight_name, internal_id)   
+        self._persist()
+        self.async_set_updated_data(self._data)
+        
     # -------------------------------------------------------------------------
     # Achievements: Check, Award
     # -------------------------------------------------------------------------
@@ -2950,7 +3005,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         Wait for the specified number of minutes and then resend the parent's
         notification if the chore or reward is still pending approval.
 
-        If a chore_id is provided, the method checks the corresponding chore's state.
+        If a chore_id is provided, the method checks the corresponding chore’s state.
         If a reward_id is provided, it checks whether that reward is still pending.
         """
         LOGGER.info(
@@ -3073,38 +3128,3 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         if kid_info:
             return kid_info.get("name")
         return None
-
-    # Add near apply_penalty method (around line 1777):
-    def apply_spotlight(self, parent_name: str, kid_id: str, spotlight_id: str):
-        """Apply spotlight => positive points to increase kid's points."""
-        spotlight = self.spotlights_data.get(spotlight_id)
-        if not spotlight:
-            raise HomeAssistantError(f"Spotlight with ID '{spotlight_id}' not found.")
-
-        kid_info = self.kids_data.get(kid_id)
-        if not kid_info:
-            raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
-
-        spotlight_pts = spotlight.get("points", 0)
-        new_points = float(kid_info["points"]) + spotlight_pts
-        self.update_kid_points(kid_id, new_points)
-
-        # increment spotlight_applies
-        if spotlight_id in kid_info["spotlight_applies"]:
-            kid_info["spotlight_applies"][spotlight_id] += 1
-        else:
-            kid_info["spotlight_applies"][spotlight_id] = 1
-
-        # Send a notification to the kid that a spotlight was applied
-        extra_data = {"kid_id": kid_id, "spotlight_id": spotlight_id}
-        self.hass.async_create_task(
-            self._notify_kid(
-                kid_id,
-                title="KidsChores: Spotlight Applied",
-                message=f"A '{spotlight['name']}' spotlight was applied. Your points increased by {spotlight_pts}!",
-                extra_data=extra_data,
-            )
-        )
-
-        self._persist()
-        self.async_set_updated_data(self._data)

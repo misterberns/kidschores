@@ -34,6 +34,7 @@ from .const import (
     LOGGER,
     MSG_NO_ENTRY_FOUND,
     SERVICE_APPLY_PENALTY,
+    SERVICE_APPLY_SPOTLIGHT,
     SERVICE_APPROVE_CHORE,
     SERVICE_APPROVE_REWARD,
     SERVICE_CLAIM_CHORE,
@@ -45,7 +46,6 @@ from .const import (
     SERVICE_RESET_OVERDUE_CHORES,
     SERVICE_SET_CHORE_DUE_DATE,
     SERVICE_SKIP_CHORE_DUE_DATE,
-    SERVICE_APPLY_SPOTLIGHT,
 )
 from .coordinator import KidsChoresDataCoordinator
 from .kc_helpers import is_user_authorized_for_global_action, is_user_authorized_for_kid
@@ -736,7 +736,7 @@ def async_setup_services(hass: HomeAssistant):
                 )
                 raise HomeAssistantError("Invalid due date provided.")
 
-            # Update the chore's due_date:
+            # Update the chore’s due_date:
             coordinator.chores_data[chore_id]["due_date"] = due_date_str
             LOGGER.info(
                 "Set due date for chore '%s' (ID: %s) to %s",
@@ -882,7 +882,10 @@ def async_setup_services(hass: HomeAssistant):
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_APPLY_SPOTLIGHT, handle_apply_spotlight, schema=APPLY_SPOTLIGHT_SCHEMA
+        DOMAIN, 
+        SERVICE_APPLY_SPOTLIGHT, 
+        handle_apply_spotlight, 
+        schema=APPLY_SPOTLIGHT_SCHEMA
     )
 
     LOGGER.info("KidsChores services have been registered successfully")
@@ -897,13 +900,13 @@ async def async_unload_services(hass: HomeAssistant):
         SERVICE_REDEEM_REWARD,
         SERVICE_DISAPPROVE_REWARD,
         SERVICE_APPLY_PENALTY,
+        SERVICE_APPLY_SPOTLIGHT,
         SERVICE_APPROVE_REWARD,
         SERVICE_RESET_ALL_DATA,
         SERVICE_RESET_ALL_CHORES,
         SERVICE_RESET_OVERDUE_CHORES,
         SERVICE_SET_CHORE_DUE_DATE,
         SERVICE_SKIP_CHORE_DUE_DATE,
-        SERVICE_APPLY_SPOTLIGHT,
     ]
 
     for service in services:

@@ -153,26 +153,18 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_manage_entity(self, user_input=None):
-        """Handle entity management."""
+        """Handle the management actions for a selected entity type.
+
+        Presents add/edit/delete options for the selected entity.
+        """
         if user_input is not None:
-            self._manage_action = user_input["manage_action"]
-            self._entry_options = dict(self.config_entry.options)
-
-            if self._entity_type == "penalty":
-                penalties_dict = self._entry_options.get(CONF_PENALTIES, {})
-                if not penalties_dict and self._manage_action != "add":
-                    return self.async_abort(reason="no_penalties")
-            elif self._entity_type == "spotlight":
-                spotlights_dict = self._entry_options.get(CONF_SPOTLIGHTS, {})
-                if not spotlights_dict and self._manage_action != "add":
-                    return self.async_abort(reason="no_spotlights")
-
+            self._action = user_input["manage_action"]
             # Route to the corresponding step based on action
-            if self._manage_action == "add":
+            if self._action == "add":
                 return await getattr(self, f"async_step_add_{self._entity_type}")()
-            elif self._manage_action in ["edit", "delete"]:
+            elif self._action in ["edit", "delete"]:
                 return await self.async_step_select_entity()
-            elif self._manage_action == "back":
+            elif self._action == "back":
                 return await self.async_step_init()
 
         # Define manage action choices

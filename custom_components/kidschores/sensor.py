@@ -350,7 +350,6 @@ async def async_setup_entry(
             ChallengeSensor(coordinator, entry, challenge_id, challenge_name)
         )
 
-    # Add in async_setup_entry after penalties section
     # Spotlight Applies
     for spotlight_id, spotlight_info in coordinator.spotlights_data.items():
         spotlight_name = spotlight_info.get("name", f"Spotlight {spotlight_id}")
