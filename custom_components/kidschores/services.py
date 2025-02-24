@@ -736,7 +736,7 @@ def async_setup_services(hass: HomeAssistant):
                 )
                 raise HomeAssistantError("Invalid due date provided.")
 
-            # Update the chore's due_date:
+            # Update the chore’s due_date:
             coordinator.chores_data[chore_id]["due_date"] = due_date_str
             LOGGER.info(
                 "Set due date for chore '%s' (ID: %s) to %s",
