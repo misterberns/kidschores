@@ -581,7 +581,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._penalty_index += 1
             if self._penalty_index >= self._penalty_count:
-                return await self.async_step_bonust_count()
+                return await self.async_step_bonus_count()
             return await self.async_step_penalties()
 
         penalty_schema = build_penalty_schema()
