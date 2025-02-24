@@ -44,6 +44,7 @@ CONF_PENALTIES = "penalties"  # Key for penalties configuration
 CONF_POINTS_ICON = "points_icon"
 CONF_POINTS_LABEL = "points_label"  # Custom label for points
 CONF_REWARDS = "rewards"  # Key for rewards configuration
+CONF_SPOTLIGHTS = "spotlights"
 
 # Options Flow Management
 OPTIONS_FLOW_ACHIEVEMENTS = "manage_achievements"  # Edit achivements step
@@ -54,6 +55,7 @@ OPTIONS_FLOW_KIDS = "manage_kids"  # Edit kids step
 OPTIONS_FLOW_PARENTS = "manage_parents"  # Edit parents step
 OPTIONS_FLOW_PENALTIES = "manage_penalties"  # Edit penalties step
 OPTIONS_FLOW_REWARDS = "manage_rewards"  # Edit rewards step
+OPTIONS_FLOW_SPOTLIGHTS = "manage_spotlights"  # Edit spotlights step
 
 # Validation Keys
 VALIDATION_DUE_DATE = "due_date"  # Optional due date for chores
@@ -73,14 +75,14 @@ CONF_CHORE_NOTIFY_SERVICE = "chore_notify_service"
 NOTIFICATION_EVENT = "mobile_app_notification_action"
 
 # Achievement types
-ACHIEVEMENT_TYPE_STREAK = "chore_streak"  # e.g., “Make bed 20 days in a row”
-ACHIEVEMENT_TYPE_TOTAL = "chore_total"  # e.g., “Complete 100 chores overall”
+ACHIEVEMENT_TYPE_STREAK = "chore_streak"  # e.g., "Make bed 20 days in a row"
+ACHIEVEMENT_TYPE_TOTAL = "chore_total"  # e.g., "Complete 100 chores overall"
 
 # Challenge types
 CHALLENGE_TYPE_TOTAL_WITHIN_WINDOW = (
-    "total_within_window"  # e.g., “Complete 50 chores in 30 days”
+    "total_within_window"  # e.g., "Complete 50 chores in 30 days"
 )
-CHALLENGE_TYPE_DAILY_MIN = "daily_minimum"  # e.g., “Do 2 chores each day for 14 days”
+CHALLENGE_TYPE_DAILY_MIN = "daily_minimum"  # e.g., "Do 2 chores each day for 14 days"
 
 
 # -------------------- Defaults --------------------
@@ -107,6 +109,7 @@ DEFAULT_POINTS_ADJUST_MINUS_MULTIPLE_ICON = "mdi:minus-circle-multiple-outline"
 DEFAULT_POINTS_ADJUST_PLUS_MULTIPLE_ICON = "mdi:plus-circle-multiple-outline"
 DEFAULT_POINTS_ICON = "mdi:star-outline"  # Default icon for points
 DEFAULT_STREAK_ICON = "mdi:blur-linear"  # Default icon for streaks
+DEFAULT_SPOTLIGHT_ICON = "mdi:spotlight"  # Default icon for spotlights
 DEFAULT_REWARD_ICON = "mdi:gift-outline"  # Default icon for rewards
 DEFAULT_TROPHY_ICON = "mdi:trophy"  # For highest-badge sensor fallback
 DEFAULT_TROPHY_OUTLINE = "mdi:trophy-outline"
@@ -120,6 +123,7 @@ DEFAULT_POINTS = 5  # Default points awarded for each chore
 DEFAULT_POINTS_MULTIPLIER = 1  # Default points multiplier for badges
 DEFAULT_POINTS_LABEL = "Points"  # Default label for points displayed in UI
 DEFAULT_PENALTY_POINTS = 2  # Default points deducted for each penalty
+DEFAULT_SPOTLIGHT_POINTS = 2  # Default points added for each spotlight
 DEFAULT_REMINDER_DELAY = 30  # Default reminder delay in minutes
 DEFAULT_REWARD_COST = 10  # Default cost for each reward
 DEFAULT_DAILY_RESET_TIME = {
@@ -151,7 +155,7 @@ DATA_PENDING_CHORE_APPROVALS = "pending_chore_approvals"  # Pending chore approv
 DATA_PENDING_REWARD_APPROVALS = "pending_reward_approvals"  # Pending reward approvals
 DATA_PENALTIES = "penalties"  # Key for storing penalties data
 DATA_REWARDS = "rewards"  # Key for storing rewards data
-
+DATA_SPOTLIGHTS = "spotlights"  # Key for storing spotlights data
 # -------------------- States --------------------
 # Badge Threshold Types
 BADGE_THRESHOLD_TYPE_CHORE_COUNT = (
@@ -231,11 +235,14 @@ ATTR_RECURRING_FREQUENCY = "recurring_frequency"
 ATTR_REDEEMED_ON = "Redeemed on"
 ATTR_REWARD_NAME = "reward_name"
 ATTR_REWARD_POINTS = "reward_points"
+ATTR_SPOTLIGHT_NAME = "spotlight_name"
+ATTR_SPOTLIGHT_POINTS = "spotlight_points"
 ATTR_START_DATE = "start_date"
 ATTR_SHARED_CHORE = "shared_chore"
 ATTR_TARGET_VALUE = "target_value"
 ATTR_THRESHOLD_TYPE = "threshold_type"
 ATTR_TYPE = "type"
+
 
 # Sensor Types
 SENSOR_TYPE_BADGES = "badges"  # Sensor tracking earned badges
@@ -260,6 +267,7 @@ SENSOR_TYPE_PENDING_REWARD_APPROVALS = (
 )
 SENSOR_TYPE_REWARD_APPROVALS = "reward_approvals"  # Reward approvals sensor
 SENSOR_TYPE_REWARD_CLAIMS = "reward_claims"  # Reward claims sensor
+SENSOR_TYPE_SPOTLIGHT_APPLIES = "spotlight_applies"  # Spotlight applies sensor
 
 
 # -------------------- Services --------------------
@@ -278,6 +286,7 @@ SERVICE_SET_CHORE_DUE_DATE = "set_chore_due_date"  # Set or reset chores due dat
 SERVICE_SKIP_CHORE_DUE_DATE = (
     "skip_chore_due_date"  # Skip chores due date and reschedule
 )
+SERVICE_APPLY_SPOTLIGHT = "apply_spotlight"  # Apply spotlight service
 
 # Field Names (for consistency across services)
 FIELD_CHORE_ID = "chore_id"
@@ -287,6 +296,7 @@ FIELD_PARENT_NAME = "parent_name"
 FIELD_PENALTY_NAME = "penalty_name"
 FIELD_POINTS_AWARDED = "points_awarded"
 FIELD_REWARD_NAME = "reward_name"
+FIELD_SPOTLIGHT_NAME = "spotlight_name"
 
 # -------------------- Labels --------------------
 # Labels for Sensors and UI
@@ -306,6 +316,7 @@ BUTTON_PENALTY_PREFIX = (
     "penalty_button_"  # Prefix for dynamically created penalty buttons
 )
 BUTTON_REWARD_PREFIX = "reward_button_"  # Prefix for dynamically created reward buttons
+BUTTON_SPOTLIGHT_PREFIX = "spotlight_button_"  # Prefix for dynamically created spotlight buttons
 
 # -------------------- Errors and Warnings --------------------
 DUE_DATE_NOT_SET = "Not Set"
@@ -324,6 +335,10 @@ ERROR_PENALTY_NOT_FOUND_FMT = (
 )
 ERROR_REWARD_NOT_FOUND = "Reward not found."  # Error for missing reward
 ERROR_REWARD_NOT_FOUND_FMT = "Reward '{}' not found"  # Error format for missing reward
+ERROR_SPOTLIGHT_NOT_FOUND = "Spotlight not found."  # Error for missing spotlight
+ERROR_SPOTLIGHT_NOT_FOUND_FMT = (
+    "Spotlight '{}' not found"  # Error format for missing spotlight
+)
 ERROR_USER_NOT_AUTHORIZED = (
     "User is not authorized to perform this action."  # Auth error
 )
@@ -349,3 +364,6 @@ WEEKDAY_OPTIONS = {
     "sat": "Saturday",
     "sun": "Sunday",
 }
+
+DEFAULT_SPOTLIGHT_POINTS = 2  # Default points added for each spotlight
+DEFAULT_SPOTLIGHT_ICON = "mdi:spotlight"  # Default icon for spotlights

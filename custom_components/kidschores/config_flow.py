@@ -29,6 +29,7 @@ from .const import (
     CONF_POINTS_ICON,
     CONF_POINTS_LABEL,
     CONF_REWARDS,
+    CONF_SPOTLIGHTS,
     DEFAULT_APPLICABLE_DAYS,
     DEFAULT_NOTIFY_ON_APPROVAL,
     DEFAULT_NOTIFY_ON_CLAIM,
@@ -49,6 +50,7 @@ from .flow_helpers import (
     build_achievement_schema,
     build_challenge_schema,
     ensure_utc_datetime,
+    build_spotlight_schema,
 )
 
 
@@ -68,6 +70,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._achievements_temp: dict[str, dict[str, Any]] = {}
         self._challenges_temp: dict[str, dict[str, Any]] = {}
         self._penalties_temp: dict[str, dict[str, Any]] = {}
+        self._spotlights_temp: dict[str, dict[str, Any]] = {}
 
         self._kid_count: int = 0
         self._parents_count: int = 0
@@ -77,6 +80,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._achievement_count: int = 0
         self._challenge_count: int = 0
         self._penalty_count: int = 0
+        self._spotlight_count: int = 0
 
         self._kid_index: int = 0
         self._parents_index: int = 0
@@ -86,6 +90,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._achievement_index: int = 0
         self._challenge_index: int = 0
         self._penalty_index: int = 0
+        self._spotlight_index: int = 0
 
     async def async_step_user(self, user_input: Optional[dict[str, Any]] = None):
         """Start the config flow with an intro step."""
@@ -585,6 +590,66 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     # --------------------------------------------------------------------------
+    # SPOTLIGHTS
+    # --------------------------------------------------------------------------
+    async def async_step_spotlight_count(self, user_input=None):
+        """Ask how many spotlights to define."""
+        errors = {}
+        if user_input is not None:
+            try:
+                self._spotlight_count = int(user_input["spotlight_count"])
+                if self._spotlight_count < 0:
+                    raise ValueError
+                if self._spotlight_count == 0:
+                    return await self.async_step_achievement_count()
+                self._spotlight_index = 0
+                return await self.async_step_spotlights()
+            except ValueError:
+                errors["base"] = "invalid_spotlight_count"
+
+        schema = vol.Schema({vol.Required("spotlight_count", default=1): vol.Coerce(int)})
+        return self.async_show_form(
+            step_id="spotlight_count", data_schema=schema, errors=errors
+        )
+
+    async def async_step_spotlights(self, user_input=None):
+        """Collect spotlight details using internal_id as the primary key."""
+        errors = {}
+        if user_input is not None:
+            spotlight_name = user_input["spotlight_name"].strip()
+            spotlight_points = user_input["spotlight_points"]
+            internal_id = user_input.get("internal_id", str(uuid.uuid4()))
+
+            if not spotlight_name:
+                errors["spotlight_name"] = "invalid_spotlight_name"
+            elif any(
+                spotlight_data["name"] == spotlight_name
+                for spotlight_data in self._spotlights_temp.values()
+            ):
+                errors["spotlight_name"] = "duplicate_spotlight"
+            else:
+                self._spotlights_temp[internal_id] = {
+                    "name": spotlight_name,
+                    "description": user_input.get("spotlight_description", ""),
+                    "points": abs(spotlight_points),  # Ensure points are positive
+                    "icon": user_input.get("icon", ""),
+                    "internal_id": internal_id,
+                }
+                LOGGER.debug(
+                    "Added spotlight '%s' with ID: %s", spotlight_name, internal_id
+                )
+
+            self._spotlight_index += 1
+            if self._spotlight_index >= self._spotlight_count:
+                return await self.async_step_achievement_count()
+            return await self.async_step_spotlights()
+
+        schema = build_spotlight_schema()
+        return self.async_show_form(
+            step_id="spotlights", data_schema=schema, errors=errors
+        )
+
+    # --------------------------------------------------------------------------
     # ACHIEVEMENTS
     # --------------------------------------------------------------------------
     async def async_step_achievement_count(self, user_input=None):
@@ -836,6 +901,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_BADGES: self._badges_temp,
             CONF_REWARDS: self._rewards_temp,
             CONF_PENALTIES: self._penalties_temp,
+            CONF_SPOTLIGHTS: self._spotlights_temp,
             CONF_ACHIEVEMENTS: self._achievements_temp,
             CONF_CHALLENGES: self._challenges_temp,
         }

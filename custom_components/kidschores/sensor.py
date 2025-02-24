@@ -81,6 +81,8 @@ from .const import (
     ATTR_REWARD_POINTS,
     ATTR_START_DATE,
     ATTR_SHARED_CHORE,
+    ATTR_SPOTLIGHT_NAME,
+    ATTR_SPOTLIGHT_POINTS,
     ATTR_TARGET_VALUE,
     ATTR_THRESHOLD_TYPE,
     ATTR_TYPE,
@@ -105,6 +107,8 @@ from .const import (
     DEFAULT_POINTS_LABEL,
     DEFAULT_REWARD_COST,
     DEFAULT_REWARD_ICON,
+    DEFAULT_SPOTLIGHT_ICON,
+    DEFAULT_SPOTLIGHT_POINTS,
     DEFAULT_STREAK_ICON,
     DEFAULT_TROPHY_ICON,
     DEFAULT_TROPHY_OUTLINE,
@@ -344,6 +348,16 @@ async def async_setup_entry(
         challenge_name = challenge.get("name", f"Challenge {challenge_id}")
         entities.append(
             ChallengeSensor(coordinator, entry, challenge_id, challenge_name)
+        )
+
+    # Add in async_setup_entry after penalties section
+    # Spotlight Applies
+    for spotlight_id, spotlight_info in coordinator.spotlights_data.items():
+        spotlight_name = spotlight_info.get("name", f"Spotlight {spotlight_id}")
+        entities.append(
+            SpotlightAppliesSensor(
+                coordinator, entry, kid_id, kid_name, spotlight_id, spotlight_name
+            )
         )
 
     async_add_entities(entities)
@@ -1967,3 +1981,49 @@ class ChoreStreakSensor(CoordinatorEntity, SensorEntity):
         """Return the chore's custom icon if set, else fallback."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
         return chore_info.get("icon", DEFAULT_CHORE_SENSOR_ICON)
+
+
+# ------------------------------------------------------------------------------------------
+class SpotlightAppliesSensor(CoordinatorEntity, SensorEntity):
+    """Sensor tracking how many times each spotlight has been applied to a kid."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "spotlight_applies_sensor"
+
+    def __init__(self, coordinator, entry, kid_id, kid_name, spotlight_id, spotlight_name):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._kid_id = kid_id
+        self._kid_name = kid_name
+        self._spotlight_id = spotlight_id
+        self._spotlight_name = spotlight_name
+        self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{spotlight_id}_spotlight_applies"
+        self._attr_translation_placeholders = {
+            "kid_name": kid_name,
+            "spotlight_name": spotlight_name,
+        }
+        self.entity_id = f"sensor.kc_{kid_name}_spotlights_applied_{spotlight_name}"
+
+    @property
+    def native_value(self):
+        """Return the number of times the spotlight has been applied."""
+        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
+        return kid_info.get("spotlight_applies", {}).get(self._spotlight_id, 0)
+
+    @property
+    def extra_state_attributes(self):
+        """Expose additional details like spotlight points and description."""
+        spotlight_info = self.coordinator.spotlights_data.get(self._spotlight_id, {})
+
+        return {
+            ATTR_KID_NAME: self._kid_name,
+            ATTR_SPOTLIGHT_NAME: self._spotlight_name,
+            ATTR_DESCRIPTION: spotlight_info.get("description", ""),
+            ATTR_SPOTLIGHT_POINTS: spotlight_info.get("points", DEFAULT_SPOTLIGHT_POINTS),
+        }
+
+    @property
+    def icon(self):
+        """Return the spotlight's custom icon if set, else fallback."""
+        spotlight_info = self.coordinator.spotlights_data.get(self._spotlight_id, {})
+        return spotlight_info.get("icon", DEFAULT_SPOTLIGHT_ICON)

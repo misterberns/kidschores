@@ -183,3 +183,17 @@ class ChoresKidSelect(KidsChoresSelectBase):
             if self._kid_id in chore.get("assigned_kids", []):
                 options.append(chore.get("name", f"Chore {chore_id}"))
         return options
+
+
+class SpotlightsSelect(KidsChoresSelectBase):
+    """Select entity for spotlights."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "spotlights_select"
+
+    def _get_options(self) -> list[str]:
+        """Get list of spotlight names."""
+        return [
+            spotlight_info.get("name", f"Spotlight {spotlight_id}")
+            for spotlight_id, spotlight_info in self.coordinator.spotlights_data.items()
+        ]

@@ -30,6 +30,7 @@ from .const import (
     FIELD_PENALTY_NAME,
     FIELD_POINTS_AWARDED,
     FIELD_REWARD_NAME,
+    FIELD_SPOTLIGHT_NAME,
     LOGGER,
     MSG_NO_ENTRY_FOUND,
     SERVICE_APPLY_PENALTY,
@@ -44,6 +45,7 @@ from .const import (
     SERVICE_RESET_OVERDUE_CHORES,
     SERVICE_SET_CHORE_DUE_DATE,
     SERVICE_SKIP_CHORE_DUE_DATE,
+    SERVICE_APPLY_SPOTLIGHT,
 )
 from .coordinator import KidsChoresDataCoordinator
 from .kc_helpers import is_user_authorized_for_global_action, is_user_authorized_for_kid
@@ -107,11 +109,11 @@ APPLY_PENALTY_SCHEMA = vol.Schema(
     }
 )
 
-APPROVE_REWARD_SCHEMA = vol.Schema(
+APPLY_SPOTLIGHT_SCHEMA = vol.Schema(
     {
         vol.Required(FIELD_PARENT_NAME): cv.string,
         vol.Required(FIELD_KID_NAME): cv.string,
-        vol.Required(FIELD_REWARD_NAME): cv.string,
+        vol.Required(FIELD_SPOTLIGHT_NAME): cv.string,
     }
 )
 
@@ -551,6 +553,65 @@ def async_setup_services(hass: HomeAssistant):
                 f"Failed to apply penalty '{penalty_name}' for kid '{kid_name}'."
             )
 
+    async def handle_apply_spotlight(call: ServiceCall):
+        """Handle applying a spotlight."""
+        entry_id = _get_first_kidschores_entry(hass)
+        if not entry_id:
+            LOGGER.warning("Apply Spotlight: %s", MSG_NO_ENTRY_FOUND)
+            return
+
+        coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id]["coordinator"]
+        parent_name = call.data[FIELD_PARENT_NAME]
+        kid_name = call.data[FIELD_KID_NAME]
+        spotlight_name = call.data[FIELD_SPOTLIGHT_NAME]
+
+        # Map kid_name and spotlight_name to internal_ids
+        kid_id = _get_kid_id_by_name(coordinator, kid_name)
+        if not kid_id:
+            LOGGER.warning("Apply Spotlight: Kid '%s' not found", kid_name)
+            raise HomeAssistantError(f"Kid '{kid_name}' not found")
+
+        spotlight_id = _get_spotlight_id_by_name(coordinator, spotlight_name)
+        if not spotlight_id:
+            LOGGER.warning("Apply Spotlight: Spotlight '%s' not found", spotlight_name)
+            raise HomeAssistantError(f"Spotlight '{spotlight_name}' not found")
+
+        # Check if user is authorized
+        user_id = call.context.user_id
+        if user_id and not await is_user_authorized_for_global_action(
+            hass, user_id, kid_id
+        ):
+            LOGGER.warning("Apply Spotlight: User not authorized")
+            raise HomeAssistantError(
+                "You are not authorized to apply spotlights for this kid."
+            )
+
+        # Apply spotlight
+        try:
+            coordinator.apply_spotlight(
+                parent_name=parent_name, kid_id=kid_id, spotlight_id=spotlight_id
+            )
+            LOGGER.info(
+                "Spotlight '%s' applied for kid '%s' by parent '%s'",
+                spotlight_name,
+                kid_name,
+                parent_name,
+            )
+            await coordinator.async_request_refresh()
+        except HomeAssistantError as e:
+            LOGGER.error("Apply Spotlight: %s", e)
+            raise
+        except Exception as e:
+            LOGGER.error(
+                "Apply Spotlight: Failed to apply spotlight '%s' for kid '%s': %s",
+                spotlight_name,
+                kid_name,
+                e,
+            )
+            raise HomeAssistantError(
+                f"Failed to apply spotlight '{spotlight_name}' for kid '{kid_name}'."
+            )
+
     async def handle_reset_all_data(call: ServiceCall):
         """Handle manually resetting ALL data in KidsChores."""
         entry_id = _get_first_kidschores_entry(hass)
@@ -675,7 +736,7 @@ def async_setup_services(hass: HomeAssistant):
                 )
                 raise HomeAssistantError("Invalid due date provided.")
 
-            # Update the chore’s due_date:
+            # Update the chore's due_date:
             coordinator.chores_data[chore_id]["due_date"] = due_date_str
             LOGGER.info(
                 "Set due date for chore '%s' (ID: %s) to %s",
@@ -820,6 +881,10 @@ def async_setup_services(hass: HomeAssistant):
         schema=SKIP_CHORE_DUE_DATE_SCHEMA,
     )
 
+    hass.services.async_register(
+        DOMAIN, SERVICE_APPLY_SPOTLIGHT, handle_apply_spotlight, schema=APPLY_SPOTLIGHT_SCHEMA
+    )
+
     LOGGER.info("KidsChores services have been registered successfully")
 
 
@@ -838,6 +903,7 @@ async def async_unload_services(hass: HomeAssistant):
         SERVICE_RESET_OVERDUE_CHORES,
         SERVICE_SET_CHORE_DUE_DATE,
         SERVICE_SKIP_CHORE_DUE_DATE,
+        SERVICE_APPLY_SPOTLIGHT,
     ]
 
     for service in services:
@@ -892,4 +958,14 @@ def _get_penalty_id_by_name(
     for penalty_id, penalty_info in coordinator.penalties_data.items():
         if penalty_info.get("name") == penalty_name:
             return penalty_id
+    return None
+
+
+def _get_spotlight_id_by_name(
+    coordinator: KidsChoresDataCoordinator, spotlight_name: str
+) -> Optional[str]:
+    """Help function to get spotlight_id by spotlight_name."""
+    for spotlight_id, spotlight_info in coordinator.spotlights_data.items():
+        if spotlight_info.get("name") == spotlight_name:
+            return spotlight_id
     return None

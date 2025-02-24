@@ -189,6 +189,32 @@ apply_penalty:
       selector:
         text:
 
+apply_spotlight:
+  name: "Apply Spotlight"
+  description: "A parent applies a spotlight to award extra points."
+  fields:
+    parent_name:
+      name: "Parent Name"
+      description: "The parent applying the spotlight."
+      example: "Dad"
+      required: true
+      selector:
+        text:
+    kid_name:
+      name: "Kid Name"
+      description: "The kid receiving the spotlight."
+      example: "Bob"
+      required: true
+      selector:
+        text:
+    spotlight_name:
+      name: "Spotlight Name"
+      description: "The name of the spotlight to apply."
+      example: "Extra Helpful"
+      required: true
+      selector:
+        text:
+
 reset_all_data:
   name: "Reset All Data"
   description: "Completely clears the KidsChores data from storage."

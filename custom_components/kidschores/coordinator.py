@@ -60,6 +60,7 @@ from .const import (
     CONF_PARENTS,
     CONF_PENALTIES,
     CONF_REWARDS,
+    CONF_SPOTLIGHTS,
     DATA_ACHIEVEMENTS,
     DATA_BADGES,
     DATA_CHALLENGES,
@@ -70,6 +71,7 @@ from .const import (
     DATA_PENDING_REWARD_APPROVALS,
     DATA_PENALTIES,
     DATA_REWARDS,
+    DATA_SPOTLIGHTS,
     DEFAULT_APPLICABLE_DAYS,
     DEFAULT_BADGE_THRESHOLD,
     DEFAULT_DAILY_RESET_TIME,
@@ -86,6 +88,8 @@ from .const import (
     DEFAULT_POINTS_MULTIPLIER,
     DEFAULT_REWARD_COST,
     DEFAULT_REWARD_ICON,
+    DEFAULT_SPOTLIGHT_ICON,
+    DEFAULT_SPOTLIGHT_POINTS,
     DEFAULT_WEEKLY_RESET_DAY,
     DOMAIN,
     FREQUENCY_DAILY,
@@ -134,7 +138,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             return dt_str
 
         try:
-            # Try to parse using Home Assistant’s utility first:
+            # Try to parse using Home Assistant's utility first:
             dt_obj = dt_util.parse_datetime(dt_str)
             if dt_obj is None:
                 # Fallback using fromisoformat
@@ -260,6 +264,9 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 DATA_REWARDS: {},
                 DATA_PARENTS: {},
                 DATA_PENALTIES: {},
+                DATA_SPOTLIGHTS: {},
+                DATA_PENDING_CHORE_APPROVALS: [],
+                DATA_PENDING_REWARD_APPROVALS: [],
                 DATA_ACHIEVEMENTS: {},
                 DATA_CHALLENGES: {},
                 DATA_PENDING_CHORE_APPROVALS: [],
@@ -302,6 +309,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             DATA_BADGES: options.get(CONF_BADGES, {}),
             DATA_REWARDS: options.get(CONF_REWARDS, {}),
             DATA_PENALTIES: options.get(CONF_PENALTIES, {}),
+            DATA_SPOTLIGHTS: options.get(CONF_SPOTLIGHTS, {}),
             DATA_ACHIEVEMENTS: options.get(CONF_ACHIEVEMENTS, {}),
             DATA_CHALLENGES: options.get(CONF_CHALLENGES, {}),
         }
@@ -330,6 +338,9 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             DATA_BADGES,
             DATA_REWARDS,
             DATA_PENALTIES,
+            DATA_SPOTLIGHTS,
+            DATA_PENDING_CHORE_APPROVALS,
+            DATA_PENDING_REWARD_APPROVALS,
             DATA_ACHIEVEMENTS,
             DATA_CHALLENGES,
         ]:
@@ -385,6 +396,11 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             challenges_dict,
             self._create_challenge,
             self._update_challenge,
+        )
+
+    def _initialize_spotlights(self, spotlights_dict: dict[str, Any]):
+        self._sync_entities(
+            DATA_SPOTLIGHTS, spotlights_dict, self._create_spotlight, self._update_spotlight
         )
 
     def _sync_entities(
@@ -1041,6 +1057,33 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             "Updated challenge '%s' with ID: %s", challenge_info["name"], challenge_id
         )
 
+    # -- Spotlights
+    def _create_spotlight(self, spotlight_id: str, spotlight_data: dict[str, Any]):
+        self._data[DATA_SPOTLIGHTS][spotlight_id] = {
+            "name": spotlight_data.get("name", ""),
+            "points": spotlight_data.get("points", 0),
+            "description": spotlight_data.get("description", ""),
+            "icon": spotlight_data.get("icon", DEFAULT_ICON),
+            "internal_id": spotlight_id,
+        }
+        LOGGER.debug(
+            "Added new spotlight '%s' with ID: %s",
+            self._data[DATA_SPOTLIGHTS][spotlight_id]["name"],
+            spotlight_id,
+        )
+
+    def _update_spotlight(self, spotlight_id: str, spotlight_data: dict[str, Any]):
+        spotlight_info = self._data[DATA_SPOTLIGHTS][spotlight_id]
+        spotlight_info["name"] = spotlight_data.get("name", spotlight_info["name"])
+        spotlight_info["points"] = spotlight_data.get("points", spotlight_info["points"])
+        spotlight_info["description"] = spotlight_data.get(
+            "description", spotlight_info["description"]
+        )
+        spotlight_info["icon"] = spotlight_data.get(
+            "icon", spotlight_info.get("icon", DEFAULT_ICON)
+        )
+        LOGGER.debug("Updated spotlight '%s' with ID: %s", spotlight_info["name"], spotlight_id)
+
     # -------------------------------------------------------------------------------------
     # Properties for Easy Access
     # -------------------------------------------------------------------------------------
@@ -1084,6 +1127,11 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
     def challenges_data(self) -> dict[str, Any]:
         """Return the challenges data."""
         return self._data.get(DATA_CHALLENGES, {})
+
+    @property
+    def spotlights_data(self) -> dict[str, Any]:
+        """Return the spotlights data."""
+        return self._data.get(DATA_SPOTLIGHTS, {})
 
     # -------------------------------------------------------------------------------------
     # Parents: Add, Remove
@@ -1480,7 +1528,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         LOGGER.debug(f"Chore ID '{chore_id}' state manually updated to '{state}'")
 
     def _compute_shared_chore_state(self, chore_id: str) -> str:
-        """Compute the global chore state for a shared chore based on each kid’s sub-state."""
+        """Compute the global chore state for a shared chore based on each kid's sub-state."""
         chore_info = self.chores_data[chore_id]
         assigned_kids = chore_info.get("assigned_kids", [])
 
@@ -2902,7 +2950,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         Wait for the specified number of minutes and then resend the parent's
         notification if the chore or reward is still pending approval.
 
-        If a chore_id is provided, the method checks the corresponding chore’s state.
+        If a chore_id is provided, the method checks the corresponding chore's state.
         If a reward_id is provided, it checks whether that reward is still pending.
         """
         LOGGER.info(
@@ -3025,3 +3073,38 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         if kid_info:
             return kid_info.get("name")
         return None
+
+    # Add near apply_penalty method (around line 1777):
+    def apply_spotlight(self, parent_name: str, kid_id: str, spotlight_id: str):
+        """Apply spotlight => positive points to increase kid's points."""
+        spotlight = self.spotlights_data.get(spotlight_id)
+        if not spotlight:
+            raise HomeAssistantError(f"Spotlight with ID '{spotlight_id}' not found.")
+
+        kid_info = self.kids_data.get(kid_id)
+        if not kid_info:
+            raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+
+        spotlight_pts = spotlight.get("points", 0)
+        new_points = float(kid_info["points"]) + spotlight_pts
+        self.update_kid_points(kid_id, new_points)
+
+        # increment spotlight_applies
+        if spotlight_id in kid_info["spotlight_applies"]:
+            kid_info["spotlight_applies"][spotlight_id] += 1
+        else:
+            kid_info["spotlight_applies"][spotlight_id] = 1
+
+        # Send a notification to the kid that a spotlight was applied
+        extra_data = {"kid_id": kid_id, "spotlight_id": spotlight_id}
+        self.hass.async_create_task(
+            self._notify_kid(
+                kid_id,
+                title="KidsChores: Spotlight Applied",
+                message=f"A '{spotlight['name']}' spotlight was applied. Your points increased by {spotlight_pts}!",
+                extra_data=extra_data,
+            )
+        )
+
+        self._persist()
+        self.async_set_updated_data(self._data)

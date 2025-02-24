@@ -225,10 +225,14 @@
       "invalid_reward_count": "Invalid reward count",
       "invalid_reward_name": "Invalid reward name",
       "invalid_start_date": "Invalid start date.",
-      "start_date_in_past": "Start Date must be in the future."
+      "start_date_in_past": "Start Date must be in the future.",
+      "invalid_spotlight_count": "Please enter a valid number of spotlights",
+      "invalid_spotlight_name": "Please enter a valid spotlight name",
+      "duplicate_spotlight": "A spotlight with this name already exists"
     },
     "abort": {
-      "single_instance_allowed": "Only a single KidsChores instance can be configured."
+      "single_instance_allowed": "Only a single KidsChores instance can be configured.",
+      "no_spotlights": "No Spotlights"
     }
   },
   "options": {
@@ -238,6 +242,9 @@
         "description": "Manage kids, chores, badges, rewards, penalties, or finish.",
         "data": {
           "menu_selection": "Select an Option"
+        },
+        "menu_options": {
+          "manage_spotlight": "Manage Spotlights"
         }
       },
       "manage_entity": {
@@ -1063,6 +1070,15 @@
           "penalty_points": { "name": "Penalty Points" }
         }
       },
+      "spotlight_applies_sensor": {
+        "name": "{kid_name} - Spotlight Applies - {spotlight_name}",
+        "state_attributes": {
+          "kid_name": { "name": "Kid Name" },
+          "spotlight_name": { "name": "Spotlight Name" },
+          "description": { "name": "Description" },
+          "spotlight_points": { "name": "Spotlight Points" }
+        }
+      },
       "kid_points_earned_daily_sensor": {
         "name": "{kid_name} - Points Earned - Daily"
       },
@@ -1183,6 +1199,9 @@
       },
       "penalty_button": {
         "name": "{kid_name} - Apply Penalty - {penalty_name}"
+      },
+      "spotlight_button": {
+        "name": "{kid_name} - Apply Spotlight - {spotlight_name}"
       },
       "manual_adjustment_button": {
         "name": "{kid_name} {sign_label} {points_label}"
