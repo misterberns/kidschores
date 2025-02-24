@@ -562,7 +562,7 @@ def build_penalty_schema(default=None):
 
 
 def build_bonus_schema(default=None):
-    """Build a schema for bonuss, keyed by internal_id in the dict.
+    """Build a schema for bonuses, keyed by internal_id in the dict.
 
     Stores bonus_points as positive in the form, converted to negative internally.
     """

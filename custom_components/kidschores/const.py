@@ -44,7 +44,7 @@ CONF_PENALTIES = "penalties"  # Key for penalties configuration
 CONF_POINTS_ICON = "points_icon"
 CONF_POINTS_LABEL = "points_label"  # Custom label for points
 CONF_REWARDS = "rewards"  # Key for rewards configuration
-CONF_BONUSES = "bonuss"
+CONF_BONUSES = "bonuses"
 
 # Options Flow Management
 OPTIONS_FLOW_ACHIEVEMENTS = "manage_achievements"  # Edit achivements step
@@ -55,7 +55,7 @@ OPTIONS_FLOW_KIDS = "manage_kids"  # Edit kids step
 OPTIONS_FLOW_PARENTS = "manage_parents"  # Edit parents step
 OPTIONS_FLOW_PENALTIES = "manage_penalties"  # Edit penalties step
 OPTIONS_FLOW_REWARDS = "manage_rewards"  # Edit rewards step
-OPTIONS_FLOW_BONUSES = "manage_bonuss"  # Edit bonuss step
+OPTIONS_FLOW_BONUSES = "manage_bonuses"  # Edit bonuses step
 
 # Validation Keys
 VALIDATION_DUE_DATE = "due_date"  # Optional due date for chores
@@ -109,7 +109,7 @@ DEFAULT_POINTS_ADJUST_MINUS_MULTIPLE_ICON = "mdi:minus-circle-multiple-outline"
 DEFAULT_POINTS_ADJUST_PLUS_MULTIPLE_ICON = "mdi:plus-circle-multiple-outline"
 DEFAULT_POINTS_ICON = "mdi:star-outline"  # Default icon for points
 DEFAULT_STREAK_ICON = "mdi:blur-linear"  # Default icon for streaks
-DEFAULT_BONUS_ICON = "mdi:bonus"  # Default icon for bonuss
+DEFAULT_BONUS_ICON = "mdi:bonus"  # Default icon for bonuses
 DEFAULT_REWARD_ICON = "mdi:gift-outline"  # Default icon for rewards
 DEFAULT_TROPHY_ICON = "mdi:trophy"  # For highest-badge sensor fallback
 DEFAULT_TROPHY_OUTLINE = "mdi:trophy-outline"
@@ -155,7 +155,7 @@ DATA_PENDING_CHORE_APPROVALS = "pending_chore_approvals"  # Pending chore approv
 DATA_PENDING_REWARD_APPROVALS = "pending_reward_approvals"  # Pending reward approvals
 DATA_PENALTIES = "penalties"  # Key for storing penalties data
 DATA_REWARDS = "rewards"  # Key for storing rewards data
-DATA_BONUSES = "bonuss"  # Key for storing bonuss data
+DATA_BONUSES = "bonuses"  # Key for storing bonuses data
 # -------------------- States --------------------
 # Badge Threshold Types
 BADGE_THRESHOLD_TYPE_CHORE_COUNT = (

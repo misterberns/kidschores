@@ -583,7 +583,7 @@ def async_setup_services(hass: HomeAssistant):
         ):
             LOGGER.warning("Apply Bonus: User not authorized")
             raise HomeAssistantError(
-                "You are not authorized to apply bonuss for this kid."
+                "You are not authorized to apply bonuses for this kid."
             )
 
         # Apply bonus
@@ -968,7 +968,7 @@ def _get_bonus_id_by_name(
     coordinator: KidsChoresDataCoordinator, bonus_name: str
 ) -> Optional[str]:
     """Help function to get bonus_id by bonus_name."""
-    for bonus_id, bonus_info in coordinator.bonuss_data.items():
+    for bonus_id, bonus_info in coordinator.bonuses_data.items():
         if bonus_info.get("name") == bonus_name:
             return bonus_id
     return None

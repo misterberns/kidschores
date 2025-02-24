@@ -238,7 +238,7 @@
     "step": {
       "init": {
         "title": "KidsChores Options",
-        "description": "Manage kids, chores, badges, rewards, penalties, bonuss, or finish.",
+        "description": "Manage kids, chores, badges, rewards, penalties, bonuses, or finish.",
         "data": {
           "menu_selection": "Select an Option"
         }
@@ -611,7 +611,7 @@
       "no_badge": "No Badges are setup for edit. Add one entry first.",
       "no_reward": "No Rewards are setup for edit. Add one entry first.",
       "no_penalty": "No Penalties are setup for edit. Add one entry first.",
-      "no_bonus": "No Bonuss are setup for edit. Add one entry first.",
+      "no_bonus": "No Bonuses are setup for edit. Add one entry first.",
       "no_achievement": "No Achievements are setup for edit. Add one entry first.",
       "no_challenge": "No Challenges are setup for edit. Add one entry first.",
       "setup_complete": "Setup Complete"

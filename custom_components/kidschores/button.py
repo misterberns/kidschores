@@ -179,7 +179,7 @@ async def async_setup_entry(
     # Create bonus buttons
     for kid_id, kid_info in coordinator.kids_data.items():
         kid_name = kid_info.get("name", f"Kid {kid_id}")
-        for bonus_id, bonus_info in coordinator.bonuss_data.items():
+        for bonus_id, bonus_info in coordinator.bonuses_data.items():
             # If no user-defined icon, fallback to DEFAULT_BONUS_ICON
             bonus_icon = bonus_info.get("icon", DEFAULT_BONUS_ICON)
             entities.append(

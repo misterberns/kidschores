@@ -351,7 +351,7 @@ async def async_setup_entry(
         )
 
     # Bonus Applies
-    for bonus_id, bonus_info in coordinator.bonuss_data.items():
+    for bonus_id, bonus_info in coordinator.bonuses_data.items():
         bonus_name = bonus_info.get("name", f"Bonus {bonus_id}")
         entities.append(
             BonusAppliesSensor(
@@ -2001,7 +2001,7 @@ class BonusAppliesSensor(CoordinatorEntity, SensorEntity):
             "kid_name": kid_name,
             "bonus_name": bonus_name,
         }
-        self.entity_id = f"sensor.kc_{kid_name}_bonuss_applied_{bonus_name}"
+        self.entity_id = f"sensor.kc_{kid_name}_bonuses_applied_{bonus_name}"
 
     @property
     def native_value(self):
@@ -2012,7 +2012,7 @@ class BonusAppliesSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         """Expose additional details like bonus points and description."""
-        bonus_info = self.coordinator.bonuss_data.get(self._bonus_id, {})
+        bonus_info = self.coordinator.bonuses_data.get(self._bonus_id, {})
 
         return {
             ATTR_KID_NAME: self._kid_name,
@@ -2024,5 +2024,5 @@ class BonusAppliesSensor(CoordinatorEntity, SensorEntity):
     @property
     def icon(self):
         """Return the bonus's custom icon if set, else fallback."""
-        bonus_info = self.coordinator.bonuss_data.get(self._bonus_id, {})
+        bonus_info = self.coordinator.bonuses_data.get(self._bonus_id, {})
         return bonus_info.get("icon", DEFAULT_BONUS_ICON)

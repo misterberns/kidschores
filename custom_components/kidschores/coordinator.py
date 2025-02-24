@@ -394,9 +394,9 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             self._update_challenge,
         )
 
-    def _initialize_bonuss(self, bonuss_dict: dict[str, Any]):
+    def _initialize_bonuses(self, bonuses_dict: dict[str, Any]):
         self._sync_entities(
-            DATA_BONUSES, bonuss_dict, self._create_bonus, self._update_bonus
+            DATA_BONUSES, bonuses_dict, self._create_bonus, self._update_bonus
         )
 
     def _sync_entities(
@@ -1053,7 +1053,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             "Updated challenge '%s' with ID: %s", challenge_info["name"], challenge_id
         )
 
-    # -- Bonuss
+    # -- Bonuses
     def _create_bonus(self, bonus_id: str, bonus_data: dict[str, Any]):
         self._data[DATA_BONUSES][bonus_id] = {
             "name": bonus_data.get("name", ""),
@@ -1125,8 +1125,8 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         return self._data.get(DATA_CHALLENGES, {})
 
     @property
-    def bonuss_data(self) -> dict[str, Any]:
-        """Return the bonuss data."""
+    def bonuses_data(self) -> dict[str, Any]:
+        """Return the bonuses data."""
         return self._data.get(DATA_BONUSES, {})
 
     # -------------------------------------------------------------------------------------
@@ -1969,12 +1969,12 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self.async_set_updated_data(self._data)
 
     # -------------------------------------------------------------------------
-    # Bonuss: Apply, Add
+    # Bonuses: Apply, Add
     # -------------------------------------------------------------------------
 
     def apply_bonus(self, parent_name: str, kid_id: str, bonus_id: str):
         """Apply bonus => positive points to increase kid's points."""
-        bonus = self.bonuss_data.get(bonus_id)
+        bonus = self.bonuses_data.get(bonus_id)
         if not bonus:
             raise HomeAssistantError(f"Bonus with ID '{bonus_id}' not found.")
 
@@ -2012,11 +2012,11 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         if not bonus_name:
             LOGGER.warning("Add bonus: Bonus must have a name")
             return  
-        if any(s["name"] == bonus_name for s in self.bonuss_data.values()):
+        if any(s["name"] == bonus_name for s in self.bonuses_data.values()):
             LOGGER.warning("Add bonus: Bonus '%s' already exists", bonus_name)
             return
         internal_id = str(uuid.uuid4())
-        self.bonuss_data[internal_id] = {
+        self.bonuses_data[internal_id] = {
             "name": bonus_name,
             "points": bonus_def.get("points", DEFAULT_BONUS_POINTS),
             "description": bonus_def.get("description", ""),

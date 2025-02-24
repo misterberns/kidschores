@@ -62,7 +62,7 @@ def _ensure_str(value):
 
 
 class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
-    """Options Flow for adding/editing/deleting kids, chores, badges, rewards, penalties, and bonuss.
+    """Options Flow for adding/editing/deleting kids, chores, badges, rewards, penalties, and bonuses.
 
     Manages entities via internal_id for consistency and historical data preservation.
     """
@@ -731,7 +731,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         self._entry_options = dict(self.config_entry.options)
 
         errors = {}
-        bonuss_dict = self._entry_options.setdefault(CONF_BONUSES, {})
+        bonuses_dict = self._entry_options.setdefault(CONF_BONUSES, {})
 
         if user_input is not None:
             bonus_name = user_input["bonus_name"].strip()
@@ -740,18 +740,18 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
             if any(
                 bonus_data["name"] == bonus_name
-                for bonus_data in bonuss_dict.values()
+                for bonus_data in bonuses_dict.values()
             ):
                 errors["bonus_name"] = "duplicate_bonus"
             else:
-                bonuss_dict[internal_id] = {
+                bonuses_dict[internal_id] = {
                     "name": bonus_name,
                     "description": user_input.get("bonus_description", ""),
                     "points": abs(bonus_points),  # Ensure points are positive
                     "icon": user_input.get("icon", ""),
                     "internal_id": internal_id,
                 }
-                self._entry_options[CONF_BONUSES] = bonuss_dict
+                self._entry_options[CONF_BONUSES] = bonuses_dict
 
                 LOGGER.debug(
                     "Added bonus '%s' with ID: %s", bonus_name, internal_id
@@ -1149,14 +1149,14 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         self._entry_options = dict(self.config_entry.options)
 
         errors = {}
-        bonuss_dict = self._entry_options.get(CONF_BONUSES, {})
+        bonuses_dict = self._entry_options.get(CONF_BONUSES, {})
         internal_id = self.context.get("internal_id")
 
-        if not internal_id or internal_id not in bonuss_dict:
+        if not internal_id or internal_id not in bonuses_dict:
             LOGGER.error("Edit bonus: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_bonus")
 
-        bonus_data = bonuss_dict[internal_id]
+        bonus_data = bonuses_dict[internal_id]
 
         if user_input is not None:
             new_name = user_input["bonus_name"].strip()
@@ -1165,7 +1165,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             # Check for duplicate names excluding current penalty
             if any(
                 data["name"] == new_name and eid != internal_id
-                for eid, data in bonuss_dict.items()
+                for eid, data in bonuses_dict.items()
             ):
                 errors["bonus_name"] = "duplicate_bonus"
             else:
@@ -1176,7 +1176,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                 )  # Ensure points are positive
                 bonus_data["icon"] = user_input.get("icon", "")
 
-                self._entry_options[CONF_BONUSES] = bonuss_dict
+                self._entry_options[CONF_BONUSES] = bonuses_dict
 
                 LOGGER.debug("Edited bonus '%s' with ID: %s", new_name, internal_id)
                 await self._update_and_reload()
@@ -1589,19 +1589,19 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         """Delete a bonus."""
         self._entry_options = dict(self.config_entry.options)
 
-        bonuss_dict = self._entry_options.get(CONF_BONUSES, {})
+        bonuses_dict = self._entry_options.get(CONF_BONUSES, {})
         internal_id = self.context.get("internal_id")
 
-        if not internal_id or internal_id not in bonuss_dict:
+        if not internal_id or internal_id not in bonuses_dict:
             LOGGER.error("Delete bonus: Invalid internal_id '%s'", internal_id)
             return self.async_abort(reason="invalid_bonus")
 
-        bonus_name = bonuss_dict[internal_id]["name"]
+        bonus_name = bonuses_dict[internal_id]["name"]
 
         if user_input is not None:
-            bonuss_dict.pop(internal_id, None)
+            bonuses_dict.pop(internal_id, None)
 
-            self._entry_options[CONF_BONUSES] = bonuss_dict
+            self._entry_options[CONF_BONUSES] = bonuses_dict
 
             LOGGER.debug("Deleted bonus '%s' with ID: %s", bonus_name, internal_id)
             await self._update_and_reload()
