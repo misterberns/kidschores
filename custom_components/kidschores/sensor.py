@@ -263,6 +263,15 @@ async def async_setup_entry(
                 )
             )
 
+        # Bonus Applies
+        for bonus_id, bonus_info in coordinator.bonuses_data.items():
+            bonus_name = bonus_info.get("name", f"Bonus {bonus_id}")
+            entities.append(
+                BonusAppliesSensor(
+                    coordinator, entry, kid_id, kid_name, bonus_id, bonus_name
+                )
+            )
+
         # Achivement Progress per Kid
         for achievement_id, achievement in coordinator.achievements_data.items():
             if kid_id in achievement.get("assigned_kids", []):
@@ -348,15 +357,6 @@ async def async_setup_entry(
         challenge_name = challenge.get("name", f"Challenge {challenge_id}")
         entities.append(
             ChallengeSensor(coordinator, entry, challenge_id, challenge_name)
-        )
-
-    # Bonus Applies
-    for bonus_id, bonus_info in coordinator.bonuses_data.items():
-        bonus_name = bonus_info.get("name", f"Bonus {bonus_id}")
-        entities.append(
-            BonusAppliesSensor(
-                coordinator, entry, kid_id, kid_name, bonus_id, bonus_name
-            )
         )
 
     async_add_entities(entities)
