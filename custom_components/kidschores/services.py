@@ -630,7 +630,7 @@ def async_setup_services(hass: HomeAssistant):
         await coordinator.storage_manager.async_clear_data()
 
         # Re-init the coordinator with reload config entry
-        hass.config_entries.async_reload(entry_id)
+        await hass.config_entries.async_reload(entry_id)
 
         coordinator.async_set_updated_data(coordinator._data)
         LOGGER.info("Manually reset all KidsChores data. Integration is now cleared")
@@ -736,7 +736,7 @@ def async_setup_services(hass: HomeAssistant):
                 )
                 raise HomeAssistantError("Invalid due date provided.")
 
-            # Update the chore’s due_date:
+            # Update the chore's due_date:
             coordinator.chores_data[chore_id]["due_date"] = due_date_str
             LOGGER.info(
                 "Set due date for chore '%s' (ID: %s) to %s",
