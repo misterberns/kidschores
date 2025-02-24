@@ -581,7 +581,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._penalty_index += 1
             if self._penalty_index >= self._penalty_count:
-                return await self.async_step_achievement_count()
+                return await self.async_step_bonust_count()
             return await self.async_step_penalties()
 
         penalty_schema = build_penalty_schema()
@@ -607,7 +607,7 @@ class KidsChoresConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except ValueError:
                 errors["base"] = "invalid_bonus_count"
 
-        schema = vol.Schema({vol.Required("bonus_count", default=1): vol.Coerce(int)})
+        schema = vol.Schema({vol.Required("bonus_count", default=0): vol.Coerce(int)})
         return self.async_show_form(
             step_id="bonus_count", data_schema=schema, errors=errors
         )
