@@ -185,26 +185,26 @@ class ChoresKidSelect(KidsChoresSelectBase):
         return options
 
 
-class SpotlightsSelect(KidsChoresSelectBase):
-    """Global select entity listing all defined spotlights by name."""
+class BonussSelect(KidsChoresSelectBase):
+    """Global select entity listing all defined bonuss by name."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "spotlights_select"
+    _attr_translation_key = "bonuss_select"
 
     def __init__(self, coordinator: KidsChoresDataCoordinator, entry: ConfigEntry):
-        """Initialize the Spotlights select entity."""
+        """Initialize the Bonuss select entity."""
         super().__init__(coordinator, entry)
-        self._attr_unique_id = f"{entry.entry_id}_spotlights_select"
-        self._attr_name = "KidsChores: All Spotlights"
-        self.entity_id = f"select.kc_all_spotlights"
+        self._attr_unique_id = f"{entry.entry_id}_bonuss_select"
+        self._attr_name = "KidsChores: All Bonuss"
+        self.entity_id = f"select.kc_all_bonuss"
 
     @property
     def options(self) -> list[str]:
-        """Return a list of spotlight names from the coordinator.
+        """Return a list of bonus names from the coordinator.
 
-        If no spotlights exist, returns an empty list.
+        If no bonuss exist, returns an empty list.
         """
         return [
-            spotlight_info.get("name", f"Spotlight {spotlight_id}")
-            for spotlight_id, spotlight_info in self.coordinator.spotlights_data.items()
+            bonus_info.get("name", f"Bonus {bonus_id}")
+            for bonus_id, bonus_info in self.coordinator.bonuss_data.items()
         ]

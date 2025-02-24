@@ -81,8 +81,8 @@ from .const import (
     ATTR_REWARD_POINTS,
     ATTR_START_DATE,
     ATTR_SHARED_CHORE,
-    ATTR_SPOTLIGHT_NAME,
-    ATTR_SPOTLIGHT_POINTS,
+    ATTR_BONUS_NAME,
+    ATTR_BONUS_POINTS,
     ATTR_TARGET_VALUE,
     ATTR_THRESHOLD_TYPE,
     ATTR_TYPE,
@@ -107,8 +107,8 @@ from .const import (
     DEFAULT_POINTS_LABEL,
     DEFAULT_REWARD_COST,
     DEFAULT_REWARD_ICON,
-    DEFAULT_SPOTLIGHT_ICON,
-    DEFAULT_SPOTLIGHT_POINTS,
+    DEFAULT_BONUS_ICON,
+    DEFAULT_BONUS_POINTS,
     DEFAULT_STREAK_ICON,
     DEFAULT_TROPHY_ICON,
     DEFAULT_TROPHY_OUTLINE,
@@ -350,12 +350,12 @@ async def async_setup_entry(
             ChallengeSensor(coordinator, entry, challenge_id, challenge_name)
         )
 
-    # Spotlight Applies
-    for spotlight_id, spotlight_info in coordinator.spotlights_data.items():
-        spotlight_name = spotlight_info.get("name", f"Spotlight {spotlight_id}")
+    # Bonus Applies
+    for bonus_id, bonus_info in coordinator.bonuss_data.items():
+        bonus_name = bonus_info.get("name", f"Bonus {bonus_id}")
         entities.append(
-            SpotlightAppliesSensor(
-                coordinator, entry, kid_id, kid_name, spotlight_id, spotlight_name
+            BonusAppliesSensor(
+                coordinator, entry, kid_id, kid_name, bonus_id, bonus_name
             )
         )
 
@@ -1983,46 +1983,46 @@ class ChoreStreakSensor(CoordinatorEntity, SensorEntity):
 
 
 # ------------------------------------------------------------------------------------------
-class SpotlightAppliesSensor(CoordinatorEntity, SensorEntity):
-    """Sensor tracking how many times each spotlight has been applied to a kid."""
+class BonusAppliesSensor(CoordinatorEntity, SensorEntity):
+    """Sensor tracking how many times each bonus has been applied to a kid."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "spotlight_applies_sensor"
+    _attr_translation_key = "bonus_applies_sensor"
 
-    def __init__(self, coordinator, entry, kid_id, kid_name, spotlight_id, spotlight_name):
+    def __init__(self, coordinator, entry, kid_id, kid_name, bonus_id, bonus_name):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._kid_id = kid_id
         self._kid_name = kid_name
-        self._spotlight_id = spotlight_id
-        self._spotlight_name = spotlight_name
-        self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{spotlight_id}_spotlight_applies"
+        self._bonus_id = bonus_id
+        self._bonus_name = bonus_name
+        self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{bonus_id}_bonus_applies"
         self._attr_translation_placeholders = {
             "kid_name": kid_name,
-            "spotlight_name": spotlight_name,
+            "bonus_name": bonus_name,
         }
-        self.entity_id = f"sensor.kc_{kid_name}_spotlights_applied_{spotlight_name}"
+        self.entity_id = f"sensor.kc_{kid_name}_bonuss_applied_{bonus_name}"
 
     @property
     def native_value(self):
-        """Return the number of times the spotlight has been applied."""
+        """Return the number of times the bonus has been applied."""
         kid_info = self.coordinator.kids_data.get(self._kid_id, {})
-        return kid_info.get("spotlight_applies", {}).get(self._spotlight_id, 0)
+        return kid_info.get("bonus_applies", {}).get(self._bonus_id, 0)
 
     @property
     def extra_state_attributes(self):
-        """Expose additional details like spotlight points and description."""
-        spotlight_info = self.coordinator.spotlights_data.get(self._spotlight_id, {})
+        """Expose additional details like bonus points and description."""
+        bonus_info = self.coordinator.bonuss_data.get(self._bonus_id, {})
 
         return {
             ATTR_KID_NAME: self._kid_name,
-            ATTR_SPOTLIGHT_NAME: self._spotlight_name,
-            ATTR_DESCRIPTION: spotlight_info.get("description", ""),
-            ATTR_SPOTLIGHT_POINTS: spotlight_info.get("points", DEFAULT_SPOTLIGHT_POINTS),
+            ATTR_BONUS_NAME: self._bonus_name,
+            ATTR_DESCRIPTION: bonus_info.get("description", ""),
+            ATTR_BONUS_POINTS: bonus_info.get("points", DEFAULT_BONUS_POINTS),
         }
 
     @property
     def icon(self):
-        """Return the spotlight's custom icon if set, else fallback."""
-        spotlight_info = self.coordinator.spotlights_data.get(self._spotlight_id, {})
-        return spotlight_info.get("icon", DEFAULT_SPOTLIGHT_ICON)
+        """Return the bonus's custom icon if set, else fallback."""
+        bonus_info = self.coordinator.bonuss_data.get(self._bonus_id, {})
+        return bonus_info.get("icon", DEFAULT_BONUS_ICON)

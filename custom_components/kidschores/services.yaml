@@ -189,27 +189,27 @@ apply_penalty:
       selector:
         text:
 
-apply_spotlight:
-  name: "Apply Spotlight"
-  description: "A parent applies a spotlight to award extra points."
+apply_bonus:
+  name: "Apply Bonus"
+  description: "A parent applies a bonus to award extra points."
   fields:
     parent_name:
       name: "Parent Name"
-      description: "The parent applying the spotlight."
+      description: "The parent applying the bonus."
       example: "Dad"
       required: true
       selector:
         text:
     kid_name:
       name: "Kid Name"
-      description: "The kid receiving the spotlight."
+      description: "The kid receiving the bonus."
       example: "Bob"
       required: true
       selector:
         text:
-    spotlight_name:
-      name: "Spotlight Name"
-      description: "The name of the spotlight to apply."
+    bonus_name:
+      name: "Bonus Name"
+      description: "The name of the bonus to apply."
       example: "Extra Helpful"
       required: true
       selector:

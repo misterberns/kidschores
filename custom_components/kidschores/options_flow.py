@@ -28,7 +28,7 @@ from .const import (
     CONF_POINTS_ICON,
     CONF_POINTS_LABEL,
     CONF_REWARDS,
-    CONF_SPOTLIGHTS,
+    CONF_BONUSES,
     DEFAULT_APPLICABLE_DAYS,
     DEFAULT_NOTIFY_ON_APPROVAL,
     DEFAULT_NOTIFY_ON_CLAIM,
@@ -49,7 +49,7 @@ from .flow_helpers import (
     build_achievement_schema,
     build_challenge_schema,
     ensure_utc_datetime,
-    build_spotlight_schema,
+    build_bonus_schema,
 )
 
 
@@ -62,7 +62,7 @@ def _ensure_str(value):
 
 
 class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
-    """Options Flow for adding/editing/deleting kids, chores, badges, rewards, penalties, and spotlights.
+    """Options Flow for adding/editing/deleting kids, chores, badges, rewards, penalties, and bonuss.
 
     Manages entities via internal_id for consistency and historical data preservation.
     """
@@ -100,7 +100,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             "manage_badge",
             "manage_reward",
             "manage_penalty",
-            "manage_spotlight",
+            "manage_bonus",
             "manage_achievement",
             "manage_challenge",
             "done",
@@ -255,7 +255,7 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             "penalty": CONF_PENALTIES,
             "achievement": CONF_ACHIEVEMENTS,
             "challenge": CONF_CHALLENGES,
-            "spotlight": CONF_SPOTLIGHTS,
+            "bonus": CONF_BONUSES,
         }
         key = entity_type_to_conf.get(self._entity_type)
         if key is None:
@@ -726,42 +726,42 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="add_challenge", data_schema=challenge_schema, errors=errors
         )
 
-    async def async_step_add_spotlight(self, user_input=None):
-        """Add a new spotlight."""
+    async def async_step_add_bonus(self, user_input=None):
+        """Add a new bonus."""
         self._entry_options = dict(self.config_entry.options)
 
         errors = {}
-        spotlights_dict = self._entry_options.setdefault(CONF_SPOTLIGHTS, {})
+        bonuss_dict = self._entry_options.setdefault(CONF_BONUSES, {})
 
         if user_input is not None:
-            spotlight_name = user_input["spotlight_name"].strip()
-            spotlight_points = user_input["spotlight_points"]
+            bonus_name = user_input["bonus_name"].strip()
+            bonus_points = user_input["bonus_points"]
             internal_id = user_input.get("internal_id", str(uuid.uuid4()))
 
             if any(
-                spotlight_data["name"] == spotlight_name
-                for spotlight_data in spotlights_dict.values()
+                bonus_data["name"] == bonus_name
+                for bonus_data in bonuss_dict.values()
             ):
-                errors["spotlight_name"] = "duplicate_spotlight"
+                errors["bonus_name"] = "duplicate_bonus"
             else:
-                spotlights_dict[internal_id] = {
-                    "name": spotlight_name,
-                    "description": user_input.get("spotlight_description", ""),
-                    "points": abs(spotlight_points),  # Ensure points are positive
+                bonuss_dict[internal_id] = {
+                    "name": bonus_name,
+                    "description": user_input.get("bonus_description", ""),
+                    "points": abs(bonus_points),  # Ensure points are positive
                     "icon": user_input.get("icon", ""),
                     "internal_id": internal_id,
                 }
-                self._entry_options[CONF_SPOTLIGHTS] = spotlights_dict
+                self._entry_options[CONF_BONUSES] = bonuss_dict
 
                 LOGGER.debug(
-                    "Added spotlight '%s' with ID: %s", spotlight_name, internal_id
+                    "Added bonus '%s' with ID: %s", bonus_name, internal_id
                 )
                 await self._update_and_reload()
                 return await self.async_step_init()
 
-        schema = build_spotlight_schema()
+        schema = build_bonus_schema()
         return self.async_show_form(
-            step_id="add_spotlight", data_schema=schema, errors=errors
+            step_id="add_bonus", data_schema=schema, errors=errors
         )
 
     # ------------------ EDIT ENTITY ------------------
@@ -1144,50 +1144,50 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="edit_penalty", data_schema=schema, errors=errors
         )
 
-    async def async_step_edit_spotlight(self, user_input=None):
-        """Edit an existing spotlight."""
+    async def async_step_edit_bonus(self, user_input=None):
+        """Edit an existing bonus."""
         self._entry_options = dict(self.config_entry.options)
 
         errors = {}
-        spotlights_dict = self._entry_options.get(CONF_SPOTLIGHTS, {})
+        bonuss_dict = self._entry_options.get(CONF_BONUSES, {})
         internal_id = self.context.get("internal_id")
 
-        if not internal_id or internal_id not in spotlights_dict:
-            LOGGER.error("Edit spotlight: Invalid internal_id '%s'", internal_id)
-            return self.async_abort(reason="invalid_spotlight")
+        if not internal_id or internal_id not in bonuss_dict:
+            LOGGER.error("Edit bonus: Invalid internal_id '%s'", internal_id)
+            return self.async_abort(reason="invalid_bonus")
 
-        spotlight_data = spotlights_dict[internal_id]
+        bonus_data = bonuss_dict[internal_id]
 
         if user_input is not None:
-            new_name = user_input["spotlight_name"].strip()
-            spotlight_points = user_input["spotlight_points"]
+            new_name = user_input["bonus_name"].strip()
+            bonus_points = user_input["bonus_points"]
 
             # Check for duplicate names excluding current penalty
             if any(
                 data["name"] == new_name and eid != internal_id
-                for eid, data in spotlights_dict.items()
+                for eid, data in bonuss_dict.items()
             ):
-                errors["spotlight_name"] = "duplicate_spotlight"
+                errors["bonus_name"] = "duplicate_bonus"
             else:
-                spotlight_data["name"] = new_name
-                spotlight_data["description"] = user_input.get("spotlight_description", "")
-                spotlight_data["points"] = abs(
-                    spotlight_points
+                bonus_data["name"] = new_name
+                bonus_data["description"] = user_input.get("bonus_description", "")
+                bonus_data["points"] = abs(
+                    bonus_points
                 )  # Ensure points are positive
-                spotlight_data["icon"] = user_input.get("icon", "")
+                bonus_data["icon"] = user_input.get("icon", "")
 
-                self._entry_options[CONF_SPOTLIGHTS] = spotlights_dict
+                self._entry_options[CONF_BONUSES] = bonuss_dict
 
-                LOGGER.debug("Edited spotlight '%s' with ID: %s", new_name, internal_id)
+                LOGGER.debug("Edited bonus '%s' with ID: %s", new_name, internal_id)
                 await self._update_and_reload()
                 return await self.async_step_init()
 
         # Prepare data for schema (convert points to positive for display)
         display_data = dict(penalty_data)
-        display_data["spotlight_points"] = abs(display_data["points"])
-        schema = build_spotlight_schema(default=display_data)
+        display_data["bonus_points"] = abs(display_data["points"])
+        schema = build_bonus_schema(default=display_data)
         return self.async_show_form(
-            step_id="edit_spotlight", data_schema=schema, errors=errors
+            step_id="edit_bonus", data_schema=schema, errors=errors
         )    
 
     async def async_step_edit_achievement(self, user_input=None):
@@ -1585,32 +1585,32 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
             description_placeholders={"challenge_name": challenge_name},
         )
 
-    async def async_step_delete_spotlight(self, user_input=None):
-        """Delete a spotlight."""
+    async def async_step_delete_bonus(self, user_input=None):
+        """Delete a bonus."""
         self._entry_options = dict(self.config_entry.options)
 
-        spotlights_dict = self._entry_options.get(CONF_SPOTLIGHTS, {})
+        bonuss_dict = self._entry_options.get(CONF_BONUSES, {})
         internal_id = self.context.get("internal_id")
 
-        if not internal_id or internal_id not in spotlights_dict:
-            LOGGER.error("Delete spotlight: Invalid internal_id '%s'", internal_id)
-            return self.async_abort(reason="invalid_spotlight")
+        if not internal_id or internal_id not in bonuss_dict:
+            LOGGER.error("Delete bonus: Invalid internal_id '%s'", internal_id)
+            return self.async_abort(reason="invalid_bonus")
 
-        spotlight_name = spotlights_dict[internal_id]["name"]
+        bonus_name = bonuss_dict[internal_id]["name"]
 
         if user_input is not None:
-            spotlights_dict.pop(internal_id, None)
+            bonuss_dict.pop(internal_id, None)
 
-            self._entry_options[CONF_SPOTLIGHTS] = spotlights_dict
+            self._entry_options[CONF_BONUSES] = bonuss_dict
 
-            LOGGER.debug("Deleted spotlight '%s' with ID: %s", spotlight_name, internal_id)
+            LOGGER.debug("Deleted bonus '%s' with ID: %s", bonus_name, internal_id)
             await self._update_and_reload()
             return await self.async_step_init()
 
         return self.async_show_form(
-            step_id="delete_spotlight",
+            step_id="delete_bonus",
             data_schema=vol.Schema({}),
-            description_placeholders={"spotlight_name": spotlight_name},
+            description_placeholders={"bonus_name": bonus_name},
         )
 
     # ------------------ HELPER METHODS ------------------

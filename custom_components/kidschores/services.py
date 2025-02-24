@@ -30,11 +30,11 @@ from .const import (
     FIELD_PENALTY_NAME,
     FIELD_POINTS_AWARDED,
     FIELD_REWARD_NAME,
-    FIELD_SPOTLIGHT_NAME,
+    FIELD_BONUS_NAME,
     LOGGER,
     MSG_NO_ENTRY_FOUND,
     SERVICE_APPLY_PENALTY,
-    SERVICE_APPLY_SPOTLIGHT,
+    SERVICE_APPLY_BONUS,
     SERVICE_APPROVE_CHORE,
     SERVICE_APPROVE_REWARD,
     SERVICE_CLAIM_CHORE,
@@ -109,11 +109,11 @@ APPLY_PENALTY_SCHEMA = vol.Schema(
     }
 )
 
-APPLY_SPOTLIGHT_SCHEMA = vol.Schema(
+APPLY_BONUS_SCHEMA = vol.Schema(
     {
         vol.Required(FIELD_PARENT_NAME): cv.string,
         vol.Required(FIELD_KID_NAME): cv.string,
-        vol.Required(FIELD_SPOTLIGHT_NAME): cv.string,
+        vol.Required(FIELD_BONUS_NAME): cv.string,
     }
 )
 
@@ -553,63 +553,63 @@ def async_setup_services(hass: HomeAssistant):
                 f"Failed to apply penalty '{penalty_name}' for kid '{kid_name}'."
             )
 
-    async def handle_apply_spotlight(call: ServiceCall):
-        """Handle applying a spotlight."""
+    async def handle_apply_bonus(call: ServiceCall):
+        """Handle applying a bonus."""
         entry_id = _get_first_kidschores_entry(hass)
         if not entry_id:
-            LOGGER.warning("Apply Spotlight: %s", MSG_NO_ENTRY_FOUND)
+            LOGGER.warning("Apply Bonus: %s", MSG_NO_ENTRY_FOUND)
             return
 
         coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id]["coordinator"]
         parent_name = call.data[FIELD_PARENT_NAME]
         kid_name = call.data[FIELD_KID_NAME]
-        spotlight_name = call.data[FIELD_SPOTLIGHT_NAME]
+        bonus_name = call.data[FIELD_BONUS_NAME]
 
-        # Map kid_name and spotlight_name to internal_ids
+        # Map kid_name and bonus_name to internal_ids
         kid_id = _get_kid_id_by_name(coordinator, kid_name)
         if not kid_id:
-            LOGGER.warning("Apply Spotlight: Kid '%s' not found", kid_name)
+            LOGGER.warning("Apply Bonus: Kid '%s' not found", kid_name)
             raise HomeAssistantError(f"Kid '{kid_name}' not found")
 
-        spotlight_id = _get_spotlight_id_by_name(coordinator, spotlight_name)
-        if not spotlight_id:
-            LOGGER.warning("Apply Spotlight: Spotlight '%s' not found", spotlight_name)
-            raise HomeAssistantError(f"Spotlight '{spotlight_name}' not found")
+        bonus_id = _get_bonus_id_by_name(coordinator, bonus_name)
+        if not bonus_id:
+            LOGGER.warning("Apply Bonus: Bonus '%s' not found", bonus_name)
+            raise HomeAssistantError(f"Bonus '{bonus_name}' not found")
 
         # Check if user is authorized
         user_id = call.context.user_id
         if user_id and not await is_user_authorized_for_global_action(
             hass, user_id, kid_id
         ):
-            LOGGER.warning("Apply Spotlight: User not authorized")
+            LOGGER.warning("Apply Bonus: User not authorized")
             raise HomeAssistantError(
-                "You are not authorized to apply spotlights for this kid."
+                "You are not authorized to apply bonuss for this kid."
             )
 
-        # Apply spotlight
+        # Apply bonus
         try:
-            coordinator.apply_spotlight(
-                parent_name=parent_name, kid_id=kid_id, spotlight_id=spotlight_id
+            coordinator.apply_bonus(
+                parent_name=parent_name, kid_id=kid_id, bonus_id=bonus_id
             )
             LOGGER.info(
-                "Spotlight '%s' applied for kid '%s' by parent '%s'",
-                spotlight_name,
+                "Bonus '%s' applied for kid '%s' by parent '%s'",
+                bonus_name,
                 kid_name,
                 parent_name,
             )
             await coordinator.async_request_refresh()
         except HomeAssistantError as e:
-            LOGGER.error("Apply Spotlight: %s", e)
+            LOGGER.error("Apply Bonus: %s", e)
             raise
         except Exception as e:
             LOGGER.error(
-                "Apply Spotlight: Failed to apply spotlight '%s' for kid '%s': %s",
-                spotlight_name,
+                "Apply Bonus: Failed to apply bonus '%s' for kid '%s': %s",
+                bonus_name,
                 kid_name,
                 e,
             )
             raise HomeAssistantError(
-                f"Failed to apply spotlight '{spotlight_name}' for kid '{kid_name}'."
+                f"Failed to apply bonus '{bonus_name}' for kid '{kid_name}'."
             )
 
     async def handle_reset_all_data(call: ServiceCall):
@@ -883,9 +883,9 @@ def async_setup_services(hass: HomeAssistant):
 
     hass.services.async_register(
         DOMAIN, 
-        SERVICE_APPLY_SPOTLIGHT, 
-        handle_apply_spotlight, 
-        schema=APPLY_SPOTLIGHT_SCHEMA
+        SERVICE_APPLY_BONUS, 
+        handle_apply_bonus, 
+        schema=APPLY_BONUS_SCHEMA
     )
 
     LOGGER.info("KidsChores services have been registered successfully")
@@ -900,7 +900,7 @@ async def async_unload_services(hass: HomeAssistant):
         SERVICE_REDEEM_REWARD,
         SERVICE_DISAPPROVE_REWARD,
         SERVICE_APPLY_PENALTY,
-        SERVICE_APPLY_SPOTLIGHT,
+        SERVICE_APPLY_BONUS,
         SERVICE_APPROVE_REWARD,
         SERVICE_RESET_ALL_DATA,
         SERVICE_RESET_ALL_CHORES,
@@ -964,11 +964,11 @@ def _get_penalty_id_by_name(
     return None
 
 
-def _get_spotlight_id_by_name(
-    coordinator: KidsChoresDataCoordinator, spotlight_name: str
+def _get_bonus_id_by_name(
+    coordinator: KidsChoresDataCoordinator, bonus_name: str
 ) -> Optional[str]:
-    """Help function to get spotlight_id by spotlight_name."""
-    for spotlight_id, spotlight_info in coordinator.spotlights_data.items():
-        if spotlight_info.get("name") == spotlight_name:
-            return spotlight_id
+    """Help function to get bonus_id by bonus_name."""
+    for bonus_id, bonus_info in coordinator.bonuss_data.items():
+        if bonus_info.get("name") == bonus_name:
+            return bonus_id
     return None

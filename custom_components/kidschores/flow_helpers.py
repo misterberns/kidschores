@@ -561,26 +561,26 @@ def build_penalty_schema(default=None):
     )
 
 
-def build_spotlight_schema(default=None):
-    """Build a schema for spotlights, keyed by internal_id in the dict.
+def build_bonus_schema(default=None):
+    """Build a schema for bonuss, keyed by internal_id in the dict.
 
-    Stores spotlight_points as positive in the form, converted to negative internally.
+    Stores bonus_points as positive in the form, converted to negative internally.
     """
     default = default or {}
-    spotlight_name_default = default.get("name", "")
+    bonus_name_default = default.get("name", "")
     internal_id_default = default.get("internal_id", str(uuid.uuid4()))
 
-    # Display spotlight points as positive for user input
+    # Display bonus points as positive for user input
     display_points = abs(default.get("points", 1)) if default else 1
 
     return vol.Schema(
         {
-            vol.Required("spotlight_name", default=spotlight_name_default): str,
+            vol.Required("bonus_name", default=bonus_name_default): str,
             vol.Optional(
-                "spotlight_description", default=default.get("description", "")
+                "bonus_description", default=default.get("description", "")
             ): str,
             vol.Required(
-                "spotlight_points", default=display_points
+                "bonus_points", default=display_points
             ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     mode=selector.NumberSelectorMode.BOX,

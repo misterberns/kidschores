@@ -5,7 +5,7 @@ Features:
 1) Chore Buttons (Claim & Approve) with user-defined or default icons.
 2) Reward Buttons using user-defined or default icons.
 3) Penalty Buttons using user-defined or default icons.
-4) Spotlight Buttons using user-defined or default icons.
+4) Bonus Buttons using user-defined or default icons.
 5) PointsAdjustButton: manually increments/decrements a kid's points (e.g., +1, -1, +2, -2, etc.).
 6) ApproveRewardButton: allows parents to approve rewards claimed by kids.
 
@@ -24,7 +24,7 @@ from .const import (
     BUTTON_DISAPPROVE_REWARD_PREFIX,
     BUTTON_PENALTY_PREFIX,
     BUTTON_REWARD_PREFIX,
-    BUTTON_SPOTLIGHT_PREFIX,
+    BUTTON_BONUS_PREFIX,
     CONF_POINTS_LABEL,
     DATA_PENDING_CHORE_APPROVALS,
     DATA_PENDING_REWARD_APPROVALS,
@@ -38,7 +38,7 @@ from .const import (
     DEFAULT_POINTS_ADJUST_PLUS_MULTIPLE_ICON,
     DEFAULT_POINTS_LABEL,
     DEFAULT_REWARD_ICON,
-    DEFAULT_SPOTLIGHT_ICON,
+    DEFAULT_BONUS_ICON,
     DOMAIN,
     ERROR_NOT_AUTHORIZED_ACTION_FMT,
     LOGGER,
@@ -176,21 +176,21 @@ async def async_setup_entry(
                 )
             )
 
-    # Create spotlight buttons
+    # Create bonus buttons
     for kid_id, kid_info in coordinator.kids_data.items():
         kid_name = kid_info.get("name", f"Kid {kid_id}")
-        for spotlight_id, spotlight_info in coordinator.spotlights_data.items():
-            # If no user-defined icon, fallback to DEFAULT_SPOTLIGHT_ICON
-            spotlight_icon = spotlight_info.get("icon", DEFAULT_SPOTLIGHT_ICON)
+        for bonus_id, bonus_info in coordinator.bonuss_data.items():
+            # If no user-defined icon, fallback to DEFAULT_BONUS_ICON
+            bonus_icon = bonus_info.get("icon", DEFAULT_BONUS_ICON)
             entities.append(
-                SpotlightButton(
+                BonusButton(
                     coordinator=coordinator,
                     entry=entry,
                     kid_id=kid_id,
                     kid_name=kid_name,
-                    spotlight_id=spotlight_id,
-                    spotlight_name=spotlight_info.get("name", f"Spotlight {spotlight_id}"),
-                    icon=spotlight_icon,
+                    bonus_id=bonus_id,
+                    bonus_name=bonus_info.get("name", f"Bonus {bonus_id}"),
+                    icon=bonus_icon,
                 )
             )
 
@@ -885,14 +885,14 @@ class PointsAdjustButton(CoordinatorEntity, ButtonEntity):
             )
 
 
-class SpotlightButton(CoordinatorEntity, ButtonEntity):
-    """Button to apply a spotlight for a kid.
+class BonusButton(CoordinatorEntity, ButtonEntity):
+    """Button to apply a bonus for a kid.
 
-    Uses user-defined or default spotlight icon.
+    Uses user-defined or default bonus icon.
     """
 
     _attr_has_entity_name = True
-    _attr_translation_key = "spotlight_button"
+    _attr_translation_key = "bonus_button"
 
     def __init__(
         self,
@@ -900,21 +900,21 @@ class SpotlightButton(CoordinatorEntity, ButtonEntity):
         entry: ConfigEntry,
         kid_id: str,
         kid_name: str,
-        spotlight_id: str,
-        spotlight_name: str,
+        bonus_id: str,
+        bonus_name: str,
         icon: str,
     ):
-        """Initialize the spotlight button."""
+        """Initialize the bonus button."""
         super().__init__(coordinator)
         self._entry = entry
         self._kid_id = kid_id
         self._kid_name = kid_name
-        self._spotlight_id = spotlight_id
-        self._spotlight_name = spotlight_name
-        self._attr_unique_id = f"{entry.entry_id}_{BUTTON_SPOTLIGHT_PREFIX}{kid_id}_{spotlight_id}"
+        self._bonus_id = bonus_id
+        self._bonus_name = bonus_name
+        self._attr_unique_id = f"{entry.entry_id}_{BUTTON_BONUS_PREFIX}{kid_id}_{bonus_id}"
         self._attr_icon = icon
         self._attr_translation_placeholders = {
             "kid_name": kid_name,
-            "spotlight_name": spotlight_name,
+            "bonus_name": bonus_name,
         }
-        self.entity_id = f"button.kc_{kid_name}_spotlight_{spotlight_name}"
+        self.entity_id = f"button.kc_{kid_name}_bonus_{bonus_name}"

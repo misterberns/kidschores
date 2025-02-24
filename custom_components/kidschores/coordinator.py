@@ -60,7 +60,7 @@ from .const import (
     CONF_PARENTS,
     CONF_PENALTIES,
     CONF_REWARDS,
-    CONF_SPOTLIGHTS,
+    CONF_BONUSES,
     DATA_ACHIEVEMENTS,
     DATA_BADGES,
     DATA_CHALLENGES,
@@ -71,7 +71,7 @@ from .const import (
     DATA_PENDING_REWARD_APPROVALS,
     DATA_PENALTIES,
     DATA_REWARDS,
-    DATA_SPOTLIGHTS,
+    DATA_BONUSES,
     DEFAULT_APPLICABLE_DAYS,
     DEFAULT_BADGE_THRESHOLD,
     DEFAULT_DAILY_RESET_TIME,
@@ -88,8 +88,8 @@ from .const import (
     DEFAULT_POINTS_MULTIPLIER,
     DEFAULT_REWARD_COST,
     DEFAULT_REWARD_ICON,
-    DEFAULT_SPOTLIGHT_ICON,
-    DEFAULT_SPOTLIGHT_POINTS,
+    DEFAULT_BONUS_ICON,
+    DEFAULT_BONUS_POINTS,
     DEFAULT_WEEKLY_RESET_DAY,
     DOMAIN,
     FREQUENCY_DAILY,
@@ -264,7 +264,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 DATA_REWARDS: {},
                 DATA_PARENTS: {},
                 DATA_PENALTIES: {},
-                DATA_SPOTLIGHTS: {},
+                DATA_BONUSES: {},
                 DATA_ACHIEVEMENTS: {},
                 DATA_CHALLENGES: {},
                 DATA_PENDING_CHORE_APPROVALS: [],
@@ -307,7 +307,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             DATA_BADGES: options.get(CONF_BADGES, {}),
             DATA_REWARDS: options.get(CONF_REWARDS, {}),
             DATA_PENALTIES: options.get(CONF_PENALTIES, {}),
-            DATA_SPOTLIGHTS: options.get(CONF_SPOTLIGHTS, {}),
+            DATA_BONUSES: options.get(CONF_BONUSES, {}),
             DATA_ACHIEVEMENTS: options.get(CONF_ACHIEVEMENTS, {}),
             DATA_CHALLENGES: options.get(CONF_CHALLENGES, {}),
         }
@@ -336,7 +336,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             DATA_BADGES,
             DATA_REWARDS,
             DATA_PENALTIES,
-            DATA_SPOTLIGHTS,
+            DATA_BONUSES,
             DATA_ACHIEVEMENTS,
             DATA_CHALLENGES,
         ]:
@@ -394,9 +394,9 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             self._update_challenge,
         )
 
-    def _initialize_spotlights(self, spotlights_dict: dict[str, Any]):
+    def _initialize_bonuss(self, bonuss_dict: dict[str, Any]):
         self._sync_entities(
-            DATA_SPOTLIGHTS, spotlights_dict, self._create_spotlight, self._update_spotlight
+            DATA_BONUSES, bonuss_dict, self._create_bonus, self._update_bonus
         )
 
     def _sync_entities(
@@ -1053,31 +1053,31 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             "Updated challenge '%s' with ID: %s", challenge_info["name"], challenge_id
         )
 
-    # -- Spotlights
-    def _create_spotlight(self, spotlight_id: str, spotlight_data: dict[str, Any]):
-        self._data[DATA_SPOTLIGHTS][spotlight_id] = {
-            "name": spotlight_data.get("name", ""),
-            "points": spotlight_data.get("points", DEFAULT_SPOTLIGHT_POINTS),
-            "description": spotlight_data.get("description", ""),
-            "icon": spotlight_data.get("icon", DEFAULT_SPOTLIGHT_ICON),
-            "internal_id": spotlight_id,
+    # -- Bonuss
+    def _create_bonus(self, bonus_id: str, bonus_data: dict[str, Any]):
+        self._data[DATA_BONUSES][bonus_id] = {
+            "name": bonus_data.get("name", ""),
+            "points": bonus_data.get("points", DEFAULT_BONUS_POINTS),
+            "description": bonus_data.get("description", ""),
+            "icon": bonus_data.get("icon", DEFAULT_BONUS_ICON),
+            "internal_id": bonus_id,
         }
         LOGGER.debug(
-            "Added new spotlight '%s' with ID: %s",
-            self._data[DATA_SPOTLIGHTS][spotlight_id]["name"],
-            spotlight_id,
+            "Added new bonus '%s' with ID: %s",
+            self._data[DATA_BONUSES][bonus_id]["name"],
+            bonus_id,
         )
 
-    def _update_spotlight(self, spotlight_id: str, spotlight_data: dict[str, Any]):
-        spotlight_info = self._data[DATA_SPOTLIGHTS][spotlight_id]
-        spotlight_info["name"] = spotlight_data.get("name", spotlight_info["name"])
-        spotlight_info["points"] = spotlight_data.get("points", spotlight_info["points"])
-        spotlight_info["description"] = spotlight_data.get(
-            "description", spotlight_info["description"]
+    def _update_bonus(self, bonus_id: str, bonus_data: dict[str, Any]):
+        bonus_info = self._data[DATA_BONUSES][bonus_id]
+        bonus_info["name"] = bonus_data.get("name", bonus_info["name"])
+        bonus_info["points"] = bonus_data.get("points", bonus_info["points"])
+        bonus_info["description"] = bonus_data.get(
+            "description", bonus_info["description"]
         )
-        spotlight_info["icon"] = spotlight_data.get("icon", spotlight_info["icon"])
+        bonus_info["icon"] = bonus_data.get("icon", bonus_info["icon"])
         LOGGER.debug(
-            "Updated spotlight '%s' with ID: %s", spotlight_info["name"], spotlight_id
+            "Updated bonus '%s' with ID: %s", bonus_info["name"], bonus_id
         )
 
     # -------------------------------------------------------------------------------------
@@ -1125,9 +1125,9 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         return self._data.get(DATA_CHALLENGES, {})
 
     @property
-    def spotlights_data(self) -> dict[str, Any]:
-        """Return the spotlights data."""
-        return self._data.get(DATA_SPOTLIGHTS, {})
+    def bonuss_data(self) -> dict[str, Any]:
+        """Return the bonuss data."""
+        return self._data.get(DATA_BONUSES, {})
 
     # -------------------------------------------------------------------------------------
     # Parents: Add, Remove
@@ -1969,36 +1969,36 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self.async_set_updated_data(self._data)
 
     # -------------------------------------------------------------------------
-    # Spotlights: Apply, Add
+    # Bonuss: Apply, Add
     # -------------------------------------------------------------------------
 
-    def apply_spotlight(self, parent_name: str, kid_id: str, spotlight_id: str):
-        """Apply spotlight => positive points to increase kid's points."""
-        spotlight = self.spotlights_data.get(spotlight_id)
-        if not spotlight:
-            raise HomeAssistantError(f"Spotlight with ID '{spotlight_id}' not found.")
+    def apply_bonus(self, parent_name: str, kid_id: str, bonus_id: str):
+        """Apply bonus => positive points to increase kid's points."""
+        bonus = self.bonuss_data.get(bonus_id)
+        if not bonus:
+            raise HomeAssistantError(f"Bonus with ID '{bonus_id}' not found.")
 
         kid_info = self.kids_data.get(kid_id)
         if not kid_info:
             raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
 
-        spotlight_pts = spotlight.get("points", 0)
-        new_points = float(kid_info["points"]) + spotlight_pts
+        bonus_pts = bonus.get("points", 0)
+        new_points = float(kid_info["points"]) + bonus_pts
         self.update_kid_points(kid_id, new_points)
 
-        # increment spotlight_applies
-        if spotlight_id in kid_info["spotlight_applies"]:
-            kid_info["spotlight_applies"][spotlight_id] += 1
+        # increment bonus_applies
+        if bonus_id in kid_info["bonus_applies"]:
+            kid_info["bonus_applies"][bonus_id] += 1
         else:
-            kid_info["spotlight_applies"][spotlight_id] = 1 
+            kid_info["bonus_applies"][bonus_id] = 1 
         
-        # Send a notification to the kid that a spotlight was applied
-        extra_data = {"kid_id": kid_id, "spotlight_id": spotlight_id}
+        # Send a notification to the kid that a bonus was applied
+        extra_data = {"kid_id": kid_id, "bonus_id": bonus_id}
         self.hass.async_create_task(
             self._notify_kid(
                 kid_id,
-                title="KidsChores: Spotlight Applied",
-                message=f"A '{spotlight['name']}' spotlight was applied. Your points changed by {spotlight_pts}.",
+                title="KidsChores: Bonus Applied",
+                message=f"A '{bonus['name']}' bonus was applied. Your points changed by {bonus_pts}.",
                 extra_data=extra_data,
             )
         )
@@ -2006,24 +2006,24 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self._persist()
         self.async_set_updated_data(self._data)
 
-    def add_spotlight(self, spotlight_def: dict[str, Any]):
-        """Add new spotlight at runtime if needed."""
-        spotlight_name = spotlight_def.get("name")
-        if not spotlight_name:
-            LOGGER.warning("Add spotlight: Spotlight must have a name")
+    def add_bonus(self, bonus_def: dict[str, Any]):
+        """Add new bonus at runtime if needed."""
+        bonus_name = bonus_def.get("name")
+        if not bonus_name:
+            LOGGER.warning("Add bonus: Bonus must have a name")
             return  
-        if any(s["name"] == spotlight_name for s in self.spotlights_data.values()):
-            LOGGER.warning("Add spotlight: Spotlight '%s' already exists", spotlight_name)
+        if any(s["name"] == bonus_name for s in self.bonuss_data.values()):
+            LOGGER.warning("Add bonus: Bonus '%s' already exists", bonus_name)
             return
         internal_id = str(uuid.uuid4())
-        self.spotlights_data[internal_id] = {
-            "name": spotlight_name,
-            "points": spotlight_def.get("points", DEFAULT_SPOTLIGHT_POINTS),
-            "description": spotlight_def.get("description", ""),
-            "icon": spotlight_def.get("icon", DEFAULT_SPOTLIGHT_ICON),
+        self.bonuss_data[internal_id] = {
+            "name": bonus_name,
+            "points": bonus_def.get("points", DEFAULT_BONUS_POINTS),
+            "description": bonus_def.get("description", ""),
+            "icon": bonus_def.get("icon", DEFAULT_BONUS_ICON),
             "internal_id": internal_id,
         }
-        LOGGER.debug("Added new spotlight '%s' with ID: %s", spotlight_name, internal_id)   
+        LOGGER.debug("Added new bonus '%s' with ID: %s", bonus_name, internal_id)   
         self._persist()
         self.async_set_updated_data(self._data)
         
