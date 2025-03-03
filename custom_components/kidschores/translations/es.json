@@ -137,24 +137,6 @@
           "icon": "Ícono (mdi:xxx)"
         }
       },
-      "bonus_count": {
-        "title": "Número de Bonificaciones",
-        "description": "¿Cuántas bonificaciones deseas definir?",
-        "data": {
-          "bonus_count": "Cantidad de Bonificaciones"
-        }
-      },
-      "bonuses": {
-        "title": "Definir Bonificación",
-        "description": "Introduce los datos de cada bonificación.",
-        "data": {
-          "bonus_name": "Nombre de la Bonificación",
-          "bonus_description": "Descripción (opcional)",
-          "internal_id": "ID Interno",
-          "bonus_points": "Puntos de bonificación (positivos)",
-          "icon": "Ícono (mdi:xxx)"
-        }
-      },
       "achievement_count": {
         "title": "Número de Logros",
         "description": "¿Cuántos logros deseas definir?",
@@ -216,7 +198,6 @@
       "duplicate_kid": "Ya existe un niño con este nombre",
       "duplicate_parent": "Ya existe un padre/madre con este nombre",
       "duplicate_penalty": "Ya existe una penalización con este nombre",
-      "duplicate_bonus": "Ya existe una bonificación con este nombre",
       "duplicate_reward": "Ya existe una recompensa con este nombre",
       "due_date_in_past": "La fecha de vencimiento debe estar en el futuro.",
       "end_date_in_past": "La fecha de fin debe estar en el futuro.",
@@ -244,9 +225,6 @@
       "invalid_reward_count": "Cantidad de recompensas no válida",
       "invalid_reward_name": "Nombre de recompensa no válido",
       "invalid_start_date": "Fecha de inicio no válida.",
-      "invalid_bonus": "Bonificación no válida",
-      "invalid_bonus_count": "Cantidad de bonificaciones no válida",
-      "invalid_bonus_name": "Nombre de bonificación no válido",
       "start_date_in_past": "La fecha de inicio debe estar en el futuro."
     },
     "abort": {
@@ -365,17 +343,6 @@
           "icon": "Ícono (mdi:xxx)"
         }
       },
-      "add_bonus": {
-        "title": "Añadir Bonificación",
-        "description": "Proporciona los datos de la nueva bonificación.",
-        "data": {
-          "bonus_name": "Nombre de la Bonificación",
-          "bonus_description": "Descripción (opcional)",
-          "internal_id": "ID Interno",
-          "bonus_points": "Puntos de bonificación (positivos)",
-          "icon": "Ícono (mdi:xxx)"
-        }
-      },
       "add_achievement": {
         "title": "Definir Logro",
         "description": "Introduce los datos de cada logro.",
@@ -491,17 +458,6 @@
           "icon": "Ícono (mdi:xxx)"
         }
       },
-      "edit_bonus": {
-        "title": "Editar Bonificación",
-        "description": "Modifica los datos de la bonificación seleccionada.",
-        "data": {
-          "bonus_name": "Nombre de la Bonificación",
-          "bonus_description": "Descripción (opcional)",
-          "internal_id": "ID Interno",
-          "bonus_points": "Puntos de bonificación (positivos)",
-          "icon": "Ícono (mdi:xxx)"
-        }
-      },
       "edit_achievement": {
         "title": "Definir Logro",
         "description": "Introduce los datos de cada logro.",
@@ -566,11 +522,6 @@
         "description": "¿Estás seguro de que deseas eliminar la penalización {penalty_name}?",
         "data": {}
       },
-      "delete_bonus": {
-        "title": "Eliminar Bonificación",
-        "description": "¿Estás seguro de que deseas eliminar la bonificación {bonus_name}?",
-        "data": {}
-      },
       "delete_achievement": {
         "title": "Eliminar Logro",
         "description": "¿Estás seguro de que deseas eliminar el logro {achievement_name}?",
@@ -591,7 +542,6 @@
       "duplicate_parent": "Ya existe un padre/madre con este nombre",
       "duplicate_penalty": "Ya existe una penalización con este nombre",
       "duplicate_reward": "Ya existe una recompensa con este nombre",
-      "duplicate_bonus": "Ya existe una bonificación con este nombre",
       "due_date_in_past": "La fecha de vencimiento debe estar en el futuro.",
       "end_date_in_past": "La fecha de fin debe estar en el futuro.",
       "end_date_not_after_start_date": "La fecha de fin debe ser posterior a la fecha de inicio.",
@@ -608,8 +558,6 @@
       "invalid_reward": "Recompensa no válida",
       "invalid_reward_count": "Cantidad de recompensas no válida",
       "invalid_start_date": "Fecha de inicio no válida.",
-      "invalid_bonus": "Bonificación no válida",
-      "invalid_bonus_count": "Cantidad de bonificaciones no válida",
       "start_date_in_past": "La fecha de inicio debe estar en el futuro."
     },
     "abort": {
@@ -623,7 +571,6 @@
       "invalid_parent": "Padre/Madre no válido",
       "invalid_penalty": "Penalización no válida",
       "invalid_reward": "Recompensa no válida",
-      "invalid_spotlight": "Spotlight no válido",
       "no_kid": "No hay niños configurados. Adiciona una entrada primero.",
       "no_parent": "No hay padres configurados. Adiciona una entrada primero.",
       "no_chore": "No hay tareas configuradas. Adiciona una entrada primero.",
@@ -632,7 +579,6 @@
       "no_penalty": "No hay penalizaciones configuradas. Adiciona una entrada primero.",
       "no_achievement": "No hay logros configurados. Adiciona una entrada primero.",
       "no_challenge": "No hay desafíos configurados. Adiciona una entrada primero.",
-      "no_bonus": "No hay bonificaciones configuradas. Adiciona una entrada primero.",
       "setup_complete": "Configuración Completa"
     }
   },
@@ -646,7 +592,6 @@
         "manage_badge": "Gestionar Insignia",
         "manage_reward": "Gestionar Recompensa",
         "manage_penalty": "Gestionar Penalización",
-        "manage_bonus": "Gestionar Bonificación",
         "manage_achievement": "Gestionar Logro",
         "manage_challenge": "Gestionar Reto",
         "done": "Finalizar Configuración"
@@ -831,27 +776,6 @@
           "name": "Nombre de la Penalización",
           "description": "El nombre de la penalización a aplicar.",
           "example": "Gritar"
-        }
-      }
-    },  
-    "apply_bonus": {
-      "name": "Aplicar Bonificación",
-      "description": "Un padre aplica una bonificación a un niño, otorgando puntos.",
-      "fields": {
-        "parent_name": {
-          "name": "Nombre del Padre/Madre",
-          "description": "El padre que aplica la bonificación.",
-          "example": "Mamá"
-        },
-        "kid_name": {
-          "name": "Nombre del Niño/a",
-          "description": "El niño que recibe la bonificación.",
-          "example": "Alice"
-        },
-        "bonus_name": {
-          "name": "Nombre de la Bonificación",
-          "description": "El nombre de la bonificación a aplicar.",
-          "example": "Ayuda Extra"
         }
       }
     },
@@ -1141,15 +1065,6 @@
           "penalty_points": { "name": "Puntos de Penalización" }
         }
       },
-      "bonus_sensor": {
-        "name": "{kid_name} - Bonificación - {bonus_name}",
-        "state_attributes": {
-          "kid_name": { "name": "Nombre del Niño/a" },
-          "bonus_name": { "name": "Nombre de la Bonificación" },
-          "description": { "name": "Descripción" },
-          "bonus_points": { "name": "Puntos de Bonificación" }
-        }
-      },
       "kid_points_earned_daily_sensor": {
         "name": "{kid_name} - Puntos Ganados - Diariamente"
       },
@@ -1270,9 +1185,6 @@
       },
       "penalty_button": {
         "name": "{kid_name} - Aplicar Penalización - {penalty_name}"
-      },
-      "bonus_button": {
-        "name": "{kid_name} - Aplicar Bonificación - {bonus_name}"
       },
       "manual_adjustment_button": {
         "name": "{kid_name} {sign_label} {points_label}"

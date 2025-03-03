@@ -81,8 +81,6 @@ from .const import (
     ATTR_REWARD_POINTS,
     ATTR_START_DATE,
     ATTR_SHARED_CHORE,
-    ATTR_BONUS_NAME,
-    ATTR_BONUS_POINTS,
     ATTR_TARGET_VALUE,
     ATTR_THRESHOLD_TYPE,
     ATTR_TYPE,
@@ -107,8 +105,6 @@ from .const import (
     DEFAULT_POINTS_LABEL,
     DEFAULT_REWARD_COST,
     DEFAULT_REWARD_ICON,
-    DEFAULT_BONUS_ICON,
-    DEFAULT_BONUS_POINTS,
     DEFAULT_STREAK_ICON,
     DEFAULT_TROPHY_ICON,
     DEFAULT_TROPHY_OUTLINE,
@@ -260,15 +256,6 @@ async def async_setup_entry(
             entities.append(
                 PenaltyAppliesSensor(
                     coordinator, entry, kid_id, kid_name, penalty_id, penalty_name
-                )
-            )
-
-        # Bonus Applies
-        for bonus_id, bonus_info in coordinator.bonuses_data.items():
-            bonus_name = bonus_info.get("name", f"Bonus {bonus_id}")
-            entities.append(
-                BonusAppliesSensor(
-                    coordinator, entry, kid_id, kid_name, bonus_id, bonus_name
                 )
             )
 
@@ -1980,49 +1967,3 @@ class ChoreStreakSensor(CoordinatorEntity, SensorEntity):
         """Return the chore's custom icon if set, else fallback."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
         return chore_info.get("icon", DEFAULT_CHORE_SENSOR_ICON)
-
-
-# ------------------------------------------------------------------------------------------
-class BonusAppliesSensor(CoordinatorEntity, SensorEntity):
-    """Sensor tracking how many times each bonus has been applied to a kid."""
-
-    _attr_has_entity_name = True
-    _attr_translation_key = "bonus_applies_sensor"
-
-    def __init__(self, coordinator, entry, kid_id, kid_name, bonus_id, bonus_name):
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._kid_id = kid_id
-        self._kid_name = kid_name
-        self._bonus_id = bonus_id
-        self._bonus_name = bonus_name
-        self._attr_unique_id = f"{entry.entry_id}_{kid_id}_{bonus_id}_bonus_applies"
-        self._attr_translation_placeholders = {
-            "kid_name": kid_name,
-            "bonus_name": bonus_name,
-        }
-        self.entity_id = f"sensor.kc_{kid_name}_bonuses_applied_{bonus_name}"
-
-    @property
-    def native_value(self):
-        """Return the number of times the bonus has been applied."""
-        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
-        return kid_info.get("bonus_applies", {}).get(self._bonus_id, 0)
-
-    @property
-    def extra_state_attributes(self):
-        """Expose additional details like bonus points and description."""
-        bonus_info = self.coordinator.bonuses_data.get(self._bonus_id, {})
-
-        return {
-            ATTR_KID_NAME: self._kid_name,
-            ATTR_BONUS_NAME: self._bonus_name,
-            ATTR_DESCRIPTION: bonus_info.get("description", ""),
-            ATTR_BONUS_POINTS: bonus_info.get("points", DEFAULT_BONUS_POINTS),
-        }
-
-    @property
-    def icon(self):
-        """Return the bonus's custom icon if set, else fallback."""
-        bonus_info = self.coordinator.bonuses_data.get(self._bonus_id, {})
-        return bonus_info.get("icon", DEFAULT_BONUS_ICON)
