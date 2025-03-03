@@ -12,7 +12,6 @@ from homeassistant.helpers import selector, config_validation as cv
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    ACHIEVEMENT_TYPE_DAILY_MIN,
     ACHIEVEMENT_TYPE_STREAK,
     ACHIEVEMENT_TYPE_TOTAL,
     CHALLENGE_TYPE_DAILY_MIN,
@@ -34,8 +33,6 @@ from .const import (
     DEFAULT_POINTS_LABEL,
     DEFAULT_POINTS_ICON,
     DOMAIN,
-    FREQUENCY_BIWEEKLY,
-    FREQUENCY_CUSTOM,
     FREQUENCY_DAILY,
     FREQUENCY_MONTHLY,
     FREQUENCY_NONE,
@@ -89,7 +86,7 @@ def build_kid_schema(
             vol.Required(
                 CONF_ENABLE_MOBILE_NOTIFICATIONS,
                 default=default_enable_mobile_notifications,
-            ): selector.BooleanSelector(),
+            ): bool,
             vol.Optional(
                 CONF_MOBILE_NOTIFY_SERVICE, default=default_mobile_notify_service or ""
             ): selector.SelectSelector(
@@ -102,7 +99,7 @@ def build_kid_schema(
             vol.Required(
                 CONF_ENABLE_PERSISTENT_NOTIFICATIONS,
                 default=default_enable_persistent_notifications,
-            ): selector.BooleanSelector(),
+            ): bool,
             vol.Required("internal_id", default=internal_id or str(uuid.uuid4())): str,
         }
     )
@@ -153,7 +150,7 @@ def build_parent_schema(
             vol.Required(
                 CONF_ENABLE_MOBILE_NOTIFICATIONS,
                 default=default_enable_mobile_notifications,
-            ): selector.BooleanSelector(),
+            ): bool,
             vol.Optional(
                 CONF_MOBILE_NOTIFY_SERVICE, default=default_mobile_notify_service or ""
             ): selector.SelectSelector(
@@ -166,7 +163,7 @@ def build_parent_schema(
             vol.Required(
                 CONF_ENABLE_PERSISTENT_NOTIFICATIONS,
                 default=default_enable_persistent_notifications,
-            ): selector.BooleanSelector(),
+            ): bool,
             vol.Required("internal_id", default=internal_id or str(uuid.uuid4())): str,
         }
     )
@@ -189,9 +186,6 @@ def build_chore_schema(kids_dict, default=None):
             vol.Optional(
                 "chore_description", default=default.get("description", "")
             ): str,
-            vol.Optional(
-                "chore_labels", default=default.get("chore_labels", [])
-            ): selector.LabelSelector(selector.LabelSelectorConfig(multiple=True)),
             vol.Required(
                 "default_points", default=default.get("default_points", 5)
             ): selector.NumberSelector(
@@ -206,14 +200,14 @@ def build_chore_schema(kids_dict, default=None):
             ): cv.multi_select(kid_choices),
             vol.Required(
                 "shared_chore", default=default.get("shared_chore", False)
-            ): selector.BooleanSelector(),
+            ): bool,
             vol.Required(
                 "allow_multiple_claims_per_day",
                 default=default.get("allow_multiple_claims_per_day", False),
-            ): selector.BooleanSelector(),
+            ): bool,
             vol.Required(
                 "partial_allowed", default=default.get("partial_allowed", False)
-            ): selector.BooleanSelector(),
+            ): bool,
             vol.Optional(
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
@@ -226,36 +220,10 @@ def build_chore_schema(kids_dict, default=None):
                         FREQUENCY_NONE,
                         FREQUENCY_DAILY,
                         FREQUENCY_WEEKLY,
-                        FREQUENCY_BIWEEKLY,
                         FREQUENCY_MONTHLY,
-                        FREQUENCY_CUSTOM,
                     ],
                     translation_key="recurring_frequency",
                 )
-            ),
-            vol.Optional(
-                "custom_interval", default=default.get("custom_interval", None)
-            ): vol.Any(
-                None,
-                selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        mode=selector.NumberSelectorMode.BOX, min=1, step=1
-                    )
-                ),
-            ),
-            vol.Optional(
-                "custom_interval_unit",
-                default=default.get("custom_interval_unit", None),
-            ): vol.Any(
-                None,
-                selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=["", "days", "weeks", "months"],
-                        translation_key="custom_interval_unit",
-                        multiple=False,
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                    )
-                ),
             ),
             vol.Optional(
                 CONF_APPLICABLE_DAYS,
@@ -276,19 +244,19 @@ def build_chore_schema(kids_dict, default=None):
             vol.Optional(
                 CONF_NOTIFY_ON_CLAIM,
                 default=default.get(CONF_NOTIFY_ON_CLAIM, DEFAULT_NOTIFY_ON_CLAIM),
-            ): selector.BooleanSelector(),
+            ): bool,
             vol.Optional(
                 CONF_NOTIFY_ON_APPROVAL,
                 default=default.get(
                     CONF_NOTIFY_ON_APPROVAL, DEFAULT_NOTIFY_ON_APPROVAL
                 ),
-            ): selector.BooleanSelector(),
+            ): bool,
             vol.Optional(
                 CONF_NOTIFY_ON_DISAPPROVAL,
                 default=default.get(
                     CONF_NOTIFY_ON_DISAPPROVAL, DEFAULT_NOTIFY_ON_DISAPPROVAL
                 ),
-            ): selector.BooleanSelector(),
+            ): bool,
             vol.Required("internal_id", default=internal_id_default): str,
         }
     )
@@ -309,9 +277,6 @@ def build_badge_schema(default=None):
             vol.Optional(
                 "badge_description", default=default.get("description", "")
             ): str,
-            vol.Optional(
-                "badge_labels", default=default.get("badge_labels", [])
-            ): selector.LabelSelector(selector.LabelSelectorConfig(multiple=True)),
             vol.Required(
                 "threshold_type",
                 default=default.get("threshold_type", "points"),
@@ -358,9 +323,6 @@ def build_reward_schema(default=None):
             vol.Optional(
                 "reward_description", default=default.get("description", "")
             ): str,
-            vol.Optional(
-                "reward_labels", default=default.get("reward_labels", [])
-            ): selector.LabelSelector(selector.LabelSelectorConfig(multiple=True)),
             vol.Required(
                 "reward_cost", default=default.get("cost", 10.0)
             ): selector.NumberSelector(
@@ -394,10 +356,9 @@ def build_achievement_schema(kids_dict, chores_dict, default=None):
         chore_options.append({"value": chore_id, "label": chore_name})
 
     default_selected_chore = default.get("selected_chore_id", "")
-    if not default_selected_chore or default_selected_chore not in [
-        option["value"] for option in chore_options
-    ]:
-        pass
+    available_values = [option["value"] for option in chore_options]
+    if default_selected_chore not in available_values:
+        default_selected_chore = ""
 
     default_criteria = default.get("criteria", "")
     default_assigned_kids = default.get("assigned_kids", [])
@@ -408,9 +369,6 @@ def build_achievement_schema(kids_dict, chores_dict, default=None):
         {
             vol.Required("name", default=achievement_name_default): str,
             vol.Optional("description", default=default.get("description", "")): str,
-            vol.Optional(
-                "achievement_labels", default=default.get("achievement_labels", [])
-            ): selector.LabelSelector(selector.LabelSelectorConfig(multiple=True)),
             vol.Optional(
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
@@ -430,10 +388,6 @@ def build_achievement_schema(kids_dict, chores_dict, default=None):
                     options=[
                         {"value": ACHIEVEMENT_TYPE_STREAK, "label": "Chore Streak"},
                         {"value": ACHIEVEMENT_TYPE_TOTAL, "label": "Chore Total"},
-                        {
-                            "value": ACHIEVEMENT_TYPE_DAILY_MIN,
-                            "label": "Daily Minimum Chores",
-                        },
                     ],
                     mode=selector.SelectSelectorMode.DROPDOWN,
                 )
@@ -502,9 +456,6 @@ def build_challenge_schema(kids_dict, chores_dict, default=None):
         {
             vol.Required("name", default=challenge_name_default): str,
             vol.Optional("description", default=default.get("description", "")): str,
-            vol.Optional(
-                "challenge_labels", default=default.get("challenge_labels", [])
-            ): selector.LabelSelector(selector.LabelSelectorConfig(multiple=True)),
             vol.Optional(
                 "icon", default=default.get("icon", "")
             ): selector.IconSelector(),
@@ -593,9 +544,6 @@ def build_penalty_schema(default=None):
             vol.Optional(
                 "penalty_description", default=default.get("description", "")
             ): str,
-            vol.Optional(
-                "penalty_labels", default=default.get("penalty_labels", [])
-            ): selector.LabelSelector(selector.LabelSelectorConfig(multiple=True)),
             vol.Required(
                 "penalty_points", default=display_points
             ): selector.NumberSelector(
@@ -631,9 +579,6 @@ def build_bonus_schema(default=None):
             vol.Optional(
                 "bonus_description", default=default.get("description", "")
             ): str,
-            vol.Optional(
-                "bonus_labels", default=default.get("bonus_labels", [])
-            ): selector.LabelSelector(selector.LabelSelectorConfig(multiple=True)),
             vol.Required(
                 "bonus_points", default=display_points
             ): selector.NumberSelector(

@@ -20,16 +20,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
-    ATTR_LABELS,
-    BUTTON_BONUS_PREFIX,
     BUTTON_DISAPPROVE_CHORE_PREFIX,
     BUTTON_DISAPPROVE_REWARD_PREFIX,
     BUTTON_PENALTY_PREFIX,
     BUTTON_REWARD_PREFIX,
+    BUTTON_BONUS_PREFIX,
     CONF_POINTS_LABEL,
     DATA_PENDING_CHORE_APPROVALS,
     DATA_PENDING_REWARD_APPROVALS,
-    DEFAULT_BONUS_ICON,
     DEFAULT_CHORE_APPROVE_ICON,
     DEFAULT_CHORE_CLAIM_ICON,
     DEFAULT_DISAPPROVE_ICON,
@@ -40,16 +38,13 @@ from .const import (
     DEFAULT_POINTS_ADJUST_PLUS_MULTIPLE_ICON,
     DEFAULT_POINTS_LABEL,
     DEFAULT_REWARD_ICON,
+    DEFAULT_BONUS_ICON,
     DOMAIN,
     ERROR_NOT_AUTHORIZED_ACTION_FMT,
     LOGGER,
 )
 from .coordinator import KidsChoresDataCoordinator
-from .kc_helpers import (
-    is_user_authorized_for_global_action,
-    is_user_authorized_for_kid,
-    get_friendly_label,
-)
+from .kc_helpers import is_user_authorized_for_global_action, is_user_authorized_for_kid
 
 
 async def async_setup_entry(
@@ -293,21 +288,6 @@ class ClaimChoreButton(CoordinatorEntity, ButtonEntity):
                 e,
             )
 
-    @property
-    def extra_state_attributes(self):
-        """Include extra state attributes for the button."""
-        chore_info = self.coordinator.chores_data.get(self._chore_id, {})
-        stored_labels = chore_info.get("chore_labels", [])
-        friendly_labels = [
-            get_friendly_label(self.hass, label) for label in stored_labels
-        ]
-
-        attributes = {
-            ATTR_LABELS: friendly_labels,
-        }
-
-        return attributes
-
 
 class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
     """Button to approve a claimed chore for a kid (set chore state=approved or partial)."""
@@ -381,21 +361,6 @@ class ApproveChoreButton(CoordinatorEntity, ButtonEntity):
                 self._kid_name,
                 e,
             )
-
-    @property
-    def extra_state_attributes(self):
-        """Include extra state attributes for the button."""
-        chore_info = self.coordinator.chores_data.get(self._chore_id, {})
-        stored_labels = chore_info.get("chore_labels", [])
-        friendly_labels = [
-            get_friendly_label(self.hass, label) for label in stored_labels
-        ]
-
-        attributes = {
-            ATTR_LABELS: friendly_labels,
-        }
-
-        return attributes
 
 
 class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
@@ -486,21 +451,6 @@ class DisapproveChoreButton(CoordinatorEntity, ButtonEntity):
                 e,
             )
 
-    @property
-    def extra_state_attributes(self):
-        """Include extra state attributes for the button."""
-        chore_info = self.coordinator.chores_data.get(self._chore_id, {})
-        stored_labels = chore_info.get("chore_labels", [])
-        friendly_labels = [
-            get_friendly_label(self.hass, label) for label in stored_labels
-        ]
-
-        attributes = {
-            ATTR_LABELS: friendly_labels,
-        }
-
-        return attributes
-
 
 # ------------------ Reward Buttons ------------------
 class RewardButton(CoordinatorEntity, ButtonEntity):
@@ -577,21 +527,6 @@ class RewardButton(CoordinatorEntity, ButtonEntity):
                 self._kid_name,
                 e,
             )
-
-    @property
-    def extra_state_attributes(self):
-        """Include extra state attributes for the button."""
-        reward_info = self.coordinator.rewards_data.get(self._reward_id, {})
-        stored_labels = reward_info.get("reward_labels", [])
-        friendly_labels = [
-            get_friendly_label(self.hass, label) for label in stored_labels
-        ]
-
-        attributes = {
-            ATTR_LABELS: friendly_labels,
-        }
-
-        return attributes
 
 
 class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
@@ -687,21 +622,6 @@ class ApproveRewardButton(CoordinatorEntity, ButtonEntity):
                     notification_id=f"approve_reward_unexpected_error_{self._reward_id}",
                 )
 
-    @property
-    def extra_state_attributes(self):
-        """Include extra state attributes for the button."""
-        reward_info = self.coordinator.rewards_data.get(self._reward_id, {})
-        stored_labels = reward_info.get("reward_labels", [])
-        friendly_labels = [
-            get_friendly_label(self.hass, label) for label in stored_labels
-        ]
-
-        attributes = {
-            ATTR_LABELS: friendly_labels,
-        }
-
-        return attributes
-
 
 class DisapproveRewardButton(CoordinatorEntity, ButtonEntity):
     """Button to disapprove a reward."""
@@ -791,21 +711,6 @@ class DisapproveRewardButton(CoordinatorEntity, ButtonEntity):
                 e,
             )
 
-    @property
-    def extra_state_attributes(self):
-        """Include extra state attributes for the button."""
-        reward_info = self.coordinator.rewards_data.get(self._reward_id, {})
-        stored_labels = reward_info.get("reward_labels", [])
-        friendly_labels = [
-            get_friendly_label(self.hass, label) for label in stored_labels
-        ]
-
-        attributes = {
-            ATTR_LABELS: friendly_labels,
-        }
-
-        return attributes
-
 
 # ------------------ Penalty Button ------------------
 class PenaltyButton(CoordinatorEntity, ButtonEntity):
@@ -886,21 +791,6 @@ class PenaltyButton(CoordinatorEntity, ButtonEntity):
                 self._kid_name,
                 e,
             )
-
-    @property
-    def extra_state_attributes(self):
-        """Include extra state attributes for the button."""
-        penalty_info = self.coordinator.penalties_data.get(self._penalty_id, {})
-        stored_labels = penalty_info.get("penalty_labels", [])
-        friendly_labels = [
-            get_friendly_label(self.hass, label) for label in stored_labels
-        ]
-
-        attributes = {
-            ATTR_LABELS: friendly_labels,
-        }
-
-        return attributes
 
 
 # ------------------ Points Adjust Button ------------------
@@ -1021,69 +911,10 @@ class BonusButton(CoordinatorEntity, ButtonEntity):
         self._kid_name = kid_name
         self._bonus_id = bonus_id
         self._bonus_name = bonus_name
-        self._attr_unique_id = (
-            f"{entry.entry_id}_{BUTTON_BONUS_PREFIX}{kid_id}_{bonus_id}"
-        )
+        self._attr_unique_id = f"{entry.entry_id}_{BUTTON_BONUS_PREFIX}{kid_id}_{bonus_id}"
         self._attr_icon = icon
         self._attr_translation_placeholders = {
             "kid_name": kid_name,
             "bonus_name": bonus_name,
         }
         self.entity_id = f"button.kc_{kid_name}_bonus_{bonus_name}"
-
-    async def async_press(self):
-        """Handle the button press event."""
-        try:
-            user_id = self._context.user_id if self._context else None
-            if user_id and not await is_user_authorized_for_global_action(
-                self.hass, user_id, "apply_bonus"
-            ):
-                raise HomeAssistantError(
-                    ERROR_NOT_AUTHORIZED_ACTION_FMT.format("apply bonus")
-                )
-
-            user_obj = await self.hass.auth.async_get_user(user_id) if user_id else None
-            parent_name = user_obj.name if user_obj else "Unknown"
-
-            self.coordinator.apply_bonus(
-                parent_name=parent_name,
-                kid_id=self._kid_id,
-                bonus_id=self._bonus_id,
-            )
-            LOGGER.info(
-                "Bonus '%s' applied to kid '%s' by '%s'",
-                self._bonus_name,
-                self._kid_name,
-                parent_name,
-            )
-            await self.coordinator.async_request_refresh()
-
-        except HomeAssistantError as e:
-            LOGGER.error(
-                "Authorization failed to apply bonus '%s' for kid '%s': %s",
-                self._bonus_name,
-                self._kid_name,
-                e,
-            )
-        except Exception as e:
-            LOGGER.error(
-                "Failed to apply bonus '%s' for kid '%s': %s",
-                self._bonus_name,
-                self._kid_name,
-                e,
-            )
-
-    @property
-    def extra_state_attributes(self):
-        """Include extra state attributes for the button."""
-        bonus_info = self.coordinator.bonuses_data.get(self._bonus_id, {})
-        stored_labels = bonus_info.get("bonus_labels", [])
-        friendly_labels = [
-            get_friendly_label(self.hass, label) for label in stored_labels
-        ]
-
-        attributes = {
-            ATTR_LABELS: friendly_labels,
-        }
-
-        return attributes
