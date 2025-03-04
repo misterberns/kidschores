@@ -977,6 +977,8 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
         LOGGER.debug("Updated chore '%s' with ID: %s", chore_info["name"], chore_id)
 
+        self._check_overdue_chores()
+
     # -- Badges
     def _create_badge(self, badge_id: str, badge_data: dict[str, Any]):
         self._data[DATA_BADGES][badge_id] = {
@@ -2724,7 +2726,22 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 due_date.isoformat(),
             )
             if now < due_date:
-                LOGGER.debug("Chore '%s' is not yet due", chore_id)
+                for kid_id in assigned_kids:
+                    kid_info = self.kids_data.get(kid_id, {})
+
+                    if chore_id in kid_info.get("overdue_chores", []):
+                        kid_info["overdue_chores"].remove(chore_id)
+
+                    if chore_id in kid_info.get("overdue_notifications", {}):
+                        kid_info["overdue_notifications"].pop(chore_id)
+
+                # Also, if the global state is overdue, set it back to pending
+                if chore_info.get("state") == CHORE_STATE_OVERDUE:
+                    chore_info["state"] = CHORE_STATE_PENDING
+                LOGGER.debug(
+                    "Chore '%s' is not yet due; cleared overdue flags", chore_id
+                )
+
                 continue
 
             # --- Shared chores ---
@@ -2821,7 +2838,8 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     kid_info.setdefault("overdue_notifications", {})
 
                     # Mark chore as overdue for this kid.
-                    kid_info["overdue_chores"].append(chore_id)
+                    if chore_id not in kid_info.get("overdue_chores", []):
+                        kid_info["overdue_chores"].append(chore_id)
 
                     # Check notification timestamp.
                     last_notif_str = kid_info["overdue_notifications"].get(chore_id)
@@ -3239,6 +3257,8 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     kid["claimed_chores"].remove(chore_id)
                 if chore_id in kid.get("approved_chores", []):
                     kid["approved_chores"].remove(chore_id)
+                if chore_id in kid.get("overdue_chores", []):
+                    kid["overdue_chores"].remove(chore_id)
 
         # Compute the next due date and update the chore options/config.
         self._reschedule_next_due_date(chore)

@@ -706,6 +706,7 @@ def async_setup_services(hass: HomeAssistant):
         coordinator.reset_overdue_chores(chore_id=chore_id, kid_id=kid_id)
         LOGGER.info("Reset overdue chores (chore_id=%s, kid_id=%s)", chore_id, kid_id)
         await coordinator.async_request_refresh()
+        await coordinator._check_overdue_chores()
 
     async def handle_set_chore_due_date(call: ServiceCall):
         """Handle setting (or clearing) the due date of a chore."""
@@ -791,6 +792,7 @@ def async_setup_services(hass: HomeAssistant):
         coordinator._persist()
         coordinator.async_set_updated_data(coordinator._data)
         await coordinator.async_request_refresh()
+        await coordinator._check_overdue_chores()
 
     async def handle_skip_chore_due_date(call: ServiceCall) -> None:
         """Handle skipping the due date on a chore by rescheduling it to the next due date."""
