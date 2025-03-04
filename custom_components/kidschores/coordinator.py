@@ -1748,8 +1748,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         # Update the chore's state.
         chore_info["state"] = new_state
 
-        # This needs reviewed because it is only being called for shared chores, but the logic in the compute function seems
-        # to apply to single and multiple assigned chores
         # For shared chores, recompute global state.
         if chore_info.get("shared_chore", False):
             new_global_state = self._compute_shared_chore_state(chore_id)
@@ -1766,40 +1764,90 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         if not chore_info:
             return CHORE_STATE_UNKNOWN
 
-        # Check due_date first—if passed, mark as overdue.
-        due_str = chore_info.get("due_date")
-        if due_str:
-            try:
-                due_date = dt_util.parse_datetime(due_str)
-                if not due_date:
-                    due_date = datetime.fromisoformat(due_str)
-                due_date = dt_util.as_utc(due_date)
-                if dt_util.utcnow() >= due_date:
-                    return CHORE_STATE_OVERDUE
-            except Exception as err:
-                LOGGER.warning(
-                    "Error parsing due_date '%s' for chore '%s': %s",
-                    due_str,
-                    chore_id,
-                    err,
-                )
-
         assigned_kids = chore_info.get("assigned_kids", [])
         if not assigned_kids:
             return CHORE_STATE_PENDING
 
-        # For a single kid, return that kid’s state.
-        if len(assigned_kids) == 1:
-            kid_id = assigned_kids[0]
-            kid_info = self.kids_data.get(kid_id, {})
-            if chore_id in kid_info.get("approved_chores", []):
-                return CHORE_STATE_APPROVED
-            elif chore_id in kid_info.get("claimed_chores", []):
-                return CHORE_STATE_CLAIMED
-            elif chore_id in kid_info.get("overdue_chores", []):
-                return CHORE_STATE_OVERDUE
-            else:
+        # For shared chores, use per–kid status first.
+        if chore_info.get("shared_chore", False):
+            count_pending = count_claimed = count_approved = count_overdue = 0
+            for kid_id in assigned_kids:
+                kid_info = self.kids_data.get(kid_id, {})
+                if chore_id in kid_info.get("overdue_chores", []):
+                    count_overdue += 1
+                elif chore_id in kid_info.get("approved_chores", []):
+                    count_approved += 1
+                elif chore_id in kid_info.get("claimed_chores", []):
+                    count_claimed += 1
+                else:
+                    count_pending += 1
+
+            total = len(assigned_kids)
+            # If no kid has acted on the chore, then check the due date.
+            if count_pending == total:
+                due_str = chore_info.get("due_date")
+                if due_str:
+                    try:
+                        due_date = dt_util.parse_datetime(due_str)
+                        if not due_date:
+                            due_date = datetime.fromisoformat(due_str)
+                        due_date = dt_util.as_utc(due_date)
+                        if dt_util.utcnow() >= due_date:
+                            return CHORE_STATE_OVERDUE
+                    except Exception as err:
+                        LOGGER.warning(
+                            "Error parsing due_date '%s' for chore '%s': %s",
+                            due_str,
+                            chore_id,
+                            err,
+                        )
                 return CHORE_STATE_PENDING
+
+            # Otherwise, compute a partial or complete state.
+            if count_approved > 0:
+                if count_approved == total:
+                    return CHORE_STATE_APPROVED
+                else:
+                    return CHORE_STATE_APPROVED_IN_PART
+            elif count_claimed > 0:
+                if count_claimed == total:
+                    return CHORE_STATE_CLAIMED
+                else:
+                    return CHORE_STATE_CLAIMED_IN_PART
+            else:
+                return CHORE_STATE_UNKNOWN
+
+        # For non-shared chores, check due date
+        else:
+            due_str = chore_info.get("due_date")
+            if due_str:
+                try:
+                    due_date = dt_util.parse_datetime(due_str)
+                    if not due_date:
+                        due_date = datetime.fromisoformat(due_str)
+                    due_date = dt_util.as_utc(due_date)
+                    if dt_util.utcnow() >= due_date:
+                        return CHORE_STATE_OVERDUE
+                except Exception as err:
+                    LOGGER.warning(
+                        "Error parsing due_date '%s' for chore '%s': %s",
+                        due_str,
+                        chore_id,
+                        err,
+                    )
+
+            # For a single kid, return that kid’s state.
+            if len(assigned_kids) == 1:
+                kid_id = assigned_kids[0]
+                kid_info = self.kids_data.get(kid_id, {})
+                if chore_id in kid_info.get("approved_chores", []):
+                    return CHORE_STATE_APPROVED
+                elif chore_id in kid_info.get("claimed_chores", []):
+                    return CHORE_STATE_CLAIMED
+                elif chore_id in kid_info.get("overdue_chores", []):
+                    return CHORE_STATE_OVERDUE
+                else:
+                    return CHORE_STATE_PENDING
 
         # For multiple kids:
         if not chore_info.get("shared_chore", False):
@@ -1821,38 +1869,21 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 return CHORE_STATE_INDEPENDENT
 
         # For shared chores, use the partial/complete rules.
-        count_pending = count_claimed = count_approved = count_overdue = 0
+        states = []
         for kid_id in assigned_kids:
             kid_info = self.kids_data.get(kid_id, {})
-            if chore_id in kid_info.get("overdue_chores", []):
-                count_overdue += 1
-            elif chore_id in kid_info.get("approved_chores", []):
-                count_approved += 1
+            if chore_id in kid_info.get("approved_chores", []):
+                states.append(CHORE_STATE_APPROVED)
             elif chore_id in kid_info.get("claimed_chores", []):
-                count_claimed += 1
+                states.append(CHORE_STATE_CLAIMED)
+            elif chore_id in kid_info.get("overdue_chores", []):
+                states.append(CHORE_STATE_OVERDUE)
             else:
-                count_pending += 1
-
-        total = len(assigned_kids)
-        if count_overdue > 0:
-            return CHORE_STATE_OVERDUE
-
-        if count_pending == total:
-            return CHORE_STATE_PENDING
-
-        if count_approved > 0:
-            if count_approved == total:
-                return CHORE_STATE_APPROVED
-            else:
-                return CHORE_STATE_APPROVED_IN_PART
-
-        elif count_claimed > 0:
-            if count_claimed == total:
-                return CHORE_STATE_CLAIMED
-            else:
-                return CHORE_STATE_CLAIMED_IN_PART
-
-        return CHORE_STATE_UNKNOWN
+                states.append(CHORE_STATE_PENDING)
+        if all(state == states[0] for state in states):
+            return states[0]
+        else:
+            return CHORE_STATE_INDEPENDENT
 
     # -------------------------------------------------------------------------------------
     # Kids: Update Points
