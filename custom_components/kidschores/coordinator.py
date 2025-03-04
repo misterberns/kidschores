@@ -1746,10 +1746,41 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             kid_info["overdue_notifications"][chore_id] = dt_util.utcnow().isoformat()
 
         # Update the chore's state.
-        chore_info["state"] = new_state
+        # Additional logic required for handling the global state of non shared chores assigned to multiple kids
+        assigned_kids = chore_info.get("assigned_kids", [])
 
-        # For shared chores, recompute global state.
-        if chore_info.get("shared_chore", False):
+        if chore_info.get("shared_chore", False) is False:
+            if len(assigned_kids) == 1:
+                # if only one kid is assigned to the chore, update the chore state to new state 1:1
+                chore_info["state"] = new_state
+            else:
+                # For non-shared assigned to multiple kids, you have to figure out if every other kid is in the same state
+                count_pending = count_claimed = count_approved = count_overdue = 0
+                for kid_id in assigned_kids:
+                    kid_info = self.kids_data.get(kid_id, {})
+                    if chore_id in kid_info.get("overdue_chores", []):
+                        count_overdue += 1
+                    elif chore_id in kid_info.get("approved_chores", []):
+                        count_approved += 1
+                    elif chore_id in kid_info.get("claimed_chores", []):
+                        count_claimed += 1
+                    else:
+                        count_pending += 1
+                total = len(assigned_kids)
+
+                # If all kids are in the same state, update the chore state to new state, otherwise use independent
+                if (
+                    count_pending == total
+                    or count_claimed == total
+                    or count_approved == total
+                    or count_overdue == total
+                ):
+                    chore_info["state"] = new_state
+                else:
+                    chore_info["state"] = CHORE_STATE_INDEPENDENT
+
+        else:
+            # For shared chores, recompute global state.
             new_global_state = self._compute_shared_chore_state(chore_id)
             chore_info["state"] = new_global_state
             LOGGER.debug(
@@ -2731,7 +2762,10 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
             due_str = chore_info.get("due_date")
             if not due_str:
-                LOGGER.debug("Chore '%s' has no due_date; skipping", chore_id)
+                LOGGER.debug(
+                    "Chore '%s' has no due_date; checking to confirm it isn't overdue; then skipping if not",
+                    chore_id,
+                )
                 # If it has no due date, but is overdue, it should be marked as pending
                 if chore_info.get("state") == CHORE_STATE_OVERDUE:
                     self._process_chore_state(kid_id, chore_id, CHORE_STATE_PENDING)
@@ -2785,11 +2819,14 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 due_date.isoformat(),
             )
             if now < due_date:
+                # Before resetting the state back to pending, check if it is currently overdue
                 for kid_id in assigned_kids:
-                    self._process_chore_state(kid_id, chore_id, CHORE_STATE_PENDING)
-                LOGGER.debug(
-                    "Chore '%s' is not yet due; cleared overdue flags", chore_id
-                )
+                    if chore_id in kid_info.get("overdue_chores", []):
+                        self._process_chore_state(kid_id, chore_id, CHORE_STATE_PENDING)
+                        LOGGER.debug(
+                            "Chore '%s' status is overdue but not yet due; cleared overdue flags",
+                            chore_id,
+                        )
 
                 continue
 
@@ -2882,13 +2919,8 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     ) or chore_id in kid_info.get("approved_chores", []):
                         continue
 
-                    # Ensure the kid has the new tracking fields.
-                    kid_info.setdefault("overdue_chores", [])
-                    kid_info.setdefault("overdue_notifications", {})
-
                     # Mark chore as overdue for this kid.
-                    if chore_id not in kid_info.get("overdue_chores", []):
-                        kid_info["overdue_chores"].append(chore_id)
+                    self._process_chore_state(kid_id, chore_id, CHORE_STATE_OVERDUE)
 
                     # Check notification timestamp.
                     last_notif_str = kid_info["overdue_notifications"].get(chore_id)
@@ -3377,7 +3409,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
             for cid, chore in self.chores_data.items():
                 if kid_id in chore.get("assigned_kids", []):
-                    if chore.get("state") == CHORE_STATE_OVERDUE:
+                    if cid in kid.get("overdue_chores", []):
                         # Reschedule chore
                         self._reschedule_next_due_date(chore)
                         # Change to Pending state
@@ -3385,13 +3417,14 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
         else:
             # Global reset: Reset all chores that are overdue.
-            for cid, chore in self.chores_data.items():
-                if chore.get("state") == CHORE_STATE_OVERDUE:
-                    # Reschedule chore
-                    self._reschedule_next_due_date(chore)
-                    # Change to Pending state
-                    for kid_id in chore.get("assigned_kids", []):
-                        self._process_chore_state(kid_id, cid, CHORE_STATE_PENDING)
+            for kid_id, kid in self.kids_data.items():
+                for cid, chore in self.chores_data.items():
+                    if kid_id in chore.get("assigned_kids", []):
+                        if cid in kid.get("overdue_chores", []):
+                            # Reschedule chore
+                            self._reschedule_next_due_date(chore)
+                            # Change to Pending state
+                            self._process_chore_state(kid_id, cid, CHORE_STATE_PENDING)
 
         self._persist()
         self.async_set_updated_data(self._data)

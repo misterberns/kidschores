@@ -446,7 +446,7 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
             ATTR_CHORE_CURRENT_STREAK: current_streak,
             ATTR_CHORE_HIGHEST_STREAK: highest_streak,
             ATTR_SHARED_CHORE: shared,
-            ATTR_GLOBAL_STATE: global_state if shared else self.native_value,
+            ATTR_GLOBAL_STATE: global_state,
             ATTR_RECURRING_FREQUENCY: chore_info.get("recurring_frequency", "None"),
             ATTR_APPLICABLE_DAYS: chore_info.get("applicable_days", []),
             ATTR_DUE_DATE: chore_info.get("due_date", DUE_DATE_NOT_SET),
