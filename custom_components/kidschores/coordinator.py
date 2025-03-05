@@ -1633,6 +1633,14 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self.async_set_updated_data(self._data)
         LOGGER.debug(f"Chore ID '{chore_id}' state manually updated to '{state}'")
 
+    # -------------------------------------------------------------------------------------
+    # Chore State Processing: Centralized Function
+    # The most critical thing to understand when working on this function is that chore_info["state"]
+    # is the actually the global state of the chore.  The individual chore state per kid is always calculated
+    # based on whether they have any claimed, approved, or overdue chores listed for them.
+    # Global state will only match if a single kid is assigned to the chore, or all kids assigned are in the same state.
+    # -------------------------------------------------------------------------------------
+
     def _process_chore_state(
         self,
         kid_id: str,
@@ -1745,62 +1753,16 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             kid_info.setdefault("overdue_notifications", {})
             kid_info["overdue_notifications"][chore_id] = dt_util.utcnow().isoformat()
 
-        # Update the chore's state.
-        # Additional logic required for handling the global state of non shared chores assigned to multiple kids
+        # Compute and update the chore's global state.
+        # Given the process above is handling everything properly for each kid, computing the global state straightforward.
+        # This process needs run every time a chore state changes, so it no longer warrants a separate function.
         assigned_kids = chore_info.get("assigned_kids", [])
 
-        if chore_info.get("shared_chore", False) is False:
-            if len(assigned_kids) == 1:
-                # if only one kid is assigned to the chore, update the chore state to new state 1:1
-                chore_info["state"] = new_state
-            else:
-                # For non-shared assigned to multiple kids, you have to figure out if every other kid is in the same state
-                count_pending = count_claimed = count_approved = count_overdue = 0
-                for kid_id in assigned_kids:
-                    kid_info = self.kids_data.get(kid_id, {})
-                    if chore_id in kid_info.get("overdue_chores", []):
-                        count_overdue += 1
-                    elif chore_id in kid_info.get("approved_chores", []):
-                        count_approved += 1
-                    elif chore_id in kid_info.get("claimed_chores", []):
-                        count_claimed += 1
-                    else:
-                        count_pending += 1
-                total = len(assigned_kids)
-
-                # If all kids are in the same state, update the chore state to new state, otherwise use independent
-                if (
-                    count_pending == total
-                    or count_claimed == total
-                    or count_approved == total
-                    or count_overdue == total
-                ):
-                    chore_info["state"] = new_state
-                else:
-                    chore_info["state"] = CHORE_STATE_INDEPENDENT
-
-        else:
-            # For shared chores, recompute global state.
-            new_global_state = self._compute_shared_chore_state(chore_id)
-            chore_info["state"] = new_global_state
-            LOGGER.debug(
-                "Shared chore '%s' global state recomputed as '%s'",
-                chore_id,
-                new_global_state,
-            )
-
-    def _compute_shared_chore_state(self, chore_id: str) -> str:
-        """Compute the global chore state based on each kid’s individual state."""
-        chore_info = self.chores_data.get(chore_id)
-        if not chore_info:
-            return CHORE_STATE_UNKNOWN
-
-        assigned_kids = chore_info.get("assigned_kids", [])
-        if not assigned_kids:
-            return CHORE_STATE_PENDING
-
-        # For shared chores, use per–kid status first.
-        if chore_info.get("shared_chore", False):
+        if len(assigned_kids) == 1:
+            # if only one kid is assigned to the chore, update the chore state to new state 1:1
+            chore_info["state"] = new_state
+        elif len(assigned_kids) > 1:
+            # For chores assigned to multiple kids, you have to figure out the global state
             count_pending = count_claimed = count_approved = count_overdue = 0
             for kid_id in assigned_kids:
                 kid_info = self.kids_data.get(kid_id, {})
@@ -1812,109 +1774,40 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     count_claimed += 1
                 else:
                     count_pending += 1
-
             total = len(assigned_kids)
-            # If no kid has acted on the chore, then check the due date.
-            if count_pending == total:
-                due_str = chore_info.get("due_date")
-                if due_str:
-                    try:
-                        due_date = dt_util.parse_datetime(due_str)
-                        if not due_date:
-                            due_date = datetime.fromisoformat(due_str)
-                        due_date = dt_util.as_utc(due_date)
-                        if dt_util.utcnow() >= due_date:
-                            return CHORE_STATE_OVERDUE
-                    except Exception as err:
-                        LOGGER.warning(
-                            "Error parsing due_date '%s' for chore '%s': %s",
-                            due_str,
-                            chore_id,
-                            err,
-                        )
-                return CHORE_STATE_PENDING
 
-            # Otherwise, compute a partial or complete state.
-            if count_approved > 0:
-                if count_approved == total:
-                    return CHORE_STATE_APPROVED
-                else:
-                    return CHORE_STATE_APPROVED_IN_PART
-            elif count_claimed > 0:
-                if count_claimed == total:
-                    return CHORE_STATE_CLAIMED
-                else:
-                    return CHORE_STATE_CLAIMED_IN_PART
-            else:
-                return CHORE_STATE_UNKNOWN
+            # If all kids are in the same state, update the chore state to new state 1:1
+            if (
+                count_pending == total
+                or count_claimed == total
+                or count_approved == total
+                or count_overdue == total
+            ):
+                chore_info["state"] = new_state
 
-        # For non-shared chores, check due date
+            # For shared chores, recompute global state of a partial if they aren't all in the same state as checked above
+            elif chore_info.get("shared_chore", False):
+                if count_overdue > 0:
+                    chore_info["state"] = CHORE_STATE_OVERDUE
+                elif count_approved > 0:
+                    chore_info["state"] = CHORE_STATE_APPROVED_IN_PART
+                elif count_claimed > 0:
+                    chore_info["state"] = CHORE_STATE_CLAIMED_IN_PART
+                else:
+                    chore_info["state"] = CHORE_STATE_UNKNOWN
+
+            # For non-shared chores multiple assign it will be independent if they aren't all in the same state as checked above.
+            elif chore_info.get("shared_chore", False) is False:
+                chore_info["state"] = CHORE_STATE_INDEPENDENT
+
         else:
-            due_str = chore_info.get("due_date")
-            if due_str:
-                try:
-                    due_date = dt_util.parse_datetime(due_str)
-                    if not due_date:
-                        due_date = datetime.fromisoformat(due_str)
-                    due_date = dt_util.as_utc(due_date)
-                    if dt_util.utcnow() >= due_date:
-                        return CHORE_STATE_OVERDUE
-                except Exception as err:
-                    LOGGER.warning(
-                        "Error parsing due_date '%s' for chore '%s': %s",
-                        due_str,
-                        chore_id,
-                        err,
-                    )
+            chore_info["state"] = CHORE_STATE_UNKNOWN
 
-            # For a single kid, return that kid’s state.
-            if len(assigned_kids) == 1:
-                kid_id = assigned_kids[0]
-                kid_info = self.kids_data.get(kid_id, {})
-                if chore_id in kid_info.get("approved_chores", []):
-                    return CHORE_STATE_APPROVED
-                elif chore_id in kid_info.get("claimed_chores", []):
-                    return CHORE_STATE_CLAIMED
-                elif chore_id in kid_info.get("overdue_chores", []):
-                    return CHORE_STATE_OVERDUE
-                else:
-                    return CHORE_STATE_PENDING
-
-        # For multiple kids:
-        if not chore_info.get("shared_chore", False):
-            # Independent scenario: if all kids share the same state, return it; otherwise, state is independent.
-            states = []
-            for kid_id in assigned_kids:
-                kid_info = self.kids_data.get(kid_id, {})
-                if chore_id in kid_info.get("approved_chores", []):
-                    states.append(CHORE_STATE_APPROVED)
-                elif chore_id in kid_info.get("claimed_chores", []):
-                    states.append(CHORE_STATE_CLAIMED)
-                elif chore_id in kid_info.get("overdue_chores", []):
-                    states.append(CHORE_STATE_OVERDUE)
-                else:
-                    states.append(CHORE_STATE_PENDING)
-            if all(state == states[0] for state in states):
-                return states[0]
-            else:
-                return CHORE_STATE_INDEPENDENT
-
-        # For shared chores, use the partial/complete rules.
-        states = []
-        for kid_id in assigned_kids:
-            kid_info = self.kids_data.get(kid_id, {})
-            if chore_id in kid_info.get("approved_chores", []):
-                states.append(CHORE_STATE_APPROVED)
-            elif chore_id in kid_info.get("claimed_chores", []):
-                states.append(CHORE_STATE_CLAIMED)
-            elif chore_id in kid_info.get("overdue_chores", []):
-                states.append(CHORE_STATE_OVERDUE)
-            else:
-                states.append(CHORE_STATE_PENDING)
-        if all(state == states[0] for state in states):
-            return states[0]
-        else:
-            return CHORE_STATE_INDEPENDENT
+        LOGGER.debug(
+            "Chore '%s' global state computed as '%s'",
+            chore_id,
+            chore_info["state"],
+        )
 
     # -------------------------------------------------------------------------------------
     # Kids: Update Points
@@ -2713,12 +2606,20 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
         for chore_id, chore_info in self.chores_data.items():
             LOGGER.debug(
-                "Checking chore '%s' (state=%s)", chore_id, chore_info.get("state")
+                "Checking chore '%s' id '%s' (state=%s)",
+                chore_info.get("name"),
+                chore_id,
+                chore_info.get("state"),
             )
 
             # Get the list of assigned kids
             assigned_kids = chore_info.get("assigned_kids", [])
-            LOGGER.debug("Chore '%s' assigned to kids: %s", chore_id, assigned_kids)
+            LOGGER.debug(
+                "Chore '%s' id '%s' assigned to kids: %s",
+                chore_info.get("name"),
+                chore_id,
+                assigned_kids,
+            )
 
             # Check if all assigned kids have either claimed or approved the chore
             all_kids_claimed_or_approved = all(
@@ -2754,11 +2655,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     chore_id,
                 )
                 continue
-
-            # Only process chores that are pending
-            # if chore_info.get("state") != CHORE_STATE_PENDING:
-            #    LOGGER.debug("Skipping chore '%s': state is not pending", chore_id)
-            #    continue
 
             due_str = chore_info.get("due_date")
             if not due_str:
@@ -2819,7 +2715,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 due_date.isoformat(),
             )
             if now < due_date:
-                # Before resetting the state back to pending, check if it is currently overdue
+                # Not past due date, but before resetting the state back to pending, check if global state is currently overdue
                 for kid_id in assigned_kids:
                     if chore_id in kid_info.get("overdue_chores", []):
                         self._process_chore_state(kid_id, chore_id, CHORE_STATE_PENDING)
@@ -2830,45 +2726,53 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
                 continue
 
-            # --- Shared chores ---
-            if chore_info.get("shared_chore", False):
-                assigned_kids = chore_info.get("assigned_kids", [])
-                if any(
-                    chore_id in self.kids_data.get(kid_id, {}).get("claimed_chores", [])
-                    or chore_id
-                    in self.kids_data.get(kid_id, {}).get("approved_chores", [])
-                    for kid_id in assigned_kids
-                ):
-                    LOGGER.debug(
-                        "Shared chore '%s' has been acted upon; skipping overdue mark",
-                        chore_id,
-                    )
+            # Handling for overdue is the same for shared and non-shared chores
+            # Status and global status will be determined by the chore state processor
+            assigned_kids = chore_info.get("assigned_kids", [])
+            for kid_id in assigned_kids:
+                kid_info = self.kids_data.get(kid_id, {})
+
+                # Skip if kid already claimed/approved on the chore.
+                if chore_id in kid_info.get(
+                    "claimed_chores", []
+                ) or chore_id in kid_info.get("approved_chores", []):
                     continue
 
-                # Check global notification timestamp
-                last_notif = chore_info.get("last_overdue_notification")
-                if last_notif:
+                # Mark chore as overdue for this kid.
+                self._process_chore_state(kid_id, chore_id, CHORE_STATE_OVERDUE)
+
+                # Check notification timestamp.
+                last_notif_str = kid_info["overdue_notifications"].get(chore_id)
+                notify = False
+                if last_notif_str:
                     try:
-                        last_dt = dt_util.parse_datetime(last_notif)
-                        if last_dt and (now - last_dt) < timedelta(hours=24):
+                        last_dt = dt_util.parse_datetime(last_notif_str)
+                        if (
+                            (not last_dt)
+                            or (last_dt < due_date)
+                            or ((now - last_dt) >= timedelta(hours=24))
+                        ):
+                            notify = True
+                        else:
                             LOGGER.debug(
-                                "Shared chore '%s' was already notified within 24 hours",
+                                "Chore '%s' for kid '%s' already notified within 24 hours",
                                 chore_id,
+                                kid_id,
                             )
-                            continue
                     except Exception as err:
                         LOGGER.error(
-                            "Error parsing last_overdue_notification '%s' for chore '%s': %s",
-                            last_notif,
+                            "Error parsing overdue notification '%s' for chore '%s', kid '%s': %s",
+                            last_notif_str,
                             chore_id,
+                            kid_id,
                             err,
                         )
+                        notify = True
+                else:
+                    notify = True
 
-                # Mark overdue globally and notify all kids/parents.
-                chore_info["state"] = CHORE_STATE_OVERDUE
-                chore_info["last_overdue_notification"] = now.isoformat()
-                LOGGER.info("Shared chore '%s' marked as OVERDUE", chore_id)
-                for kid_id in assigned_kids:
+                if notify:
+                    kid_info["overdue_notifications"][chore_id] = now.isoformat()
                     extra_data = {"kid_id": kid_id, "chore_id": chore_id}
                     actions = [
                         {
@@ -2885,15 +2789,15 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                         },
                     ]
                     LOGGER.debug(
-                        "Notifying kid '%s' for shared overdue chore '%s'",
-                        kid_id,
+                        "Sending overdue notification for chore '%s' to kid '%s'",
                         chore_id,
+                        kid_id,
                     )
                     self.hass.async_create_task(
                         self._notify_kid(
                             kid_id,
                             title="KidsChores: Chore Overdue",
-                            message=f"Your shared chore '{chore_info.get('name', 'Unnamed Chore')}' is overdue.",
+                            message=f"Your chore '{chore_info.get('name', 'Unnamed Chore')}' is overdue",
                             extra_data=extra_data,
                         )
                     )
@@ -2901,96 +2805,11 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                         self._notify_parents(
                             kid_id,
                             title="KidsChores: Chore Overdue",
-                            message=f"{self._get_kid_name_by_id(kid_id)}'s shared chore '{chore_info.get('name', 'Unnamed Chore')}' is overdue.",
+                            message=f"{self._get_kid_name_by_id(kid_id)}'s chore '{chore_info.get('name', 'Unnamed Chore')}' is overdue",
                             actions=actions,
                             extra_data=extra_data,
                         )
                     )
-
-            # --- Non-shared chores ---
-            else:
-                assigned_kids = chore_info.get("assigned_kids", [])
-                for kid_id in assigned_kids:
-                    kid_info = self.kids_data.get(kid_id, {})
-
-                    # Skip if kid already claimed/approved on the chore.
-                    if chore_id in kid_info.get(
-                        "claimed_chores", []
-                    ) or chore_id in kid_info.get("approved_chores", []):
-                        continue
-
-                    # Mark chore as overdue for this kid.
-                    self._process_chore_state(kid_id, chore_id, CHORE_STATE_OVERDUE)
-
-                    # Check notification timestamp.
-                    last_notif_str = kid_info["overdue_notifications"].get(chore_id)
-                    notify = False
-                    if last_notif_str:
-                        try:
-                            last_dt = dt_util.parse_datetime(last_notif_str)
-                            if (
-                                (not last_dt)
-                                or (last_dt < due_date)
-                                or ((now - last_dt) >= timedelta(hours=24))
-                            ):
-                                notify = True
-                            else:
-                                LOGGER.debug(
-                                    "Non-shared chore '%s' for kid '%s' already notified within 24 hours",
-                                    chore_id,
-                                    kid_id,
-                                )
-                        except Exception as err:
-                            LOGGER.error(
-                                "Error parsing overdue notification '%s' for chore '%s', kid '%s': %s",
-                                last_notif_str,
-                                chore_id,
-                                kid_id,
-                                err,
-                            )
-                            notify = True
-                    else:
-                        notify = True
-
-                    if notify:
-                        kid_info["overdue_notifications"][chore_id] = now.isoformat()
-                        extra_data = {"kid_id": kid_id, "chore_id": chore_id}
-                        actions = [
-                            {
-                                "action": f"{ACTION_APPROVE_CHORE}|{kid_id}|{chore_id}",
-                                "title": ACTION_TITLE_APPROVE,
-                            },
-                            {
-                                "action": f"{ACTION_DISAPPROVE_CHORE}|{kid_id}|{chore_id}",
-                                "title": ACTION_TITLE_DISAPPROVE,
-                            },
-                            {
-                                "action": f"{ACTION_REMIND_30}|{kid_id}|{chore_id}",
-                                "title": ACTION_TITLE_REMIND_30,
-                            },
-                        ]
-                        LOGGER.debug(
-                            "Sending overdue notification for chore '%s' to kid '%s'",
-                            chore_id,
-                            kid_id,
-                        )
-                        self.hass.async_create_task(
-                            self._notify_kid(
-                                kid_id,
-                                title="KidsChores: Chore Overdue",
-                                message=f"Your chore '{chore_info.get('name', 'Unnamed Chore')}' is overdue",
-                                extra_data=extra_data,
-                            )
-                        )
-                        self.hass.async_create_task(
-                            self._notify_parents(
-                                kid_id,
-                                title="KidsChores: Chore Overdue",
-                                message=f"{self._get_kid_name_by_id(kid_id)}'s chore '{chore_info.get('name', 'Unnamed Chore')}' is overdue",
-                                actions=actions,
-                                extra_data=extra_data,
-                            )
-                        )
         LOGGER.debug("Overdue check completed")
 
     async def _reset_all_chore_counts(self, now: datetime):
@@ -3076,23 +2895,11 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     "Rescheduled recurring chore '%s'", chore_info.get("name", chore_id)
                 )
 
-                # Reset the chore's state to pending
-                chore_info["state"] = CHORE_STATE_PENDING
-
-                # Remove the chore from each kid's approved/claimed lists:
+                # Reset the chore's state for each kid to pending using central processor
                 for kid_id in chore_info.get("assigned_kids", []):
-                    kid = self.kids_data.get(kid_id)
-                    if kid:
-                        kid["approved_chores"] = [
-                            item
-                            for item in kid.get("approved_chores", [])
-                            if item != chore_id
-                        ]
-                        kid["claimed_chores"] = [
-                            item
-                            for item in kid.get("claimed_chores", [])
-                            if item != chore_id
-                        ]
+                    if kid_id:
+                        self._process_chore_state(kid_id, chore_id, CHORE_STATE_PENDING)
+
         self._persist()
         self.async_set_updated_data(self._data)
         LOGGER.debug("Daily rescheduling of recurring chores complete")
@@ -3128,26 +2935,17 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     CHORE_STATE_OVERDUE,
                 ]:
                     previous_state = chore_info["state"]
-                    chore_info["state"] = CHORE_STATE_PENDING
+                    for kid_id in chore.get("assigned_kids", []):
+                        if kid_id:
+                            self._process_chore_state(
+                                kid_id, chore_id, CHORE_STATE_PENDING
+                            )
                     LOGGER.debug(
                         "Resetting chore '%s' from '%s' to '%s'",
                         chore_id,
                         previous_state,
                         CHORE_STATE_PENDING,
                     )
-
-                    # Remove the chore from each kid's approved and claimed lists.
-                    for kid_info in self.kids_data.values():
-                        kid_info["approved_chores"] = [
-                            item
-                            for item in kid_info.get("approved_chores", [])
-                            if item != chore_id
-                        ]
-                        kid_info["claimed_chores"] = [
-                            item
-                            for item in kid_info.get("claimed_chores", [])
-                            if item != chore_id
-                        ]
 
         # clear pending chore approvals
         target_chore_ids = [
