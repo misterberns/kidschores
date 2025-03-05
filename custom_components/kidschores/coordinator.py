@@ -2935,7 +2935,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     CHORE_STATE_OVERDUE,
                 ]:
                     previous_state = chore_info["state"]
-                    for kid_id in chore.get("assigned_kids", []):
+                    for kid_id in chore_info.get("assigned_kids", []):
                         if kid_id:
                             self._process_chore_state(
                                 kid_id, chore_id, CHORE_STATE_PENDING
