@@ -1019,7 +1019,8 @@
               "unknown": "Desconocida",
               "none": "Ninguna",
               "approved_in_part": "Aprobada (parcialmente)",
-              "claimed_in_part": "Reclamada (parcialmente)"
+              "claimed_in_part": "Reclamada (parcialmente)",
+              "independent": "Independiente"
             }
           },
           "partial_allowed": {
@@ -1126,7 +1127,8 @@
           "unknown": "Desconocida",
           "none": "Ninguna",
           "approved_in_part": "Aprobada (parcialmente)",
-          "claimed_in_part": "Reclamada (parcialmente)"
+          "claimed_in_part": "Reclamada (parcialmente)",
+          "independent": "Independiente"
         },
         "state_attributes": {
           "chore_name": { "name": "Nombre de la Tarea" },
@@ -1239,7 +1241,14 @@
           "achievement_name": { "name": "Nombre del Logro" },
           "description": { "name": "Descripción" },
           "assigned_kids": { "name": "Niños Asignados" },
-          "type": { "name": "Tipo" },
+          "type": {
+            "name": "Tipo",
+            "state": {
+              "chore_total": "Tareas Totales",
+              "chore_streak": "Racha Tareas",
+              "daily_minimum": "Mínimo Diario"
+            }
+          },
           "associated_chore": { "name": "Tarea Asociada" },
           "critera": { "name": "Criterios" },
           "target_value": { "name": "Objetivo" },
@@ -1255,7 +1264,13 @@
           "challenge_type": { "name": "Tipo de Desafío" },
           "description": { "name": "Descripción" },
           "assigned_kids": { "name": "Niños Asignados" },
-          "type": { "name": "Tipo" },
+          "type": {
+            "name": "Tipo",
+            "state": {
+              "total_within_window": "Total en Periodo",
+              "daily_minimum": "Minimo Diario"
+            }
+          },
           "associated_chore": { "name": "Tarea Asociada" },
           "critera": { "name": "Criterios" },
           "target_value": { "name": "Objetivo" },

@@ -1707,10 +1707,9 @@ class ChallengeSensor(CoordinatorEntity, SensorEntity):
 
         return {
             ATTR_CHALLENGE_NAME: self._challenge_name,
-            ATTR_CHALLENGE_TYPE: challenge_type,
             ATTR_DESCRIPTION: challenge.get("description", ""),
             ATTR_ASSIGNED_KIDS: assigned_kids_names,
-            ATTR_TYPE: challenge.get("type"),
+            ATTR_TYPE: challenge_type,
             ATTR_ASSOCIATED_CHORE: associated_chore,
             ATTR_CRITERIA: challenge.get("criteria", ""),
             ATTR_TARGET_VALUE: challenge.get("target_value"),

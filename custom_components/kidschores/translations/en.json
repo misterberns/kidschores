@@ -1020,7 +1020,8 @@
               "unknown": "Unknown",
               "none": "None",
               "approved_in_part": "Approved (in-part)",
-              "claimed_in_part": "Claimed (in-part)"
+              "claimed_in_part": "Claimed (in-part)",
+              "independent": "Independent"
             }
           },
           "partial_allowed": {
@@ -1127,7 +1128,8 @@
           "unknown": "Unknown",
           "none": "None",
           "approved_in_part": "Approved (in-part)",
-          "claimed_in_part": "Claimed (in-part)"
+          "claimed_in_part": "Claimed (in-part)",
+          "independent": "Independent"
         },
         "state_attributes": {
           "chore_name": { "name": "Chore Name" },
@@ -1236,7 +1238,14 @@
           "achievement_name": { "name": "Achievement Name" },
           "description": { "name": "Description" },
           "assigned_kids": { "name": "Assigned Kids" },
-          "type": { "name": "Type" },
+          "type": {
+            "name": "Type",
+            "state": {
+              "chore_total": "Chore Total",
+              "chore_streak": "Chore Streak",
+              "daily_minimum": "Daily Minimum"
+            }
+          },
           "associated_chore": { "name": "Associated Chore" },
           "critera": { "name": "Criteria" },
           "target_value": { "name": "Target" },
@@ -1252,7 +1261,13 @@
           "challenge_type": { "name": "Challenge Type" },
           "description": { "name": "Description" },
           "assigned_kids": { "name": "Assigned Kids" },
-          "type": { "name": "Type" },
+          "type": {
+            "name": "Type",
+            "state": {
+              "total_within_window": "Total Within Window",
+              "daily_minimum": "Daily Minimum"
+            }
+          },
           "associated_chore": { "name": "Associated Chore" },
           "critera": { "name": "Criteria" },
           "target_value": { "name": "Target" },
