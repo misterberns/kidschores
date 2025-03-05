@@ -2895,23 +2895,11 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     "Rescheduled recurring chore '%s'", chore_info.get("name", chore_id)
                 )
 
-                # Reset the chore's state to pending
-                chore_info["state"] = CHORE_STATE_PENDING
-
-                # Remove the chore from each kid's approved/claimed lists:
+                # Reset the chore's state for each kid to pending using central processor
                 for kid_id in chore_info.get("assigned_kids", []):
-                    kid = self.kids_data.get(kid_id)
-                    if kid:
-                        kid["approved_chores"] = [
-                            item
-                            for item in kid.get("approved_chores", [])
-                            if item != chore_id
-                        ]
-                        kid["claimed_chores"] = [
-                            item
-                            for item in kid.get("claimed_chores", [])
-                            if item != chore_id
-                        ]
+                    if kid_id:
+                        self._process_chore_state(kid_id, chore_id, CHORE_STATE_PENDING)
+
         self._persist()
         self.async_set_updated_data(self._data)
         LOGGER.debug("Daily rescheduling of recurring chores complete")
@@ -2947,26 +2935,17 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     CHORE_STATE_OVERDUE,
                 ]:
                     previous_state = chore_info["state"]
-                    chore_info["state"] = CHORE_STATE_PENDING
+                    for kid_id in chore.get("assigned_kids", []):
+                        if kid_id:
+                            self._process_chore_state(
+                                kid_id, chore_id, CHORE_STATE_PENDING
+                            )
                     LOGGER.debug(
                         "Resetting chore '%s' from '%s' to '%s'",
                         chore_id,
                         previous_state,
                         CHORE_STATE_PENDING,
                     )
-
-                    # Remove the chore from each kid's approved and claimed lists.
-                    for kid_info in self.kids_data.values():
-                        kid_info["approved_chores"] = [
-                            item
-                            for item in kid_info.get("approved_chores", [])
-                            if item != chore_id
-                        ]
-                        kid_info["claimed_chores"] = [
-                            item
-                            for item in kid_info.get("claimed_chores", [])
-                            if item != chore_id
-                        ]
 
         # clear pending chore approvals
         target_chore_ids = [
