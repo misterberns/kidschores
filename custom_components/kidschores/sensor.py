@@ -395,20 +395,16 @@ class ChoreStatusSensor(CoordinatorEntity, SensorEntity):
         """Return the chore's state based on shared or individual tracking."""
         chore_info = self.coordinator.chores_data.get(self._chore_id, {})
 
-        if chore_info.get("shared_chore", False):
-            return chore_info.get("state", CHORE_STATE_UNKNOWN)
-
+        kid_info = self.coordinator.kids_data.get(self._kid_id, {})
+        # The status of the kids chore should always be their own status, it's only global status that would show independent or in-part
+        if self._chore_id in kid_info.get("approved_chores", []):
+            return CHORE_STATE_APPROVED
+        elif self._chore_id in kid_info.get("claimed_chores", []):
+            return CHORE_STATE_CLAIMED
+        elif self._chore_id in kid_info.get("overdue_chores", []):
+            return CHORE_STATE_OVERDUE
         else:
-            kid_info = self.coordinator.kids_data.get(self._kid_id, {})
-            # If the chore is marked overdue for this kid, return overdue.
-            if self._chore_id in kid_info.get("approved_chores", []):
-                return CHORE_STATE_APPROVED
-            elif self._chore_id in kid_info.get("claimed_chores", []):
-                return CHORE_STATE_CLAIMED
-            elif self._chore_id in kid_info.get("overdue_chores", []):
-                return CHORE_STATE_OVERDUE
-            else:
-                return CHORE_STATE_PENDING
+            return CHORE_STATE_PENDING
 
     @property
     def extra_state_attributes(self):
