@@ -483,7 +483,7 @@ def build_challenge_schema(kids_dict, chores_dict, default=None):
         {"value": kid_id, "label": kid_name} for kid_name, kid_id in kids_dict.items()
     ]
 
-    chore_options = [{"value": "", "label": "None"}]
+    chore_options = [{"value": "", "label": ""}]
     for chore_id, chore_data in chores_dict.items():
         chore_name = chore_data.get("name", f"Chore {chore_id[:6]}")
         chore_options.append({"value": chore_id, "label": chore_name})

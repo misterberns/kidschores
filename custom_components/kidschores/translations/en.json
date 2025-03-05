@@ -1258,7 +1258,6 @@
         "name": "Challenge - {challenge_name}",
         "state_attributes": {
           "challenge_name": { "name": "Challenge Name" },
-          "challenge_type": { "name": "Challenge Type" },
           "description": { "name": "Description" },
           "assigned_kids": { "name": "Assigned Kids" },
           "type": {
@@ -1284,7 +1283,14 @@
           "achievement_name": { "name": "Achievement Name" },
           "description": { "name": "Description" },
           "assigned_kids": { "name": "Assigned Kids" },
-          "type": { "name": "Type" },
+          "type": {
+            "name": "Type",
+            "state": {
+              "chore_total": "Chore Total",
+              "chore_streak": "Chore Streak",
+              "daily_minimum": "Daily Minimum"
+            }
+          },
           "associated_chore": { "name": "Associated Chore" },
           "critera": { "name": "Criteria" },
           "target_value": { "name": "Target" },
@@ -1304,10 +1310,15 @@
         "name": "{kid_name} - Progress - {challenge_name}",
         "state_attributes": {
           "challenge_name": { "name": "Challenge Name" },
-          "challenge_type": { "name": "Challenge Type" },
           "description": { "name": "Description" },
           "assigned_kids": { "name": "Assigned Kids" },
-          "type": { "name": "Type" },
+          "type": {
+            "name": "Type",
+            "state": {
+              "total_within_window": "Total Within Window",
+              "daily_minimum": "Daily Minimum"
+            }
+          },
           "associated_chore": { "name": "Associated Chore" },
           "critera": { "name": "Criteria" },
           "target_value": { "name": "Target" },

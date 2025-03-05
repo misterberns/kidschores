@@ -1292,6 +1292,61 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
 
         challenge_data = challenges_dict[internal_id]
 
+        if user_input is None:
+            kids_dict = {
+                data["name"]: kid_id
+                for kid_id, data in self._entry_options.get(CONF_KIDS, {}).items()
+            }
+            chores_dict = self._entry_options.get(CONF_CHORES, {})
+            # Convert stored start/end dates to a display format (e.g. local time string)
+            default_data = {
+                **challenge_data,
+                "start_date": challenge_data.get("start_date")
+                and dt_util.as_local(
+                    dt_util.parse_datetime(challenge_data["start_date"])
+                ).strftime("%Y-%m-%d %H:%M:%S"),
+                "end_date": challenge_data.get("end_date")
+                and dt_util.as_local(
+                    dt_util.parse_datetime(challenge_data["end_date"])
+                ).strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            schema = build_challenge_schema(
+                kids_dict=kids_dict, chores_dict=chores_dict, default=default_data
+            )
+            return self.async_show_form(
+                step_id="edit_challenge", data_schema=schema, errors=errors
+            )
+
+        start_date_input = user_input.get("start_date")
+        if start_date_input:
+            try:
+                new_start_date = ensure_utc_datetime(self.hass, start_date_input)
+                start_dt = dt_util.parse_datetime(new_start_date)
+                if start_dt and start_dt < dt_util.utcnow():
+                    errors["start_date"] = "start_date_in_past"
+            except Exception:
+                errors["start_date"] = "invalid_start_date"
+                new_start_date = None
+        else:
+            new_start_date = None
+
+        end_date_input = user_input.get("end_date")
+        if end_date_input:
+            try:
+                new_end_date = ensure_utc_datetime(self.hass, end_date_input)
+                end_dt = dt_util.parse_datetime(new_end_date)
+                if end_dt and end_dt <= dt_util.utcnow():
+                    errors["end_date"] = "end_date_in_past"
+                if new_start_date:
+                    sdt = dt_util.parse_datetime(new_start_date)
+                    if sdt and end_dt and end_dt <= sdt:
+                        errors["end_date"] = "end_date_not_after_start_date"
+            except Exception:
+                errors["end_date"] = "invalid_end_date"
+                new_end_date = None
+        else:
+            new_end_date = None
+
         if user_input is not None:
             new_name = user_input["name"].strip()
             if any(
@@ -1309,45 +1364,6 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                         errors["selected_chore_id"] = "a_chore_must_be_selected"
                     chore_id = c
 
-                start_date_input = user_input.get("start_date")
-                end_date_input = user_input.get("end_date")
-
-                if start_date_input:
-                    try:
-                        start_date = ensure_utc_datetime(
-                            self.hass, user_input["start_date"]
-                        )
-                        start_dt = dt_util.parse_datetime(start_date)
-                        if start_dt and start_dt < dt_util.utcnow():
-                            errors["start_date"] = "start_date_in_past"
-                        else:
-                            challenge_data["start_date"] = start_date
-                    except Exception:
-                        errors["start_date"] = "invalid_start_date"
-                else:
-                    challenge_data["start_date"] = None
-
-                if end_date_input:
-                    try:
-                        end_date = ensure_utc_datetime(
-                            self.hass, user_input["end_date"]
-                        )
-                        end_dt = dt_util.parse_datetime(end_date)
-                        if end_dt and end_dt <= dt_util.utcnow():
-                            errors["end_date"] = "end_date_in_past"
-                        if challenge_data.get("start_date"):
-                            sdt = dt_util.parse_datetime(challenge_data["start_date"])
-                            if sdt and end_dt and end_dt <= sdt:
-                                errors["end_date"] = "end_date_not_after_start_date"
-                            else:
-                                challenge_data["end_date"] = end_date
-                        else:
-                            challenge_data["end_date"] = end_date
-                    except Exception:
-                        errors["end_date"] = "invalid_end_date"
-                else:
-                    challenge_data["end_date"] = None
-
                 if not errors:
                     challenge_data["name"] = new_name
                     challenge_data["description"] = user_input.get("description", "")
@@ -1361,6 +1377,8 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
                     challenge_data["criteria"] = user_input.get("criteria", "").strip()
                     challenge_data["target_value"] = user_input["target_value"]
                     challenge_data["reward_points"] = user_input["reward_points"]
+                    challenge_data["start_date"] = new_start_date
+                    challenge_data["end_date"] = new_end_date
                     LOGGER.debug(
                         "Edited challenge '%s' with ID: %s", new_name, internal_id
                     )
@@ -1373,8 +1391,13 @@ class KidsChoresOptionsFlowHandler(config_entries.OptionsFlow):
         }
         chores_dict = self._entry_options.get(CONF_CHORES, {})
 
+        default_data = {
+            **challenge_data,
+            "start_date": new_start_date,
+            "end_date": new_end_date,
+        }
         challenge_schema = build_challenge_schema(
-            kids_dict=kids_dict, chores_dict=chores_dict, default=challenge_data
+            kids_dict=kids_dict, chores_dict=chores_dict, default=default_data
         )
         return self.async_show_form(
             step_id="edit_challenge", data_schema=challenge_schema, errors=errors
