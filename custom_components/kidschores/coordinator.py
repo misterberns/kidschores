@@ -441,9 +441,13 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             else:
                 update_method(entity_id, entity_body)
 
-        # Cleanup for orphaned shared chore sensors.
+        # Remove orphaned shared chore sensors.
         if section == DATA_CHORES:
             self.hass.async_create_task(self._remove_orphaned_shared_chore_sensors())
+
+        # Remove orphaned achievement and challenges sensors
+        self.hass.async_create_task(self._remove_orphaned_achievement_entities())
+        self.hass.async_create_task(self._remove_orphaned_challenge_entities())
 
     def _cleanup_all_links(self) -> None:
         """Run all cross-entity cleanup routines."""
@@ -475,7 +479,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 and entity_entry.unique_id.startswith(prefix)
                 and entity_entry.unique_id.endswith(suffix)
             ):
-                # Extract chore_id from the unique_id.
                 chore_id = entity_entry.unique_id[len(prefix) : -len(suffix)]
                 chore_info = self.chores_data.get(chore_id)
                 if not chore_info or not chore_info.get("shared_chore", False):
@@ -483,6 +486,62 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     LOGGER.debug(
                         "Removed orphaned SharedChoreGlobalStateSensor: %s",
                         entity_entry.entity_id,
+                    )
+
+    async def _remove_orphaned_achievement_entities(self) -> None:
+        """Remove achievement progress entities for kids that are no longer assigned."""
+        ent_reg = er.async_get(self.hass)
+        prefix = f"{self.config_entry.entry_id}_"
+        suffix = "_achievement_progress"
+        for entity_entry in list(ent_reg.entities.values()):
+            if (
+                entity_entry.domain == "sensor"
+                and entity_entry.unique_id.startswith(prefix)
+                and entity_entry.unique_id.endswith(suffix)
+            ):
+                core_id = entity_entry.unique_id[len(prefix) : -len(suffix)]
+                parts = core_id.split("_", 1)
+                if len(parts) != 2:
+                    continue
+
+                kid_id, achievement_id = parts
+                achievement = self._data.get(DATA_ACHIEVEMENTS, {}).get(achievement_id)
+                if not achievement or kid_id not in achievement.get(
+                    "assigned_kids", []
+                ):
+                    ent_reg.async_remove(entity_entry.entity_id)
+                    LOGGER.debug(
+                        "Removed orphaned achievement progress sensor '%s' because kid '%s' is not assigned to achievement '%s'",
+                        entity_entry.entity_id,
+                        kid_id,
+                        achievement_id,
+                    )
+
+    async def _remove_orphaned_challenge_entities(self) -> None:
+        """Remove challenge progress sensor entities for kids no longer assigned."""
+        ent_reg = er.async_get(self.hass)
+        prefix = f"{self.config_entry.entry_id}_"
+        suffix = "_challenge_progress"
+        for entity_entry in list(ent_reg.entities.values()):
+            if (
+                entity_entry.domain == "sensor"
+                and entity_entry.unique_id.startswith(prefix)
+                and entity_entry.unique_id.endswith(suffix)
+            ):
+                core_id = entity_entry.unique_id[len(prefix) : -len(suffix)]
+                parts = core_id.split("_", 1)
+                if len(parts) != 2:
+                    continue
+
+                kid_id, challenge_id = parts
+                challenge = self._data.get(DATA_CHALLENGES, {}).get(challenge_id)
+                if not challenge or kid_id not in challenge.get("assigned_kids", []):
+                    ent_reg.async_remove(entity_entry.entity_id)
+                    LOGGER.debug(
+                        "Removed orphaned challenge progress sensor '%s' because kid '%s' is not assigned to challenge '%s'",
+                        entity_entry.entity_id,
+                        kid_id,
+                        challenge_id,
                     )
 
     def _remove_kid_chore_entities(self, kid_id: str, chore_id: str) -> None:
@@ -584,6 +643,18 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                         kid,
                         section,
                     )
+                if "assigned_kids" in entity:
+                    original_assigned = entity["assigned_kids"]
+                    filtered_assigned = [
+                        kid for kid in original_assigned if kid in valid_kid_ids
+                    ]
+                    if filtered_assigned != original_assigned:
+                        entity["assigned_kids"] = filtered_assigned
+                        LOGGER.debug(
+                            "Cleaned up assigned_kids in %s '%s'",
+                            section,
+                            entity.get("name"),
+                        )
 
     def _cleanup_deleted_chore_references(self) -> None:
         """Remove references to chores that no longer exist from kid data."""
@@ -1635,10 +1706,13 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
     # -------------------------------------------------------------------------------------
     # Chore State Processing: Centralized Function
-    # The most critical thing to understand when working on this function is that chore_info["state"]
-    # is the actually the global state of the chore.  The individual chore state per kid is always calculated
-    # based on whether they have any claimed, approved, or overdue chores listed for them.
-    # Global state will only match if a single kid is assigned to the chore, or all kids assigned are in the same state.
+    # The most critical thing to understand when working on this function is that
+    # chore_info["state"] is actually the global state of the chore. The individual chore
+    # state per kid is always calculated based on whether they have any claimed, approved, or
+    # overdue chores listed for them.
+    #
+    # Global state will only match if a single kid is assigned to the chore, or all kids
+    # assigned are in the same state.
     # -------------------------------------------------------------------------------------
 
     def _process_chore_state(
