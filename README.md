@@ -26,14 +26,21 @@
 Get up and running in **10 minutes or less**, with **unmatched capabilities** to gamify the process and keep kids engaged!
 
 ✅ **Track chores effortlessly** – Assign chores, set due dates, and track completions.
-✅ **Gamify the experience** – **Badges, Achievements, and Challenges** keep kids motivated.
-✅ **Bonuses & Penalties** – Reward extra effort and enforce accountability.
-✅ **Customizable Rewards** – Give coins, stars, points, or any currency system you choose.
-✅ **Built-in User Access Control** – Restricts actions based on roles (kids, parents, admins).
-✅ **Smart Notifications** – Notify kids and parents; parents can approve chores & rewards from their phone or watch.
-✅ **Calendar Integration & Custom Scheduling** – Automatically manage recurring chores and sync with Home Assistant’s calendar.
-✅ **Works Offline & Keeps Data Local** – Everything is processed locally for **privacy & security**.
 
+✅ **Gamify the experience** – **Badges, Achievements, and Challenges** keep kids motivated.
+
+✅ **Bonuses & Penalties** – Reward extra effort and enforce accountability.
+
+✅ **Customizable Rewards** – Give coins, stars, points, or any currency system you choose.
+
+✅ **Built-in User Access Control** – Restricts actions based on roles (kids, parents, admins).
+
+✅ **Smart Notifications** – Notify kids and parents; parents can approve chores & rewards from their phone or watch.
+
+✅ **Calendar Integration & Custom Scheduling** – Automatically manage recurring chores and sync with Home Assistant’s calendar.
+
+✅ **Works Offline & Keeps Data Local** – Everything is processed locally for **privacy & security**.
+<br><br>
 **"Designed for kids, but flexible for the whole family—assign chores to anyone, from toddlers to teens to adults!"**
 
 📖 **[System Overviews, Tips & Tricks, and Usage Examples in the Wiki →](https://github.com/ad-ha/kidschores-ha/wiki)**
@@ -198,7 +205,9 @@ Challenges and achievements **motivate kids with structured goals**, rewarding c
 ## 🔐 **Security & Privacy**
 
 🔹 **100% Local & Private** – Your data stays on your Home Assistant instance, ensuring complete privacy.
+
 🔹 **No External Data Sharing** – No cloud services, no third-party access—everything runs securely on your local network.
+
 🔹 **Built-in User Access Control** – Restrict actions based on roles to prevent unauthorized changes.
 
 With **KidsChores**, your family’s information remains private, secure, and fully under your control.
