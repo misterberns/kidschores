@@ -133,7 +133,7 @@ Get up and running in **10 minutes or less**, with **unmatched capabilities** to
 
 ### ⚖️ **Bonuses & Penalties**
 
-Bonuses and penalties allow parents to **reinforce positive behavior** and **correct missteps** by adjusting points dynamically.  **[Learn More →](https://github.com/ad-ha/kidschores-ha/wiki/Bonuses-&-Penalties:-Overview-&-Examples)**
+- Bonuses and penalties allow parents to **reinforce positive behavior** and **correct missteps** by adjusting points dynamically.  **[Learn More →](https://github.com/ad-ha/kidschores-ha/wiki/Bonuses-&-Penalties:-Overview-&-Examples)**
 
 - **Bonuses: Reward Extra Effort**
 
@@ -148,7 +148,7 @@ Bonuses and penalties allow parents to **reinforce positive behavior** and **cor
 
 ### 🏆 **Challenges & Achievements**
 
-Challenges and achievements **motivate kids with structured goals**, rewarding consistency beyond daily chore completions.  **[Learn More →](https://github.com/ad-ha/kidschores-ha/wiki/Challenges-&-Achievements:-Overview-&-Functionality)**
+- Challenges and achievements **motivate kids with structured goals**, rewarding consistency beyond daily chore completions.  **[Learn More →](https://github.com/ad-ha/kidschores-ha/wiki/Challenges-&-Achievements:-Overview-&-Functionality)**
 
 - **Achievements: Personal Milestones**
 
