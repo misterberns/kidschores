@@ -56,7 +56,7 @@ Get up and running in **10 minutes or less**, with **unmatched capabilities** to
 3. Add `https://github.com/ad-ha/kidschores-ha` as an **Integration**.
 4. Search for **KidsChores**, install, and **restart Home Assistant**.
 
-📖 **[Full Setup & Configuration Guide →](Installation-&-Setup)**
+📖 **[Full Setup & Configuration Guide →](https://github.com/ad-ha/kidschores-ha/wiki/Installation-&-Setup)**
 
 ---
 
@@ -71,7 +71,7 @@ Get up and running in **10 minutes or less**, with **unmatched capabilities** to
 
 - **Effortless Management:**
   - Handle multiple kids with a single integration while monitoring individual statistics and trends.
-  - **Built-in Access Control** (Restrict actions based on user roles to prevent unauthorized changes). **[Learn More →](Access-Control:-Overview-&-Best-Practices)**
+  - **Built-in Access Control** (Restrict actions based on user roles to prevent unauthorized changes). **[Learn More →](https://github.com/ad-ha/kidschores-ha/wiki/Access-Control:-Overview-&-Best-Practices)**
  
   ---
 
@@ -85,7 +85,7 @@ Get up and running in **10 minutes or less**, with **unmatched capabilities** to
 
 - **Assign & Track Chores:**
 
-  - Easily define chores with descriptions, icons, due dates, and customizable recurring schedules.  **[Learn More →](Chore-Status-and-Recurrence-Handling)**
+  - Easily define chores with descriptions, icons, due dates, and customizable recurring schedules.  **[Learn More →](https://github.com/ad-ha/kidschores-ha/wiki/Chore-Status-and-Recurrence-Handling)**
   - Supports **individual chores** (assigned to a single kid) and **shared chores** (requiring participation from multiple kids).
   - **Labels** can be used to **group chores** by type, location, or difficulty—or to **exclude specific chores** based on your family's needs.
 
@@ -118,7 +118,7 @@ Get up and running in **10 minutes or less**, with **unmatched capabilities** to
 
 ### 🏅 **Badge System**
 
-- Badges reward **milestone achievements** and encourage consistency by tracking progress over time.  **[Learn More →](Badges:-Overview-&-Examples)**
+- Badges reward **milestone achievements** and encourage consistency by tracking progress over time.  **[Learn More →](https://github.com/ad-ha/kidschores-ha/wiki/Badges:-Overview-&-Examples)**
 
 - **Earned Through Chores & Points:**
 
@@ -133,7 +133,7 @@ Get up and running in **10 minutes or less**, with **unmatched capabilities** to
 
 ### ⚖️ **Bonuses & Penalties**
 
-Bonuses and penalties allow parents to **reinforce positive behavior** and **correct missteps** by adjusting points dynamically.  **[Learn More →](Bonuses-&-Penalties:-Overview-&-Examples)**
+Bonuses and penalties allow parents to **reinforce positive behavior** and **correct missteps** by adjusting points dynamically.  **[Learn More →](https://github.com/ad-ha/kidschores-ha/wiki/Bonuses-&-Penalties:-Overview-&-Examples)**
 
 - **Bonuses: Reward Extra Effort**
 
@@ -148,7 +148,7 @@ Bonuses and penalties allow parents to **reinforce positive behavior** and **cor
 
 ### 🏆 **Challenges & Achievements**
 
-Challenges and achievements **motivate kids with structured goals**, rewarding consistency beyond daily chore completions.  **[Learn More →](Challenges-&-Achievements:-Overview-&-Functionality)**
+Challenges and achievements **motivate kids with structured goals**, rewarding consistency beyond daily chore completions.  **[Learn More →](https://github.com/ad-ha/kidschores-ha/wiki/Challenges-&-Achievements:-Overview-&-Functionality)**
 
 - **Achievements: Personal Milestones**
 
@@ -190,7 +190,7 @@ Challenges and achievements **motivate kids with structured goals**, rewarding c
   - Use dynamic buttons for **claiming chores, approving rewards, and applying bonuses or penalties** directly from the UI.
   - Seamlessly integrate with Home Assistant automations for **custom alerts, reports, and dashboard insights**.
 
-- 📖 **[View the Full List of Sensors & Actions →](Sensors-&-Buttons)**
+- 📖 **[View the Full List of Sensors & Actions →](https://github.com/ad-ha/kidschores-ha/wiki/Sensors-&-Buttons)**
 
   ---
 
@@ -231,7 +231,7 @@ Challenges and achievements **motivate kids with structured goals**, rewarding c
   ✅ **Want to automatically approve specific chores?**  
   ⏳ **Want to automatically apply a penalty or a custom alert when a chore goes overdue?**  
   
-  The **[Tips & Tricks](Tips-&-Tricks)** section of the Wiki is packed with ideas to help you **customize, automate, and extend** KidsChores to fit your family's needs.  
+  The **[Tips & Tricks](https://github.com/ad-ha/kidschores-ha/wiki/Tips-&-Tricks)** section of the Wiki is packed with ideas to help you **customize, automate, and extend** KidsChores to fit your family's needs.  
 
 ---
 
