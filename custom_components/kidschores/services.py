@@ -589,9 +589,7 @@ def async_setup_services(hass: HomeAssistant):
 
         # Reset penalties
         coordinator.reset_penalties(kid_id=kid_id, penalty_id=penalty_id)
-        LOGGER.info(
-            "Penalty '%s' applied for kid '%s' by parent '%s'", penalty_name, kid_name
-        )
+        LOGGER.info("Penalties '%s' applied for kid '%s'", penalty_name, kid_name)
         await coordinator.async_request_refresh()
 
     async def handle_apply_bonus(call: ServiceCall):
