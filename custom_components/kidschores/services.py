@@ -553,6 +553,47 @@ def async_setup_services(hass: HomeAssistant):
                 f"Failed to apply penalty '{penalty_name}' for kid '{kid_name}'."
             )
 
+    async def handle_reset_penalties(call: ServiceCall):
+        """Handle resetting penalties."""
+        entry_id = _get_first_kidschores_entry(hass)
+        if not entry_id:
+            LOGGER.warning("Reset Penalties: %s", MSG_NO_ENTRY_FOUND)
+            return
+
+        coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
+            "coordinator"
+        ]
+        kid_name = call.data[FIELD_KID_NAME]
+        penalty_name = call.data[FIELD_PENALTY_NAME]
+
+        # If provided map kid_name and penalty_name to internal_ids
+        kid_id = _get_kid_id_by_name(coordinator, kid_name)
+        if not kid_id:
+            LOGGER.warning("Reset Penalties: Kid '%s' not found", kid_name)
+            raise HomeAssistantError(f"Kid '{kid_name}' not found")
+
+        penalty_id = _get_penalty_id_by_name(coordinator, penalty_name)
+        if not penalty_id:
+            LOGGER.warning("Reset Penalties: Penalty '%s' not found", penalty_name)
+            raise HomeAssistantError(f"Penalty '{penalty_name}' not found")
+
+        # Check if user is authorized
+        user_id = call.context.user_id
+        if user_id and not await is_user_authorized_for_global_action(
+            hass, user_id, kid_id
+        ):
+            LOGGER.warning("Reset Penalites: User not authorized")
+            raise HomeAssistantError(
+                "You are not authorized to reset penalties for this kid."
+            )
+
+        # Reset penalties
+        coordinator.reset_penalties(kid_id=kid_id, penalty_id=penalty_id)
+        LOGGER.info(
+            "Penalty '%s' applied for kid '%s' by parent '%s'", penalty_name, kid_name
+        )
+        await coordinator.async_request_refresh()
+
     async def handle_apply_bonus(call: ServiceCall):
         """Handle applying a bonus."""
         entry_id = _get_first_kidschores_entry(hass)

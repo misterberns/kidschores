@@ -3301,6 +3301,47 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self._persist()
         self.async_set_updated_data(self._data)
 
+    # -------------------------------------------------------------------------------------
+    # Penalties: Reset
+    # -------------------------------------------------------------------------------------
+
+    def reset_penalties(self, kid_id: str, penalty_id: str) -> None:
+        """Reset Penalities"""
+        penalty = self.penalties_data.get(penalty_id)
+
+        if penalty_id:
+            # If penalty_id was provided then determine if this is for a specific kid or all kids
+            if kid_id:
+                # If kid_id is provided, reset penalty for the kid
+                kid_info = self.kids_data.get(kid_id)
+                if not kid_info:
+                    raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+                if penalty_id not in kid_info.get("penalty_applies", {}):
+                    raise HomeAssistantError(
+                        f"Penalty '{penalty_id}' does not apply to kid '{kid_id}'."
+                    )
+                kid_info["penalty_applies"][penalty_id] = 0
+            else:
+                # Reset penalty for all kids
+                for kid_info in self.kids_data.values():
+                    if penalty_id in kid_info.get("penalty_applies", {}):
+                        kid_info["penalty_applies"][penalty_id] = 0
+        # Check if kid_id was provided
+        elif kid_id:
+            # Reset all penalties for the kid
+            kid_info = self.kids_data.get(kid_id)
+            if not kid_info:
+                raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+            kid_info["penalty_applies"] = {}
+
+        else:
+            # Reset all penalties for all kids
+            for kid_info in self.kids_data.values():
+                kid_info["penalty_applies"] = {}
+
+        self._persist()
+        self.async_set_updated_data(self._data)
+
     # Persist new due dates on config entries
     async def _update_all_chore_due_dates_in_config(self) -> None:
         updated_options = dict(self.config_entry.options)

@@ -302,3 +302,25 @@ skip_chore_due_date:
       required: false
       selector:
         text:
+
+reset_penalties:
+  name: "Reset Penalties"
+  description: >
+    Reset all applied penalties for all kids. Optionally, provide penalty_name to reset a
+    specific penalty across all kids. Use kid_name to reset all penalties for a specific kid.
+    Combine both to reset a specific penalty for a specific kid.
+  fields:
+    kid_name:
+      name: "Kid Name"
+      description: "The kid penalites will be reset for."
+      example: "Bob"
+      required: true
+      selector:
+        text:
+    penalty_name:
+      name: "Penalty Name"
+      description: "The name of the penalty to reset."
+      example: "Yelling"
+      required: true
+      selector:
+        text:
