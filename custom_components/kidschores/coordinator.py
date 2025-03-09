@@ -1551,9 +1551,10 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             kid_id, chore_id, CHORE_STATE_APPROVED, points_awarded=awarded_points
         )
 
-        old_points = float(kid_info["points"])
-        new_points = old_points + awarded_points
-        self.update_kid_points(kid_id, new_points)
+        # Remove to avoid awarding duplicated points
+        # old_points = float(kid_info["points"])
+        # new_points = old_points + awarded_points
+        # self.update_kid_points(kid_id, new_points)
 
         # increment completed chores counters
         kid_info["completed_chores_today"] += 1
