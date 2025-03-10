@@ -742,7 +742,7 @@ def async_setup_services(hass: HomeAssistant):
                 raise HomeAssistantError("Invalid due date provided.")
 
             # Update the chore’s due_date:
-            coordinator.chores_data[chore_id]["due_date"] = due_date_str
+            coordinator.set_chore_due_date(chore_id, due_dt)
             LOGGER.info(
                 "Set due date for chore '%s' (ID: %s) to %s",
                 chore_name,
@@ -751,48 +751,12 @@ def async_setup_services(hass: HomeAssistant):
             )
         else:
             # Clear the due date by setting it to None
-            coordinator.chores_data[chore_id]["due_date"] = None
+            coordinator.set_chore_due_date(chore_id, None)
             LOGGER.info(
                 "Cleared due date for chore '%s' (ID: %s)", chore_name, chore_id
             )
 
-        # Update the chore state if it is currently pending or overdue.
-        current_state = coordinator.chores_data[chore_id].get(
-            "state", CHORE_STATE_PENDING
-        )
-        if current_state in [CHORE_STATE_PENDING, CHORE_STATE_OVERDUE]:
-            # If a new due date was provided and it's in the future, set state to pending.
-            if due_date_input and due_dt and due_dt > dt_util.utcnow():
-                coordinator.update_chore_state(chore_id, CHORE_STATE_PENDING)
-
-            # If the due date was cleared, also set state to pending.
-            elif not due_date_input:
-                coordinator.update_chore_state(chore_id, CHORE_STATE_PENDING)
-
-        # Update the config entry options with new due date
-        updated_options = dict(coordinator.config_entry.options)
-
-        chores_conf = dict(updated_options.get(DATA_CHORES, {}))
-
-        existing_chore_options = dict(chores_conf.get(chore_id, {}))
-        existing_chore_options["due_date"] = coordinator.chores_data[chore_id][
-            "due_date"
-        ]
-
-        chores_conf[chore_id] = existing_chore_options
-        updated_options[DATA_CHORES] = chores_conf
-
-        new_data = dict(coordinator.config_entry.data)
-        new_data["last_change"] = dt_util.utcnow().isoformat()
-
-        coordinator.hass.config_entries.async_update_entry(
-            coordinator.config_entry, data=new_data, options=updated_options
-        )
-
-        coordinator._persist()
-        coordinator.async_set_updated_data(coordinator._data)
         await coordinator.async_request_refresh()
-        await coordinator._check_overdue_chores()
 
     async def handle_skip_chore_due_date(call: ServiceCall) -> None:
         """Handle skipping the due date on a chore by rescheduling it to the next due date."""
