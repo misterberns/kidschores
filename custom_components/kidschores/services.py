@@ -25,6 +25,7 @@ from .const import (
     ERROR_NOT_AUTHORIZED_FMT,
     FIELD_CHORE_ID,
     FIELD_CHORE_NAME,
+    FIELD_DUE_DATE,
     FIELD_KID_NAME,
     FIELD_PARENT_NAME,
     FIELD_PENALTY_NAME,
@@ -155,15 +156,15 @@ RESET_ALL_CHORES_SCHEMA = vol.Schema({})
 
 SET_CHORE_DUE_DATE_SCHEMA = vol.Schema(
     {
-        vol.Required("chore_name"): cv.string,
-        vol.Optional("due_date"): vol.Any(cv.string, None),
+        vol.Required(FIELD_CHORE_NAME): cv.string,
+        vol.Optional(FIELD_DUE_DATE): vol.Any(cv.string, None),
     }
 )
 
 SKIP_CHORE_DUE_DATE_SCHEMA = vol.Schema(
     {
-        vol.Optional("chore_id"): cv.string,
-        vol.Optional("chore_name"): cv.string,
+        vol.Optional(FIELD_CHORE_ID): cv.string,
+        vol.Optional(FIELD_CHORE_NAME): cv.string,
     }
 )
 
@@ -855,13 +856,14 @@ def async_setup_services(hass: HomeAssistant):
         ]
 
         # Get parameters
-        chore_id = call.data.get("chore_id")
-        chore_name = call.data.get("chore_name")
-        kid_name = call.data.get("kid_name")
+        chore_id = call.data.get(FIELD_CHORE_ID)
+        chore_name = call.data.get(FIELD_CHORE_NAME)
+        kid_name = call.data.get(FIELD_KID_NAME)
 
         # If chore_id not provided but chore_name is, map it to chore_id.
         if not chore_id and chore_name:
             chore_id = _get_chore_id_by_name(coordinator, chore_name)
+
             if not chore_id:
                 LOGGER.warning("Reset Overdue Chores: Chore '%s' not found", chore_name)
                 raise HomeAssistantError(f"Chore '{chore_name}' not found.")
@@ -870,12 +872,15 @@ def async_setup_services(hass: HomeAssistant):
         kid_id: Optional[str] = None
         if kid_name:
             kid_id = _get_kid_id_by_name(coordinator, kid_name)
+
             if not kid_id:
                 LOGGER.warning("Reset Overdue Chores: Kid '%s' not found", kid_name)
                 raise HomeAssistantError(f"Kid '{kid_name}' not found.")
 
         coordinator.reset_overdue_chores(chore_id=chore_id, kid_id=kid_id)
+
         LOGGER.info("Reset overdue chores (chore_id=%s, kid_id=%s)", chore_id, kid_id)
+
         await coordinator.async_request_refresh()
         await coordinator._check_overdue_chores()
 
@@ -889,8 +894,8 @@ def async_setup_services(hass: HomeAssistant):
         coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
             "coordinator"
         ]
-        chore_name = call.data["chore_name"]
-        due_date_input = call.data.get("due_date")
+        chore_name = call.data[FIELD_CHORE_NAME]
+        due_date_input = call.data.get(FIELD_DUE_DATE)
 
         # Look up the chore by name:
         chore_id = _get_chore_id_by_name(coordinator, chore_name)
@@ -941,8 +946,8 @@ def async_setup_services(hass: HomeAssistant):
         ]
 
         # Get parameters: either chore_id or chore_name must be provided.
-        chore_id = call.data.get("chore_id")
-        chore_name = call.data.get("chore_name")
+        chore_id = call.data.get(FIELD_CHORE_ID)
+        chore_name = call.data.get(FIELD_CHORE_NAME)
 
         if not chore_id and chore_name:
             chore_id = _get_chore_id_by_name(coordinator, chore_name)
