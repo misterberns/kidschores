@@ -3381,7 +3381,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
     # Persist new due dates on config entries
     # This is not being used currently, but was refactored so it calls a new function _update_chore_due_date_in_config
-    # which can be used to update a single chore's due date and requency.  New fuction can be used in multiple places.
+    # which can be used to update a single chore's due date and frequency.  New function can be used in multiple places.
 
     async def _update_all_chore_due_dates_in_config(self) -> None:
         """Update due dates for all chores in config_entry.options."""
