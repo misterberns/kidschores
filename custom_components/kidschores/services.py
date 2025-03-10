@@ -1040,6 +1040,7 @@ async def async_unload_services(hass: HomeAssistant):
         SERVICE_RESET_ALL_CHORES,
         SERVICE_RESET_OVERDUE_CHORES,
         SERVICE_RESET_PENALTIES,
+        SERVICE_RESET_BONUSES,
         SERVICE_SET_CHORE_DUE_DATE,
         SERVICE_SKIP_CHORE_DUE_DATE,
     ]
