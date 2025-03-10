@@ -460,7 +460,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         """Remove all platform entities whose unique_id references the given item_id."""
         ent_reg = er.async_get(self.hass)
         for entity_entry in list(ent_reg.entities.values()):
-            if item_id in entity_entry.unique_id:
+            if str(item_id) in str(entity_entry.unique_id):
                 ent_reg.async_remove(entity_entry.entity_id)
                 LOGGER.debug(
                     "Auto-removed entity '%s' with unique_id '%s' from registry",
@@ -898,7 +898,9 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         # If chore is recurring, set due_date to creation date if not set
         freq = chore_data.get("recurring_frequency", FREQUENCY_NONE)
         if freq != FREQUENCY_NONE and not chore_data.get("due_date"):
-            now_local = dt_util.utcnow()
+            now_local = dt_util.utcnow().astimezone(
+                dt_util.get_time_zone(self.hass.config.time_zone)
+            )
             # Force the time to 23:59:00 (and zero microseconds)
             default_due = now_local.replace(hour=23, minute=59, second=0, microsecond=0)
             chore_data["due_date"] = default_due.isoformat()
@@ -1431,7 +1433,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             LOGGER.warning("Remove parent: Parent ID '%s' not found", parent_id)
 
     # -------------------------------------------------------------------------------------
-    # Chores: Claim, Approve, Disapprove, Compute Glonal State for Shared Chores
+    # Chores: Claim, Approve, Disapprove, Compute Global State for Shared Chores
     # -------------------------------------------------------------------------------------
 
     def claim_chore(self, kid_id: str, chore_id: str, user_name: str):
@@ -1551,9 +1553,10 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             kid_id, chore_id, CHORE_STATE_APPROVED, points_awarded=awarded_points
         )
 
-        old_points = float(kid_info["points"])
-        new_points = old_points + awarded_points
-        self.update_kid_points(kid_id, new_points)
+        # Remove to avoid awarding duplicated points
+        # old_points = float(kid_info["points"])
+        # new_points = old_points + awarded_points
+        # self.update_kid_points(kid_id, new_points)
 
         # increment completed chores counters
         kid_info["completed_chores_today"] += 1
@@ -2026,12 +2029,12 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
         self._check_badges_for_kid(kid_id)
 
-        # remove from pending approvals
-        self._data[DATA_PENDING_REWARD_APPROVALS] = [
-            ap
-            for ap in self._data[DATA_PENDING_REWARD_APPROVALS]
-            if not (ap["kid_id"] == kid_id and ap["reward_id"] == reward_id)
-        ]
+        # remove 1 claim from pending approvals
+        approvals = self._data[DATA_PENDING_REWARD_APPROVALS]
+        for i, ap in enumerate(approvals):
+            if ap["kid_id"] == kid_id and ap["reward_id"] == reward_id:
+                del approvals[i]  # Remove only the first match
+                break  # Stop after the first removal
 
         # increment reward_approvals
         if reward_id in kid_info["reward_approvals"]:
@@ -2391,7 +2394,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 )
 
                 # Set the baseline so that we only count chores done after deployment.
-                if progress["baseline"] is None:
+                if "baseline" not in progress or progress["baseline"] is None:
                     progress["baseline"] = kid_info.get("completed_chores_total", 0)
 
                 # Calculate progress as (current total minus baseline)
@@ -2435,9 +2438,17 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             return
 
         # Get or create the existing progress dictionary for this kid
-        progress_for_kid = achievement.setdefault("progress", {}).setdefault(
-            kid_id, {"current_value": 0, "awarded": False}
-        )
+        progress_for_kid = achievement.setdefault("progress", {}).get(kid_id)
+        if progress_for_kid is None:
+            # If it doesn't exist, initialize it with baseline from the kid's current total.
+            kid_info = self.kids_data.get(kid_id, {})
+            progress_dict = {
+                "baseline": kid_info.get("completed_chores_total", 0),
+                "current_value": 0,
+                "awarded": False,
+            }
+            achievement["progress"][kid_id] = progress_dict
+            progress_for_kid = progress_dict
 
         # Mark achievement as earned for the kid by storing progress (e.g. set to target)
         progress_for_kid["awarded"] = True
@@ -2758,29 +2769,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 )
                 continue
 
-            # Check if today is an applicable day.
-            applicable_days = chore_info.get(
-                CONF_APPLICABLE_DAYS, DEFAULT_APPLICABLE_DAYS
-            )
-            if applicable_days:
-                weekday_mapping = {
-                    0: "mon",
-                    1: "tue",
-                    2: "wed",
-                    3: "thu",
-                    4: "fri",
-                    5: "sat",
-                    6: "sun",
-                }
-                today_weekday = weekday_mapping[dt_util.as_local(now).weekday()]
-                if today_weekday not in applicable_days:
-                    LOGGER.debug(
-                        "Chore '%s' is not scheduled for today (today=%s, applicable=%s)",
-                        chore_id,
-                        today_weekday,
-                        applicable_days,
-                    )
-                    continue
+            # Check for applicable day is no longer required; the scheduling function ensures due_date matches applicable day criteria.
 
             LOGGER.debug(
                 "Chore '%s': now=%s, due_date=%s",
@@ -2969,11 +2958,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                     "Rescheduled recurring chore '%s'", chore_info.get("name", chore_id)
                 )
 
-                # Reset the chore's state for each kid to pending using central processor
-                for kid_id in chore_info.get("assigned_kids", []):
-                    if kid_id:
-                        self._process_chore_state(kid_id, chore_id, CHORE_STATE_PENDING)
-
         self._persist()
         self.async_set_updated_data(self._data)
         LOGGER.debug("Daily rescheduling of recurring chores complete")
@@ -3056,32 +3040,23 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self.async_set_updated_data(self._data)
         LOGGER.info("Daily reward statuses have been reset")
 
-    def _handle_recurring_chore(self, chore_info: dict[str, Any]):
-        """If chore is daily/weekly/monthly, reset & set next due date (no due_date set)."""
-        freq = chore_info.get("recurring_frequency", FREQUENCY_NONE)
-        if freq == FREQUENCY_NONE:
-            return
-        # daily, weekly, monthly logic if chore lacks a due_date
-        now = dt_util.utcnow()
-        if freq == FREQUENCY_DAILY:
-            next_due = now + timedelta(days=1)
-        elif freq == FREQUENCY_WEEKLY:
-            next_due = now + timedelta(weeks=1)
-        elif freq == FREQUENCY_MONTHLY:
-            days_in_month = monthrange(now.year, now.month)[1]
-            reset_day = min(DEFAULT_MONTHLY_RESET_DAY, days_in_month)
-            # handle logic
-            next_due = now.replace(day=reset_day)
-            if next_due <= now:
-                pass
-        else:
-            return
-
-        chore_info["due_date"] = next_due.isoformat()
-
     def _reschedule_next_due_date(self, chore_info: dict[str, Any]):
         """Reschedule the next due date based on the recurring frequency."""
         freq = chore_info.get("recurring_frequency", FREQUENCY_NONE)
+        if freq == FREQUENCY_CUSTOM:
+            custom_interval = chore_info.get("custom_interval")
+            custom_unit = chore_info.get("custom_interval_unit")
+            if custom_interval is None or custom_unit not in [
+                "days",
+                "weeks",
+                "months",
+            ]:
+                LOGGER.warning(
+                    "Custom frequency set but custom_interval or unit invalid for chore '%s'",
+                    chore_info.get("name"),
+                )
+                return
+
         due_date_str = chore_info.get("due_date")
         if not freq or freq == FREQUENCY_NONE or not due_date_str:
             LOGGER.debug(
@@ -3098,102 +3073,78 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             LOGGER.warning("Unable to parse due_date '%s'", due_date_str)
             return
 
-        if freq == FREQUENCY_DAILY:
-            next_due = original_due + timedelta(days=1)
-        elif freq == FREQUENCY_WEEKLY:
-            next_due = original_due + timedelta(weeks=1)
-        elif freq == FREQUENCY_BIWEEKLY:
-            next_due = original_due + timedelta(weeks=2)
-        elif freq == FREQUENCY_MONTHLY:
-            next_due = self._add_one_month(original_due)
-        elif freq == FREQUENCY_CUSTOM:
-            custom_interval = chore_info.get("custom_interval")
-            custom_unit = chore_info.get("custom_interval_unit")
-            if custom_interval is None or custom_unit not in [
-                "days",
-                "weeks",
-                "months",
-            ]:
-                LOGGER.warning(
-                    "Custom frequency set but custom_interval or unit invalid for chore '%s'",
-                    chore_info.get("name"),
-                )
-                return
-            if custom_unit == "days":
-                next_due = original_due + timedelta(days=custom_interval)
-            elif custom_unit == "weeks":
-                next_due = original_due + timedelta(weeks=custom_interval)
-            elif custom_unit == "months":
-                next_due = self._add_months(original_due, custom_interval)
-        else:
-            return
-
-        now = dt_util.utcnow()
-        while next_due <= now:
-            if freq == FREQUENCY_DAILY:
-                next_due += timedelta(days=1)
-            elif freq == FREQUENCY_WEEKLY:
-                next_due += timedelta(weeks=1)
-            elif freq == FREQUENCY_BIWEEKLY:
-                next_due += timedelta(weeks=2)
-            elif freq == FREQUENCY_MONTHLY:
-                next_due = self._add_one_month(next_due)
-            elif freq == FREQUENCY_CUSTOM:
-                if custom_unit == "days":
-                    next_due += timedelta(days=custom_interval)
-                elif custom_unit == "weeks":
-                    next_due += timedelta(weeks=custom_interval)
-                elif custom_unit == "months":
-                    next_due = self._add_months(next_due, custom_interval)
-
         applicable_days = chore_info.get(CONF_APPLICABLE_DAYS, DEFAULT_APPLICABLE_DAYS)
-        if applicable_days:
-            weekday_mapping = {i: key for i, key in enumerate(WEEKDAY_OPTIONS.keys())}
-            # Increment next_due day-by-day until its weekday is in applicable_days.
-            while weekday_mapping[next_due.weekday()] not in applicable_days:
+        weekday_mapping = {i: key for i, key in enumerate(WEEKDAY_OPTIONS.keys())}
+        # Convert next_due to local time for proper weekday checking
+        now = dt_util.utcnow()
+        now_local = dt_util.as_local(now)
+        next_due = original_due
+        next_due_local = dt_util.as_local(next_due)
+
+        # Track first iteration to allow one advancement for future dates
+        first_iteration = True
+        # Ensure the next due date is advanced even if it's already scheduled in the future
+        # Handle past due_date by looping until we find a future date that is also on an applicable day
+        while (
+            first_iteration
+            or next_due_local <= now_local
+            or (
+                applicable_days
+                and weekday_mapping[next_due_local.weekday()] not in applicable_days
+            )
+        ):
+            # If next_due is still in the past, increment by the full frequency period
+            if first_iteration or (next_due_local <= now_local):
+                if freq == FREQUENCY_DAILY:
+                    next_due += timedelta(days=1)
+                elif freq == FREQUENCY_WEEKLY:
+                    next_due += timedelta(weeks=1)
+                elif freq == FREQUENCY_BIWEEKLY:
+                    next_due += timedelta(weeks=2)
+                elif freq == FREQUENCY_MONTHLY:
+                    next_due = self._add_months(next_due, 1)
+                elif freq == FREQUENCY_CUSTOM:
+                    if custom_unit == "days":
+                        next_due += timedelta(days=custom_interval)
+                    elif custom_unit == "weeks":
+                        next_due += timedelta(weeks=custom_interval)
+                    elif custom_unit == "months":
+                        next_due = self._add_months(next_due, custom_interval)
+            else:
+                # Next due is in the future but not on an applicable day,
+                # so just add one day until it falls on an applicable day.
                 next_due += timedelta(days=1)
+
+            # After first loop, only move forward if necessary
+            first_iteration = False
+
+            # Update the local time reference for the new next_due
+            next_due_local = dt_util.as_local(next_due)
+
+            LOGGER.debug(
+                "Rescheduling chore: Original Due: %s, New Attempt: %s (Local: %s), Now: %s (Local: %s), Weekday: %s, Applicable Days: %s",
+                original_due,
+                next_due,
+                next_due_local,
+                now,
+                dt_util.as_local(now),
+                weekday_mapping[next_due_local.weekday()],
+                applicable_days,
+            )
 
         chore_info["due_date"] = next_due.isoformat()
+        chore_id = chore_info.get("internal_id")
 
         # Update config_entry.options for this chore so that the new due_date is visible in Options
-        updated_options = dict(self.config_entry.options)
-        if DATA_CHORES in updated_options:
-            chores_conf = dict(updated_options[DATA_CHORES])
-            if chore_info["internal_id"] in chores_conf:
-                # Update only the due_date in the static part:
-                chores_conf[chore_info["internal_id"]]["due_date"] = (
-                    next_due.isoformat()
-                )
-            else:
-                chores_conf[chore_info["internal_id"]] = {
-                    "due_date": next_due.isoformat()
-                }
-            updated_options[DATA_CHORES] = chores_conf
-            new_data = dict(self.config_entry.data)
-            new_data["last_change"] = dt_util.utcnow().isoformat()
+        self.hass.async_create_task(
+            self._update_chore_due_date_in_config(chore_id, chore_info["due_date"])
+        )
+        # Reset the chore state to Pending
+        for kid_id in chore_info.get("assigned_kids", []):
+            if kid_id:
+                self._process_chore_state(kid_id, chore_id, CHORE_STATE_PENDING)
 
-            # Push the new options to the config entry.
-            result = self.hass.config_entries.async_update_entry(
-                self.config_entry, data=new_data, options=updated_options
-            )
-            if asyncio.iscoroutine(result):
-                self.hass.async_create_task(result)
-
-    def _add_one_month(self, dt_in: datetime) -> datetime:
-        """Add one month to a datetime, preserving day if possible."""
-        year = dt_in.year
-        month = dt_in.month
-        day = dt_in.day
-        new_month = month + 1
-        new_year = year
-        if new_month > 12:
-            new_month = 1
-            new_year += 1
-        days_in_new_month = monthrange(new_year, new_month)[1]
-        if day > days_in_new_month:
-            day = days_in_new_month
-        return dt_in.replace(year=new_year, month=new_month, day=day)
-
+    # Removed the _add_one_month method since _add_months method will handle all cases including adding one month.
     def _add_months(self, dt_in: datetime, months: int) -> datetime:
         """Add a specified number of months to a datetime, preserving the day if possible."""
         total_month = dt_in.month + months
@@ -3204,6 +3155,34 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         if day > days_in_new_month:
             day = days_in_new_month
         return dt_in.replace(year=year, month=month, day=day)
+
+    # Set Chore Due Date
+    def set_chore_due_date(self, chore_id: str, due_date: Optional[datetime]) -> None:
+        """Set the due date of a chore."""
+        # Retrieve the chore data; raise error if not found.
+        chore_info = self.chores_data.get(chore_id)
+        if chore_info is None:
+            raise HomeAssistantError(f"Chore with ID '{chore_id}' not found.")
+
+        # Convert the due_date to an ISO-formatted string if provided; otherwise use None.
+        new_due_date = due_date.isoformat() if due_date else None
+
+        # Update the chore's due date. If the key is missing, add it.
+        try:
+            chore_info["due_date"] = new_due_date
+        except KeyError as err:
+            raise HomeAssistantError(
+                f"Missing 'due_date' key in chore data for '{chore_id}': {err}"
+            )
+
+        # Update config_entry.options so that the new due date is visible in Options.
+        # Use new_due_date here to ensure we’re passing the updated value.
+        self.hass.async_create_task(
+            self._update_chore_due_date_in_config(chore_id, new_due_date)
+        )
+
+        self._persist()
+        self.async_set_updated_data(self._data)
 
     # Skip Chore Due Date
     def skip_chore_due_date(self, chore_id: str) -> None:
@@ -3221,22 +3200,8 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 f"Chore '{chore.get('name', chore_id)}' does not have a due date set."
             )
 
-        if chore.get("state") != CHORE_STATE_PENDING:
-            for kid in self.kids_data.values():
-                kid["claimed_chores"] = [
-                    item for item in kid.get("claimed_chores", []) if item != chore_id
-                ]
-                kid["approved_chores"] = [
-                    item for item in kid.get("approved_chores", []) if item != chore_id
-                ]
-                kid["overdue_chores"] = [
-                    item for item in kid.get("overdue_chores", []) if item != chore_id
-                ]
-
         # Compute the next due date and update the chore options/config.
         self._reschedule_next_due_date(chore)
-        # Set state to pending so it will be ready for action again.
-        chore["state"] = CHORE_STATE_PENDING
 
         self._persist()
         self.async_set_updated_data(self._data)
@@ -3253,69 +3218,212 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             if not chore:
                 raise HomeAssistantError(f"Chore with ID '{chore_id}' not found.")
 
-            # In either case, reschedule chore.
-            # This may need another look.  Is it really possible to reschedule just for one kid.
+            # Reschedule happens at the chore level, so it is not necessary to check for kid_id
+            # _rescheduled_next_due_date will also handle setting the status to Pending
             self._reschedule_next_due_date(chore)
-
-            if kid_id:
-                # Reset only for the given kid.
-                kid = self.kids_data.get(kid_id)
-                if not kid:
-                    raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
-                if kid_id not in chore.get("assigned_kids", []):
-                    raise HomeAssistantError(
-                        f"Kid '{kid.get('name', kid_id)}' is not assigned to chore '{chore.get('name', chore_id)}'."
-                    )
-                # Set state for kid assigned to the chore:
-                self._process_chore_state(kid_id, chore_id, CHORE_STATE_PENDING)
-            else:
-                # Reset this chore for all kids.
-                for kid_id in chore.get("assigned_kids", []):
-                    if kid_id:
-                        self._process_chore_state(kid_id, chore_id, CHORE_STATE_PENDING)
 
         elif kid_id:
             # Kid-only reset: reset all overdue chores for the specified kid.
+            # Note that reschedule happens at the chore level, so it chores assigned to this kid that are multi assigned
+            # will show as reset for those other kids
             kid = self.kids_data.get(kid_id)
             if not kid:
                 raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
             for cid, chore in self.chores_data.items():
                 if kid_id in chore.get("assigned_kids", []):
                     if cid in kid.get("overdue_chores", []):
-                        # Reschedule chore
+                        # Reschedule chore which will also set status to Pending
                         self._reschedule_next_due_date(chore)
-                        # Change to Pending state
-                        self._process_chore_state(kid_id, cid, CHORE_STATE_PENDING)
-
         else:
             # Global reset: Reset all chores that are overdue.
             for kid_id, kid in self.kids_data.items():
                 for cid, chore in self.chores_data.items():
                     if kid_id in chore.get("assigned_kids", []):
                         if cid in kid.get("overdue_chores", []):
-                            # Reschedule chore
+                            # Reschedule chore which will also set status to Pending
                             self._reschedule_next_due_date(chore)
-                            # Change to Pending state
-                            self._process_chore_state(kid_id, cid, CHORE_STATE_PENDING)
+
+        self._persist()
+        self.async_set_updated_data(self._data)
+
+    # -------------------------------------------------------------------------------------
+    # Penalties: Reset
+    # -------------------------------------------------------------------------------------
+
+    def reset_penalties(
+        self, kid_id: Optional[str] = None, penalty_id: Optional[str] = None
+    ) -> None:
+        """Reset penalties based on provided kid_id and penalty_id."""
+
+        if penalty_id and kid_id:
+            # Reset a specific penalty for a specific kid
+            kid_info = self.kids_data.get(kid_id)
+            if not kid_info:
+                LOGGER.error("Reset Penalties: Kid with ID '%s' not found.", kid_id)
+                raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+            if penalty_id not in kid_info.get("penalty_applies", {}):
+                LOGGER.error(
+                    "Reset Penalties: Penalty '%s' does not apply to kid '%s'.",
+                    penalty_id,
+                    kid_id,
+                )
+                raise HomeAssistantError(
+                    f"Penalty '{penalty_id}' does not apply to kid '{kid_id}'."
+                )
+
+            kid_info["penalty_applies"].pop(penalty_id, None)
+
+        elif penalty_id:
+            # Reset a specific penalty for all kids
+            found = False
+            for kid_info in self.kids_data.values():
+                if penalty_id in kid_info.get("penalty_applies", {}):
+                    found = True
+                    kid_info["penalty_applies"].pop(penalty_id, None)
+
+            if not found:
+                LOGGER.warning(
+                    "Reset Penalties: Penalty '%s' not found in any kid's data.",
+                    penalty_id,
+                )
+
+        elif kid_id:
+            # Reset all penalties for a specific kid
+            kid_info = self.kids_data.get(kid_id)
+            if not kid_info:
+                LOGGER.error("Reset Penalties: Kid with ID '%s' not found.", kid_id)
+                raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+
+            kid_info["penalty_applies"].clear()
+
+        else:
+            # Reset all penalties for all kids
+            LOGGER.info("Reset Penalties: Resetting all penalties for all kids.")
+            for kid_info in self.kids_data.values():
+                kid_info["penalty_applies"].clear()
+
+        LOGGER.debug(
+            "Penalties reset completed (kid_id=%s, penalty_id=%s)", kid_id, penalty_id
+        )
+
+        self._persist()
+        self.async_set_updated_data(self._data)
+
+    # -------------------------------------------------------------------------------------
+    # Bonuses: Reset
+    # -------------------------------------------------------------------------------------
+
+    def reset_bonuses(
+        self, kid_id: Optional[str] = None, bonus_id: Optional[str] = None
+    ) -> None:
+        """Reset bonuses based on provided kid_id and bonus_id."""
+
+        if bonus_id and kid_id:
+            # Reset a specific bonus for a specific kid
+            kid_info = self.kids_data.get(kid_id)
+            if not kid_info:
+                LOGGER.error("Reset Bonuses: Kid with ID '%s' not found.", kid_id)
+                raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+            if bonus_id not in kid_info.get("bonus_applies", {}):
+                LOGGER.error(
+                    "Reset Bonuses: Bonus '%s' does not apply to kid '%s'.",
+                    bonus_id,
+                    kid_id,
+                )
+                raise HomeAssistantError(
+                    f"Bonus '{bonus_id}' does not apply to kid '{kid_id}'."
+                )
+
+            kid_info["bonus_applies"].pop(bonus_id, None)
+
+        elif bonus_id:
+            # Reset a specific bonus for all kids
+            found = False
+            for kid_info in self.kids_data.values():
+                if bonus_id in kid_info.get("bonus_applies", {}):
+                    found = True
+                    kid_info["bonus_applies"].pop(bonus_id, None)
+
+            if not found:
+                LOGGER.warning(
+                    "Reset Bonuses: Bonus '%s' not found in any kid's data.", bonus_id
+                )
+
+        elif kid_id:
+            # Reset all bonuses for a specific kid
+            kid_info = self.kids_data.get(kid_id)
+            if not kid_info:
+                LOGGER.error("Reset Bonuses: Kid with ID '%s' not found.", kid_id)
+                raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+
+            kid_info["bonus_applies"].clear()
+
+        else:
+            # Reset all bonuses for all kids
+            LOGGER.info("Reset Bonuses: Resetting all bonuses for all kids.")
+            for kid_info in self.kids_data.values():
+                kid_info["bonus_applies"].clear()
+
+        LOGGER.debug(
+            "Bonuses reset completed (kid_id=%s, bonus_id=%s)", kid_id, bonus_id
+        )
 
         self._persist()
         self.async_set_updated_data(self._data)
 
     # Persist new due dates on config entries
+    # This is not being used currently, but was refactored so it calls a new function _update_chore_due_date_in_config
+    # which can be used to update a single chore's due date.  New fuction can be used in multiple places.
+
     async def _update_all_chore_due_dates_in_config(self) -> None:
+        """Update due dates for all chores in config_entry.options."""
+        tasks = []
+        for chore_id, chore_info in self.chores_data.items():
+            if "due_date" in chore_info:
+                tasks.append(
+                    self._update_chore_due_date_in_config(
+                        chore_id, chore_info["due_date"]
+                    )
+                )
+
+        # Run all updates concurrently
+        if tasks:
+            await asyncio.gather(*tasks)
+
+    # Persist new due dates on config entries
+    async def _update_chore_due_date_in_config(
+        self, chore_id: str, due_date: Optional[str]
+    ) -> None:
+        """Update the due date for a specific chore in config_entry.options.
+
+        If due_date is provided, it should be an ISO-formatted string (e.g. "2025-03-16T23:59:00+00:00").
+        If due_date is None, the chore's due date is cleared.
+        """
         updated_options = dict(self.config_entry.options)
         chores_conf = dict(updated_options.get(DATA_CHORES, {}))
-        for chore_id, chore in self.chores_data.items():
-            if "due_date" in chore:
-                existing_options = dict(chores_conf.get(chore_id, {}))
-                existing_options["due_date"] = chore["due_date"]
-                chores_conf[chore_id] = existing_options
+
+        # Get or create the existing options for the chore.
+        existing_options = dict(chores_conf.get(chore_id, {}))
+        if due_date is not None:
+            # Store the ISO string if provided.
+            existing_options["due_date"] = due_date
+        else:
+            # Remove the due_date key to clear it.
+            existing_options.pop("due_date", None)
+        chores_conf[chore_id] = existing_options
         updated_options[DATA_CHORES] = chores_conf
+
         new_data = dict(self.config_entry.data)
         new_data["last_change"] = dt_util.utcnow().isoformat()
-        await self.hass.config_entries.async_update_entry(
+
+        # Push the updated options to Home Assistant.
+        update_result = self.hass.config_entries.async_update_entry(
             self.config_entry, data=new_data, options=updated_options
         )
+
+        # Only await if update_result is a coroutine.
+        if asyncio.iscoroutine(update_result):
+            await update_result
 
     # -------------------------------------------------------------------------------------
     # Notifications
