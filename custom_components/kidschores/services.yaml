@@ -346,3 +346,25 @@ reset_bonuses:
       required: false
       selector:
         text:
+
+reset_rewards:
+  name: "Reset Rewards"
+  description: >
+    Reset all reward claim and approval counts for all kids. Optionally, provide reward_name to reset a
+    specific reward counts across all kids. Use kid_name to reset all reward counts for a specific kid.
+    Combine both to reset a specific reward for a specific kid.
+  fields:
+    kid_name:
+      name: "Kid Name"
+      description: "The kid reward counts will be reset for."
+      example: "Bob"
+      required: false
+      selector:
+        text:
+    bonus_name:
+      name: "Reward Name"
+      description: "The name of the reward to reset count."
+      example: "Ice Cream"
+      required: false
+      selector:
+        text:

@@ -3390,6 +3390,95 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         if tasks:
             await asyncio.gather(*tasks)
 
+    # -------------------------------------------------------------------------------------
+    # Rewards: Reset
+    # -------------------------------------------------------------------------------------
+
+    def reset_rewards(
+        self, kid_id: Optional[str] = None, reward_id: Optional[str] = None
+    ) -> None:
+        """Reset rewards based on provided kid_id and reward_id."""
+
+        if reward_id and kid_id:
+            # Reset a specific reward for a specific kid
+            kid_info = self.kids_data.get(kid_id)
+            if not kid_info:
+                LOGGER.error("Reset Rewards: Kid with ID '%s' not found.", kid_id)
+                raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+            if reward_id not in kid_info.get(
+                "reward_claims", {}
+            ) or reward_id not in kid_info.get("reward_approvals", {}):
+                LOGGER.error(
+                    "Reset Rewards: Reward '%s' does not apply to kid '%s'.",
+                    reward_id,
+                    kid_id,
+                )
+                raise HomeAssistantError(
+                    f"Reward '{reward_id}' does not apply to kid '{kid_id}'."
+                )
+
+            kid_info["reward_claims"].pop(reward_id, None)
+            kid_info["reward_approvals"].pop(reward_id, None)
+
+        elif reward_id:
+            # Reset a specific reward for all kids
+            found = False
+            for kid_info in self.kids_data.values():
+                if reward_id in kid_info.get("reward_claims", {}):
+                    found = True
+                    kid_info["reward_claims"].pop(reward_id, None)
+                if reward_id in kid_info.get("reward_approvals", {}):
+                    found = True
+                    kid_info["reward_approvals"].pop(reward_id, None)
+
+            if not found:
+                LOGGER.warning(
+                    "Reset Rewards: Reward '%s' not found in any kid's data.", reward_id
+                )
+
+        elif kid_id:
+            # Reset all rewards for a specific kid
+            kid_info = self.kids_data.get(kid_id)
+            if not kid_info:
+                LOGGER.error("Reset Rewards: Kid with ID '%s' not found.", kid_id)
+                raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+
+            kid_info["reward_claims"].clear()
+            kid_info["reward_approvals"].clear()
+
+        else:
+            # Reset all rewards for all kids
+            LOGGER.info("Reset Rewards: Resetting all rewards for all kids.")
+            for kid_info in self.kids_data.values():
+                kid_info["reward_claims"].clear()
+                kid_info["reward_approvals"].clear()
+
+        LOGGER.debug(
+            "Rewards reset completed (kid_id=%s, reward_id=%s)", kid_id, reward_id
+        )
+
+        self._persist()
+        self.async_set_updated_data(self._data)
+
+    # Persist new due dates on config entries
+    # This is not being used currently, but was refactored so it calls a new function _update_chore_due_date_in_config
+    # which can be used to update a single chore's due date.  New fuction can be used in multiple places.
+
+    async def _update_all_chore_due_dates_in_config(self) -> None:
+        """Update due dates for all chores in config_entry.options."""
+        tasks = []
+        for chore_id, chore_info in self.chores_data.items():
+            if "due_date" in chore_info:
+                tasks.append(
+                    self._update_chore_due_date_in_config(
+                        chore_id, chore_info["due_date"]
+                    )
+                )
+
+        # Run all updates concurrently
+        if tasks:
+            await asyncio.gather(*tasks)
+
     # Persist new due dates on config entries
     async def _update_chore_due_date_in_config(
         self, chore_id: str, due_date: Optional[str]
