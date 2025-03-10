@@ -3400,6 +3400,18 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
             kid_info["reward_claims"].pop(reward_id, None)
             kid_info["reward_approvals"].pop(reward_id, None)
+            kid_info["redeemed_rewards"] = [
+                reward for reward in kid_info["redeemed_rewards"] if reward != reward_id
+            ]
+            kid_info["pending_rewards"] = [
+                reward for reward in kid_info["pending_rewards"] if reward != reward_id
+            ]
+
+            # remove open claims from pending approvals
+            approvals = self._data[DATA_PENDING_REWARD_APPROVALS]
+            for i, ap in enumerate(approvals):
+                if ap["kid_id"] == kid_id and ap["reward_id"] == reward_id:
+                    del approvals[i]
 
         elif reward_id:
             # Reset a specific reward for all kids
@@ -3411,11 +3423,28 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 if reward_id in kid_info.get("reward_approvals", {}):
                     found = True
                     kid_info["reward_approvals"].pop(reward_id, None)
+                kid_info["redeemed_rewards"] = [
+                    reward
+                    for reward in kid_info["redeemed_rewards"]
+                    if reward != reward_id
+                ]
+                kid_info["pending_rewards"] = [
+                    reward
+                    for reward in kid_info["pending_rewards"]
+                    if reward != reward_id
+                ]
 
-            if not found:
-                LOGGER.warning(
-                    "Reset Rewards: Reward '%s' not found in any kid's data.", reward_id
-                )
+                # remove open claims from pending approvals
+                approvals = self._data[DATA_PENDING_REWARD_APPROVALS]
+                for i, ap in enumerate(approvals):
+                    if ap["kid_id"] == kid_id and ap["reward_id"] == reward_id:
+                        del approvals[i]
+
+                if not found:
+                    LOGGER.warning(
+                        "Reset Rewards: Reward '%s' not found in any kid's data.",
+                        reward_id,
+                    )
 
         elif kid_id:
             # Reset all rewards for a specific kid
@@ -3426,6 +3455,14 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
 
             kid_info["reward_claims"].clear()
             kid_info["reward_approvals"].clear()
+            kid_info["redeemed_rewards"].clear()
+            kid_info["pending_rewards"].clear()
+
+            # remove open claims from pending approvals
+            approvals = self._data[DATA_PENDING_REWARD_APPROVALS]
+            for i, ap in enumerate(approvals):
+                if ap["kid_id"] == kid_id:
+                    del approvals[i]
 
         else:
             # Reset all rewards for all kids
@@ -3433,6 +3470,13 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
             for kid_info in self.kids_data.values():
                 kid_info["reward_claims"].clear()
                 kid_info["reward_approvals"].clear()
+                kid_info["redeemed_rewards"].clear()
+                kid_info["pending_rewards"].clear()
+
+            # remove open claims from pending approvals
+            approvals = self._data[DATA_PENDING_REWARD_APPROVALS]
+            for i, ap in enumerate(approvals):
+                del approvals[i]
 
         LOGGER.debug(
             "Rewards reset completed (kid_id=%s, reward_id=%s)", kid_id, reward_id
