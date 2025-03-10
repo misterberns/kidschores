@@ -953,6 +953,54 @@
           "example": "Lavar Platos"
         }
       }
+    },
+    "reset_penalties": {
+      "name": "Restablecer Sanciones",
+      "description": "Restablece todas las sanciones aplicadas para todos los niños. Opcionalmente, proporciona Nombre de la Sanción para restablecer una sanción específica en todos los niños. Usa Nombre del Niño/a para restablecer todas las sanciones de un/a niño/a en particular. Combina ambos para restablecer una sanción específica de un/a niño/a específico/a.",
+      "fields": {
+        "kid_name": {
+          "name": "Nombre del Niño/a",
+          "description": "El niño/a para el cual se restablecerán las sanciones.",
+          "example": "Alicia"
+        },
+        "penalty_name": {
+          "name": "Nombre de la Sanción",
+          "description": "El nombre de la sanción a restablecer.",
+          "example": "Gritar"
+        }
+      }
+    },
+    "reset_bonuses": {
+      "name": "Restablecer Bonificaciones",
+      "description": "Restablece todas las bonificaciones aplicadas para todos los niños. Opcionalmente, proporciona Nombre de la Bonificación para restablecer una bonificación específica en todos los niños. Usa Nombre del Niño/a para restablecer todas las bonificaciones de un/a niño/a en particular. Combina ambos para restablecer una bonificación específica de un/a niño/a específico/a.",
+      "fields": {
+        "kid_name": {
+          "name": "Nombre del Niño/a",
+          "description": "El niño/a para el cual se restablecerán las bonificaciones.",
+          "example": "Alicia"
+        },
+        "bonus_name": {
+          "name": "Nombre de la Bonificación",
+          "description": "El nombre de la bonificación a restablecer.",
+          "example": "Ayudar"
+        }
+      }
+    },
+    "reset_rewards": {
+      "name": "Restablecer Recompensas",
+      "description": "Restablece el conteo de reclamaciones y aprobaciones de recompensas para todos los niños. Opcionalmente, proporciona Nombre de la Recompensa para restablecer el conteo de una recompensa específica en todos los niños. Usa Nombre del Niño/a para restablecer el conteo de recompensas de un/a niño/a en particular. Combina ambos para restablecer una recompensa específica de un/a niño/a específico/a.",
+      "fields": {
+        "kid_name": {
+          "name": "Nombre del Niño/a",
+          "description": "El niño para el cual se restablecerán los conteos de recompensas.",
+          "example": "Alicia"
+        },
+        "reward_name": {
+          "name": "Nombre de la Recompensa",
+          "description": "El nombre de la recompensa a restablecer.",
+          "example": "Helado"
+        }
+      }
     }
   },
   "entity": {
