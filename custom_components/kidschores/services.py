@@ -144,8 +144,8 @@ RESET_BONUSES_SCHEMA = vol.Schema(
 
 RESET_REWARDS_SCHEMA = vol.Schema(
     {
-        vol.Required(FIELD_KID_NAME): cv.string,
-        vol.Required(FIELD_REWARD_NAME): cv.string,
+        vol.Optional(FIELD_KID_NAME): cv.string,
+        vol.Optional(FIELD_REWARD_NAME): cv.string,
     }
 )
 

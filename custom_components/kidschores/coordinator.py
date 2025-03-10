@@ -3371,25 +3371,6 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self._persist()
         self.async_set_updated_data(self._data)
 
-    # Persist new due dates on config entries
-    # This is not being used currently, but was refactored so it calls a new function _update_chore_due_date_in_config
-    # which can be used to update a single chore's due date.  New fuction can be used in multiple places.
-
-    async def _update_all_chore_due_dates_in_config(self) -> None:
-        """Update due dates for all chores in config_entry.options."""
-        tasks = []
-        for chore_id, chore_info in self.chores_data.items():
-            if "due_date" in chore_info:
-                tasks.append(
-                    self._update_chore_due_date_in_config(
-                        chore_id, chore_info["due_date"]
-                    )
-                )
-
-        # Run all updates concurrently
-        if tasks:
-            await asyncio.gather(*tasks)
-
     # -------------------------------------------------------------------------------------
     # Rewards: Reset
     # -------------------------------------------------------------------------------------
