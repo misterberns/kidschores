@@ -3380,6 +3380,111 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         self._persist()
         self.async_set_updated_data(self._data)
 
+    # -------------------------------------------------------------------------------------
+    # Rewards: Reset
+    # This function resets reward-related data for a specified kid and/or reward by
+    # clearing claims, approvals, redeemed and pending rewards, and removing associated
+    # pending reward approvals from the global data.
+    # -------------------------------------------------------------------------------------
+
+    def reset_rewards(
+        self, kid_id: Optional[str] = None, reward_id: Optional[str] = None
+    ) -> None:
+        """Reset rewards based on provided kid_id and reward_id."""
+
+        if reward_id and kid_id:
+            # Reset a specific reward for a specific kid
+            kid_info = self.kids_data.get(kid_id)
+            if not kid_info:
+                LOGGER.error("Reset Rewards: Kid with ID '%s' not found.", kid_id)
+                raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+
+            kid_info["reward_claims"].pop(reward_id, None)
+            kid_info["reward_approvals"].pop(reward_id, None)
+            kid_info["redeemed_rewards"] = [
+                reward for reward in kid_info["redeemed_rewards"] if reward != reward_id
+            ]
+            kid_info["pending_rewards"] = [
+                reward for reward in kid_info["pending_rewards"] if reward != reward_id
+            ]
+
+            # Remove open claims from pending approvals for this kid and reward.
+            self._data[DATA_PENDING_REWARD_APPROVALS] = [
+                ap
+                for ap in self._data[DATA_PENDING_REWARD_APPROVALS]
+                if not (ap["kid_id"] == kid_id and ap["reward_id"] == reward_id)
+            ]
+
+        elif reward_id:
+            # Reset a specific reward for all kids
+            found = False
+            for kid_info in self.kids_data.values():
+                if reward_id in kid_info.get("reward_claims", {}):
+                    found = True
+                    kid_info["reward_claims"].pop(reward_id, None)
+                if reward_id in kid_info.get("reward_approvals", {}):
+                    found = True
+                    kid_info["reward_approvals"].pop(reward_id, None)
+                kid_info["redeemed_rewards"] = [
+                    reward
+                    for reward in kid_info["redeemed_rewards"]
+                    if reward != reward_id
+                ]
+                kid_info["pending_rewards"] = [
+                    reward
+                    for reward in kid_info["pending_rewards"]
+                    if reward != reward_id
+                ]
+            # Remove open claims from pending approvals for this reward (all kids).
+            self._data[DATA_PENDING_REWARD_APPROVALS] = [
+                ap
+                for ap in self._data[DATA_PENDING_REWARD_APPROVALS]
+                if ap["reward_id"] != reward_id
+            ]
+            if not found:
+                LOGGER.warning(
+                    "Reset Rewards: Reward '%s' not found in any kid's data.",
+                    reward_id,
+                )
+
+        elif kid_id:
+            # Reset all rewards for a specific kid
+            kid_info = self.kids_data.get(kid_id)
+            if not kid_info:
+                LOGGER.error("Reset Rewards: Kid with ID '%s' not found.", kid_id)
+                raise HomeAssistantError(f"Kid with ID '{kid_id}' not found.")
+
+            kid_info["reward_claims"].clear()
+            kid_info["reward_approvals"].clear()
+            kid_info["redeemed_rewards"].clear()
+            kid_info["pending_rewards"].clear()
+
+            # Remove open claims from pending approvals for that kid.
+            self._data[DATA_PENDING_REWARD_APPROVALS] = [
+                ap
+                for ap in self._data[DATA_PENDING_REWARD_APPROVALS]
+                if ap["kid_id"] != kid_id
+            ]
+
+        else:
+            # Reset all rewards for all kids
+            LOGGER.info("Reset Rewards: Resetting all rewards for all kids.")
+            for kid_info in self.kids_data.values():
+                kid_info["reward_claims"].clear()
+                kid_info["reward_approvals"].clear()
+                kid_info["redeemed_rewards"].clear()
+                kid_info["pending_rewards"].clear()
+
+            # Clear all pending reward approvals.
+            self._data[DATA_PENDING_REWARD_APPROVALS].clear()
+
+        LOGGER.debug(
+            "Rewards reset completed (kid_id=%s, reward_id=%s)", kid_id, reward_id
+        )
+
+        self._persist()
+        self.async_set_updated_data(self._data)
+
     # Persist new due dates on config entries
     # This is not being used currently, but was refactored so it calls a new function _update_chore_due_date_in_config
     # which can be used to update a single chore's due date and frequency.  New function can be used in multiple places.

@@ -46,6 +46,7 @@ from .const import (
     SERVICE_RESET_OVERDUE_CHORES,
     SERVICE_RESET_PENALTIES,
     SERVICE_RESET_BONUSES,
+    SERVICE_RESET_REWARDS,
     SERVICE_SET_CHORE_DUE_DATE,
     SERVICE_SKIP_CHORE_DUE_DATE,
 )
@@ -138,6 +139,13 @@ RESET_BONUSES_SCHEMA = vol.Schema(
     {
         vol.Optional(FIELD_KID_NAME): cv.string,
         vol.Optional(FIELD_BONUS_NAME): cv.string,
+    }
+)
+
+RESET_REWARDS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(FIELD_KID_NAME): cv.string,
+        vol.Optional(FIELD_REWARD_NAME): cv.string,
     }
 )
 
@@ -667,6 +675,55 @@ def async_setup_services(hass: HomeAssistant):
         coordinator.reset_bonuses(kid_id=kid_id, bonus_id=bonus_id)
         await coordinator.async_request_refresh()
 
+    async def handle_reset_rewards(call: ServiceCall):
+        """Handle resetting rewards counts."""
+        entry_id = _get_first_kidschores_entry(hass)
+        if not entry_id:
+            LOGGER.warning("Reset Rewards: %s", MSG_NO_ENTRY_FOUND)
+            return
+
+        coordinator: KidsChoresDataCoordinator = hass.data[DOMAIN][entry_id][
+            "coordinator"
+        ]
+
+        kid_name = call.data.get(FIELD_KID_NAME)
+        reward_name = call.data.get(FIELD_REWARD_NAME)
+
+        kid_id = _get_kid_id_by_name(coordinator, kid_name) if kid_name else None
+        reward_id = (
+            _get_reward_id_by_name(coordinator, reward_name) if reward_name else None
+        )
+
+        if kid_name and not kid_id:
+            LOGGER.warning("Reset Rewards: Kid '%s' not found.", kid_name)
+            raise HomeAssistantError(f"Kid '{kid_name}' not found.")
+
+        if reward_name and not reward_id:
+            LOGGER.warning("Reset Rewards: Reward '%s' not found.", reward_name)
+            raise HomeAssistantError(f"Reward '{reward_name}' not found.")
+
+        # Check if user is authorized
+        user_id = call.context.user_id
+        if user_id and not await is_user_authorized_for_global_action(
+            hass, user_id, kid_id
+        ):
+            LOGGER.warning("Reset Rewards: User not authorized.")
+            raise HomeAssistantError("You are not authorized to reset rewards.")
+
+        # Log action based on parameters provided
+        if kid_id is None and reward_id is None:
+            LOGGER.info("Resetting all rewards for all kids.")
+        elif kid_id is None:
+            LOGGER.info("Resetting reward '%s' for all kids.", reward_name)
+        elif reward_id is None:
+            LOGGER.info("Resetting all rewards for kid '%s'.", kid_name)
+        else:
+            LOGGER.info("Resetting reward '%s' for kid '%s'.", reward_name, kid_name)
+
+        # Reset rewards
+        coordinator.reset_rewards(kid_id=kid_id, reward_id=reward_id)
+        await coordinator.async_request_refresh()
+
     async def handle_apply_bonus(call: ServiceCall):
         """Handle applying a bonus."""
         entry_id = _get_first_kidschores_entry(hass)
@@ -970,6 +1027,13 @@ def async_setup_services(hass: HomeAssistant):
 
     hass.services.async_register(
         DOMAIN,
+        SERVICE_RESET_REWARDS,
+        handle_reset_rewards,
+        schema=RESET_REWARDS_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
         SERVICE_SET_CHORE_DUE_DATE,
         handle_set_chore_due_date,
         schema=SET_CHORE_DUE_DATE_SCHEMA,
@@ -1005,6 +1069,7 @@ async def async_unload_services(hass: HomeAssistant):
         SERVICE_RESET_OVERDUE_CHORES,
         SERVICE_RESET_PENALTIES,
         SERVICE_RESET_BONUSES,
+        SERVICE_RESET_REWARDS,
         SERVICE_SET_CHORE_DUE_DATE,
         SERVICE_SKIP_CHORE_DUE_DATE,
     ]

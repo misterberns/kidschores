@@ -315,6 +315,7 @@ SERVICE_SKIP_CHORE_DUE_DATE = (
 SERVICE_APPLY_BONUS = "apply_bonus"  # Apply bonus service
 SERVICE_RESET_PENALTIES = "reset_penalties"  # Reset penalties service
 SERVICE_RESET_BONUSES = "reset_bonuses"  # Reset bonuses service
+SERVICE_RESET_REWARDS = "reset_rewards"  # Reset rewards service
 
 # Field Names (for consistency across services)
 FIELD_CHORE_ID = "chore_id"
