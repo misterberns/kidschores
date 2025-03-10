@@ -893,7 +893,6 @@
         }
       }
     },
-
     "reset_all_data": {
       "name": "Reset All Data",
       "description": "Completely clears the KidsChores data from storage."
@@ -971,8 +970,12 @@
           "claimed_in_part": "Claimed (in-part)"
         },
         "state_attributes": {
-          "kid_name": { "name": "Kid Name" },
-          "chore_name": { "name": "Chore Name" },
+          "kid_name": {
+            "name": "Kid Name"
+          },
+          "chore_name": {
+            "name": "Chore Name"
+          },
           "shared_chore": {
             "name": "Shared Chore",
             "state": {
@@ -1003,13 +1006,27 @@
               "sun": "Sunday"
             }
           },
-          "due_date": { "name": "Due Date" },
-          "default_points": { "name": "Default Points" },
-          "description": { "name": "Description" },
-          "chore_claims_count": { "name": "Chore Claims Count" },
-          "chore_approvals_count": { "name": "Chore Approvals Count" },
-          "chore_current_streak": { "name": "Chore Current Streak" },
-          "chore_highest_streak": { "name": "Chore Highest Streak" },
+          "due_date": {
+            "name": "Due Date"
+          },
+          "default_points": {
+            "name": "Default Points"
+          },
+          "description": {
+            "name": "Description"
+          },
+          "chore_claims_count": {
+            "name": "Chore Claims Count"
+          },
+          "chore_approvals_count": {
+            "name": "Chore Approvals Count"
+          },
+          "chore_current_streak": {
+            "name": "Chore Current Streak"
+          },
+          "chore_highest_streak": {
+            "name": "Chore Highest Streak"
+          },
           "global_state": {
             "name": "Global State",
             "state": {
@@ -1038,8 +1055,12 @@
               "false": "No"
             }
           },
-          "assigned_kids": { "name": "Assigned Kids" },
-          "custom_frequency_interval": { "name": "Custom Frequency" },
+          "assigned_kids": {
+            "name": "Assigned Kids"
+          },
+          "custom_frequency_interval": {
+            "name": "Custom Frequency"
+          },
           "custom_frequency_unit": {
             "name": "Custom Frequency Period",
             "state": {
@@ -1080,14 +1101,24 @@
       "kids_highest_badge_sensor": {
         "name": "{kid_name} - Badge",
         "state_attributes": {
-          "kid_name": { "name": "Kid Name" },
-          "all_earned_badges": { "name": "All Earned Badges" },
+          "kid_name": {
+            "name": "Kid Name"
+          },
+          "all_earned_badges": {
+            "name": "All Earned Badges"
+          },
           "highest_badge_threshold_value": {
             "name": "Highest Badge Threshold"
           },
-          "points_multiplier": { "name": "Points Multiplier" },
-          "points_to_next_badge": { "name": "Points to Next Badge" },
-          "labels": { "name": "Labels" }
+          "points_multiplier": {
+            "name": "Points Multiplier"
+          },
+          "points_to_next_badge": {
+            "name": "Points to Next Badge"
+          },
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "badge_sensor": {
@@ -1100,10 +1131,18 @@
               "chore_count": "Chore Count"
             }
           },
-          "points_multiplier": { "name": "Points Multiplier" },
-          "description": { "name": "Description" },
-          "kids_earned": { "name": "Kids Earned" },
-          "labels": { "name": "Labels" }
+          "points_multiplier": {
+            "name": "Points Multiplier"
+          },
+          "description": {
+            "name": "Description"
+          },
+          "kids_earned": {
+            "name": "Kids Earned"
+          },
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "pending_chores_approvals_sensor": {
@@ -1132,8 +1171,12 @@
           "independent": "Independent"
         },
         "state_attributes": {
-          "chore_name": { "name": "Chore Name" },
-          "description": { "name": "Description" },
+          "chore_name": {
+            "name": "Chore Name"
+          },
+          "description": {
+            "name": "Description"
+          },
           "recurring_frequency": {
             "name": "Recurring Frequency",
             "state": {
@@ -1157,8 +1200,12 @@
               "sun": "Sunday"
             }
           },
-          "due_date": { "name": "Due Date" },
-          "default_points": { "name": "Default Points" },
+          "due_date": {
+            "name": "Due Date"
+          },
+          "default_points": {
+            "name": "Default Points"
+          },
           "partial_allowed": {
             "name": "Partially Allowed",
             "state": {
@@ -1176,8 +1223,12 @@
           "assigned_kids": {
             "name": "Assigned Kids"
           },
-          "chore_approvals_today": { "name": "Chore Approvals Today" },
-          "labels": { "name": "Labels" }
+          "chore_approvals_today": {
+            "name": "Chore Approvals Today"
+          },
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "reward_status_sensor": {
@@ -1190,11 +1241,21 @@
           "none": "None"
         },
         "state_attributes": {
-          "kid_name": { "name": "Kid Name" },
-          "reward_name": { "name": "Reward Name" },
-          "reward_cost": { "name": "Reward Cost" },
-          "description": { "name": "Description" },
-          "labels": { "name": "Labels" }
+          "kid_name": {
+            "name": "Kid Name"
+          },
+          "reward_name": {
+            "name": "Reward Name"
+          },
+          "reward_cost": {
+            "name": "Reward Cost"
+          },
+          "description": {
+            "name": "Description"
+          },
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "chore_claims_sensor": {
@@ -1206,21 +1267,41 @@
       "penalty_applies_sensor": {
         "name": "{kid_name} - Penalties Applied - {penalty_name}",
         "state_attributes": {
-          "kid_name": { "name": "Kid Name" },
-          "penalty_name": { "name": "Penalty Name" },
-          "description": { "name": "Description" },
-          "penalty_points": { "name": "Penalty Points" },
-          "labels": { "name": "Labels" }
+          "kid_name": {
+            "name": "Kid Name"
+          },
+          "penalty_name": {
+            "name": "Penalty Name"
+          },
+          "description": {
+            "name": "Description"
+          },
+          "penalty_points": {
+            "name": "Penalty Points"
+          },
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "bonus_applies_sensor": {
         "name": "{kid_name} - Bonus Applies - {bonus_name}",
         "state_attributes": {
-          "kid_name": { "name": "Kid Name" },
-          "bonus_name": { "name": "Bonus Name" },
-          "description": { "name": "Description" },
-          "bonus_points": { "name": "Bonus Points" },
-          "labels": { "name": "Labels" }
+          "kid_name": {
+            "name": "Kid Name"
+          },
+          "bonus_name": {
+            "name": "Bonus Name"
+          },
+          "description": {
+            "name": "Description"
+          },
+          "bonus_points": {
+            "name": "Bonus Points"
+          },
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "kid_points_earned_daily_sensor": {
@@ -1235,9 +1316,15 @@
       "achievement_state_sensor": {
         "name": "Achievement - {achievement_name}",
         "state_attributes": {
-          "achievement_name": { "name": "Achievement Name" },
-          "description": { "name": "Description" },
-          "assigned_kids": { "name": "Assigned Kids" },
+          "achievement_name": {
+            "name": "Achievement Name"
+          },
+          "description": {
+            "name": "Description"
+          },
+          "assigned_kids": {
+            "name": "Assigned Kids"
+          },
           "type": {
             "name": "Type",
             "state": {
@@ -1246,20 +1333,38 @@
               "daily_minimum": "Daily Minimum"
             }
           },
-          "associated_chore": { "name": "Associated Chore" },
-          "critera": { "name": "Criteria" },
-          "target_value": { "name": "Target" },
-          "reward_points": { "name": "Reward Points" },
-          "kids_earned": { "name": "Earned by" },
-          "labels": { "name": "Labels" }
+          "associated_chore": {
+            "name": "Associated Chore"
+          },
+          "critera": {
+            "name": "Criteria"
+          },
+          "target_value": {
+            "name": "Target"
+          },
+          "reward_points": {
+            "name": "Reward Points"
+          },
+          "kids_earned": {
+            "name": "Earned by"
+          },
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "challenge_state_sensor": {
         "name": "Challenge - {challenge_name}",
         "state_attributes": {
-          "challenge_name": { "name": "Challenge Name" },
-          "description": { "name": "Description" },
-          "assigned_kids": { "name": "Assigned Kids" },
+          "challenge_name": {
+            "name": "Challenge Name"
+          },
+          "description": {
+            "name": "Description"
+          },
+          "assigned_kids": {
+            "name": "Assigned Kids"
+          },
           "type": {
             "name": "Type",
             "state": {
@@ -1267,22 +1372,44 @@
               "daily_minimum": "Daily Minimum"
             }
           },
-          "associated_chore": { "name": "Associated Chore" },
-          "critera": { "name": "Criteria" },
-          "target_value": { "name": "Target" },
-          "reward_points": { "name": "Reward Points" },
-          "start_date": { "name": "Start Date" },
-          "end_date": { "name": "End Date" },
-          "kids_earned": { "name": "Earned by" },
-          "labels": { "name": "Labels" }
+          "associated_chore": {
+            "name": "Associated Chore"
+          },
+          "critera": {
+            "name": "Criteria"
+          },
+          "target_value": {
+            "name": "Target"
+          },
+          "reward_points": {
+            "name": "Reward Points"
+          },
+          "start_date": {
+            "name": "Start Date"
+          },
+          "end_date": {
+            "name": "End Date"
+          },
+          "kids_earned": {
+            "name": "Earned by"
+          },
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "achievement_progress_sensor": {
         "name": "{kid_name} - Progress - {achievement_name}",
         "state_attributes": {
-          "achievement_name": { "name": "Achievement Name" },
-          "description": { "name": "Description" },
-          "assigned_kids": { "name": "Assigned Kids" },
+          "achievement_name": {
+            "name": "Achievement Name"
+          },
+          "description": {
+            "name": "Description"
+          },
+          "assigned_kids": {
+            "name": "Assigned Kids"
+          },
           "type": {
             "name": "Type",
             "state": {
@@ -1291,11 +1418,21 @@
               "daily_minimum": "Daily Minimum"
             }
           },
-          "associated_chore": { "name": "Associated Chore" },
-          "critera": { "name": "Criteria" },
-          "target_value": { "name": "Target" },
-          "reward_points": { "name": "Reward Points" },
-          "raw_progress": { "name": "Progress" },
+          "associated_chore": {
+            "name": "Associated Chore"
+          },
+          "critera": {
+            "name": "Criteria"
+          },
+          "target_value": {
+            "name": "Target"
+          },
+          "reward_points": {
+            "name": "Reward Points"
+          },
+          "raw_progress": {
+            "name": "Progress"
+          },
           "awarded": {
             "name": "Awarded",
             "state": {
@@ -1303,15 +1440,23 @@
               "false": "No"
             }
           },
-          "labels": { "name": "Labels" }
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "challenge_progress_sensor": {
         "name": "{kid_name} - Progress - {challenge_name}",
         "state_attributes": {
-          "challenge_name": { "name": "Challenge Name" },
-          "description": { "name": "Description" },
-          "assigned_kids": { "name": "Assigned Kids" },
+          "challenge_name": {
+            "name": "Challenge Name"
+          },
+          "description": {
+            "name": "Description"
+          },
+          "assigned_kids": {
+            "name": "Assigned Kids"
+          },
           "type": {
             "name": "Type",
             "state": {
@@ -1319,13 +1464,27 @@
               "daily_minimum": "Daily Minimum"
             }
           },
-          "associated_chore": { "name": "Associated Chore" },
-          "critera": { "name": "Criteria" },
-          "target_value": { "name": "Target" },
-          "reward_points": { "name": "Reward Points" },
-          "start_date": { "name": "Start Date" },
-          "end_date": { "name": "End Date" },
-          "raw_progress": { "name": "Progress" },
+          "associated_chore": {
+            "name": "Associated Chore"
+          },
+          "critera": {
+            "name": "Criteria"
+          },
+          "target_value": {
+            "name": "Target"
+          },
+          "reward_points": {
+            "name": "Reward Points"
+          },
+          "start_date": {
+            "name": "Start Date"
+          },
+          "end_date": {
+            "name": "End Date"
+          },
+          "raw_progress": {
+            "name": "Progress"
+          },
           "awarded": {
             "name": "Awarded",
             "state": {
@@ -1333,20 +1492,28 @@
               "false": "No"
             }
           },
-          "labels": { "name": "Labels" }
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "kid_highest_streak_sensor": {
         "name": "{kid_name} - Highest Streak",
         "state_attributes": {
-          "streaks_by_achievement": { "name": "Streaks by Achievement" }
+          "streaks_by_achievement": {
+            "name": "Streaks by Achievement"
+          }
         }
       },
       "chore_streak_sensor": {
         "name": "{kid_name} - Streak - {chore_name}",
         "state_attributes": {
-          "last_date": { "name": "Last Date" },
-          "raw_streak": { "name": "Current Streak" }
+          "last_date": {
+            "name": "Last Date"
+          },
+          "raw_streak": {
+            "name": "Current Streak"
+          }
         }
       }
     },
@@ -1354,49 +1521,65 @@
       "claim_chore_button": {
         "name": "{kid_name} - Claim Chore - {chore_name}",
         "state_attributes": {
-          "labels": { "name": "Labels" }
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "approve_chore_button": {
         "name": "{kid_name} - Approve Chore - {chore_name}",
         "state_attributes": {
-          "labels": { "name": "Labels" }
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "disapprove_chore_button": {
         "name": "{kid_name} - Disapprove Chore - {chore_name}",
         "state_attributes": {
-          "labels": { "name": "Labels" }
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "claim_reward_button": {
         "name": "{kid_name} - Claim Reward - {reward_name}",
         "state_attributes": {
-          "labels": { "name": "Labels" }
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "approve_reward_button": {
         "name": "{kid_name} - Approve Reward - {reward_name}",
         "state_attributes": {
-          "labels": { "name": "Labels" }
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "disapprove_reward_button": {
         "name": "{kid_name} - Disapprove Reward - {reward_name}",
         "state_attributes": {
-          "labels": { "name": "Labels" }
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "penalty_button": {
         "name": "{kid_name} - Apply Penalty - {penalty_name}",
         "state_attributes": {
-          "labels": { "name": "Labels" }
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "bonus_button": {
         "name": "{kid_name} - Apply Bonus - {bonus_name}",
         "state_attributes": {
-          "labels": { "name": "Labels" }
+          "labels": {
+            "name": "Labels"
+          }
         }
       },
       "manual_adjustment_button": {
