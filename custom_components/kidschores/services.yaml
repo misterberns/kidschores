@@ -361,7 +361,7 @@ reset_rewards:
       required: false
       selector:
         text:
-    bonus_name:
+    reward_name:
       name: "Reward Name"
       description: "The name of the reward to reset count."
       example: "Ice Cream"
