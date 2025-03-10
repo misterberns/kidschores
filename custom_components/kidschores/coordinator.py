@@ -2394,7 +2394,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 )
 
                 # Set the baseline so that we only count chores done after deployment.
-                if progress["baseline"] is None:
+                if "baseline" not in progress or progress["baseline"] is None:
                     progress["baseline"] = kid_info.get("completed_chores_total", 0)
 
                 # Calculate progress as (current total minus baseline)
@@ -2448,6 +2448,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
                 "awarded": False,
             }
             achievement["progress"][kid_id] = progress_dict
+            progress_for_kid = progress_dict
 
         # Mark achievement as earned for the kid by storing progress (e.g. set to target)
         progress_for_kid["awarded"] = True
