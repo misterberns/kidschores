@@ -460,7 +460,7 @@ class KidsChoresDataCoordinator(DataUpdateCoordinator):
         """Remove all platform entities whose unique_id references the given item_id."""
         ent_reg = er.async_get(self.hass)
         for entity_entry in list(ent_reg.entities.values()):
-            if item_id in entity_entry.unique_id:
+            if str(item_id) in str(entity_entry.unique_id):
                 ent_reg.async_remove(entity_entry.entity_id)
                 LOGGER.debug(
                     "Auto-removed entity '%s' with unique_id '%s' from registry",
