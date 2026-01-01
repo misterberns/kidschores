@@ -55,6 +55,15 @@ export interface PendingApprovals {
   rewards: any[];
 }
 
+export interface Parent {
+  id: string;
+  name: string;
+  pin?: string;
+  associated_kids: string[];
+  enable_notifications: boolean;
+  created_at: string;
+}
+
 // API Functions
 export const kidsApi = {
   list: () => api.get<Kid[]>('/kids'),
@@ -93,4 +102,13 @@ export const approvalsApi = {
   pending: () => api.get<PendingApprovals>('/approvals/pending'),
   count: () => api.get<{ total: number }>('/approvals/pending/count'),
   history: (limit = 50) => api.get(`/approvals/history?limit=${limit}`),
+};
+
+export const parentsApi = {
+  list: () => api.get<Parent[]>('/parents'),
+  get: (id: string) => api.get<Parent>(`/parents/${id}`),
+  create: (data: Partial<Parent>) => api.post<Parent>('/parents', data),
+  update: (id: string, data: Partial<Parent>) => api.put<Parent>(`/parents/${id}`, data),
+  delete: (id: string) => api.delete(`/parents/${id}`),
+  verifyPin: (id: string, pin: string) => api.post(`/parents/${id}/verify-pin`, { pin }),
 };

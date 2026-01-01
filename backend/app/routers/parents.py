@@ -10,13 +10,15 @@ from ..schemas import ParentCreate, ParentResponse
 router = APIRouter()
 
 
-@router.get("/", response_model=List[ParentResponse])
+@router.get("", response_model=List[ParentResponse])
+@router.get("/", response_model=List[ParentResponse], include_in_schema=False)
 def list_parents(db: Session = Depends(get_db)):
     """List all parents."""
     return db.query(Parent).all()
 
 
-@router.post("/", response_model=ParentResponse)
+@router.post("", response_model=ParentResponse)
+@router.post("/", response_model=ParentResponse, include_in_schema=False)
 def create_parent(parent: ParentCreate, db: Session = Depends(get_db)):
     """Create a new parent."""
     db_parent = Parent(**parent.model_dump())

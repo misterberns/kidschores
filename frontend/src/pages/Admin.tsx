@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { kidsApi, choresApi, rewardsApi, approvalsApi } from '../api/client';
-import type { Kid, Chore, Reward } from '../api/client';
+import { kidsApi, choresApi, rewardsApi, approvalsApi, parentsApi } from '../api/client';
+import type { Kid, Chore, Reward, Parent } from '../api/client';
 
-type Tab = 'approvals' | 'kids' | 'chores' | 'rewards';
+type Tab = 'approvals' | 'kids' | 'chores' | 'rewards' | 'parents';
 
 function ApprovalsList() {
   const queryClient = useQueryClient();
@@ -273,6 +273,99 @@ function AddRewardForm({ onClose }: { onClose: () => void }) {
   );
 }
 
+function AddParentForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) {
+  const [name, setName] = useState('');
+  const [pin, setPin] = useState('');
+  const [selectedKids, setSelectedKids] = useState<string[]>([]);
+  const [enableNotifications, setEnableNotifications] = useState(true);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (data: Partial<Parent>) => parentsApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['parents'] });
+      onClose();
+    },
+  });
+
+  return (
+    <div className="bg-white rounded-xl p-4 shadow">
+      <h3 className="font-bold text-lg mb-4">Add Parent</h3>
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Parent name"
+        className="w-full border-2 rounded-lg px-4 py-2 mb-3"
+      />
+      <div className="mb-3">
+        <label className="block text-sm font-medium mb-1">PIN (optional, 4 digits)</label>
+        <input
+          type="text"
+          value={pin}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+          placeholder="1234"
+          maxLength={4}
+          className="w-full border-2 rounded-lg px-4 py-2"
+        />
+      </div>
+      <div className="mb-3">
+        <label className="block text-sm font-medium mb-2">Associated Kids:</label>
+        <div className="flex gap-2 flex-wrap">
+          {kids.map((kid) => (
+            <button
+              key={kid.id}
+              type="button"
+              onClick={() => {
+                setSelectedKids(prev =>
+                  prev.includes(kid.id)
+                    ? prev.filter(id => id !== kid.id)
+                    : [...prev, kid.id]
+                );
+              }}
+              className={`px-3 py-1 rounded-full border-2 ${
+                selectedKids.includes(kid.id)
+                  ? 'bg-green-500 text-white border-green-500'
+                  : 'border-gray-300'
+              }`}
+            >
+              {kid.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="mb-4">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={enableNotifications}
+            onChange={(e) => setEnableNotifications(e.target.checked)}
+            className="w-5 h-5"
+          />
+          <span>Enable notifications</span>
+        </label>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => mutation.mutate({
+            name,
+            pin: pin || undefined,
+            associated_kids: selectedKids,
+            enable_notifications: enableNotifications,
+          })}
+          disabled={!name}
+          className="flex-1 bg-green-500 text-white py-2 rounded-lg font-bold disabled:opacity-50"
+        >
+          Add
+        </button>
+        <button onClick={onClose} className="flex-1 bg-gray-200 py-2 rounded-lg">
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function Admin() {
   const [activeTab, setActiveTab] = useState<Tab>('approvals');
   const [showAddForm, setShowAddForm] = useState<string | null>(null);
@@ -292,6 +385,11 @@ export function Admin() {
     queryFn: () => rewardsApi.list().then(res => res.data),
   });
 
+  const { data: parents = [] } = useQuery({
+    queryKey: ['parents'],
+    queryFn: () => parentsApi.list().then(res => res.data),
+  });
+
   const { data: pendingCount } = useQuery({
     queryKey: ['approvals-count'],
     queryFn: () => approvalsApi.count().then(res => res.data),
@@ -303,6 +401,7 @@ export function Admin() {
     { id: 'kids', label: 'Kids', icon: '👧' },
     { id: 'chores', label: 'Chores', icon: '🧹' },
     { id: 'rewards', label: 'Rewards', icon: '🎁' },
+    { id: 'parents', label: 'Parents', icon: '👨‍👩‍👧' },
   ];
 
   return (
@@ -405,6 +504,40 @@ export function Admin() {
                   <p className="text-sm text-gray-500">{reward.cost} points</p>
                 </div>
                 <span className="text-2xl">{reward.icon || '🎁'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'parents' && (
+        <div className="space-y-4">
+          {showAddForm === 'parent' ? (
+            <AddParentForm kids={kids} onClose={() => setShowAddForm(null)} />
+          ) : (
+            <button
+              onClick={() => setShowAddForm('parent')}
+              className="w-full bg-green-100 text-green-700 py-3 rounded-xl font-bold border-2 border-dashed border-green-300"
+            >
+              + Add Parent
+            </button>
+          )}
+          {parents.map((parent) => (
+            <div key={parent.id} className="bg-white rounded-xl p-4 shadow">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-bold">{parent.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {parent.associated_kids.length > 0
+                      ? `Kids: ${parent.associated_kids.map(kidId => kids.find(k => k.id === kidId)?.name || kidId).join(', ')}`
+                      : 'No kids assigned'}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {parent.pin ? '🔒 PIN set' : '🔓 No PIN'}
+                    {parent.enable_notifications && ' • 🔔 Notifications on'}
+                  </p>
+                </div>
+                <span className="text-2xl">👨‍👩‍👧</span>
               </div>
             </div>
           ))}
