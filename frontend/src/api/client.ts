@@ -34,8 +34,12 @@ export interface Chore {
   assigned_kids: string[];
   shared_chore: boolean;
   recurring_frequency: string;
+  custom_interval?: number;
+  custom_interval_unit?: string;
+  applicable_days?: number[];
   due_date?: string;
   allow_multiple_claims_per_day: boolean;
+  partial_allowed?: boolean;
   status?: string;
   claimed_by?: string;
 }
@@ -79,6 +83,8 @@ export const choresApi = {
   list: () => api.get<Chore[]>('/chores'),
   get: (id: string) => api.get<Chore>(`/chores/${id}`),
   create: (data: Partial<Chore>) => api.post<Chore>('/chores', data),
+  update: (id: string, data: Partial<Chore>) => api.put<Chore>(`/chores/${id}`, data),
+  delete: (id: string) => api.delete(`/chores/${id}`),
   forKid: (kidId: string) => api.get<Chore[]>(`/chores/kid/${kidId}`),
   claim: (choreId: string, kidId: string) =>
     api.post(`/chores/${choreId}/claim`, { kid_id: kidId }),
@@ -92,6 +98,8 @@ export const rewardsApi = {
   list: () => api.get<Reward[]>('/rewards'),
   get: (id: string) => api.get<Reward>(`/rewards/${id}`),
   create: (data: Partial<Reward>) => api.post<Reward>('/rewards', data),
+  update: (id: string, data: Partial<Reward>) => api.put<Reward>(`/rewards/${id}`, data),
+  delete: (id: string) => api.delete(`/rewards/${id}`),
   redeem: (rewardId: string, kidId: string) =>
     api.post(`/rewards/${rewardId}/redeem`, { kid_id: kidId }),
   approve: (rewardId: string, parentName: string) =>

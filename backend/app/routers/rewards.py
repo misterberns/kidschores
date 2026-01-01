@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Reward, RewardClaim, Kid
 from ..schemas import (
-    RewardCreate, RewardResponse,
+    RewardCreate, RewardUpdate, RewardResponse,
     RewardRedeemRequest, RewardApproveRequest, RewardClaimResponse
 )
 
@@ -42,7 +42,7 @@ def get_reward(reward_id: str, db: Session = Depends(get_db)):
 
 
 @router.put("/{reward_id}", response_model=RewardResponse)
-def update_reward(reward_id: str, reward_update: RewardCreate, db: Session = Depends(get_db)):
+def update_reward(reward_id: str, reward_update: RewardUpdate, db: Session = Depends(get_db)):
     """Update reward."""
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     if not reward:

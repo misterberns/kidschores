@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KidsChores",
     description="Family chore management with points and rewards",
-    version="0.1.0",  # Keep in sync with VERSION file
+    version="0.2.0",  # Keep in sync with VERSION file
     lifespan=lifespan,
     redirect_slashes=False,  # Prevent 307 redirects for /api/kids vs /api/kids/
 )
@@ -42,7 +42,7 @@ app.include_router(approvals.router, prefix="/api/approvals", tags=["Approvals"]
 @app.get("/")
 async def root():
     """Root endpoint - health check."""
-    return {"status": "ok", "app": "KidsChores", "version": "0.1.0"}
+    return {"status": "ok", "app": "KidsChores", "version": "0.2.0"}
 
 
 @app.get("/api/health")

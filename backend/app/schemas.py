@@ -101,8 +101,14 @@ class ChoreUpdate(BaseModel):
     icon: Optional[str] = None
     default_points: Optional[int] = None
     assigned_kids: Optional[List[str]] = None
+    shared_chore: Optional[bool] = None
     recurring_frequency: Optional[str] = None
+    custom_interval: Optional[int] = None
+    custom_interval_unit: Optional[str] = None
+    applicable_days: Optional[List[int]] = None
     due_date: Optional[datetime] = None
+    allow_multiple_claims_per_day: Optional[bool] = None
+    partial_allowed: Optional[bool] = None
 
 
 class ChoreResponse(ChoreBase):
@@ -159,6 +165,15 @@ class RewardBase(BaseModel):
 
 class RewardCreate(RewardBase):
     pass
+
+
+class RewardUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    icon: Optional[str] = None
+    cost: Optional[int] = None
+    eligible_kids: Optional[List[str]] = None
+    requires_approval: Optional[bool] = None
 
 
 class RewardResponse(RewardBase):

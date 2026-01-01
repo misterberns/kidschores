@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-01-01
+
+### Added
+- Edit/Delete UI for Kids, Chores, Rewards, and Parents
+- Chore scheduling fields: recurring frequency, due date, applicable days
+- Delete confirmation modal for safe deletion
+- Edit forms with pre-filled values for all entity types
+
+### Changed
+- Updated ChoreUpdate schema to include all scheduling fields
+- Enhanced chore cards to show recurring frequency and assigned kids
+- Improved API client with update/delete methods for all entities
+
 ## [0.1.0] - 2026-01-01
 
 ### Added
