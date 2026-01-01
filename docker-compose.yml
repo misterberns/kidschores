@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  kidschores:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: kidschores
+    ports:
+      - "3100:8000"
+    volumes:
+      - /volume1/docker/kidschores/data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/kidschores.db
+      - TZ=America/Chicago
+    restart: unless-stopped
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kidschores.rule=Host(`localhost:3103`)"
+      - "traefik.http.routers.kidschores.entrypoints=websecure"
+      - "traefik.http.routers.kidschores.tls=true"
+      - "traefik.http.services.kidschores.loadbalancer.server.port=8000"
+
+networks:
+  traefik-net:
+    external: true

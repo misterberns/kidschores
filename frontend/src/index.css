@@ -1,0 +1,57 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+
+@theme {
+  --color-primary-100: #fee2e2;
+  --color-primary-200: #fecaca;
+  --color-primary-300: #fca5a5;
+  --color-primary-400: #f87171;
+  --color-primary-500: #ef4444;
+  --color-primary-600: #dc2626;
+  --color-primary-700: #b91c1c;
+  --color-stella: #ec4899;
+  --color-selma: #a855f7;
+}
+
+body {
+  font-family: 'Comic Neue', 'Comic Sans MS', cursive, system-ui;
+}
+
+/* Kid-friendly large touch targets */
+.touch-target {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Colorful gradients for cards */
+.card-stella {
+  background: linear-gradient(to bottom right, #f472b6, #db2777);
+}
+
+.card-selma {
+  background: linear-gradient(to bottom right, #c084fc, #9333ea);
+}
+
+/* Points display animation */
+@keyframes pointsPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.points-animate {
+  animation: pointsPop 0.3s ease-out;
+}
+
+/* Chore completion celebration */
+@keyframes celebrate {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-5deg); }
+  50% { transform: scale(1.2) rotate(5deg); }
+  75% { transform: scale(1.1) rotate(-5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.celebrate {
+  animation: celebrate 0.5s ease-out;
+}

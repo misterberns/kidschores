@@ -1,0 +1,1 @@
+"""KidsChores Backend App."""
