@@ -1,0 +1,22 @@
+{
+  "name": "kidschores-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:api": "playwright test api/",
+    "test:browser": "playwright test ui/ workflows/",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen http://localhost:5173"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "@faker-js/faker": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0",
+    "dotenv": "^16.4.0"
+  }
+}
