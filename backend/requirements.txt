@@ -3,4 +3,20 @@ fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
 sqlalchemy>=2.0.0
 pydantic>=2.0.0
+pydantic-settings>=2.0.0
 python-multipart>=0.0.6
+
+# Authentication
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+httpx>=0.25.0
+python-dotenv>=1.0.0
+
+# Background Jobs
+apscheduler>=3.10.0
+
+# Push Notifications
+pywebpush>=1.14.0
+
+# Email Notifications
+aiosmtplib>=2.0.0

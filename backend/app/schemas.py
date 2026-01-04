@@ -18,6 +18,7 @@ class KidCreate(KidBase):
 class KidUpdate(BaseModel):
     name: Optional[str] = None
     enable_notifications: Optional[bool] = None
+    points_multiplier: Optional[float] = None
 
 
 class KidResponse(KidBase):
@@ -25,6 +26,8 @@ class KidResponse(KidBase):
     points: float
     points_multiplier: float
     overall_chore_streak: int
+    longest_streak_ever: int = 0
+    streak_freeze_count: int = 0
     completed_chores_today: int
     completed_chores_weekly: int
     completed_chores_monthly: int
@@ -78,7 +81,7 @@ class ParentResponse(ParentBase):
 class ChoreBase(BaseModel):
     name: str
     description: Optional[str] = None
-    icon: str = "mdi:broom"
+    icon: str = "🧹"
     default_points: int = 10
     assigned_kids: List[str] = []
     shared_chore: bool = False
@@ -299,3 +302,174 @@ class PendingApproval(BaseModel):
 class PendingApprovalsResponse(BaseModel):
     chores: List[ChoreClaimResponse]
     rewards: List[RewardClaimResponse]
+
+
+# --- Streak Schemas ---
+
+class StreakInfo(BaseModel):
+    """Detailed streak information for a kid."""
+    overall_streak: int
+    longest_streak_ever: int
+    streak_freeze_count: int
+    chore_streaks: dict  # {chore_id: streak_count}
+    is_streak_at_risk: bool = False
+    next_milestone: Optional[int] = None
+    days_to_next_milestone: Optional[int] = None
+
+
+class DailyProgressResponse(BaseModel):
+    """Daily chore completion progress."""
+    kid_id: str
+    date: datetime
+    total_chores: int
+    completed_chores: int
+    completion_percentage: float
+    all_completed: bool
+    bonus_eligible: bool
+    bonus_awarded: bool
+    bonus_points: int
+    multiplier: float
+
+
+class TodaysChoreResponse(ChoreWithStatus):
+    """Chore applicable for today with additional streak info."""
+    streak_count: int = 0
+    is_recurring: bool = False
+
+
+class ApprovalWithStreakResponse(ChoreClaimResponse):
+    """Approval response with streak info."""
+    new_streak: int
+    is_milestone: bool = False
+    milestone_reached: Optional[int] = None
+    bonus_awarded: int = 0
+
+
+# --- Category Schemas ---
+
+class ChoreCategoryBase(BaseModel):
+    name: str
+    icon: str = "📁"
+    color: str = "#6366f1"
+    sort_order: int = 0
+
+
+class ChoreCategoryCreate(ChoreCategoryBase):
+    pass
+
+
+class ChoreCategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    icon: Optional[str] = None
+    color: Optional[str] = None
+    sort_order: Optional[int] = None
+
+
+class ChoreCategoryResponse(ChoreCategoryBase):
+    id: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# --- Allowance Schemas ---
+
+class AllowanceSettingsBase(BaseModel):
+    points_per_dollar: int = 100
+    auto_payout: bool = False
+    payout_day: int = 0
+    minimum_payout: float = 1.0
+
+
+class AllowanceSettingsUpdate(BaseModel):
+    points_per_dollar: Optional[int] = None
+    auto_payout: Optional[bool] = None
+    payout_day: Optional[int] = None
+    minimum_payout: Optional[float] = None
+
+
+class AllowanceSettingsResponse(AllowanceSettingsBase):
+    id: str
+    kid_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AllowanceConvertRequest(BaseModel):
+    points: int
+    payout_method: str = "cash"
+    notes: Optional[str] = None
+
+
+class AllowancePayoutResponse(BaseModel):
+    id: str
+    kid_id: str
+    points_converted: int
+    dollar_amount: float
+    payout_method: str
+    status: str
+    notes: Optional[str]
+    requested_at: datetime
+    paid_at: Optional[datetime]
+    paid_by: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class AllowanceSummaryResponse(BaseModel):
+    kid_id: str
+    kid_name: str
+    current_points: float
+    current_dollar_value: float
+    lifetime_payouts: int
+    lifetime_amount: float
+    pending_payouts: int
+    pending_amount: float
+
+
+# --- Notification Schemas ---
+
+class PushSubscriptionCreate(BaseModel):
+    endpoint: str
+    p256dh_key: str
+    auth_key: str
+
+
+class NotificationPreferenceUpdate(BaseModel):
+    email_chore_claimed: Optional[bool] = None
+    email_chore_approved: Optional[bool] = None
+    email_daily_summary: Optional[bool] = None
+    email_weekly_summary: Optional[bool] = None
+    push_enabled: Optional[bool] = None
+    push_chore_claimed: Optional[bool] = None
+    push_chore_approved: Optional[bool] = None
+    push_streak_milestone: Optional[bool] = None
+    push_reward_redeemed: Optional[bool] = None
+    quiet_hours_enabled: Optional[bool] = None
+    quiet_hours_start: Optional[str] = None
+    quiet_hours_end: Optional[str] = None
+
+
+class NotificationPreferenceResponse(BaseModel):
+    id: str
+    user_id: str
+    email_chore_claimed: bool
+    email_chore_approved: bool
+    email_daily_summary: bool
+    email_weekly_summary: bool
+    push_enabled: bool
+    push_chore_claimed: bool
+    push_chore_approved: bool
+    push_streak_milestone: bool
+    push_reward_redeemed: bool
+    quiet_hours_enabled: bool
+    quiet_hours_start: str
+    quiet_hours_end: str
+
+    class Config:
+        from_attributes = True

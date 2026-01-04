@@ -1,2 +1,10 @@
 __pycache__/
 *.py[cod]
+
+# Build artifacts
+frontend/dist.tar.gz
+
+# Test artifacts
+frontend/playwright-report/
+frontend/test-results/
+e2e/test-output.txt

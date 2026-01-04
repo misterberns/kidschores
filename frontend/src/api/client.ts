@@ -16,6 +16,8 @@ export interface Kid {
   points: number;
   points_multiplier: number;
   overall_chore_streak: number;
+  longest_streak_ever: number;
+  streak_freeze_count: number;
   completed_chores_today: number;
   completed_chores_weekly: number;
   completed_chores_monthly: number;
@@ -23,6 +25,34 @@ export interface Kid {
   badges: string[];
   enable_notifications: boolean;
   created_at: string;
+}
+
+export interface StreakInfo {
+  overall_streak: number;
+  longest_streak_ever: number;
+  streak_freeze_count: number;
+  chore_streaks: Record<string, number>;
+  is_streak_at_risk: boolean;
+  next_milestone?: number;
+  days_to_next_milestone?: number;
+}
+
+export interface DailyProgress {
+  kid_id: string;
+  date: string;
+  total_chores: number;
+  completed_chores: number;
+  completion_percentage: number;
+  all_completed: boolean;
+  bonus_eligible: boolean;
+  bonus_awarded: boolean;
+  bonus_points: number;
+  multiplier: number;
+}
+
+export interface TodaysChore extends Chore {
+  streak_count: number;
+  is_recurring: boolean;
 }
 
 export interface Chore {
@@ -42,6 +72,7 @@ export interface Chore {
   partial_allowed?: boolean;
   status?: string;
   claimed_by?: string;
+  category_id?: string;
 }
 
 export interface Reward {
@@ -77,6 +108,9 @@ export const kidsApi = {
   delete: (id: string) => api.delete(`/kids/${id}`),
   adjustPoints: (id: string, points: number) =>
     api.post<Kid>(`/kids/${id}/points`, { points }),
+  getStreaks: (id: string) => api.get<StreakInfo>(`/kids/${id}/streaks`),
+  getDailyProgress: (id: string) => api.get<DailyProgress>(`/kids/${id}/daily-progress`),
+  useStreakFreeze: (id: string) => api.post<Kid>(`/kids/${id}/streak-freeze`),
 };
 
 export const choresApi = {
@@ -86,6 +120,7 @@ export const choresApi = {
   update: (id: string, data: Partial<Chore>) => api.put<Chore>(`/chores/${id}`, data),
   delete: (id: string) => api.delete(`/chores/${id}`),
   forKid: (kidId: string) => api.get<Chore[]>(`/chores/kid/${kidId}`),
+  todayForKid: (kidId: string) => api.get<TodaysChore[]>(`/chores/today/${kidId}`),
   claim: (choreId: string, kidId: string) =>
     api.post(`/chores/${choreId}/claim`, { kid_id: kidId }),
   approve: (choreId: string, parentName: string, points?: number) =>
@@ -119,4 +154,182 @@ export const parentsApi = {
   update: (id: string, data: Partial<Parent>) => api.put<Parent>(`/parents/${id}`, data),
   delete: (id: string) => api.delete(`/parents/${id}`),
   verifyPin: (id: string, pin: string) => api.post(`/parents/${id}/verify-pin`, { pin }),
+};
+
+// Notification types
+export interface NotificationPreferences {
+  email_chore_claimed: boolean;
+  email_chore_approved: boolean;
+  email_daily_summary: boolean;
+  push_enabled: boolean;
+  quiet_hours_start: string | null;
+  quiet_hours_end: string | null;
+}
+
+export interface PushSubscription {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+  kid_id?: string;
+}
+
+// Category types
+export interface ChoreCategory {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  sort_order: number;
+  chore_count?: number;
+}
+
+export const categoriesApi = {
+  list: () => api.get<ChoreCategory[]>('/categories'),
+  get: (id: string) => api.get<ChoreCategory>(`/categories/${id}`),
+  create: (data: Partial<ChoreCategory>) => api.post<ChoreCategory>('/categories', data),
+  update: (id: string, data: Partial<ChoreCategory>) =>
+    api.put<ChoreCategory>(`/categories/${id}`, data),
+  delete: (id: string) => api.delete(`/categories/${id}`),
+  getPredefined: () => api.get<Partial<ChoreCategory>[]>('/categories/predefined'),
+  seedDefaults: () => api.post('/categories/seed-defaults'),
+  reorder: (id: string, newOrder: number) =>
+    api.put(`/categories/${id}/reorder`, null, { params: { new_order: newOrder } }),
+};
+
+export const notificationsApi = {
+  getVapidKey: () => api.get<{ public_key: string }>('/notifications/vapid-key'),
+  subscribe: (subscription: PushSubscription) =>
+    api.post('/notifications/subscribe', subscription),
+  unsubscribe: (endpoint: string) =>
+    api.delete('/notifications/unsubscribe', { params: { endpoint } }),
+  sendTest: (endpoint: string) =>
+    api.post('/notifications/test', null, { params: { endpoint } }),
+  getPreferences: (userId: string) =>
+    api.get<NotificationPreferences>(`/notifications/preferences/${userId}`),
+  updatePreferences: (userId: string, prefs: Partial<NotificationPreferences>) =>
+    api.put<NotificationPreferences>(`/notifications/preferences/${userId}`, prefs),
+};
+
+// Allowance types
+export interface AllowanceSettings {
+  id: string;
+  kid_id: string;
+  points_per_dollar: number;
+  auto_payout: boolean;
+  payout_day: number; // 0=Sunday, 6=Saturday
+  minimum_payout: number;
+  kid_points: number;
+  dollar_equivalent: number;
+}
+
+export interface AllowancePayout {
+  id: string;
+  kid_id: string;
+  points_converted: number;
+  dollar_amount: number;
+  payout_method: string;
+  status: 'pending' | 'paid' | 'cancelled';
+  notes?: string;
+  requested_at: string;
+  paid_at?: string;
+  paid_by?: string;
+}
+
+export interface AllowanceSummary {
+  kid_id: string;
+  kid_name: string;
+  current_points: number;
+  dollar_equivalent: number;
+  points_per_dollar: number;
+  pending_payouts: number;
+  pending_amount: number;
+  total_paid: number;
+  total_paid_count: number;
+}
+
+export const allowanceApi = {
+  getSettings: (kidId: string) =>
+    api.get<AllowanceSettings>(`/allowance/settings/${kidId}`),
+  updateSettings: (kidId: string, data: Partial<AllowanceSettings>) =>
+    api.put<AllowanceSettings>(`/allowance/settings/${kidId}`, data),
+  requestPayout: (kidId: string, data: { points_to_convert: number; payout_method?: string; notes?: string }) =>
+    api.post<AllowancePayout>(`/allowance/convert/${kidId}`, data),
+  getPayouts: (kidId: string, status?: string) =>
+    api.get<AllowancePayout[]>(`/allowance/payouts/${kidId}`, { params: status ? { status } : {} }),
+  getAllPending: () =>
+    api.get<AllowancePayout[]>('/allowance/pending'),
+  markPaid: (payoutId: string, data: { paid_by: string; notes?: string }) =>
+    api.post<AllowancePayout>(`/allowance/payouts/${payoutId}/pay`, data),
+  cancelPayout: (payoutId: string) =>
+    api.post<AllowancePayout>(`/allowance/payouts/${payoutId}/cancel`),
+  getSummary: (kidId: string) =>
+    api.get<AllowanceSummary>(`/allowance/summary/${kidId}`),
+};
+
+// History types
+export interface HistoryItem {
+  id: string;
+  chore_id: string;
+  chore_name: string;
+  chore_icon: string;
+  category_name?: string;
+  category_color?: string;
+  status: string;
+  points_awarded?: number;
+  claimed_at: string;
+  approved_at?: string;
+  approved_by?: string;
+  notes?: string;
+}
+
+export interface HistoryResponse {
+  items: HistoryItem[];
+  total: number;
+  page: number;
+  per_page: number;
+  has_more: boolean;
+}
+
+export interface DailyStats {
+  date: string;
+  completed: number;
+  total_points: number;
+}
+
+export interface CategoryStats {
+  category_id?: string;
+  category_name: string;
+  category_color: string;
+  count: number;
+  points: number;
+}
+
+export interface Analytics {
+  kid_id: string;
+  kid_name: string;
+  total_chores_completed: number;
+  total_points_earned: number;
+  average_points_per_chore: number;
+  chores_today: number;
+  chores_this_week: number;
+  chores_this_month: number;
+  points_today: number;
+  points_this_week: number;
+  points_this_month: number;
+  current_streak: number;
+  longest_streak: number;
+  daily_stats: DailyStats[];
+  category_stats: CategoryStats[];
+  top_chores: Array<{ chore_id: string; chore_name: string; chore_icon: string; count: number; points: number }>;
+}
+
+export const historyApi = {
+  getHistory: (kidId: string, params?: { page?: number; per_page?: number; status?: string; category_id?: string }) =>
+    api.get<HistoryResponse>(`/history/${kidId}`, { params }),
+  getAnalytics: (kidId: string, days?: number) =>
+    api.get<Analytics>(`/history/stats/${kidId}`, { params: days ? { days } : {} }),
+  exportCsv: (kidId: string) =>
+    api.get(`/history/export/${kidId}`, { responseType: 'blob' }),
 };
