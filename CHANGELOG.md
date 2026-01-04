@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-01-04
+
+### Added
+- **Allowance System**: Convert points to dollars with configurable rates per kid
+- **History Tracking**: View all transactions (chores, rewards, payouts) with filtering
+- **Chore Categories**: Organize chores by room/type with custom icons and colors
+- **Theme System**: Light/dark mode with seasonal themes (Halloween, Christmas, Easter, Summer)
+- **Per-Kid Colors**: Customize accent colors for each child
+- **Help Section**: Parent FAQ guide with accordion format
+- **Notification Settings**: Configure push notification preferences
+- **E2E Testing**: Playwright test framework with smoke tests
+- **Chorbie Mascot**: Animated character with mood variations
+
+### Changed
+- Navigation updated with Allowance and History tabs
+- Admin page header includes Help button
+- Enhanced animations with reduced motion support
+
 ## [0.3.0] - 2026-01-03
 
 ### Added
