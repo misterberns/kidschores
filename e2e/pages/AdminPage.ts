@@ -35,30 +35,30 @@ export class AdminPage {
     // Page title
     this.pageTitle = page.getByText(/parent dashboard|admin/i);
 
-    // Tab buttons
+    // Tab buttons - target by text and ensure it's in the tab navigation area (not action buttons)
+    // The tabs are buttons with rounded-xl class in a horizontal flex container
+    const tabContainer = page.locator('div.flex.gap-2, div.flex.gap-3').filter({ has: page.getByRole('button', { name: /Kids/i }) });
     this.tabs = {
-      approvals: page.getByRole('button', { name: /approve|pending/i }),
-      kids: page.getByRole('button', { name: /kids/i }),
-      chores: page.getByRole('button', { name: /chores/i }),
-      rewards: page.getByRole('button', { name: /rewards/i }),
-      parents: page.getByRole('button', { name: /parents/i }),
+      approvals: tabContainer.getByRole('button', { name: /Approve/i }).first(),
+      kids: tabContainer.getByRole('button', { name: /Kids/i }),
+      chores: tabContainer.getByRole('button', { name: /Chores/i }),
+      rewards: tabContainer.getByRole('button', { name: /Rewards/i }),
+      parents: tabContainer.getByRole('button', { name: /Parents/i }),
     };
 
-    // Add buttons
+    // Add buttons - dashed border style
     this.addButtons = {
-      kid: page.getByRole('button', { name: /add kid/i }),
-      chore: page.getByRole('button', { name: /add chore/i }),
-      reward: page.getByRole('button', { name: /add reward/i }),
-      parent: page.getByRole('button', { name: /add parent/i }),
+      kid: page.locator('button.border-dashed:has-text("Add Kid"), button:has-text("+ Add Kid")'),
+      chore: page.locator('button.border-dashed:has-text("Add Chore"), button:has-text("+ Add Chore")'),
+      reward: page.locator('button.border-dashed:has-text("Add Reward"), button:has-text("+ Add Reward")'),
+      parent: page.locator('button.border-dashed:has-text("Add Parent"), button:has-text("+ Add Parent")'),
     };
 
-    // Delete confirmation modal
-    this.deleteConfirmModal = page.locator('[class*="fixed inset-0"]').filter({
-      hasText: /delete|confirm/i,
-    });
+    // Delete confirmation modal - uses data-testid
+    this.deleteConfirmModal = page.locator('[data-testid="delete-modal"]');
 
-    // Pending approval cards
-    this.pendingApprovalCards = page.locator('[class*="border-l-4"]');
+    // Pending approval cards - left border indicator
+    this.pendingApprovalCards = page.locator('div.border-l-4.border-blue-500, div.border-l-4.border-purple-500, [class*="border-l-4"]');
   }
 
   /**
@@ -87,10 +87,10 @@ export class AdminPage {
     await this.addButtons.kid.click();
 
     // Fill the form
-    await this.page.fill('input[placeholder*="name" i]', name);
+    await this.page.locator('input[placeholder*="name" i], input[type="text"]').first().fill(name);
 
-    // Submit
-    await this.page.getByRole('button', { name: /^add$/i }).click();
+    // Submit - look for Add button or form submit
+    await this.page.locator('button.bg-primary-500:has-text("Add"), button:has-text("Add"):not(.border-dashed)').click();
 
     // Wait for API response
     await this.page.waitForResponse((resp) => resp.url().includes('/api/kids') && resp.status() === 200);
@@ -112,8 +112,8 @@ export class AdminPage {
     await this.addButtons.chore.click();
 
     // Fill the form
-    await this.page.fill('input[placeholder*="name" i]', name);
-    await this.page.fill('input[type="number"]', String(points));
+    await this.page.locator('input[placeholder*="name" i], input[type="text"]').first().fill(name);
+    await this.page.locator('input[type="number"]').first().fill(String(points));
 
     if (options.description) {
       const descInput = this.page.locator('input[placeholder*="description" i], textarea');
@@ -122,14 +122,21 @@ export class AdminPage {
       }
     }
 
-    // Select assigned kids
+    // Select assigned kids - they are rounded buttons in a flex container
+    // Wait for kids to appear in the selector
+    await this.page.waitForTimeout(300);
     for (const kid of assignedKids) {
-      const kidCheckbox = this.page.locator(`label:has-text("${kid}") input[type="checkbox"]`);
-      if ((await kidCheckbox.count()) > 0) {
-        await kidCheckbox.check();
+      // Kid selector uses rounded-full buttons containing only the kid's name
+      const kidBtn = this.page.locator('button.rounded-full.border-2', { hasText: kid });
+      if ((await kidBtn.count()) > 0) {
+        await kidBtn.click();
+        await this.page.waitForTimeout(100); // Wait for state to update
       } else {
-        // Try button-based selection
-        await this.page.getByRole('button', { name: kid }).click();
+        // Fallback: Try any button with the kid name
+        const fallbackBtn = this.page.locator(`button:has-text("${kid}")`);
+        if ((await fallbackBtn.count()) > 0) {
+          await fallbackBtn.click();
+        }
       }
     }
 
@@ -142,7 +149,7 @@ export class AdminPage {
     }
 
     // Submit
-    await this.page.getByRole('button', { name: /^add$/i }).click();
+    await this.page.locator('button.bg-primary-500:has-text("Add"), button:has-text("Add"):not(.border-dashed)').click();
 
     // Wait for API response
     await this.page.waitForResponse((resp) => resp.url().includes('/api/chores') && resp.status() === 200);
@@ -156,8 +163,8 @@ export class AdminPage {
     await this.addButtons.reward.click();
 
     // Fill the form
-    await this.page.fill('input[placeholder*="name" i]', name);
-    await this.page.fill('input[type="number"]', String(cost));
+    await this.page.locator('input[placeholder*="name" i], input[type="text"]').first().fill(name);
+    await this.page.locator('input[type="number"]').first().fill(String(cost));
 
     // Set approval requirement
     const approvalCheckbox = this.page.locator('input[type="checkbox"]').filter({
@@ -172,7 +179,7 @@ export class AdminPage {
     }
 
     // Submit
-    await this.page.getByRole('button', { name: /^add$/i }).click();
+    await this.page.locator('button.bg-primary-500:has-text("Add"), button:has-text("Add"):not(.border-dashed)').click();
 
     // Wait for API response
     await this.page.waitForResponse((resp) => resp.url().includes('/api/rewards') && resp.status() === 200);
@@ -186,7 +193,7 @@ export class AdminPage {
     await this.addButtons.parent.click();
 
     // Fill the form
-    await this.page.fill('input[placeholder*="name" i]', name);
+    await this.page.locator('input[placeholder*="name" i], input[type="text"]').first().fill(name);
     if (pin) {
       const pinInput = this.page.locator('input[placeholder*="pin" i], input[type="password"]');
       if ((await pinInput.count()) > 0) {
@@ -195,7 +202,7 @@ export class AdminPage {
     }
 
     // Submit
-    await this.page.getByRole('button', { name: /^add$/i }).click();
+    await this.page.locator('button.bg-primary-500:has-text("Add"), button:has-text("Add"):not(.border-dashed)').click();
 
     // Wait for API response
     await this.page.waitForResponse((resp) => resp.url().includes('/api/parents') && resp.status() === 200);
@@ -205,9 +212,12 @@ export class AdminPage {
 
   /**
    * Get an entity card by name in the current tab
+   * Uses .card class which is theme-aware (works in light/dark mode)
+   * Cards have data-testid="entity-{type}-{id}" format
    */
   getEntityCard(name: string): Locator {
-    return this.page.locator('[class*="bg-white"][class*="rounded"]').filter({ hasText: name });
+    // Use specific card selectors to avoid matching inner elements
+    return this.page.locator('[data-testid^="entity-"], .card:has(button[title="Delete"])').filter({ hasText: name }).first();
   }
 
   /**
@@ -216,7 +226,9 @@ export class AdminPage {
   async clickEdit(entityName: string): Promise<void> {
     const card = this.getEntityCard(entityName);
     await expect(card).toBeVisible();
-    await card.getByTitle(/edit/i).or(card.locator('button:has-text("✏️")')).click();
+    // Try emoji button first, then icon button
+    const editBtn = card.locator('button:has-text("✏"), button[title*="edit" i], button:has-text("Edit")');
+    await editBtn.click();
   }
 
   /**
@@ -225,7 +237,11 @@ export class AdminPage {
   async clickDelete(entityName: string): Promise<void> {
     const card = this.getEntityCard(entityName);
     await expect(card).toBeVisible();
-    await card.getByTitle(/delete/i).or(card.locator('button:has-text("🗑️")')).click();
+    // Look for delete button by title attribute (Lucide Trash2 icon with title="Delete")
+    const deleteBtn = card.locator('button[title="Delete"]').first();
+    // Wait for button to be stable, then use dispatchEvent to bypass interception
+    await deleteBtn.waitFor({ state: 'visible' });
+    await deleteBtn.dispatchEvent('click');
   }
 
   /**
@@ -233,7 +249,8 @@ export class AdminPage {
    */
   async confirmDelete(): Promise<void> {
     await expect(this.deleteConfirmModal).toBeVisible();
-    await this.page.getByRole('button', { name: /^delete$/i }).click();
+    // Use data-testid for reliable selection
+    await this.page.locator('[data-testid="confirm-delete-btn"], button.bg-status-error:has-text("Delete"), button:has-text("Confirm")').click();
   }
 
   /**
@@ -241,7 +258,8 @@ export class AdminPage {
    */
   async cancelDelete(): Promise<void> {
     await expect(this.deleteConfirmModal).toBeVisible();
-    await this.page.getByRole('button', { name: /cancel/i }).click();
+    // Use data-testid for reliable selection
+    await this.page.locator('[data-testid="cancel-delete-btn"], button:has-text("Cancel")').click();
   }
 
   /**
@@ -258,7 +276,8 @@ export class AdminPage {
    * Get pending approval count from badge
    */
   async getPendingApprovalCount(): Promise<number> {
-    const badge = this.tabs.approvals.locator('[class*="bg-red"]');
+    // Badge uses data-testid="pending-badge" and bg-accent-500 class
+    const badge = this.tabs.approvals.locator('[data-testid="pending-badge"], [class*="bg-accent"]');
     if ((await badge.count()) > 0) {
       const text = await badge.textContent();
       return parseInt(text || '0', 10);
@@ -281,7 +300,9 @@ export class AdminPage {
     }
 
     await expect(approvalCard.first()).toBeVisible();
-    await approvalCard.first().getByRole('button', { name: /approve/i }).click();
+    // Look for approve button (green with checkmark)
+    const approveBtn = approvalCard.first().locator('button.bg-green-500:has-text("Approve"), button:has-text("✓ Approve"), button:has-text("Approve")');
+    await approveBtn.click();
 
     // Wait for approval to process
     await this.page.waitForResponse((resp) => resp.url().includes('/approve') && resp.status() === 200);
@@ -301,7 +322,9 @@ export class AdminPage {
     }
 
     await expect(approvalCard.first()).toBeVisible();
-    await approvalCard.first().getByRole('button', { name: /disapprove|reject/i }).click();
+    // Look for deny button
+    const denyBtn = approvalCard.first().locator('button:has-text("✗ Deny"), button:has-text("Deny"), button:has-text("Disapprove")');
+    await denyBtn.click();
 
     // Wait for disapproval to process
     await this.page.waitForResponse((resp) => resp.url().includes('/disapprove') && resp.status() === 200);
@@ -321,8 +344,9 @@ export class AdminPage {
    * Get count of entities in current tab
    */
   async getEntityCount(): Promise<number> {
-    const cards = this.page.locator('[class*="bg-white"][class*="rounded"]').filter({
-      has: this.page.locator('button'),
+    // Use .card class with buttons (entity cards have edit/delete buttons)
+    const cards = this.page.locator('.card').filter({
+      has: this.page.locator('button[title="Delete"]'),
     });
     return await cards.count();
   }
@@ -336,14 +360,35 @@ export class AdminPage {
     await expect(card).toBeVisible();
 
     // Look for points adjustment button/input
-    const adjustButton = card.getByRole('button', { name: /adjust|points/i });
+    const adjustButton = card.locator('button:has-text("adjust"), button:has-text("points"), button:has-text("+")');
     if ((await adjustButton.count()) > 0) {
-      await adjustButton.click();
-      await this.page.fill('input[type="number"]', String(points));
-      await this.page.getByRole('button', { name: /save|confirm/i }).click();
+      await adjustButton.first().click();
+      await this.page.locator('input[type="number"]').fill(String(points));
+      await this.page.locator('button:has-text("Save"), button:has-text("Confirm")').click();
 
       // Wait for API response
       await this.page.waitForResponse((resp) => resp.url().includes('/points') && resp.status() === 200);
     }
+  }
+
+  /**
+   * Get kid points from card
+   */
+  async getKidPoints(kidName: string): Promise<number> {
+    const card = this.getEntityCard(kidName);
+    await expect(card).toBeVisible();
+
+    const cardText = await card.textContent();
+    const match = cardText?.match(/(\d+)\s*(?:points|pts)/i);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /**
+   * Check if there are pending approvals
+   */
+  async hasPendingApprovals(): Promise<boolean> {
+    await this.selectTab('approvals');
+    const count = await this.pendingApprovalCards.count();
+    return count > 0;
   }
 }

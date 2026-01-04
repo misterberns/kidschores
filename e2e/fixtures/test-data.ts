@@ -72,6 +72,41 @@ export const TestData = {
   },
 
   /**
+   * Generate category data
+   */
+  category: {
+    create: (overrides: Partial<CategoryInput> = {}): CategoryInput => ({
+      name: faker.helpers.arrayElement([
+        'Bedroom',
+        'Kitchen',
+        'Bathroom',
+        'Living Room',
+        'Outdoor',
+        'School',
+        'Pet Care',
+      ]),
+      icon: faker.helpers.arrayElement(['🛏️', '🍳', '🚿', '🛋️', '🌳', '📚', '🐕']),
+      color: faker.helpers.arrayElement([
+        '#4f46e5',
+        '#ef4444',
+        '#3b82f6',
+        '#22c55e',
+        '#f59e0b',
+        '#8b5cf6',
+        '#ec4899',
+      ]),
+      sort_order: faker.number.int({ min: 1, max: 10 }),
+      ...overrides,
+    }),
+
+    /** Common test categories */
+    bedroom: (): CategoryInput => ({ name: 'Bedroom', icon: '🛏️', color: '#4f46e5', sort_order: 1 }),
+    kitchen: (): CategoryInput => ({ name: 'Kitchen', icon: '🍳', color: '#ef4444', sort_order: 2 }),
+    bathroom: (): CategoryInput => ({ name: 'Bathroom', icon: '🚿', color: '#3b82f6', sort_order: 3 }),
+    outdoor: (): CategoryInput => ({ name: 'Outdoor', icon: '🌳', color: '#22c55e', sort_order: 4 }),
+  },
+
+  /**
    * Generate reward data
    */
   reward: {
@@ -163,6 +198,19 @@ export interface ChoreInput {
   due_date?: string;
   allow_multiple_claims_per_day?: boolean;
   partial_allowed?: boolean;
+  category_id?: string;
+}
+
+export interface CategoryInput {
+  name: string;
+  icon: string;
+  color: string;
+  sort_order?: number;
+}
+
+export interface Category extends CategoryInput {
+  id: string;
+  chore_count?: number;
 }
 
 export interface RewardInput {

@@ -221,4 +221,123 @@ export class ApiHelpers {
     }
     return response.json();
   }
+
+  // ============== Categories API ==============
+
+  async createCategory(data: { name: string; icon: string; color: string; sort_order?: number }): Promise<any> {
+    const response = await this.apiContext.post('/api/categories', { data });
+    if (!response.ok()) {
+      throw new Error(`Failed to create category: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  async listCategories(): Promise<any[]> {
+    const response = await this.apiContext.get('/api/categories');
+    if (!response.ok()) {
+      throw new Error(`Failed to list categories: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  async getCategory(id: string): Promise<any> {
+    const response = await this.apiContext.get(`/api/categories/${id}`);
+    if (!response.ok()) {
+      throw new Error(`Failed to get category: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  // ============== Allowance API ==============
+
+  async getAllowanceSettings(kidId: string): Promise<any> {
+    const response = await this.apiContext.get(`/api/allowance/settings/${kidId}`);
+    if (!response.ok()) {
+      throw new Error(`Failed to get allowance settings: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  async updateAllowanceSettings(kidId: string, data: any): Promise<any> {
+    const response = await this.apiContext.put(`/api/allowance/settings/${kidId}`, { data });
+    if (!response.ok()) {
+      throw new Error(`Failed to update allowance settings: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  async requestPayout(kidId: string, data: { points_to_convert: number; payout_method?: string; notes?: string }): Promise<any> {
+    const response = await this.apiContext.post(`/api/allowance/convert/${kidId}`, { data });
+    if (!response.ok()) {
+      throw new Error(`Failed to request payout: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  async getPayouts(kidId: string, status?: string): Promise<any[]> {
+    const url = status ? `/api/allowance/payouts/${kidId}?status=${status}` : `/api/allowance/payouts/${kidId}`;
+    const response = await this.apiContext.get(url);
+    if (!response.ok()) {
+      throw new Error(`Failed to get payouts: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  async markPayoutPaid(payoutId: string, data: { paid_by: string; notes?: string }): Promise<any> {
+    const response = await this.apiContext.post(`/api/allowance/payouts/${payoutId}/pay`, { data });
+    if (!response.ok()) {
+      throw new Error(`Failed to mark payout paid: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  async cancelPayout(payoutId: string): Promise<any> {
+    const response = await this.apiContext.post(`/api/allowance/payouts/${payoutId}/cancel`);
+    if (!response.ok()) {
+      throw new Error(`Failed to cancel payout: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  async getAllowanceSummary(kidId: string): Promise<any> {
+    const response = await this.apiContext.get(`/api/allowance/summary/${kidId}`);
+    if (!response.ok()) {
+      throw new Error(`Failed to get allowance summary: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  // ============== History API ==============
+
+  async getHistory(kidId: string, params?: { page?: number; per_page?: number; status?: string; category_id?: string }): Promise<any> {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', String(params.page));
+    if (params?.per_page) searchParams.set('per_page', String(params.per_page));
+    if (params?.status) searchParams.set('status', params.status);
+    if (params?.category_id) searchParams.set('category_id', params.category_id);
+
+    const url = `/api/history/${kidId}${searchParams.toString() ? `?${searchParams}` : ''}`;
+    const response = await this.apiContext.get(url);
+    if (!response.ok()) {
+      throw new Error(`Failed to get history: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  async getAnalytics(kidId: string, days?: number): Promise<any> {
+    const url = days ? `/api/history/stats/${kidId}?days=${days}` : `/api/history/stats/${kidId}`;
+    const response = await this.apiContext.get(url);
+    if (!response.ok()) {
+      throw new Error(`Failed to get analytics: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  async exportHistoryCsv(kidId: string): Promise<string> {
+    const response = await this.apiContext.get(`/api/history/export/${kidId}`);
+    if (!response.ok()) {
+      throw new Error(`Failed to export history: ${await response.text()}`);
+    }
+    return response.text();
+  }
 }

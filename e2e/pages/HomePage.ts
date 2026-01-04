@@ -12,21 +12,31 @@ export class HomePage {
   readonly page: Page;
 
   // Page elements
-  readonly welcomeHeading: Locator;
   readonly kidCards: Locator;
   readonly loadingIndicator: Locator;
   readonly emptyState: Locator;
   readonly errorMessage: Locator;
 
+  // Navigation
+  readonly navHome: Locator;
+  readonly navChores: Locator;
+  readonly navRewards: Locator;
+  readonly navAdmin: Locator;
+
   constructor(page: Page) {
     this.page = page;
 
-    // Main elements
-    this.welcomeHeading = page.getByText('Welcome back!');
-    this.kidCards = page.locator('[class*="bg-gradient-to-br"]').filter({ has: page.locator('text=/points/i') });
+    // Kid cards use data-testid="kid-card-{id}" or gradient backgrounds
+    this.kidCards = page.locator('[data-testid^="kid-card-"], div.bg-gradient-to-br.rounded-2xl');
     this.loadingIndicator = page.getByText(/loading/i);
     this.emptyState = page.getByText(/no kids yet/i);
-    this.errorMessage = page.locator('.bg-red-100');
+    this.errorMessage = page.locator('.bg-red-100, .bg-status-error');
+
+    // Navigation links
+    this.navHome = page.locator('a[href="/"]');
+    this.navChores = page.locator('a[href="/chores"]');
+    this.navRewards = page.locator('a[href="/rewards"]');
+    this.navAdmin = page.locator('a[href="/admin"]');
   }
 
   /**
@@ -45,15 +55,34 @@ export class HomePage {
   }
 
   /**
+   * Get kid name locator
+   */
+  getKidName(name: string): Locator {
+    return this.page.locator('[data-testid^="kid-name-"], h2.text-2xl.font-bold, h2.font-bold', { hasText: name });
+  }
+
+  /**
    * Get the points displayed for a kid
+   * Note: AnimatedPoints uses spring animation, so we need to wait for it to settle
    */
   async getKidPoints(name: string): Promise<number> {
     const card = this.getKidCard(name);
     await expect(card).toBeVisible();
 
-    // Look for the points value (large number before "points" text)
-    const pointsText = await card.locator('text=/\\d+/').first().textContent();
-    return parseInt(pointsText || '0', 10);
+    // Wait for spring animation to settle (restDelta: 0.01 means ~500ms for most values)
+    await this.page.waitForTimeout(800);
+
+    // Look for the points element using data-testid first
+    const pointsElement = card.locator('[data-testid^="kid-points-"], span.text-5xl.font-bold, span.text-4xl.font-bold').first();
+    if (await pointsElement.count() > 0) {
+      const pointsText = await pointsElement.textContent();
+      return parseInt(pointsText || '0', 10);
+    }
+
+    // Fallback: look for any number followed by "points"
+    const cardText = await card.textContent();
+    const match = cardText?.match(/(\d+)\s*points/i);
+    return match ? parseInt(match[1], 10) : 0;
   }
 
   /**
@@ -63,8 +92,8 @@ export class HomePage {
     const card = this.getKidCard(name);
     await expect(card).toBeVisible();
 
-    // Look for streak indicator
-    const streakElement = card.locator('text=/streak/i').locator('..');
+    // Look for streak indicator (fire emoji or streak text)
+    const streakElement = card.locator('text=/streak/i, text=/🔥/').locator('..');
     if (await streakElement.count() > 0) {
       const text = await streakElement.textContent();
       const match = text?.match(/(\d+)/);
@@ -105,8 +134,8 @@ export class HomePage {
     const names: string[] = [];
 
     for (const card of cards) {
-      // The kid name is typically in the first heading or prominent text
-      const nameElement = card.locator('h2, h3, [class*="font-bold"]').first();
+      // The kid name is in h2.text-2xl.font-bold
+      const nameElement = card.locator('h2.text-2xl.font-bold, h2, h3').first();
       const name = await nameElement.textContent();
       if (name) {
         names.push(name.trim());
@@ -120,7 +149,21 @@ export class HomePage {
    * Wait for kids to load
    */
   async waitForKidsToLoad(): Promise<void> {
-    // Wait for either kids to appear or empty state
+    // Wait for network to settle first
+    await this.page.waitForLoadState('networkidle');
+
+    // Wait for either kids to appear, empty state, or loading to finish
+    // The loading skeleton uses animate-pulse class
+    const loadingSkeleton = this.page.locator('.animate-pulse');
+
+    // First wait for loading to potentially finish
+    try {
+      await loadingSkeleton.first().waitFor({ state: 'hidden', timeout: 5000 });
+    } catch {
+      // Loading may have already completed
+    }
+
+    // Then wait for either kids or empty state
     await Promise.race([
       this.kidCards.first().waitFor({ state: 'visible', timeout: 10000 }),
       this.emptyState.waitFor({ state: 'visible', timeout: 10000 }),
@@ -139,5 +182,29 @@ export class HomePage {
    */
   async getKidCount(): Promise<number> {
     return await this.kidCards.count();
+  }
+
+  /**
+   * Navigate to chores page via nav
+   */
+  async goToChores(): Promise<void> {
+    await this.navChores.click();
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  /**
+   * Navigate to rewards page via nav
+   */
+  async goToRewards(): Promise<void> {
+    await this.navRewards.click();
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  /**
+   * Navigate to admin page via nav
+   */
+  async goToAdmin(): Promise<void> {
+    await this.navAdmin.click();
+    await this.page.waitForLoadState('networkidle');
   }
 }

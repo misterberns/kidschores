@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-01-03
+
+### Added
+- **Authentication System** (Backend Phase 1)
+  - User model with email/password authentication
+  - JWT access/refresh token authentication
+  - Google OAuth 2.0 support (optional, requires configuration)
+  - API tokens for external integrations (e.g., Home Assistant)
+  - `/api/auth/register` - Create new account
+  - `/api/auth/login` - Email/password login
+  - `/api/auth/refresh` - Refresh access token
+  - `/api/auth/google` - Google OAuth exchange
+  - `/api/auth/me` - Get current user profile
+  - `/api/auth/verify-pin` - Verify parent PIN
+  - `/api/tokens` - API token CRUD operations
+
+- **Frontend Authentication** (Phase 2)
+  - AuthContext with JWT token management
+  - ProtectedRoute wrapper for authenticated pages
+  - Login page with email/password form
+  - Register page with password validation
+  - Kid selector page (Netflix-style profile selection)
+  - User indicator in header with logout button
+  - Automatic token refresh on 401 responses
+
+### Changed
+- Parent model now links to User account via `user_id`
+- PIN storage migrated to hashed format (`pin_hash`)
+- App now requires authentication to access main pages
+- Header shows current user/kid profile with quick switch
+
+### Security
+- JWT tokens with configurable expiry (24h access, 30d refresh for home use)
+- SHA256 password/PIN hashing with salt (home network appropriate)
+- API tokens stored as hashes (shown only once at creation)
+- Tokens stored in localStorage with automatic cleanup on logout
+
+## [0.2.1] - 2026-01-02
+
+### Fixed
+- Theme selector dropdown now has visible background (Tailwind v4 CSS variable fix)
+- Selected button text visibility in theme toggle (light/dark/system modes)
+- Halloween theme light mode now distinct from dark mode (warm cream vs dark purple)
+- Admin tab selected state now visible (inline style fix for CSS variables)
+- Default chore icon changed from "mdi:broom" text to 🧹 emoji
+- Season button selected state visibility in theme selector
+
+### Changed
+- Applied inline style pattern for CSS variable backgrounds throughout theme components
+- Updated Halloween light theme with harvest cream (#FFF8F0) background
+- Updated Halloween dark theme with spooky purple (#1A0F2E) background
+
 ## [0.2.0] - 2026-01-01
 
 ### Added
