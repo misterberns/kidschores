@@ -31,7 +31,7 @@ export function SelectKid() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-bg-base">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 bg-bg-base">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

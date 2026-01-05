@@ -486,11 +486,20 @@
    Base Styles
    ============================================ */
 
+html {
+  height: 100%;
+}
+
 body {
+  height: 100%;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-base);
   color: var(--text-primary);
   transition: background-color var(--transition-colors), color var(--transition-colors);
+}
+
+#root {
+  height: 100%;
 }
 
 /* Kid-friendly large touch targets */

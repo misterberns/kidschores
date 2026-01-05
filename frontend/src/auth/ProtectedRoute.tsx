@@ -13,7 +13,7 @@ export function ProtectedRoute({ children, requireKidSelection = false }: Protec
   // Show loading spinner while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-base">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-bg-base">
         <div className="flex flex-col items-center gap-4">
           <div
             style={{ borderColor: 'var(--primary-500)', borderTopColor: 'transparent' }}

@@ -125,7 +125,7 @@ function AppRoutes() {
   // Show loading while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-base">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-bg-base">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-text-muted">Loading...</p>
@@ -178,7 +178,7 @@ function AppContent() {
   const activeKid = kids.find((k) => k.id === activeKidId);
 
   return (
-    <div className="min-h-screen pb-20 transition-colors duration-200 bg-bg-base">
+    <div className="min-h-[100dvh] pb-20 transition-colors duration-200 bg-bg-base">
       {/* Primary accent line at top */}
       <div className="h-1 bg-primary-500" />
 
