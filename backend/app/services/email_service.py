@@ -54,8 +54,10 @@ class EmailService:
         """
         if not self._is_configured:
             print("Email service not configured. Skipping email send.")
+            print(f"  SMTP_HOST={self.host}, SMTP_USER={self.username}, HAS_PASSWORD={bool(self.password)}")
             return False
 
+        print(f"Attempting to send email to {to_email} via {self.host}:{self.port}")
         try:
             # Create message
             message = MIMEMultipart("alternative")
@@ -71,6 +73,7 @@ class EmailService:
             message.attach(MIMEText(html_content, "html"))
 
             # Send email
+            print(f"Connecting to SMTP: {self.host}:{self.port} with TLS={self.use_tls}")
             await aiosmtplib.send(
                 message,
                 hostname=self.host,
@@ -80,10 +83,13 @@ class EmailService:
                 start_tls=self.use_tls,
             )
 
+            print(f"Email sent successfully to {to_email}")
             return True
 
         except Exception as e:
-            print(f"Failed to send email: {e}")
+            print(f"Failed to send email to {to_email}: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     async def send_chore_claimed_email(
@@ -331,6 +337,146 @@ class EmailService:
 
         --
         KidsChores
+        """
+
+        return await self.send_email(to_email, subject, html_content, text_content)
+
+
+    async def send_password_reset_email(
+        self,
+        to_email: str,
+        reset_link: str,
+        display_name: str,
+    ) -> bool:
+        """Send password reset email with secure link."""
+        subject = "[KidsChores] Reset Your Password"
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name="referrer" content="no-referrer">
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #ef4444, #f97316); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
+                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
+                .btn {{ display: inline-block; background: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }}
+                .warning {{ background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 12px; margin-top: 20px; font-size: 14px; }}
+                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
+                .link-fallback {{ word-break: break-all; font-size: 12px; color: #6b7280; margin-top: 10px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Password Reset</h1>
+                </div>
+                <div class="content">
+                    <p>Hi {display_name},</p>
+                    <p>We received a request to reset your password for your KidsChores account.</p>
+                    <p>Click the button below to create a new password:</p>
+                    <p style="text-align: center;">
+                        <a href="{reset_link}" class="btn">Reset Password</a>
+                    </p>
+                    <p class="link-fallback">
+                        If the button doesn't work, copy and paste this link into your browser:<br>
+                        {reset_link}
+                    </p>
+                    <div class="warning">
+                        <strong>Important:</strong>
+                        <ul style="margin: 5px 0; padding-left: 20px;">
+                            <li>This link expires in 1 hour</li>
+                            <li>If you didn't request this reset, you can safely ignore this email</li>
+                            <li>Your password won't change until you create a new one</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>This is an automated message from KidsChores.</p>
+                    <p>If you didn't request a password reset, please ignore this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        text_content = f"""
+Hi {display_name},
+
+We received a request to reset your password for your KidsChores account.
+
+Click the link below to create a new password:
+{reset_link}
+
+Important:
+- This link expires in 1 hour
+- If you didn't request this reset, you can safely ignore this email
+- Your password won't change until you create a new one
+
+--
+KidsChores
+        """
+
+        return await self.send_email(to_email, subject, html_content, text_content)
+
+    async def send_password_changed_email(
+        self,
+        to_email: str,
+        display_name: str,
+    ) -> bool:
+        """Send confirmation email after password has been changed."""
+        subject = "[KidsChores] Your Password Has Been Changed"
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #10b981, #3b82f6); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
+                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
+                .success-icon {{ font-size: 48px; text-align: center; }}
+                .warning {{ background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 12px; margin-top: 20px; font-size: 14px; }}
+                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Password Changed</h1>
+                </div>
+                <div class="content">
+                    <p class="success-icon">&#9989;</p>
+                    <p>Hi {display_name},</p>
+                    <p>Your KidsChores password has been successfully changed.</p>
+                    <p>You can now log in with your new password.</p>
+                    <div class="warning">
+                        <strong>Wasn't you?</strong><br>
+                        If you didn't make this change, please contact support immediately as your account may have been compromised.
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>This is an automated message from KidsChores.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        text_content = f"""
+Hi {display_name},
+
+Your KidsChores password has been successfully changed.
+
+You can now log in with your new password.
+
+Wasn't you?
+If you didn't make this change, please contact support immediately as your account may have been compromised.
+
+--
+KidsChores
         """
 
         return await self.send_email(to_email, subject, html_content, text_content)

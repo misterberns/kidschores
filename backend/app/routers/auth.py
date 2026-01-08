@@ -1,5 +1,5 @@
 """Authentication endpoints."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 import httpx
@@ -10,7 +10,13 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..database import get_db
 from ..deps import get_current_user, require_auth
-from ..models import User, Parent, Kid
+from ..models import User, Parent, Kid, PasswordResetToken
+from ..schemas import (
+    PasswordResetRequest,
+    PasswordResetVerify,
+    PasswordResetResponse,
+    PasswordResetTokenStatus,
+)
 from ..security import (
     create_access_token,
     create_refresh_token,
@@ -19,7 +25,10 @@ from ..security import (
     verify_password,
     hash_pin,
     verify_pin,
+    generate_reset_token,
+    verify_reset_token,
 )
+from ..services.email_service import email_service
 
 router = APIRouter()
 
@@ -351,3 +360,171 @@ async def logout():
     This endpoint exists for consistency and future token blocklisting.
     """
     return {"message": "Logged out successfully"}
+
+
+# --- Password Reset Endpoints ---
+
+@router.post("/forgot-password", response_model=PasswordResetResponse)
+async def forgot_password(request: PasswordResetRequest, db: Session = Depends(get_db)):
+    """
+    Request a password reset email.
+
+    Security measures:
+    - Returns same response for valid/invalid emails (prevents enumeration)
+    - Rate limited to 3 requests per email per hour
+    - Invalidates previous reset tokens for the same user
+    """
+    email = request.email.lower().strip()
+
+    # Always return success message (prevent user enumeration)
+    success_message = "If an account with that email exists, you will receive a password reset link."
+
+    # Look up user
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        # User doesn't exist - return success anyway to prevent enumeration
+        return PasswordResetResponse(message=success_message)
+
+    if not user.is_active:
+        # Inactive account - return success anyway
+        return PasswordResetResponse(message=success_message)
+
+    # OAuth-only users can't reset password
+    if not user.password_hash and user.oauth_provider:
+        return PasswordResetResponse(message=success_message)
+
+    # Check rate limiting: count recent tokens for this user
+    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+    recent_tokens = db.query(PasswordResetToken).filter(
+        PasswordResetToken.user_id == user.id,
+        PasswordResetToken.created_at > one_hour_ago,
+    ).count()
+
+    if recent_tokens >= settings.reset_rate_limit_per_hour:
+        # Rate limited - still return success to prevent enumeration
+        return PasswordResetResponse(message=success_message)
+
+    # Invalidate any existing unused tokens for this user
+    db.query(PasswordResetToken).filter(
+        PasswordResetToken.user_id == user.id,
+        PasswordResetToken.used_at.is_(None),
+    ).delete()
+
+    # Generate new reset token
+    plain_token, token_hash = generate_reset_token()
+
+    # Store hashed token in database
+    reset_token = PasswordResetToken(
+        user_id=user.id,
+        token_hash=token_hash,
+        expires_at=datetime.utcnow() + timedelta(minutes=settings.reset_token_expire_minutes),
+    )
+    db.add(reset_token)
+    db.commit()
+
+    # Build reset link (frontend URL with port 8443)
+    reset_link = f"https://localhost:3103/reset-password?token={plain_token}"
+
+    # Send email
+    await email_service.send_password_reset_email(
+        to_email=user.email,
+        reset_link=reset_link,
+        display_name=user.display_name,
+    )
+
+    return PasswordResetResponse(message=success_message)
+
+
+@router.post("/reset-password", response_model=PasswordResetResponse)
+async def reset_password(request: PasswordResetVerify, db: Session = Depends(get_db)):
+    """
+    Verify reset token and set new password.
+
+    Security measures:
+    - Token must be valid and not expired
+    - Token is single-use (marked as used after successful reset)
+    - Password must be at least 8 characters
+    - User is NOT auto-logged in (must log in manually)
+    - Confirmation email sent after successful reset
+    """
+    # Validate password length
+    if len(request.new_password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters"
+        )
+
+    # Find all unexpired, unused tokens
+    now = datetime.utcnow()
+    tokens = db.query(PasswordResetToken).filter(
+        PasswordResetToken.expires_at > now,
+        PasswordResetToken.used_at.is_(None),
+    ).all()
+
+    # Check each token (we store hash, so need to verify)
+    valid_token = None
+    for token in tokens:
+        if verify_reset_token(request.token, token.token_hash):
+            valid_token = token
+            break
+
+    if not valid_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset link. Please request a new password reset."
+        )
+
+    # Get the user
+    user = db.query(User).filter(User.id == valid_token.user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid reset link"
+        )
+
+    # Update password
+    user.password_hash = hash_password(request.new_password)
+
+    # Mark token as used
+    valid_token.used_at = now
+
+    db.commit()
+
+    # Send confirmation email
+    await email_service.send_password_changed_email(
+        to_email=user.email,
+        display_name=user.display_name,
+    )
+
+    return PasswordResetResponse(
+        message="Password has been reset successfully. Please log in with your new password."
+    )
+
+
+@router.get("/verify-reset-token", response_model=PasswordResetTokenStatus)
+async def verify_reset_token_endpoint(token: str, db: Session = Depends(get_db)):
+    """
+    Check if a password reset token is valid.
+
+    Used by frontend to validate token before showing password form.
+    """
+    # Find all unexpired, unused tokens
+    now = datetime.utcnow()
+    tokens = db.query(PasswordResetToken).filter(
+        PasswordResetToken.expires_at > now,
+        PasswordResetToken.used_at.is_(None),
+    ).all()
+
+    # Check each token
+    for reset_token in tokens:
+        if verify_reset_token(token, reset_token.token_hash):
+            # Get user email for display
+            user = db.query(User).filter(User.id == reset_token.user_id).first()
+            if user:
+                # Mask email for privacy (show only first 2 chars and domain)
+                email_parts = user.email.split("@")
+                masked_email = email_parts[0][:2] + "***@" + email_parts[1]
+                return PasswordResetTokenStatus(valid=True, email=masked_email)
+
+    return PasswordResetTokenStatus(valid=False)

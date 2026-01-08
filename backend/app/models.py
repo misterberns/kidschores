@@ -39,6 +39,22 @@ class User(Base):
     # Relationships
     parent = relationship("Parent", back_populates="user", uselist=False)
     api_tokens = relationship("ApiToken", back_populates="user")
+    reset_tokens = relationship("PasswordResetToken", back_populates="user")
+
+
+class PasswordResetToken(Base):
+    """Password reset token for secure password recovery."""
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    token_hash = Column(String(64), nullable=False)  # SHA256 hash of token
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)  # Set when token is used
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", back_populates="reset_tokens")
 
 
 class ApiToken(Base):

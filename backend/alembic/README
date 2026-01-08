@@ -1,0 +1,49 @@
+Alembic Migrations for KidsChores
+==================================
+
+This directory contains database migrations managed by Alembic.
+
+## Common Commands
+
+### Generate a new migration (autogenerate from model changes)
+```bash
+cd backend
+alembic revision --autogenerate -m "Description of changes"
+```
+
+### Apply all pending migrations
+```bash
+alembic upgrade head
+```
+
+### Rollback one migration
+```bash
+alembic downgrade -1
+```
+
+### View migration history
+```bash
+alembic history
+```
+
+### View current database version
+```bash
+alembic current
+```
+
+## SQLite Notes
+
+- SQLite has limited ALTER TABLE support
+- Alembic uses batch mode (`render_as_batch=True`) to handle this
+- Complex column modifications create a new table, copy data, drop old table
+
+## First-Time Setup
+
+If migrating from `Base.metadata.create_all()`:
+
+1. Stamp the current database state:
+   ```bash
+   alembic stamp head
+   ```
+
+2. Future changes will be tracked via migrations

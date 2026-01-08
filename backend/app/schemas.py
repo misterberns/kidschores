@@ -473,3 +473,27 @@ class NotificationPreferenceResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# --- Password Reset Schemas ---
+
+class PasswordResetRequest(BaseModel):
+    """Request to initiate password reset."""
+    email: str
+
+
+class PasswordResetVerify(BaseModel):
+    """Request to verify token and set new password."""
+    token: str
+    new_password: str
+
+
+class PasswordResetResponse(BaseModel):
+    """Response for password reset operations."""
+    message: str
+
+
+class PasswordResetTokenStatus(BaseModel):
+    """Response for token validation check."""
+    valid: bool
+    email: Optional[str] = None  # Only included if valid

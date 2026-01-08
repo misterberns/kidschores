@@ -96,9 +96,18 @@ export function Login() {
 
           {/* Password Input */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-1">
-              Password
-            </label>
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-text-secondary">
+                Password
+              </label>
+              <Link
+                to="/forgot-password"
+                style={{ color: 'var(--primary-500)' }}
+                className="text-sm hover:opacity-80"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <div className="relative">
               <Lock
                 size={20}

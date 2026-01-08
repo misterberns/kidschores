@@ -21,7 +21,15 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db():
-    """Initialize database tables."""
+    """Initialize database tables.
+
+    For development: Uses create_all() which creates missing tables.
+    For production: Use Alembic migrations instead:
+        cd backend && alembic upgrade head
+
+    Note: create_all() is safe - it only creates tables that don't exist.
+    It won't modify existing tables or drop data.
+    """
     Base.metadata.create_all(bind=engine)
 
 

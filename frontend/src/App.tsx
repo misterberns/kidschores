@@ -8,6 +8,8 @@ import { Rewards } from './pages/Rewards';
 import { Admin } from './pages/Admin';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 import { SelectKid } from './pages/SelectKid';
 import NotificationSettings from './pages/NotificationSettings';
 import { Allowance } from './pages/Allowance';
@@ -144,6 +146,14 @@ function AppRoutes() {
       <Route
         path="/register"
         element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
+      />
+      <Route
+        path="/forgot-password"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <ForgotPassword />}
+      />
+      <Route
+        path="/reset-password"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <ResetPassword />}
       />
 
       {/* Kid selector (authenticated but before main app) */}

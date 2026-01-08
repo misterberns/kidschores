@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     # API Tokens
     api_token_prefix: str = "kc_"  # Prefix for API tokens
 
+    # Password Reset
+    reset_token_expire_minutes: int = 60  # 1 hour expiration
+    reset_rate_limit_per_hour: int = 3  # Max reset requests per email per hour
+
     # Security
     bcrypt_rounds: int = 12  # bcrypt cost factor
 

@@ -20,3 +20,6 @@ pywebpush>=1.14.0
 
 # Email Notifications
 aiosmtplib>=2.0.0
+
+# Database Migrations
+alembic>=1.13.0

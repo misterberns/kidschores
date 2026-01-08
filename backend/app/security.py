@@ -100,3 +100,20 @@ def verify_api_token(plain_token: str, hashed_token: str) -> bool:
 def get_token_prefix(token: str) -> str:
     """Get the display prefix of an API token (first 12 chars)."""
     return token[:12] if len(token) >= 12 else token
+
+
+def generate_reset_token() -> Tuple[str, str]:
+    """
+    Generate a secure password reset token.
+    Returns (plain_token, token_hash) - store hash, send plain token to user.
+    """
+    # Generate cryptographically secure token (64+ chars when base64 encoded)
+    token = secrets.token_urlsafe(48)
+    # Hash using SHA256 (no salt needed - token is already random)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    return token, token_hash
+
+
+def verify_reset_token(plain_token: str, token_hash: str) -> bool:
+    """Verify a password reset token against its stored hash."""
+    return hashlib.sha256(plain_token.encode()).hexdigest() == token_hash
