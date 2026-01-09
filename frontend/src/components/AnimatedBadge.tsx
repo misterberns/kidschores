@@ -88,12 +88,15 @@ interface CountBadgeProps {
 
 // Theme-aware variant colors (use CSS variables)
 const variantClasses = {
-  primary: 'bg-primary-500 text-white',
+  primary: 'bg-primary-500',
   secondary: 'bg-bg-accent text-text-primary',
-  success: 'bg-primary-500 text-white',
-  warning: 'bg-accent-500 text-white',
-  danger: 'bg-status-error text-white',
+  success: 'bg-primary-500',
+  warning: 'bg-accent-500',
+  danger: 'bg-status-error',
 };
+
+// Variants that need inverse text color (applied via inline style)
+const inverseTextVariants = ['primary', 'success', 'warning', 'danger'];
 
 /**
  * Animated count badge with pop effect on change
@@ -108,6 +111,7 @@ export function CountBadge({ count, className = '', variant = 'primary' }: Count
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 500, damping: 25 }}
       className={`inline-flex items-center justify-center min-w-6 h-6 px-2 rounded-full text-xs font-bold ${variantClasses[variant]} ${className}`}
+      style={inverseTextVariants.includes(variant) ? { color: 'var(--text-inverse)' } : undefined}
     >
       {count}
     </motion.span>

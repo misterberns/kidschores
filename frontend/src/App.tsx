@@ -42,7 +42,10 @@ function NavBar() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] transition-colors duration-200 bg-bg-surface z-50"
-      style={{ isolation: 'isolate' }}
+      style={{
+        isolation: 'isolate',
+        backgroundColor: 'var(--bg-surface)',
+      }}
     >
       <div className="flex justify-around items-center h-16 relative">
         {/* Animated indicator - green dot above active item */}

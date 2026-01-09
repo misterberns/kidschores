@@ -59,9 +59,10 @@ export function CategoryFilter({
         onClick={() => onSelect(null)}
         className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
           selected === null
-            ? 'bg-primary-500 text-white'
+            ? 'bg-primary-500'
             : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
         }`}
+        style={selected === null ? { color: 'var(--text-inverse)' } : undefined}
       >
         All
       </button>
@@ -71,12 +72,12 @@ export function CategoryFilter({
           onClick={() => onSelect(category.id)}
           className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1 ${
             selected === category.id
-              ? 'text-white'
+              ? ''
               : 'hover:opacity-80'
           }`}
           style={{
             backgroundColor: selected === category.id ? category.color : `${category.color}20`,
-            color: selected === category.id ? 'white' : category.color,
+            color: selected === category.id ? 'var(--text-inverse)' : category.color,
           }}
         >
           <span>{category.icon}</span>

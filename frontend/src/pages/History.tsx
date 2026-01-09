@@ -280,10 +280,11 @@ function CalendarView({ dailyStats }: { dailyStats: Analytics['daily_stats'] }) 
                 className={`aspect-square rounded-lg flex items-center justify-center text-sm ${
                   day
                     ? day.completed > 0
-                      ? 'bg-primary-500 text-white font-medium'
+                      ? 'bg-primary-500 font-medium'
                       : 'bg-bg-accent text-text-secondary'
                     : ''
                 }`}
+                style={day && day.completed > 0 ? { color: 'var(--text-inverse)' } : undefined}
               >
                 {day?.date}
               </div>
@@ -390,9 +391,10 @@ export function History() {
               }}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 activeKidId === kid.id
-                  ? 'bg-primary-500 text-white'
+                  ? 'bg-primary-500'
                   : 'bg-bg-accent text-text-secondary hover:bg-bg-elevated'
               }`}
+              style={activeKidId === kid.id ? { color: 'var(--text-inverse)' } : undefined}
               whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
             >
@@ -408,9 +410,10 @@ export function History() {
           onClick={() => setViewMode('stats')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
             viewMode === 'stats'
-              ? 'bg-primary-500 text-white'
+              ? 'bg-primary-500'
               : 'bg-bg-accent text-text-secondary hover:bg-bg-elevated'
           }`}
+          style={viewMode === 'stats' ? { color: 'var(--text-inverse)' } : undefined}
         >
           <BarChart3 size={16} />
           Stats
@@ -419,9 +422,10 @@ export function History() {
           onClick={() => setViewMode('calendar')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
             viewMode === 'calendar'
-              ? 'bg-primary-500 text-white'
+              ? 'bg-primary-500'
               : 'bg-bg-accent text-text-secondary hover:bg-bg-elevated'
           }`}
+          style={viewMode === 'calendar' ? { color: 'var(--text-inverse)' } : undefined}
         >
           <Calendar size={16} />
           Calendar
@@ -430,9 +434,10 @@ export function History() {
           onClick={() => setViewMode('list')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
             viewMode === 'list'
-              ? 'bg-primary-500 text-white'
+              ? 'bg-primary-500'
               : 'bg-bg-accent text-text-secondary hover:bg-bg-elevated'
           }`}
+          style={viewMode === 'list' ? { color: 'var(--text-inverse)' } : undefined}
         >
           <List size={16} />
           List

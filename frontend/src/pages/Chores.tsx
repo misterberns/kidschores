@@ -399,9 +399,10 @@ export function Chores() {
             onClick={() => setViewMode('today')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               viewMode === 'today'
-                ? 'bg-primary-500 text-white'
+                ? 'bg-primary-500'
                 : 'bg-bg-accent text-text-secondary hover:bg-bg-elevated'
             }`}
+            style={viewMode === 'today' ? { color: 'var(--text-inverse)' } : undefined}
             whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
             whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
           >
@@ -412,9 +413,10 @@ export function Chores() {
             onClick={() => setViewMode('all')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               viewMode === 'all'
-                ? 'bg-primary-500 text-white'
+                ? 'bg-primary-500'
                 : 'bg-bg-accent text-text-secondary hover:bg-bg-elevated'
             }`}
+            style={viewMode === 'all' ? { color: 'var(--text-inverse)' } : undefined}
             whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
             whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
           >

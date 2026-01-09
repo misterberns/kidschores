@@ -349,11 +349,12 @@ function AddChoreForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) {
                     : [...prev, kid.id]
                 );
               }}
-              className={`px-3 py-1.5 rounded-full border-2 font-medium transition-colors ${
-                selectedKids.includes(kid.id)
-                  ? 'bg-primary-500 text-white border-primary-500'
-                  : 'border-bg-accent text-text-secondary hover:border-primary-500'
-              }`}
+              className="px-3 py-1.5 rounded-full border-2 font-medium transition-colors"
+              style={{
+                backgroundColor: selectedKids.includes(kid.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
+                borderColor: selectedKids.includes(kid.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
+                color: selectedKids.includes(kid.id) ? 'var(--text-inverse)' : 'var(--text-secondary)'
+              }}
             >
               {kid.name}
             </button>
@@ -393,9 +394,10 @@ function AddChoreForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) {
               }}
               className={`px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 applicableDays.includes(idx)
-                  ? 'bg-primary-500 text-white'
+                  ? 'bg-primary-500'
                   : 'bg-bg-accent text-text-secondary hover:bg-primary-100'
               }`}
+              style={applicableDays.includes(idx) ? { color: 'var(--text-inverse)' } : undefined}
             >
               {day}
             </button>
@@ -476,11 +478,12 @@ function EditChoreForm({ chore, kids, onClose }: { chore: Chore; kids: Kid[]; on
                     : [...prev, kid.id]
                 );
               }}
-              className={`px-3 py-1.5 rounded-full border-2 font-medium transition-colors ${
-                selectedKids.includes(kid.id)
-                  ? 'bg-primary-500 text-white border-primary-500'
-                  : 'border-bg-accent text-text-secondary hover:border-primary-500'
-              }`}
+              className="px-3 py-1.5 rounded-full border-2 font-medium transition-colors"
+              style={{
+                backgroundColor: selectedKids.includes(kid.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
+                borderColor: selectedKids.includes(kid.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
+                color: selectedKids.includes(kid.id) ? 'var(--text-inverse)' : 'var(--text-secondary)'
+              }}
             >
               {kid.name}
             </button>
@@ -520,9 +523,10 @@ function EditChoreForm({ chore, kids, onClose }: { chore: Chore; kids: Kid[]; on
               }}
               className={`px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 applicableDays.includes(idx)
-                  ? 'bg-primary-500 text-white'
+                  ? 'bg-primary-500'
                   : 'bg-bg-accent text-text-secondary hover:bg-primary-100'
               }`}
+              style={applicableDays.includes(idx) ? { color: 'var(--text-inverse)' } : undefined}
             >
               {day}
             </button>
