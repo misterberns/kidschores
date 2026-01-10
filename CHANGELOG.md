@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-01-09
+
+### Added
+- Password reset functionality with email-based recovery flow
+
+## [0.4.1] - 2026-01-05
+
+### Fixed
+- Resolved iframe blank space using relative height
+- Fixed Home Assistant iframe blank space using 100dvh viewport units
+
 ## [0.4.0] - 2026-01-04
 
 ### Added
