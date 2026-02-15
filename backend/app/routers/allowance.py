@@ -1,5 +1,5 @@
 """Allowance management API endpoints."""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -293,7 +293,7 @@ def mark_payout_paid(
         )
 
     payout.status = "paid"
-    payout.paid_at = datetime.utcnow()
+    payout.paid_at = datetime.now(timezone.utc)
     payout.paid_by = request.paid_by
     if request.notes:
         payout.notes = (payout.notes or "") + f"\nPaid: {request.notes}"

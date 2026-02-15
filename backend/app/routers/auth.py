@@ -1,22 +1,27 @@
 """Authentication endpoints."""
-from datetime import datetime, timedelta
+import time
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..database import get_db
 from ..deps import get_current_user, require_auth
-from ..models import User, Parent, Kid, PasswordResetToken
+from ..models import User, Parent, Kid, PasswordResetToken, ParentInvitation
 from ..schemas import (
     PasswordResetRequest,
     PasswordResetVerify,
     PasswordResetResponse,
     PasswordResetTokenStatus,
+    ParentInvitationAccept,
+    ParentInvitationTokenStatus,
 )
+import hashlib
 from ..security import (
     create_access_token,
     create_refresh_token,
@@ -25,10 +30,33 @@ from ..security import (
     verify_password,
     hash_pin,
     verify_pin,
+    needs_rehash,
     generate_reset_token,
     verify_reset_token,
 )
 from ..services.email_service import email_service
+
+
+# --- Rate Limiting ---
+# Simple in-memory rate limiter: {ip: [(timestamp, ...)]
+_login_attempts: dict[str, list[float]] = defaultdict(list)
+_RATE_LIMIT_MAX = 5  # max attempts
+_RATE_LIMIT_WINDOW = 300  # 5 minutes
+
+
+def _check_rate_limit(client_ip: str) -> None:
+    """Raise 429 if too many login attempts from this IP."""
+    now = time.time()
+    # Prune old entries
+    _login_attempts[client_ip] = [
+        t for t in _login_attempts[client_ip] if now - t < _RATE_LIMIT_WINDOW
+    ]
+    if len(_login_attempts[client_ip]) >= _RATE_LIMIT_MAX:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts. Please try again in a few minutes."
+        )
+    _login_attempts[client_ip].append(now)
 
 router = APIRouter()
 
@@ -99,6 +127,13 @@ class VerifyPinResponse(BaseModel):
 @router.post("/register", response_model=TokenResponse)
 async def register(request: RegisterRequest, db: Session = Depends(get_db)):
     """Register a new user account."""
+    # Validate password strength
+    if len(request.password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters"
+        )
+
     # Check if email already exists
     existing = db.query(User).filter(User.email == request.email.lower()).first()
     if existing:
@@ -136,8 +171,11 @@ async def register(request: RegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(request: LoginRequest, db: Session = Depends(get_db)):
+async def login(request: LoginRequest, req: Request, db: Session = Depends(get_db)):
     """Login with email and password."""
+    client_ip = req.client.host if req.client else "unknown"
+    _check_rate_limit(client_ip)
+
     user = db.query(User).filter(User.email == request.email.lower()).first()
 
     if not user or not user.password_hash:
@@ -158,8 +196,12 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             detail="Account is disabled"
         )
 
+    # Transparent rehash: upgrade SHA256 -> bcrypt on successful login
+    if needs_rehash(user.password_hash):
+        user.password_hash = hash_password(request.password)
+
     # Update last login
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()
 
     # Generate tokens
@@ -284,7 +326,7 @@ async def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db))
             )
             db.add(parent)
 
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()
 
     # Generate tokens
@@ -342,11 +384,19 @@ async def verify_pin_endpoint(
     # Check hashed PIN first, fall back to legacy plaintext
     if parent.pin_hash:
         valid = verify_pin(request.pin, parent.pin_hash)
+        # Rehash if using legacy SHA256
+        if valid and needs_rehash(parent.pin_hash):
+            parent.pin_hash = hash_pin(request.pin)
+            db.commit()
     elif parent.pin:
-        # Legacy plaintext comparison
+        # Legacy plaintext comparison + migrate to hashed
         valid = request.pin == parent.pin
+        if valid:
+            parent.pin_hash = hash_pin(request.pin)
+            parent.pin = None  # Remove plaintext
+            db.commit()
     else:
-        # No PIN set - always valid (or you could require PIN)
+        # No PIN set - always valid
         valid = True
 
     return VerifyPinResponse(valid=valid)
@@ -395,7 +445,7 @@ async def forgot_password(request: PasswordResetRequest, db: Session = Depends(g
         return PasswordResetResponse(message=success_message)
 
     # Check rate limiting: count recent tokens for this user
-    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+    one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
     recent_tokens = db.query(PasswordResetToken).filter(
         PasswordResetToken.user_id == user.id,
         PasswordResetToken.created_at > one_hour_ago,
@@ -418,7 +468,7 @@ async def forgot_password(request: PasswordResetRequest, db: Session = Depends(g
     reset_token = PasswordResetToken(
         user_id=user.id,
         token_hash=token_hash,
-        expires_at=datetime.utcnow() + timedelta(minutes=settings.reset_token_expire_minutes),
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=settings.reset_token_expire_minutes),
     )
     db.add(reset_token)
     db.commit()
@@ -456,7 +506,7 @@ async def reset_password(request: PasswordResetVerify, db: Session = Depends(get
         )
 
     # Find all unexpired, unused tokens
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     tokens = db.query(PasswordResetToken).filter(
         PasswordResetToken.expires_at > now,
         PasswordResetToken.used_at.is_(None),
@@ -510,7 +560,7 @@ async def verify_reset_token_endpoint(token: str, db: Session = Depends(get_db))
     Used by frontend to validate token before showing password form.
     """
     # Find all unexpired, unused tokens
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     tokens = db.query(PasswordResetToken).filter(
         PasswordResetToken.expires_at > now,
         PasswordResetToken.used_at.is_(None),
@@ -528,3 +578,130 @@ async def verify_reset_token_endpoint(token: str, db: Session = Depends(get_db))
                 return PasswordResetTokenStatus(valid=True, email=masked_email)
 
     return PasswordResetTokenStatus(valid=False)
+
+
+# --- Parent Invitation Endpoints ---
+
+@router.get("/verify-invitation-token", response_model=ParentInvitationTokenStatus)
+async def verify_invitation_token_endpoint(token: str, db: Session = Depends(get_db)):
+    """
+    Check if a parent invitation token is valid.
+
+    Used by frontend to validate token before showing account setup form.
+    """
+    # Hash the provided token
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+    # Find matching invitation
+    now = datetime.now(timezone.utc)
+    invitation = db.query(ParentInvitation).filter(
+        ParentInvitation.token_hash == token_hash,
+        ParentInvitation.expires_at > now,
+        ParentInvitation.is_consumed == False,
+    ).first()
+
+    if not invitation:
+        return ParentInvitationTokenStatus(valid=False)
+
+    # Get parent info
+    parent = db.query(Parent).filter(Parent.id == invitation.parent_id).first()
+    if not parent:
+        return ParentInvitationTokenStatus(valid=False)
+
+    return ParentInvitationTokenStatus(
+        valid=True,
+        email=invitation.email,
+        parent_name=parent.name,
+        expires_at=invitation.expires_at,
+    )
+
+
+@router.post("/accept-invitation", response_model=TokenResponse)
+async def accept_invitation(
+    request: ParentInvitationAccept,
+    db: Session = Depends(get_db),
+):
+    """
+    Accept a parent invitation and create user account.
+
+    Security measures:
+    - Token must be valid and not expired
+    - Token is single-use (marked as consumed after successful acceptance)
+    - Password must be at least 8 characters
+    - Email from invitation is used (cannot be changed)
+    - User is auto-logged in after successful account creation
+    """
+    # Validate password length
+    if len(request.password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters"
+        )
+
+    # Hash the provided token
+    token_hash = hashlib.sha256(request.token.encode()).hexdigest()
+
+    # Find matching invitation
+    now = datetime.now(timezone.utc)
+    invitation = db.query(ParentInvitation).filter(
+        ParentInvitation.token_hash == token_hash,
+        ParentInvitation.expires_at > now,
+        ParentInvitation.is_consumed == False,
+    ).first()
+
+    if not invitation:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired invitation link. Please request a new invitation."
+        )
+
+    # Get the parent
+    parent = db.query(Parent).filter(Parent.id == invitation.parent_id).first()
+    if not parent:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid invitation link"
+        )
+
+    # Check if parent already has a linked user account
+    if parent.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This parent already has an account"
+        )
+
+    # Check if email is already registered
+    existing_user = db.query(User).filter(User.email == invitation.email.lower()).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An account with this email already exists. Please log in instead."
+        )
+
+    # Create user account
+    display_name = request.display_name if request.display_name else parent.name
+    user = User(
+        email=invitation.email.lower(),
+        password_hash=hash_password(request.password),
+        display_name=display_name,
+    )
+    db.add(user)
+    db.flush()  # Get the user ID
+
+    # Link user to parent
+    parent.user_id = user.id
+
+    # Mark invitation as consumed
+    invitation.is_consumed = True
+    invitation.consumed_at = now
+
+    db.commit()
+
+    # Generate tokens for auto-login
+    access_token = create_access_token({"sub": user.id})
+    refresh_token = create_refresh_token({"sub": user.id})
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )

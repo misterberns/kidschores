@@ -4,8 +4,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from .config import settings
 from .database import init_db
-from .routers import kids, chores, rewards, parents, approvals, test, auth, api_tokens, notifications, categories, allowance, history
+from .routers import kids, chores, rewards, parents, approvals, auth, api_tokens, notifications, categories, allowance, history
 from .scheduler import start_scheduler, shutdown_scheduler
 
 # Configure logging
@@ -33,15 +34,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KidsChores",
     description="Family chore management with points and rewards",
-    version="0.2.0",  # Keep in sync with VERSION file
+    version="0.6.0",  # Keep in sync with VERSION file
     lifespan=lifespan,
     redirect_slashes=False,  # Prevent 307 redirects for /api/kids vs /api/kids/
 )
 
 # CORS middleware for frontend
+_cors_origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure for production
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,7 +57,6 @@ app.include_router(parents.router, prefix="/api/parents", tags=["Parents"])
 app.include_router(chores.router, prefix="/api/chores", tags=["Chores"])
 app.include_router(rewards.router, prefix="/api/rewards", tags=["Rewards"])
 app.include_router(approvals.router, prefix="/api/approvals", tags=["Approvals"])
-app.include_router(test.router, prefix="/api/test", tags=["Test"])
 app.include_router(notifications.router, prefix="/api", tags=["Notifications"])
 app.include_router(categories.router, prefix="/api/categories", tags=["Categories"])
 app.include_router(allowance.router, prefix="/api/allowance", tags=["Allowance"])
@@ -65,7 +66,7 @@ app.include_router(history.router, prefix="/api/history", tags=["History"])
 @app.get("/")
 async def root():
     """Root endpoint - health check."""
-    return {"status": "ok", "app": "KidsChores", "version": "0.2.0"}
+    return {"status": "ok", "app": "KidsChores", "version": "0.6.0"}
 
 
 @app.get("/api/health")

@@ -10,6 +10,8 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
+import { AcceptInvitation } from './pages/AcceptInvitation';
+import { GoogleCallback } from './pages/GoogleCallback';
 import { SelectKid } from './pages/SelectKid';
 import NotificationSettings from './pages/NotificationSettings';
 import { Allowance } from './pages/Allowance';
@@ -157,6 +159,14 @@ function AppRoutes() {
       <Route
         path="/reset-password"
         element={isAuthenticated ? <Navigate to="/" replace /> : <ResetPassword />}
+      />
+      <Route
+        path="/accept-invitation"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <AcceptInvitation />}
+      />
+      <Route
+        path="/auth/google/callback"
+        element={<GoogleCallback />}
       />
 
       {/* Kid selector (authenticated but before main app) */}

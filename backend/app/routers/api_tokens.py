@@ -1,5 +1,5 @@
 """API token management endpoints."""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -77,7 +77,7 @@ async def create_token(
     expires_at = None
     if request.expires_in_days:
         from datetime import timedelta
-        expires_at = datetime.utcnow() + timedelta(days=request.expires_in_days)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=request.expires_in_days)
 
     # Create token record
     api_token = ApiToken(

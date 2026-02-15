@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-02-14
+
+### Security
+- **bcrypt password hashing**: Migrated from SHA256 to bcrypt (12 rounds) with transparent rehash-on-login
+- **Login rate limiting**: 5 attempts per IP per 5-minute window (HTTP 429)
+- **CORS restriction**: Tightened from wildcard `*` to explicit allowed origins
+- **PIN migration**: Plaintext PINs auto-migrate to bcrypt on first verification
+- **Password validation**: Minimum 8 characters enforced on registration
+- **Admin authorization**: Added `require_admin` dependency for admin-only endpoints
+- **Removed test router**: `/api/test` no longer exposes internal state
+
+### Added
+- **Google SSO**: OAuth 2.0 authorization code flow with Google sign-in on Login and Register pages
+- **Google callback page**: Handles OAuth redirect with loading state and error handling
+- **Admin middleware**: `require_admin` FastAPI dependency for guarding admin routes
+
+### Changed
+- **Dockerfile**: Updated to Python 3.14-slim with baked-in dependencies (eliminates pip install on every start)
+- **API token lookup**: Prefix-based database query instead of O(n) full-table scan
+- **datetime fix**: All `datetime.utcnow()` replaced with `datetime.now(timezone.utc)` (Python 3.12+ deprecation)
+- **Config cleanup**: Removed dead `bcrypt_rounds` and `database_url` settings
+- **Version**: Bumped to 0.6.0
+
+### Fixed
+- Google OAuth redirect URI now includes `:8443` port for Traefik routing
+
 ## [0.5.0] - 2026-01-09
 
 ### Added

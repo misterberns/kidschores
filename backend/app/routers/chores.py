@@ -1,11 +1,12 @@
 """Chores API endpoints."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Chore, ChoreClaim, Kid, DailyMultiplier, PushSubscription
+from ..deps import require_admin
+from ..models import Chore, ChoreClaim, Kid, DailyMultiplier, PushSubscription, User
 from ..schemas import (
     ChoreCreate, ChoreUpdate, ChoreResponse, ChoreWithStatus,
     ChoreClaimRequest, ChoreApproveRequest, ChoreClaimResponse,
@@ -70,7 +71,7 @@ def list_chores(db: Session = Depends(get_db)):
 
 @router.post("", response_model=ChoreResponse)
 @router.post("/", response_model=ChoreResponse, include_in_schema=False)
-def create_chore(chore: ChoreCreate, db: Session = Depends(get_db)):
+def create_chore(chore: ChoreCreate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Create a new chore."""
     db_chore = Chore(**chore.model_dump())
     db.add(db_chore)
@@ -89,7 +90,7 @@ def get_chore(chore_id: str, db: Session = Depends(get_db)):
 
 
 @router.put("/{chore_id}", response_model=ChoreResponse)
-def update_chore(chore_id: str, chore_update: ChoreUpdate, db: Session = Depends(get_db)):
+def update_chore(chore_id: str, chore_update: ChoreUpdate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Update chore."""
     chore = db.query(Chore).filter(Chore.id == chore_id).first()
     if not chore:
@@ -105,7 +106,7 @@ def update_chore(chore_id: str, chore_update: ChoreUpdate, db: Session = Depends
 
 
 @router.delete("/{chore_id}")
-def delete_chore(chore_id: str, db: Session = Depends(get_db)):
+def delete_chore(chore_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Delete chore."""
     chore = db.query(Chore).filter(Chore.id == chore_id).first()
     if not chore:
@@ -219,7 +220,7 @@ def get_chores_for_kid(kid_id: str, db: Session = Depends(get_db)):
                 claimed_by = kid.name
 
             # Check if overdue
-            if chore.due_date and chore.due_date < datetime.utcnow() and status == "pending":
+            if chore.due_date and chore.due_date < datetime.now(timezone.utc) and status == "pending":
                 status = "overdue"
 
             result.append(ChoreWithStatus(
@@ -270,7 +271,7 @@ def claim_chore(
     db.add(claim)
 
     # Update chore last_claimed
-    chore.last_claimed = datetime.utcnow()
+    chore.last_claimed = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(claim)
@@ -307,7 +308,7 @@ def approve_chore(
 
     # Update claim
     claim.status = "approved"
-    claim.approved_at = datetime.utcnow()
+    claim.approved_at = datetime.now(timezone.utc)
     claim.approved_by = request.parent_name
     claim.points_awarded = points_with_multiplier
 
@@ -323,7 +324,7 @@ def approve_chore(
     kid.completed_chores_total += 1
 
     # Update chore last_completed
-    chore.last_completed = datetime.utcnow()
+    chore.last_completed = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(claim)
@@ -348,7 +349,7 @@ def disapprove_chore(chore_id: str, request: ChoreApproveRequest, db: Session = 
         raise HTTPException(status_code=404, detail="No pending claim found for this chore")
 
     claim.status = "disapproved"
-    claim.approved_at = datetime.utcnow()
+    claim.approved_at = datetime.now(timezone.utc)
     claim.approved_by = request.parent_name
 
     db.commit()

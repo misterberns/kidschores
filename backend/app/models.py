@@ -1,5 +1,5 @@
 """SQLAlchemy models for KidsChores standalone app."""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 import uuid
 
@@ -33,7 +33,7 @@ class User(Base):
     is_admin = Column(Boolean, default=False)  # For future admin features
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_login = Column(DateTime, nullable=True)
 
     # Relationships
@@ -51,10 +51,27 @@ class PasswordResetToken(Base):
     token_hash = Column(String(64), nullable=False)  # SHA256 hash of token
     expires_at = Column(DateTime, nullable=False)
     used_at = Column(DateTime, nullable=True)  # Set when token is used
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="reset_tokens")
+
+
+class ParentInvitation(Base):
+    """Parent invitation token for email-based onboarding."""
+    __tablename__ = "parent_invitations"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    email = Column(String(255), nullable=False, index=True)
+    token_hash = Column(String(64), nullable=False, unique=True)  # SHA256 hash of token
+    parent_id = Column(String(36), ForeignKey("parents.id"), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    expires_at = Column(DateTime, nullable=False)
+    is_consumed = Column(Boolean, default=False)
+    consumed_at = Column(DateTime, nullable=True)
+
+    # Relationships
+    parent = relationship("Parent", back_populates="invitation")
 
 
 class ApiToken(Base):
@@ -75,7 +92,7 @@ class ApiToken(Base):
     expires_at = Column(DateTime, nullable=True)
     last_used = Column(DateTime, nullable=True)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="api_tokens")
@@ -114,8 +131,8 @@ class Kid(Base):
     chore_claims = relationship("ChoreClaim", back_populates="kid")
     reward_claims = relationship("RewardClaim", back_populates="kid")
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 
 class Parent(Base):
@@ -138,10 +155,11 @@ class Parent(Base):
     # Notifications
     enable_notifications = Column(Boolean, default=True)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="parent")
+    invitation = relationship("ParentInvitation", back_populates="parent", uselist=False)
 
 
 class ChoreCategory(Base):
@@ -154,7 +172,7 @@ class ChoreCategory(Base):
     color = Column(String(20), default="#6366f1")  # Hex color
     sort_order = Column(Integer, default=0)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     chores = relationship("Chore", back_populates="category")
@@ -203,8 +221,8 @@ class Chore(Base):
     # Relationships
     claims = relationship("ChoreClaim", back_populates="chore")
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 
 class ChoreClaim(Base):
@@ -218,7 +236,7 @@ class ChoreClaim(Base):
     status = Column(String(20), default="pending")  # pending, claimed, approved, disapproved, expired
     points_awarded = Column(Float, nullable=True)
 
-    claimed_at = Column(DateTime, default=datetime.utcnow)
+    claimed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     approved_at = Column(DateTime, nullable=True)
     approved_by = Column(String(100), nullable=True)  # Parent name
 
@@ -245,7 +263,7 @@ class Reward(Base):
     eligible_kids = Column(JSON, default=list)  # Empty = all kids
     requires_approval = Column(Boolean, default=True)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class RewardClaim(Base):
@@ -259,7 +277,7 @@ class RewardClaim(Base):
     status = Column(String(20), default="pending")  # pending, approved, disapproved
     points_spent = Column(Integer, nullable=True)
 
-    requested_at = Column(DateTime, default=datetime.utcnow)
+    requested_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     approved_at = Column(DateTime, nullable=True)
     approved_by = Column(String(100), nullable=True)
 
@@ -284,7 +302,7 @@ class Badge(Base):
     # Bonus for earning
     points_multiplier_bonus = Column(Float, default=0.0)  # Added to multiplier when earned
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Penalty(Base):
@@ -297,7 +315,7 @@ class Penalty(Base):
     icon = Column(String(50), default="mdi:alert")
     points_deduction = Column(Integer, default=10)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Bonus(Base):
@@ -310,7 +328,7 @@ class Bonus(Base):
     icon = Column(String(50), default="mdi:star")
     points_bonus = Column(Integer, default=10)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 # ============================================
@@ -323,7 +341,7 @@ class ScheduledJobLog(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     job_name = Column(String(100), nullable=False)
-    executed_at = Column(DateTime, default=datetime.utcnow)
+    executed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     status = Column(String(20), default="success")  # success, failed
     error_message = Column(Text, nullable=True)
     affected_records = Column(Integer, default=0)
@@ -346,8 +364,8 @@ class DailyMultiplier(Base):
     bonus_awarded = Column(Boolean, default=False)
     bonus_points = Column(Integer, default=0)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     kid = relationship("Kid")
@@ -369,7 +387,7 @@ class PushSubscription(Base):
     p256dh_key = Column(String(255), nullable=False)
     auth_key = Column(String(255), nullable=False)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_used = Column(DateTime, nullable=True)
 
     # Relationships
@@ -402,8 +420,8 @@ class NotificationPreference(Base):
     quiet_hours_start = Column(String(5), default="22:00")  # HH:MM
     quiet_hours_end = Column(String(5), default="08:00")  # HH:MM
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User")
@@ -425,8 +443,8 @@ class AllowanceSettings(Base):
     payout_day = Column(Integer, default=0)  # 0=Sunday, 6=Saturday
     minimum_payout = Column(Float, default=1.0)  # Minimum $1.00
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     kid = relationship("Kid")
@@ -445,7 +463,7 @@ class AllowancePayout(Base):
     status = Column(String(20), default="pending")  # pending, paid, cancelled
     notes = Column(Text, nullable=True)
 
-    requested_at = Column(DateTime, default=datetime.utcnow)
+    requested_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     paid_at = Column(DateTime, nullable=True)
     paid_by = Column(String(100), nullable=True)
 

@@ -1,11 +1,12 @@
 """Rewards API endpoints."""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Reward, RewardClaim, Kid
+from ..deps import require_admin
+from ..models import Reward, RewardClaim, Kid, User
 from ..schemas import (
     RewardCreate, RewardUpdate, RewardResponse,
     RewardRedeemRequest, RewardApproveRequest, RewardClaimResponse
@@ -23,7 +24,7 @@ def list_rewards(db: Session = Depends(get_db)):
 
 @router.post("", response_model=RewardResponse)
 @router.post("/", response_model=RewardResponse, include_in_schema=False)
-def create_reward(reward: RewardCreate, db: Session = Depends(get_db)):
+def create_reward(reward: RewardCreate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Create a new reward."""
     db_reward = Reward(**reward.model_dump())
     db.add(db_reward)
@@ -42,7 +43,7 @@ def get_reward(reward_id: str, db: Session = Depends(get_db)):
 
 
 @router.put("/{reward_id}", response_model=RewardResponse)
-def update_reward(reward_id: str, reward_update: RewardUpdate, db: Session = Depends(get_db)):
+def update_reward(reward_id: str, reward_update: RewardUpdate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Update reward."""
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     if not reward:
@@ -58,7 +59,7 @@ def update_reward(reward_id: str, reward_update: RewardUpdate, db: Session = Dep
 
 
 @router.delete("/{reward_id}")
-def delete_reward(reward_id: str, db: Session = Depends(get_db)):
+def delete_reward(reward_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Delete reward."""
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     if not reward:
@@ -103,7 +104,7 @@ def redeem_reward(reward_id: str, request: RewardRedeemRequest, db: Session = De
     # If no approval required, deduct points immediately
     if not reward.requires_approval:
         kid.points -= reward.cost
-        claim.approved_at = datetime.utcnow()
+        claim.approved_at = datetime.now(timezone.utc)
 
     db.add(claim)
     db.commit()
@@ -131,7 +132,7 @@ def approve_reward(reward_id: str, request: RewardApproveRequest, db: Session = 
 
     # Update claim
     claim.status = "approved"
-    claim.approved_at = datetime.utcnow()
+    claim.approved_at = datetime.now(timezone.utc)
     claim.approved_by = request.parent_name
 
     db.commit()
@@ -151,7 +152,7 @@ def disapprove_reward(reward_id: str, request: RewardApproveRequest, db: Session
         raise HTTPException(status_code=404, detail="No pending redemption found")
 
     claim.status = "disapproved"
-    claim.approved_at = datetime.utcnow()
+    claim.approved_at = datetime.now(timezone.utc)
     claim.approved_by = request.parent_name
 
     db.commit()

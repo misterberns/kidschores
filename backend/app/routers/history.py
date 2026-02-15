@@ -1,5 +1,5 @@
 """Chore history and analytics API endpoints."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -163,7 +163,7 @@ def get_analytics(
         raise HTTPException(status_code=404, detail="Kid not found")
 
     # Date ranges
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_start = today_start - timedelta(days=today_start.weekday())
     month_start = today_start.replace(day=1)

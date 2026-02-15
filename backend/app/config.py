@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # Database
-    database_url: str = "sqlite:///./kidschores.db"
+    database_path: str = "./data/kidschores.db"
 
     # JWT Settings (home network - longer expiry for convenience)
     jwt_secret_key: str = secrets.token_urlsafe(32)  # Auto-generate if not set
@@ -28,11 +28,8 @@ class Settings(BaseSettings):
     reset_token_expire_minutes: int = 60  # 1 hour expiration
     reset_rate_limit_per_hour: int = 3  # Max reset requests per email per hour
 
-    # Security
-    bcrypt_rounds: int = 12  # bcrypt cost factor
-
     # CORS Origins (comma-separated list or "*")
-    cors_origins: str = "*"
+    cors_origins: str = "https://localhost:3103"
 
     class Config:
         env_file = ".env"
