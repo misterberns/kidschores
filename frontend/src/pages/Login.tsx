@@ -34,14 +34,14 @@ export function Login() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center p-4 bg-bg-base">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 bg-bg-base overflow-y-auto">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center mb-8"
       >
-        <Logo variant="stacked" size={200} className="mb-2" />
+        <Logo variant="stacked" size={160} className="mb-2 max-w-[70vw]" />
         <p className="text-text-muted mt-2">Welcome back!</p>
       </motion.div>
 
