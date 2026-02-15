@@ -206,8 +206,13 @@ function AppContent() {
       {/* Seasonal floating particles overlay */}
       <SeasonalParticles />
 
-      {/* Primary accent line at top */}
-      <div className="h-1 bg-primary-500" />
+      {/* Primary accent line at top — seasonal gradient */}
+      <div
+        className="h-1.5"
+        style={{
+          background: `linear-gradient(to right, ${seasonalOverride.primaryColor}, ${seasonalOverride.accentColor})`,
+        }}
+      />
 
       {/* Header - Neobrutalist with thick bottom border */}
       <header className="p-4 transition-colors duration-200 bg-bg-surface border-b-2 border-[var(--border-color)]">
@@ -231,9 +236,8 @@ function AppContent() {
           <h1 className="text-2xl font-black text-center flex items-center gap-2">
             <Logo variant="horizontal" size={180} alt="KidChores" />
             <SeasonIcon
-              size={20}
+              size={28}
               style={{ color: seasonalOverride.iconColor }}
-              className="opacity-80"
             />
           </h1>
 

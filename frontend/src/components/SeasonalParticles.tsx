@@ -13,32 +13,32 @@ interface ParticleConfig {
 
 const seasonalParticles: Record<SeasonalTheme, ParticleConfig> = {
   default: {
-    emojis: ['✨'],
-    count: 5,
+    emojis: ['✨', '⭐'],
+    count: 8,
     drift: 'float',
     speed: 12,
   },
   halloween: {
-    emojis: ['🎃', '👻', '🦇', '🕸️'],
-    count: 12,
+    emojis: ['🎃', '👻', '🦇', '🕸️', '🕷️', '🍬'],
+    count: 20,
     drift: 'float',
     speed: 10,
   },
   christmas: {
-    emojis: ['❄️', '✨', '⭐'],
-    count: 15,
+    emojis: ['❄️', '✨', '⭐', '🎄', '🎁', '🔔'],
+    count: 25,
     drift: 'fall',
     speed: 8,
   },
   easter: {
-    emojis: ['🌸', '🥚', '🐣', '🌷'],
-    count: 12,
+    emojis: ['🌸', '🥚', '🐣', '🌷', '🦋', '🐰'],
+    count: 18,
     drift: 'rise',
     speed: 10,
   },
   summer: {
-    emojis: ['☀️', '🌊', '🐚', '🌴'],
-    count: 10,
+    emojis: ['☀️', '🌊', '🐚', '🌴', '🍉', '🏖️'],
+    count: 16,
     drift: 'float',
     speed: 12,
   },
@@ -60,9 +60,9 @@ function generateParticles(config: ParticleConfig): Particle[] {
     emoji: config.emojis[i % config.emojis.length],
     x: Math.random() * 95 + 2.5,
     startY: Math.random() * 90 + 5,
-    size: 0.8 + Math.random() * 0.8,
+    size: 0.9 + Math.random() * 1.3,
     delay: Math.random() * config.speed,
-    opacity: 0.15 + Math.random() * 0.2,
+    opacity: 0.25 + Math.random() * 0.3,
   }));
 }
 

@@ -4,6 +4,7 @@ import { Star, Award, User, AlertCircle } from 'lucide-react';
 import { kidsApi } from '../api/client';
 import type { Kid } from '../api/client';
 import { useTheme } from '../theme';
+import type { SeasonalTheme } from '../theme/seasonal';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { staggerContainer, cardVariants, smoothTransition } from '../utils/animations';
 import { AnimatedPoints } from '../components/AnimatedPoints';
@@ -12,6 +13,14 @@ import { LevelBadge } from '../components/gamification/LevelBadge';
 import { ChorbiePresets } from '../components/mascot';
 import { DailyProgress } from '../components/DailyProgress';
 import { StreakDisplay } from '../components/StreakDisplay';
+
+const seasonalGreetings: Record<SeasonalTheme, string> = {
+  default: 'Welcome back!',
+  halloween: 'Trick or Treat!',
+  christmas: 'Merry Christmas!',
+  easter: 'Happy Easter!',
+  summer: 'Summer Vibes!',
+};
 
 function KidCard({ kid, index }: { kid: Kid; index: number }) {
   const { getKidColor } = useTheme();
@@ -149,6 +158,7 @@ export function Home() {
   });
   // Must call all hooks before any conditional returns (React Rules of Hooks)
   const prefersReducedMotion = useReducedMotion();
+  const { seasonal } = useTheme();
 
   if (isLoading) {
     return (
@@ -175,7 +185,7 @@ export function Home() {
     return (
       <div className="text-center py-12">
         <div className="mx-auto mb-4">
-          <ChorbiePresets.EmptyState />
+          <ChorbiePresets.EmptyState season={seasonal} />
         </div>
         <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary">No kids yet!</h2>
         <p className="mt-2 text-text-secondary">
@@ -193,9 +203,9 @@ export function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <ChorbiePresets.Welcome size={40} />
+        <ChorbiePresets.Welcome size={48} season={seasonal} />
         <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary">
-          Welcome back!
+          {seasonalGreetings[seasonal] || 'Welcome back!'}
         </h2>
       </motion.div>
 
