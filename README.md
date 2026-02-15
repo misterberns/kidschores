@@ -1,5 +1,18 @@
 # KidsChores
 
+[![Release](https://github.com/misterberns/kidschores/badges/release.svg)](https://github.com/misterberns/kidschores/releases)
+![Status](https://img.shields.io/badge/Status-Deployed-brightgreen?style=flat-square)
+![License](https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square)
+
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?style=flat-square&logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.14-3776AB?style=flat-square&logo=python&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+
 A standalone family chore management web application with points, rewards, and approval workflows.
 
 ## Features
@@ -106,4 +119,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Version
 
-Current version: **0.1.0** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.5.1** (see [CHANGELOG.md](CHANGELOG.md) for history)
