@@ -28,14 +28,14 @@ export function GoogleCallback() {
   if (error) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-bg-base">
-        <div className="w-full max-w-md bg-bg-surface rounded-2xl shadow-lg p-6 text-center">
+        <div className="w-full max-w-md bg-bg-surface rounded-md border-2 border-[var(--border-color)] shadow-[var(--neo-shadow)] p-6 text-center">
           <AlertCircle size={48} className="mx-auto mb-4 text-error-500" />
           <h2 className="text-xl font-bold text-text-primary mb-2">Sign-in Failed</h2>
           <p className="text-text-muted mb-4">{error}</p>
           <a
             href="/login"
             style={{ backgroundColor: 'var(--primary-500)' }}
-            className="inline-block py-2 px-6 rounded-xl text-white font-semibold hover:opacity-90 transition-colors"
+            className="inline-block py-2 px-6 rounded-md border-2 border-[var(--border-color)] text-white font-bold uppercase tracking-wide text-sm shadow-[var(--neo-shadow-sm)] hover:-translate-y-0.5 hover:shadow-[5px_5px_0_var(--border-color)] transition-all"
           >
             Back to Login
           </a>

@@ -7,6 +7,7 @@ import {
 import { Link } from 'react-router-dom';
 import { kidsApi, choresApi, rewardsApi, approvalsApi, parentsApi } from '../api/client';
 import type { Kid, Chore, Reward, Parent } from '../api/client';
+import { DynamicIcon } from '../components/DynamicIcon';
 import { ChorbieAnimated } from '../components/mascot';
 import { useToast } from '../hooks/useToast';
 
@@ -653,12 +654,15 @@ function EditRewardForm({ reward, onClose }: { reward: Reward; onClose: () => vo
 function AddParentForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) {
   const [name, setName] = useState('');
   const [pin, setPin] = useState('');
+  const [email, setEmail] = useState('');
+  const [sendInvite, setSendInvite] = useState(false);
   const [selectedKids, setSelectedKids] = useState<string[]>([]);
   const [enableNotifications, setEnableNotifications] = useState(true);
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: Partial<Parent>) => parentsApi.create(data),
+    mutationFn: (data: Partial<Parent> & { email?: string; send_invite?: boolean }) =>
+      parentsApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parents'] });
       onClose();
@@ -685,6 +689,32 @@ function AddParentForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) 
         placeholder="1234"
         maxLength={4}
       />
+      <FormInput
+        label="Email (optional)"
+        type="email"
+        value={email}
+        onChange={(e) => {
+          setEmail(e.target.value);
+          if (!e.target.value) setSendInvite(false);
+        }}
+        placeholder="parent@email.com"
+      />
+      {email && (
+        <div className="mb-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={sendInvite}
+              onChange={(e) => setSendInvite(e.target.checked)}
+              className="w-5 h-5 rounded border-bg-accent text-primary-500 focus:ring-primary-500"
+            />
+            <span className="text-text-primary">Send email invitation</span>
+          </label>
+          <p className="text-xs text-text-muted mt-1 ml-7">
+            They'll receive an email with a link to create their account
+          </p>
+        </div>
+      )}
       <div className="mb-3">
         <label className="block text-sm font-medium mb-2 text-text-secondary">Associated Kids:</label>
         <div className="flex gap-2 flex-wrap">
@@ -728,11 +758,13 @@ function AddParentForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) 
             pin: pin || undefined,
             associated_kids: selectedKids,
             enable_notifications: enableNotifications,
+            email: email || undefined,
+            send_invite: sendInvite,
           })}
           disabled={!name || mutation.isPending}
           className="flex-1 bg-status-approved-border text-white py-2.5 rounded-xl font-bold hover:opacity-90 transition-colors disabled:opacity-50"
         >
-          {mutation.isPending ? 'Adding...' : 'Add'}
+          {mutation.isPending ? 'Adding...' : sendInvite ? 'Add & Send Invite' : 'Add'}
         </button>
         <button onClick={onClose} className="flex-1 btn btn-secondary">
           Cancel
@@ -1070,7 +1102,7 @@ export function Admin() {
               testId={`entity-chore-${chore.id}`}
               onEdit={() => setEditingChore(chore)}
               onDelete={() => setDeleteConfirm({ type: 'chore', id: chore.id, name: chore.name })}
-              icon={<div className="w-10 h-10 bg-bg-accent rounded-xl flex items-center justify-center"><span className="text-xl">{chore.icon || '🧹'}</span></div>}
+              icon={<div className="w-10 h-10 bg-bg-accent rounded-md border-2 border-[var(--border-color)] flex items-center justify-center"><DynamicIcon icon={chore.icon || '🧹'} size={20} /></div>}
             >
               <p className="font-bold text-text-primary" data-testid={`chore-name-admin-${chore.id}`}>{chore.name}</p>
               <p className="text-sm text-text-muted" data-testid={`chore-points-admin-${chore.id}`}>
@@ -1110,7 +1142,7 @@ export function Admin() {
               testId={`entity-reward-${reward.id}`}
               onEdit={() => setEditingReward(reward)}
               onDelete={() => setDeleteConfirm({ type: 'reward', id: reward.id, name: reward.name })}
-              icon={<div className="w-10 h-10 bg-accent-500/20 rounded-xl flex items-center justify-center"><span className="text-xl">{reward.icon || '🎁'}</span></div>}
+              icon={<div className="w-10 h-10 bg-accent-500/20 rounded-md border-2 border-[var(--border-color)] flex items-center justify-center"><DynamicIcon icon={reward.icon || 'mdi:gift'} size={20} /></div>}
             >
               <p className="font-bold text-text-primary" data-testid={`reward-name-admin-${reward.id}`}>{reward.name}</p>
               <p className="text-sm text-text-muted" data-testid={`reward-cost-admin-${reward.id}`}>{reward.cost} points</p>

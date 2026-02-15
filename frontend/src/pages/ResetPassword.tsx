@@ -107,7 +107,7 @@ export function ResetPassword() {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md"
         >
-          <div className="bg-bg-surface rounded-2xl shadow-lg p-8 text-center">
+          <div className="bg-bg-surface rounded-md border-2 border-[var(--border-color)] shadow-[var(--neo-shadow)] p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-error-100 dark:bg-error-900/30 flex items-center justify-center">
               <AlertCircle size={32} className="text-error-500" />
             </div>
@@ -142,7 +142,7 @@ export function ResetPassword() {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md"
         >
-          <div className="bg-bg-surface rounded-2xl shadow-lg p-8 text-center">
+          <div className="bg-bg-surface rounded-md border-2 border-[var(--border-color)] shadow-[var(--neo-shadow)] p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success-100 dark:bg-success-900/30 flex items-center justify-center">
               <CheckCircle size={32} className="text-success-500" />
             </div>
@@ -194,7 +194,7 @@ export function ResetPassword() {
       >
         <form
           onSubmit={handleSubmit}
-          className="bg-bg-surface rounded-2xl shadow-lg p-6 space-y-4"
+          className="bg-bg-surface rounded-md border-2 border-[var(--border-color)] shadow-[var(--neo-shadow)] p-6 space-y-4"
         >
           {/* Error Message */}
           {error && (
@@ -225,7 +225,7 @@ export function ResetPassword() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full pl-10 pr-12 py-3 rounded-xl border border-bg-accent bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-12 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
                 placeholder="Enter new password"
               />
               <button
@@ -255,7 +255,7 @@ export function ResetPassword() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full pl-10 pr-12 py-3 rounded-xl border border-bg-accent bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-12 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
                 placeholder="Confirm new password"
               />
               <button

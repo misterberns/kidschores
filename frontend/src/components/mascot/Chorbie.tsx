@@ -1,7 +1,9 @@
 export type ChorbieExpression = 'happy' | 'excited' | 'encouraging' | 'celebrating' | 'thinking';
+export type ChorbieSeason = 'default' | 'halloween' | 'christmas' | 'easter' | 'summer';
 
 export interface ChorbieProps {
   expression?: ChorbieExpression;
+  season?: ChorbieSeason;
   size?: number | string;
   className?: string;
 }
@@ -17,7 +19,7 @@ export interface ChorbieProps {
  * - celebrating: Party hat, confetti
  * - thinking: Hand on chin, raised eyebrow
  */
-export function Chorbie({ expression = 'happy', size = 100, className = '' }: ChorbieProps) {
+export function Chorbie({ expression = 'happy', season = 'default', size = 100, className = '' }: ChorbieProps) {
   const sizeValue = typeof size === 'number' ? size : undefined;
   const sizeStyle = typeof size === 'string' ? { width: size, height: size } : undefined;
 
@@ -56,6 +58,16 @@ export function Chorbie({ expression = 'happy', size = 100, className = '' }: Ch
           <stop offset="0%" stopColor="#FFD93D" />
           <stop offset="100%" stopColor="#FF9600" />
         </linearGradient>
+
+        {/* Seasonal gradients */}
+        <linearGradient id="witchHat" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#2D1B4E" />
+          <stop offset="100%" stopColor="#BF00FF" />
+        </linearGradient>
+        <linearGradient id="santaHat" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#CC0000" />
+          <stop offset="100%" stopColor="#FF0033" />
+        </linearGradient>
       </defs>
 
       {/* Star body */}
@@ -66,8 +78,14 @@ export function Chorbie({ expression = 'happy', size = 100, className = '' }: Ch
         strokeWidth="2"
       />
 
+      {/* Seasonal outfit overlays */}
+      {season === 'halloween' && <HalloweenOutfit />}
+      {season === 'christmas' && <ChristmasOutfit />}
+      {season === 'easter' && <EasterOutfit />}
+      {season === 'summer' && <SummerOutfit />}
+
       {/* Expression-specific elements */}
-      {expression === 'happy' && <HappyFace />}
+      {expression === 'happy' && <HappyFace season={season} />}
       {expression === 'excited' && <ExcitedFace />}
       {expression === 'encouraging' && <EncouragingFace />}
       {expression === 'celebrating' && <CelebratingFace />}
@@ -76,7 +94,92 @@ export function Chorbie({ expression = 'happy', size = 100, className = '' }: Ch
   );
 }
 
-function HappyFace() {
+/* ====== Seasonal Outfit Components ====== */
+
+function HalloweenOutfit() {
+  return (
+    <g>
+      {/* Witch hat */}
+      <polygon points="50,-2 36,24 64,24" fill="url(#witchHat)" stroke="#1A0A2A" strokeWidth="1.5" />
+      {/* Hat brim */}
+      <ellipse cx="50" cy="24" rx="18" ry="5" fill="#2D1B4E" stroke="#1A0A2A" strokeWidth="1" />
+      {/* Hat buckle */}
+      <rect x="46" y="14" width="8" height="6" rx="1" fill="#FFD700" />
+      {/* Bat wings */}
+      <path d="M8,40 Q2,30 10,28 Q8,34 14,32 Q10,38 8,40Z" fill="#2D1B4E" opacity="0.7" />
+      <path d="M92,40 Q98,30 90,28 Q92,34 86,32 Q90,38 92,40Z" fill="#2D1B4E" opacity="0.7" />
+    </g>
+  );
+}
+
+function ChristmasOutfit() {
+  return (
+    <g>
+      {/* Santa hat */}
+      <polygon points="50,-2 38,26 62,26" fill="url(#santaHat)" stroke="#990000" strokeWidth="1" />
+      {/* Hat fur trim */}
+      <ellipse cx="50" cy="26" rx="14" ry="4" fill="#FFFFFF" stroke="#E0E0E0" strokeWidth="0.5" />
+      {/* Pom-pom */}
+      <circle cx="50" cy="-2" r="5" fill="#FFFFFF" stroke="#E0E0E0" strokeWidth="0.5" />
+      {/* Scarf */}
+      <path d="M35,62 Q42,67 50,66 Q58,67 65,62" stroke="#FF0033" strokeWidth="4" strokeLinecap="round" fill="none" />
+      <path d="M35,62 Q42,69 50,68 Q58,69 65,62" stroke="#00AA44" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.6" />
+    </g>
+  );
+}
+
+function EasterOutfit() {
+  return (
+    <g>
+      {/* Bunny ears */}
+      <ellipse cx="40" cy="4" rx="6" ry="16" fill="#FFB6C1" stroke="#FF69B4" strokeWidth="1" transform="rotate(-10 40 4)" />
+      <ellipse cx="40" cy="4" rx="3" ry="12" fill="#FF69B4" opacity="0.4" transform="rotate(-10 40 4)" />
+      <ellipse cx="60" cy="4" rx="6" ry="16" fill="#FFB6C1" stroke="#FF69B4" strokeWidth="1" transform="rotate(10 60 4)" />
+      <ellipse cx="60" cy="4" rx="3" ry="12" fill="#FF69B4" opacity="0.4" transform="rotate(10 60 4)" />
+      {/* Flower */}
+      <g transform="translate(80, 35)">
+        <circle cx="0" cy="-4" r="3" fill="#FF69B4" opacity="0.8" />
+        <circle cx="4" cy="0" r="3" fill="#BF5FFF" opacity="0.8" />
+        <circle cx="0" cy="4" r="3" fill="#FF69B4" opacity="0.8" />
+        <circle cx="-4" cy="0" r="3" fill="#BF5FFF" opacity="0.8" />
+        <circle cx="0" cy="0" r="2" fill="#FFD700" />
+      </g>
+    </g>
+  );
+}
+
+function SummerOutfit() {
+  return (
+    <g>
+      {/* Sunglasses */}
+      <rect x="32" y="38" width="14" height="10" rx="3" fill="#1A1A1A" opacity="0.85" />
+      <rect x="54" y="38" width="14" height="10" rx="3" fill="#1A1A1A" opacity="0.85" />
+      <line x1="46" y1="42" x2="54" y2="42" stroke="#1A1A1A" strokeWidth="2" />
+      <line x1="32" y1="42" x2="25" y2="40" stroke="#1A1A1A" strokeWidth="1.5" />
+      <line x1="68" y1="42" x2="75" y2="40" stroke="#1A1A1A" strokeWidth="1.5" />
+      {/* Lens shine */}
+      <rect x="34" y="39" width="4" height="2" rx="1" fill="#FFFFFF" opacity="0.3" />
+      <rect x="56" y="39" width="4" height="2" rx="1" fill="#FFFFFF" opacity="0.3" />
+      {/* Visor brim */}
+      <path d="M30,32 Q50,28 70,32" stroke="#00D4FF" strokeWidth="3" strokeLinecap="round" fill="none" />
+    </g>
+  );
+}
+
+/* ====== Expression Face Components ====== */
+
+function HappyFace({ season = 'default' }: { season?: ChorbieSeason }) {
+  // Summer: sunglasses cover eyes, only show smile + blush
+  if (season === 'summer') {
+    return (
+      <g>
+        <path d="M38 54 Q50 66 62 54" stroke="#3C3C3C" strokeWidth="3" strokeLinecap="round" fill="none" />
+        <ellipse cx="30" cy="50" rx="6" ry="4" fill="#FF9600" opacity="0.5" />
+        <ellipse cx="70" cy="50" rx="6" ry="4" fill="#FF9600" opacity="0.5" />
+      </g>
+    );
+  }
+  const blushColor = season === 'halloween' ? '#FF6600' : '#FFB6C1';
   return (
     <g>
       {/* Eyes */}
@@ -94,8 +197,8 @@ function HappyFace() {
         fill="none"
       />
       {/* Blush */}
-      <ellipse cx="30" cy="50" rx="6" ry="4" fill="#FFB6C1" opacity="0.5" />
-      <ellipse cx="70" cy="50" rx="6" ry="4" fill="#FFB6C1" opacity="0.5" />
+      <ellipse cx="30" cy="50" rx="6" ry="4" fill={blushColor} opacity="0.5" />
+      <ellipse cx="70" cy="50" rx="6" ry="4" fill={blushColor} opacity="0.5" />
     </g>
   );
 }

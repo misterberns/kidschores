@@ -19,17 +19,25 @@ interface ConfettiProps {
   colors?: string[];
 }
 
-// Duolingo-style celebration colors
+// Neobrutalist celebration colors - bold, saturated
 const defaultColors = [
-  '#58CC02', // Feather Green
-  '#7AE82A', // Light Green
-  '#1CB0F6', // Sky Blue
-  '#FF9600', // Warm Orange
-  '#FFBE00', // Golden Yellow
-  '#FF4B4B', // Berry Red
-  '#CE82FF', // Grape Purple
-  '#2DD4BF', // Teal
+  '#39FF14', // Neon Lime
+  '#00D4FF', // Electric Blue
+  '#FF6B35', // Hot Orange
+  '#FF2D55', // Neon Red
+  '#BF5FFF', // UV Purple
+  '#00FFD5', // Toxic Teal
+  '#FF1493', // Hot Pink
+  '#FFD700', // Electric Gold
 ];
+
+// Seasonal confetti color palettes
+export const seasonalConfettiColors: Record<string, string[]> = {
+  halloween: ['#FF6600', '#BF00FF', '#FFD700', '#FF3300', '#9B30FF'],
+  christmas: ['#FF0033', '#00FF66', '#FFD700', '#FFFFFF', '#FF6666'],
+  easter:    ['#BF5FFF', '#FF00AA', '#FFD700', '#00E5CC', '#FF69B4'],
+  summer:    ['#00D4FF', '#FF6B35', '#FFD700', '#39FF14', '#FF1493'],
+};
 
 /**
  * Confetti explosion effect for celebrations

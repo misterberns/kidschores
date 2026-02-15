@@ -1,7 +1,7 @@
 """Pydantic schemas for request/response validation."""
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 # --- Kid Schemas ---
@@ -497,3 +497,38 @@ class PasswordResetTokenStatus(BaseModel):
     """Response for token validation check."""
     valid: bool
     email: Optional[str] = None  # Only included if valid
+
+
+# --- Parent Invitation Schemas ---
+
+class ParentInvitationCreate(BaseModel):
+    """Request to send an invitation to a parent."""
+    email: EmailStr
+
+
+class ParentInvitationAccept(BaseModel):
+    """Request to accept an invitation and create account."""
+    token: str
+    password: str
+    display_name: Optional[str] = None
+
+
+class ParentInvitationResponse(BaseModel):
+    """Response for invitation operations."""
+    message: str
+    invitation_sent: bool = False
+    email: Optional[str] = None
+
+
+class ParentInvitationTokenStatus(BaseModel):
+    """Response for invitation token validation."""
+    valid: bool
+    email: Optional[str] = None
+    parent_name: Optional[str] = None
+    expires_at: Optional[datetime] = None
+
+
+class ParentCreateWithInvite(ParentBase):
+    """Extended parent creation with optional email invitation."""
+    email: Optional[EmailStr] = None
+    send_invite: bool = False

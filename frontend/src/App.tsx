@@ -21,7 +21,8 @@ import { AuthProvider, useAuth, ProtectedRoute } from './auth';
 import { ThemeProvider, useTheme, ThemeToggle } from './theme';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { pageVariants } from './utils/animations';
-import { ChorbiePresets } from './components/mascot';
+import { Logo } from './components/Logo';
+import { SeasonalParticles } from './components/SeasonalParticles';
 import { ToastProvider } from './components/notifications/ToastProvider';
 
 const queryClient = new QueryClient();
@@ -43,7 +44,7 @@ function NavBar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] transition-colors duration-200 bg-bg-surface z-50"
+      className="fixed bottom-0 left-0 right-0 border-t-2 border-[var(--border-color)] transition-colors duration-200 bg-bg-surface z-50"
       style={{
         isolation: 'isolate',
         backgroundColor: 'var(--bg-surface)',
@@ -202,11 +203,14 @@ function AppContent() {
 
   return (
     <div className="min-h-[100dvh] pb-20 transition-colors duration-200 bg-bg-base">
+      {/* Seasonal floating particles overlay */}
+      <SeasonalParticles />
+
       {/* Primary accent line at top */}
       <div className="h-1 bg-primary-500" />
 
-      {/* Header - Theme-aware with Chorbie */}
-      <header className="p-4 shadow-sm transition-colors duration-200 bg-bg-surface border-b border-bg-accent">
+      {/* Header - Neobrutalist with thick bottom border */}
+      <header className="p-4 transition-colors duration-200 bg-bg-surface border-b-2 border-[var(--border-color)]">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           {/* User indicator */}
           <Link
@@ -224,11 +228,8 @@ function AppContent() {
             </span>
           </Link>
 
-          <h1 className="text-2xl font-bold text-center flex items-center gap-2">
-            <ChorbiePresets.Header />
-            <span style={{ color: 'var(--primary-500)' }}>
-              KidsChores
-            </span>
+          <h1 className="text-2xl font-black text-center flex items-center gap-2">
+            <Logo variant="horizontal" size={180} alt="KidChores" />
             <SeasonIcon
               size={20}
               style={{ color: seasonalOverride.iconColor }}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, ShoppingBag, Lock } from 'lucide-react';
+import { DynamicIcon } from '../components/DynamicIcon';
 import { kidsApi, rewardsApi } from '../api/client';
 import type { Reward, Kid } from '../api/client';
 import { useReducedMotion } from '../hooks/useReducedMotion';
@@ -36,13 +37,13 @@ function RewardCard({
       variants={prefersReducedMotion ? undefined : listItemVariants}
       initial={prefersReducedMotion ? false : 'hidden'}
       animate="visible"
-      whileHover={prefersReducedMotion ? {} : { scale: 1.01, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+      whileHover={prefersReducedMotion ? {} : { x: -2, y: -2 }}
       whileTap={prefersReducedMotion ? {} : { scale: 0.99 }}
       transition={{ delay: index * 0.05 }}
     >
       <div className="flex items-start gap-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-accent-500 to-accent-400 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md">
-          <span className="text-3xl">{reward.icon || '🎁'}</span>
+        <div className="w-16 h-16 bg-gradient-to-br from-accent-500 to-accent-400 rounded-md border-2 border-[var(--border-color)] flex items-center justify-center flex-shrink-0 shadow-[var(--neo-shadow-sm)]">
+          <DynamicIcon icon={reward.icon || 'mdi:gift'} size={32} className="text-white" />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-lg text-text-primary" data-testid={`reward-name-${reward.id}`}>

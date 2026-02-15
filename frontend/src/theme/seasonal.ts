@@ -21,50 +21,50 @@ export const seasonalThemes: Record<SeasonalTheme, SeasonalOverride> = {
     name: 'Default',
     cssClass: '',
     icon: Sparkles,
-    iconColor: '#58CC02', // Duolingo Feather Green
+    iconColor: '#58CC02',
     primaryColor: '#58CC02',
     accentColor: '#FF9600',
-    description: 'Fresh Duolingo-style green theme',
+    description: 'Neobrutalist green with neon energy',
   },
 
   halloween: {
     name: 'Halloween',
     cssClass: 'theme-halloween',
     icon: Ghost,
-    iconColor: '#FF9500', // Pumpkin Orange
-    primaryColor: '#FF9500',
-    accentColor: '#9B59B6', // Spooky Purple
-    description: 'Kid-friendly spooky with orange & purple',
+    iconColor: '#FF6600',
+    primaryColor: '#FF6600',
+    accentColor: '#BF00FF',
+    description: 'Neon pumpkin spooky with electric purple',
   },
 
   christmas: {
     name: 'Christmas',
     cssClass: 'theme-christmas',
     icon: Snowflake,
-    iconColor: '#D32F2F', // Festive Red
-    primaryColor: '#D32F2F',
-    accentColor: '#2E7D32', // Evergreen
-    description: 'Cozy festive red, green & gold',
+    iconColor: '#FF0033',
+    primaryColor: '#FF0033',
+    accentColor: '#00FF66',
+    description: 'Electric festive red and neon green',
   },
 
   easter: {
     name: 'Easter',
     cssClass: 'theme-easter',
     icon: Egg,
-    iconColor: '#A855F7', // Pastel Purple
-    primaryColor: '#A855F7',
-    accentColor: '#EC4899', // Pastel Pink
-    description: 'Fresh spring pastels with purple & pink',
+    iconColor: '#BF5FFF',
+    primaryColor: '#BF5FFF',
+    accentColor: '#FF00AA',
+    description: 'UV purple spring with neon pink blooms',
   },
 
   summer: {
     name: 'Summer',
     cssClass: 'theme-summer',
     icon: Sun,
-    iconColor: '#0EA5E9', // Ocean Blue
-    primaryColor: '#0EA5E9',
-    accentColor: '#F97316', // Coral Orange
-    description: 'Beach vibes with ocean blue & coral',
+    iconColor: '#00D4FF',
+    primaryColor: '#00D4FF',
+    accentColor: '#FF6B35',
+    description: 'Electric ocean vibes with neon coral',
   },
 };
 

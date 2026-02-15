@@ -84,17 +84,33 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
+      fontWeight: {
+        medium: '500',
+        semibold: '600',
+        bold: '700',
+        extrabold: '800',
+        black: '900',
+      },
       borderRadius: {
-        'xl': '0.75rem',
-        '2xl': '1rem',
-        '3xl': '1.5rem',
+        'sm': '0.25rem',
+        'md': '0.375rem',
+        'lg': '0.375rem',
+        'xl': '0.375rem',
+        '2xl': '0.375rem',
+        '3xl': '0.5rem',
+      },
+      borderWidth: {
+        'neo': '2px',
       },
       transitionDuration: {
         'theme': '200ms',
       },
       boxShadow: {
-        'card': '0 1px 3px rgba(0, 0, 0, 0.05)',
-        'card-hover': '0 4px 12px rgba(0, 0, 0, 0.1)',
+        'card': 'var(--neo-shadow)',
+        'card-hover': 'var(--neo-shadow-hover)',
+        'neo-sm': 'var(--neo-shadow-sm)',
+        'neo': 'var(--neo-shadow)',
+        'neo-hover': 'var(--neo-shadow-hover)',
         'seasonal': 'var(--seasonal-glow)',
       },
     },

@@ -90,7 +90,7 @@ function ChoreCard({
       variants={prefersReducedMotion ? undefined : listItemVariants}
       initial={prefersReducedMotion ? false : 'hidden'}
       animate="visible"
-      whileHover={prefersReducedMotion ? {} : { scale: 1.01, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+      whileHover={prefersReducedMotion ? {} : { x: -2, y: -2 }}
       transition={{ delay: index * 0.05 }}
     >
       <div className="flex items-start justify-between gap-4">

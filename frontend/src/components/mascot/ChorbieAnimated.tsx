@@ -217,6 +217,7 @@ const defaultLooping: Record<ChorbieAnimation, boolean> = {
 export function ChorbieAnimated({
   expression = 'happy',
   animation = 'idle',
+  season,
   size = 100,
   className = '',
   loop,
@@ -231,7 +232,7 @@ export function ChorbieAnimated({
 
   // For reduced motion, just show static Chorbie
   if (prefersReducedMotion) {
-    return <Chorbie expression={expression} size={size} className={className} />;
+    return <Chorbie expression={expression} season={season} size={size} className={className} />;
   }
 
   // Determine which animate variant to use
@@ -247,7 +248,7 @@ export function ChorbieAnimated({
       transition={{ delay }}
       onAnimationComplete={onAnimationComplete}
     >
-      <Chorbie expression={expression} size="100%" />
+      <Chorbie expression={expression} season={season} size="100%" />
     </motion.div>
   );
 }

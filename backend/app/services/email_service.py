@@ -342,6 +342,94 @@ class EmailService:
         return await self.send_email(to_email, subject, html_content, text_content)
 
 
+    async def send_parent_invitation_email(
+        self,
+        to_email: str,
+        parent_name: str,
+        invite_link: str,
+    ) -> bool:
+        """Send parent invitation email with secure link to create account."""
+        subject = "[KidsChores] You're Invited!"
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name="referrer" content="no-referrer">
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #10b981, #3b82f6); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }}
+                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
+                .btn {{ display: inline-block; background: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }}
+                .highlight {{ background: #10b981; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold; display: inline-block; }}
+                .info {{ background: #e0f2fe; border: 1px solid #0284c7; border-radius: 6px; padding: 12px; margin-top: 20px; font-size: 14px; }}
+                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
+                .link-fallback {{ word-break: break-all; font-size: 12px; color: #6b7280; margin-top: 10px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Welcome to KidsChores!</h1>
+                </div>
+                <div class="content">
+                    <p>Hi there!</p>
+                    <p>You've been added as a parent <span class="highlight">{parent_name}</span> to help manage chores for your family.</p>
+                    <p>Click the button below to set up your account:</p>
+                    <p style="text-align: center;">
+                        <a href="{invite_link}" class="btn">Accept Invitation</a>
+                    </p>
+                    <p class="link-fallback">
+                        If the button doesn't work, copy and paste this link into your browser:<br>
+                        {invite_link}
+                    </p>
+                    <div class="info">
+                        <strong>What you'll be able to do:</strong>
+                        <ul style="margin: 5px 0; padding-left: 20px;">
+                            <li>Approve chores completed by kids</li>
+                            <li>Award points and bonuses</li>
+                            <li>Manage rewards and allowances</li>
+                            <li>Track progress and streaks</li>
+                        </ul>
+                    </div>
+                    <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">
+                        <strong>Note:</strong> This invitation expires in 24 hours.
+                    </p>
+                </div>
+                <div class="footer">
+                    <p>This is an automated message from KidsChores.</p>
+                    <p>If you didn't expect this invitation, you can safely ignore this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        text_content = f"""
+Hi there!
+
+You've been added as a parent ({parent_name}) to help manage chores for your family in KidsChores.
+
+Click the link below to set up your account:
+{invite_link}
+
+What you'll be able to do:
+- Approve chores completed by kids
+- Award points and bonuses
+- Manage rewards and allowances
+- Track progress and streaks
+
+Note: This invitation expires in 24 hours.
+
+--
+KidsChores
+
+If you didn't expect this invitation, you can safely ignore this email.
+        """
+
+        return await self.send_email(to_email, subject, html_content, text_content)
+
     async def send_password_reset_email(
         self,
         to_email: str,

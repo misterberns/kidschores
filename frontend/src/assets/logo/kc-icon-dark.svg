@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KidChores" viewBox="0 0 512 512">
+  <title>KidChores</title>
+  <defs>
+    <linearGradient id="starGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8BF038"/>
+      <stop offset="100%" stop-color="#6BDD12"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+    <radialGradient id="sparkle" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 5-pointed star with rounded tips (bezier curves) -->
+  <path filter="url(#shadow)" fill="url(#starGrad)" d="M246 66 Q256 40 266 66 L312 183 L437 190 Q465 192 444 210 L346 289 L378 411 Q385 438 362 423 L256 355 L150 423 Q127 438 134 411 L166 289 L68 210 Q47 192 75 190 L200 183 Z"/>
+
+  <!-- Cheerful face (inverted for dark bg) -->
+  <ellipse cx="222" cy="248" rx="22" ry="26" fill="#FFFFFF"/>
+  <ellipse cx="228" cy="240" rx="8" ry="9" fill="#1A1A2E"/>
+  <ellipse cx="302" cy="248" rx="22" ry="26" fill="#FFFFFF"/>
+  <ellipse cx="308" cy="240" rx="8" ry="9" fill="#1A1A2E"/>
+  <path d="M222 298 Q242 332 262 334 Q282 332 302 298" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="192" cy="290" r="16" fill="#FF9600" opacity="0.3"/>
+  <circle cx="332" cy="290" r="16" fill="#FF9600" opacity="0.3"/>
+
+  <!-- Checkmark sparkle (top-right) -->
+  <g transform="translate(390, 100)">
+    <circle cx="0" cy="0" r="24" fill="url(#sparkle)"/>
+    <path d="M-10 2 L-3 9 L12 -6" fill="none" stroke="#6BDD12" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Small sparkle (top-left) -->
+  <g transform="translate(130, 110)">
+    <path d="M0 -10 L2.5 -2.5 L10 0 L2.5 2.5 L0 10 L-2.5 2.5 L-10 0 L-2.5 -2.5 Z" fill="#FFFFFF" opacity="0.8"/>
+  </g>
+</svg>

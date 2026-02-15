@@ -150,10 +150,13 @@ export const approvalsApi = {
 export const parentsApi = {
   list: () => api.get<Parent[]>('/parents'),
   get: (id: string) => api.get<Parent>(`/parents/${id}`),
-  create: (data: Partial<Parent>) => api.post<Parent>('/parents', data),
+  create: (data: Partial<Parent> & { email?: string; send_invite?: boolean }) =>
+    api.post<Parent>('/parents', data),
   update: (id: string, data: Partial<Parent>) => api.put<Parent>(`/parents/${id}`, data),
   delete: (id: string) => api.delete(`/parents/${id}`),
   verifyPin: (id: string, pin: string) => api.post(`/parents/${id}/verify-pin`, { pin }),
+  invite: (parentId: string, email: string) =>
+    api.post(`/parents/${parentId}/invite`, { email }),
 };
 
 // Notification types

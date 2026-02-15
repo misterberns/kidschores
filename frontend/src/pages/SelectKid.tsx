@@ -62,7 +62,7 @@ export function SelectKid() {
                 onClick={() => handleSelectKid(kid.id)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex flex-col items-center p-6 rounded-2xl bg-bg-surface shadow-lg hover:shadow-xl transition-shadow"
+                className="flex flex-col items-center p-6 rounded-md border-2 border-[var(--border-color)] bg-bg-surface shadow-[var(--neo-shadow)] hover:shadow-xl transition-shadow"
               >
                 <div
                   style={{ backgroundColor: avatarColors[index % avatarColors.length] }}
@@ -78,7 +78,7 @@ export function SelectKid() {
             ))}
           </div>
         ) : (
-          <div className="text-center p-6 rounded-2xl bg-bg-surface shadow-lg mb-6">
+          <div className="text-center p-6 rounded-md border-2 border-[var(--border-color)] bg-bg-surface shadow-[var(--neo-shadow)] mb-6">
             <p className="text-text-muted">
               No kids added yet. Go to the Parent section to add kids.
             </p>

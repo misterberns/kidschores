@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
-import { ChorbiePresets } from '../components/mascot';
+import { Logo } from '../components/Logo';
 
 export function Register() {
   const [displayName, setDisplayName] = useState('');
@@ -60,10 +60,7 @@ export function Register() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center mb-6"
       >
-        <div className="w-20 h-20 mb-4">
-          <ChorbiePresets.Success size={80} />
-        </div>
-        <h1 style={{ color: 'var(--primary-500)' }} className="text-3xl font-bold">Join KidsChores</h1>
+        <Logo variant="stacked" size={200} className="mb-2" />
         <p className="text-text-muted mt-2">Create your family account</p>
       </motion.div>
 
@@ -76,7 +73,7 @@ export function Register() {
       >
         <form
           onSubmit={handleSubmit}
-          className="bg-bg-surface rounded-2xl shadow-lg p-6 space-y-4"
+          className="bg-bg-surface rounded-md border-2 border-[var(--border-color)] shadow-[var(--neo-shadow)] p-6 space-y-4"
         >
           {/* Error Message */}
           {error && (
@@ -107,7 +104,7 @@ export function Register() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 required
                 autoComplete="name"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-bg-accent bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
                 placeholder="Mom, Dad, etc."
               />
             </div>
@@ -130,7 +127,7 @@ export function Register() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-bg-accent bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
                 placeholder="you@example.com"
               />
             </div>
@@ -153,7 +150,7 @@ export function Register() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-bg-accent bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
                 placeholder="••••••••"
               />
             </div>
@@ -176,7 +173,7 @@ export function Register() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-bg-accent bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
                 placeholder="••••••••"
               />
             </div>
@@ -210,7 +207,7 @@ export function Register() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             style={{ backgroundColor: 'var(--primary-500)' }}
-            className="w-full py-3 px-4 rounded-xl text-white font-semibold flex items-center justify-center gap-2 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-3 px-4 rounded-md border-2 border-[var(--border-color)] text-white font-bold uppercase tracking-wide text-sm flex items-center justify-center gap-2 shadow-[var(--neo-shadow-sm)] hover:shadow-[5px_5px_0_var(--border-color)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -245,7 +242,7 @@ export function Register() {
               const scope = encodeURIComponent('openid email profile');
               window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
             }}
-            className="w-full py-3 px-4 rounded-xl border border-bg-accent bg-bg-base text-text-secondary font-medium flex items-center justify-center gap-2 hover:bg-bg-accent focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
+            className="w-full py-3 px-4 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-secondary font-bold uppercase tracking-wide text-sm flex items-center justify-center gap-2 shadow-[var(--neo-shadow-sm)] hover:shadow-[5px_5px_0_var(--border-color)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none focus:outline-none transition-all"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
