@@ -1,6 +1,6 @@
 # KidsChores
 
-[![Release](https://github.com/misterberns/kidschores/badges/release.svg)](https://github.com/misterberns/kidschores/releases)
+[![Version](https://img.shields.io/badge/Version-v0.5.1-green?style=flat-square)](https://github.com/misterberns/kidschores/releases)
 ![Status](https://img.shields.io/badge/Status-Deployed-brightgreen?style=flat-square)
 ![License](https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square)
 
