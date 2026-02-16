@@ -24,6 +24,7 @@ export interface Kid {
   completed_chores_total: number;
   badges: string[];
   enable_notifications: boolean;
+  google_email?: string;
   created_at: string;
 }
 
@@ -111,6 +112,10 @@ export const kidsApi = {
   getStreaks: (id: string) => api.get<StreakInfo>(`/kids/${id}/streaks`),
   getDailyProgress: (id: string) => api.get<DailyProgress>(`/kids/${id}/daily-progress`),
   useStreakFreeze: (id: string) => api.post<Kid>(`/kids/${id}/streak-freeze`),
+  linkGoogle: (id: string, email: string) =>
+    api.put(`/kids/${id}/link-google`, { email }),
+  unlinkGoogle: (id: string) =>
+    api.delete(`/kids/${id}/link-google`),
 };
 
 export const choresApi = {

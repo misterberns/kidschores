@@ -569,6 +569,69 @@ KidsChores
 
         return await self.send_email(to_email, subject, html_content, text_content)
 
+    async def send_reward_redeemed_email(
+        self,
+        to_email: str,
+        parent_name: str,
+        kid_name: str,
+        reward_name: str,
+        points_spent: int,
+    ) -> bool:
+        """Send email when a kid redeems a reward."""
+        subject = f"[KidsChores] {kid_name} redeemed '{reward_name}'"
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
+                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
+                .highlight {{ background: #f59e0b; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold; display: inline-block; }}
+                .points {{ font-size: 36px; font-weight: bold; color: #ef4444; text-align: center; }}
+                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
+                .btn {{ display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Reward Redeemed!</h1>
+                </div>
+                <div class="content">
+                    <p>Hi {parent_name},</p>
+                    <p><span class="highlight">{kid_name}</span> has redeemed the reward:</p>
+                    <h2 style="color: #f59e0b;">"{reward_name}"</h2>
+                    <p class="points">-{points_spent} points</p>
+                    <p>This reward may require your approval before it's granted.</p>
+                    <a href="#" class="btn">Review Now</a>
+                </div>
+                <div class="footer">
+                    <p>This is an automated message from KidsChores.</p>
+                    <p>To change your notification preferences, visit the app settings.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        text_content = f"""
+        Hi {parent_name},
+
+        {kid_name} has redeemed the reward: "{reward_name}"
+
+        Points spent: {points_spent}
+
+        This reward may require your approval before it's granted.
+
+        --
+        KidsChores
+        """
+
+        return await self.send_email(to_email, subject, html_content, text_content)
+
 
 # Singleton instance
 email_service = EmailService()

@@ -32,6 +32,8 @@ interface AuthState {
   activeKidId: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  role: 'parent' | 'kid';
+  kidId: string | null;  // kid_id from JWT for kid sessions
 }
 
 interface AuthContextType extends AuthState {
@@ -78,6 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     activeKidId: localStorage.getItem(ACTIVE_KID_KEY),
     isLoading: true,
     isAuthenticated: false,
+    role: 'parent',
+    kidId: null,
   });
 
   // Set up axios interceptor for auth header
@@ -132,14 +136,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const response = await api.get('/auth/me');
-      const { user, parent, kids } = response.data;
+      const { user, parent, kids, role, kid_id } = response.data;
+      const isKid = role === 'kid';
       setState({
         user,
         parent,
         kids,
-        activeKidId: localStorage.getItem(ACTIVE_KID_KEY),
+        activeKidId: isKid ? kid_id : localStorage.getItem(ACTIVE_KID_KEY),
         isLoading: false,
         isAuthenticated: true,
+        role: role || 'parent',
+        kidId: kid_id || null,
       });
     } catch {
       // Token invalid or expired, try refresh
@@ -153,6 +160,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           activeKidId: null,
           isLoading: false,
           isAuthenticated: false,
+          role: 'parent',
+          kidId: null,
         });
       }
     }
@@ -171,14 +180,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Reload user info
       const meResponse = await api.get('/auth/me');
-      const { user, parent, kids } = meResponse.data;
+      const { user, parent, kids, role, kid_id } = meResponse.data;
+      const isKid = role === 'kid';
       setState({
         user,
         parent,
         kids,
-        activeKidId: localStorage.getItem(ACTIVE_KID_KEY),
+        activeKidId: isKid ? kid_id : localStorage.getItem(ACTIVE_KID_KEY),
         isLoading: false,
         isAuthenticated: true,
+        role: role || 'parent',
+        kidId: kid_id || null,
       });
 
       return true;
@@ -191,6 +203,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         activeKidId: null,
         isLoading: false,
         isAuthenticated: false,
+        role: 'parent',
+        kidId: null,
       });
       return false;
     }
@@ -230,6 +244,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       activeKidId: null,
       isLoading: false,
       isAuthenticated: false,
+      role: 'parent',
+      kidId: null,
     });
   };
 

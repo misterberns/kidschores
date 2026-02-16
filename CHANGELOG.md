@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-02-16
+
+### Changed
+- **Docker containerization**: Backend and frontend now build as self-contained Docker images pushed to Forgejo OCI container registry (`your-registry/kidschores-backend` and `kidschores-ui`)
+- **Multi-stage backend Dockerfile**: Dependencies installed in builder stage via venv, clean copy to production image. Eliminates ~90s pip install on every container restart.
+- **Multi-stage frontend Dockerfile**: Node.js builds static assets, served by nginx:1.27-alpine. No more volume-mounted dist/ directory.
+- **Non-root container user**: Backend runs as `kidschores` user (security best practice)
+- **Proxy headers**: uvicorn configured with `--proxy-headers --forwarded-allow-ips *` for Traefik
+- **Build script**: `scripts/build-and-push.sh` for repeatable image builds and registry pushes
+
+### Fixed
+- **Missing passlib dependency**: Added `passlib[bcrypt]>=1.7.4` to requirements.txt (was only in inline pip install command)
+
 ## [0.5.3] - 2026-02-16
 
 ### Fixed

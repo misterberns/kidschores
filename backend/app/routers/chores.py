@@ -6,13 +6,14 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..deps import require_admin
-from ..models import Chore, ChoreClaim, Kid, DailyMultiplier, PushSubscription, User
+from ..models import Chore, ChoreClaim, Kid, DailyMultiplier, PushSubscription, User, Parent
 from ..schemas import (
     ChoreCreate, ChoreUpdate, ChoreResponse, ChoreWithStatus,
     ChoreClaimRequest, ChoreApproveRequest, ChoreClaimResponse,
     TodaysChoreResponse, ApprovalWithStreakResponse
 )
 from ..services.push_service import push_service
+from ..services.email_service import email_service
 
 # Streak milestones that trigger celebrations
 STREAK_MILESTONES = [3, 7, 14, 30, 50, 100, 365]
@@ -60,6 +61,24 @@ def notify_kid_chore_approved(db: Session, kid_id: str, chore_name: str, points:
             push_service.send_chore_approved(subscription_info, chore_name, points)
         except Exception as e:
             print(f"Failed to send push notification: {e}")
+
+
+async def email_notify_parents_chore_claimed(db: Session, kid_id: str, kid_name: str, chore_name: str):
+    """Email all parents associated with this kid when a chore is claimed."""
+    if not email_service.is_configured():
+        return
+    parents = db.query(Parent).all()
+    for parent in parents:
+        if kid_id in (parent.associated_kids or []):
+            if parent.user_id:
+                user = db.query(User).filter(User.id == parent.user_id).first()
+                if user and user.email:
+                    await email_service.send_chore_claimed_email(
+                        to_email=user.email,
+                        parent_name=parent.name,
+                        kid_name=kid_name,
+                        chore_name=chore_name,
+                    )
 
 
 @router.get("", response_model=List[ChoreResponse])
@@ -278,6 +297,9 @@ def claim_chore(
 
     # Send push notification to parents (in background)
     background_tasks.add_task(notify_parents_chore_claimed, db, kid.name, chore.name)
+
+    # Send email notification to parents (in background)
+    background_tasks.add_task(email_notify_parents_chore_claimed, db, kid.id, kid.name, chore.name)
 
     return claim
 

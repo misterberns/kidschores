@@ -5,11 +5,17 @@ import { useAuth } from '../auth/AuthContext';
 import { ChorbiePresets } from '../components/mascot';
 
 export function SelectKid() {
-  const { user, kids, setActiveKid, logout } = useAuth();
+  const { user, kids, setActiveKid, logout, role, kidId } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+
+  // Kid sessions skip selection — auto-redirect
+  if (role === 'kid' && kidId) {
+    navigate(from, { replace: true });
+    return null;
+  }
 
   const handleSelectKid = (kidId: string) => {
     setActiveKid(kidId);
@@ -85,17 +91,19 @@ export function SelectKid() {
           </div>
         )}
 
-        {/* Continue as Parent */}
-        <motion.button
-          onClick={handleContinueAsParent}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          style={{ borderColor: 'var(--primary-500)', color: 'var(--primary-500)' }}
-          className="w-full py-4 px-4 rounded-xl bg-bg-surface border-2 font-semibold flex items-center justify-center gap-2 hover:opacity-80 transition-colors"
-        >
-          <User size={20} />
-          Continue as Parent
-        </motion.button>
+        {/* Continue as Parent (hidden for kid sessions) */}
+        {role === 'parent' && (
+          <motion.button
+            onClick={handleContinueAsParent}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            style={{ borderColor: 'var(--primary-500)', color: 'var(--primary-500)' }}
+            className="w-full py-4 px-4 rounded-xl bg-bg-surface border-2 font-semibold flex items-center justify-center gap-2 hover:opacity-80 transition-colors"
+          >
+            <User size={20} />
+            Continue as Parent
+          </motion.button>
+        )}
 
         {/* Logout */}
         <button

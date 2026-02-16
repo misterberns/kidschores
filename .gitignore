@@ -8,3 +8,4 @@ frontend/dist.tar.gz
 frontend/playwright-report/
 frontend/test-results/
 e2e/test-output.txt
+_ul

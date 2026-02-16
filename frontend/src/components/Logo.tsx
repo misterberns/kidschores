@@ -26,7 +26,7 @@ const logoMap: Record<LogoVariant, { light: string; dark: string }> = {
   horizontal: { light: horizontalLight, dark: horizontalDark },
 };
 
-export function Logo({ variant = 'stacked', size, className = '', alt = 'KidChores' }: LogoProps) {
+export function Logo({ variant = 'stacked', size, className = '', alt = 'KidsChores' }: LogoProps) {
   const { isDark } = useTheme();
   const src = isDark ? logoMap[variant].dark : logoMap[variant].light;
 

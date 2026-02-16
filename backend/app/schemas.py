@@ -9,6 +9,7 @@ from pydantic import BaseModel, EmailStr
 class KidBase(BaseModel):
     name: str
     enable_notifications: bool = True
+    google_email: Optional[str] = None
 
 
 class KidCreate(KidBase):
@@ -19,6 +20,7 @@ class KidUpdate(BaseModel):
     name: Optional[str] = None
     enable_notifications: Optional[bool] = None
     points_multiplier: Optional[float] = None
+    google_email: Optional[str] = None
 
 
 class KidResponse(KidBase):
@@ -37,6 +39,11 @@ class KidResponse(KidBase):
 
     class Config:
         from_attributes = True
+
+
+class LinkGoogleRequest(BaseModel):
+    """Request to link a Google email to a kid."""
+    email: EmailStr
 
 
 class KidStats(BaseModel):

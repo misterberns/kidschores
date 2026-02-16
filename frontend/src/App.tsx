@@ -30,8 +30,9 @@ const queryClient = new QueryClient();
 function NavBar() {
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
+  const { role } = useAuth();
 
-  const navItems = [
+  const allNavItems = [
     { path: '/', icon: HomeIcon, label: 'Home', testId: 'nav-home' },
     { path: '/chores', icon: ClipboardList, label: 'Chores', testId: 'nav-chores' },
     { path: '/rewards', icon: Gift, label: 'Rewards', testId: 'nav-rewards' },
@@ -39,6 +40,9 @@ function NavBar() {
     { path: '/history', icon: HistoryIcon, label: 'History', testId: 'nav-history' },
     { path: '/admin', icon: Users, label: 'Parent', testId: 'nav-admin' },
   ];
+
+  // Hide Parent tab for kid sessions
+  const navItems = role === 'kid' ? allNavItems.filter(item => item.path !== '/admin') : allNavItems;
 
   const activeIndex = navItems.findIndex(item => item.path === location.pathname);
 
@@ -100,6 +104,7 @@ function NavBar() {
 function AnimatedRoutes() {
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
+  const { role } = useAuth();
 
   return (
     <AnimatePresence mode="wait">
@@ -116,7 +121,7 @@ function AnimatedRoutes() {
           <Route path="/rewards" element={<Rewards />} />
           <Route path="/allowance" element={<Allowance />} />
           <Route path="/history" element={<History />} />
-          <Route path="/admin" element={<Admin />} />
+          {role === 'parent' && <Route path="/admin" element={<Admin />} />}
           <Route path="/notifications" element={<NotificationSettings />} />
           <Route path="/help" element={<Help />} />
         </Routes>
@@ -234,7 +239,7 @@ function AppContent() {
           </Link>
 
           <h1 className="text-2xl font-black text-center flex items-center gap-2">
-            <Logo variant="horizontal" size={180} alt="KidChores" />
+            <Logo variant="horizontal" size={180} alt="KidsChores" />
             <SeasonIcon
               size={28}
               style={{ color: seasonalOverride.iconColor }}

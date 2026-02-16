@@ -1,4 +1,4 @@
-# KidChores Brand Guidelines
+# KidsChores Brand Guidelines
 
 ## Logo
 

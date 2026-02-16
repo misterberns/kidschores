@@ -1,4 +1,4 @@
-// Theme color definitions for KidChores app
+// Theme color definitions for KidsChores app
 // Neobrutalist Design System
 // Primary: Feather Green (#58CC02)
 // Secondary: Sky Blue (#1CB0F6)
@@ -88,8 +88,8 @@ export const kidColorPalette: KidColor[] = [
     id: 'lime',
     name: 'Neon Lime',
     gradient: 'from-[#2ECC0E] to-[#45B80C]',
-    gradientDark: 'from-[#39FF14] to-[#00FF41]',
-    primary: '#39FF14',
+    gradientDark: 'from-[#4ADE80] to-[#34D399]',
+    primary: '#4ADE80',
     secondary: '#2ECC0E',
     lightBg: '#0A1F0A',
   },
@@ -97,8 +97,8 @@ export const kidColorPalette: KidColor[] = [
     id: 'ocean',
     name: 'Electric Blue',
     gradient: 'from-[#0088DD] to-[#00AAEE]',
-    gradientDark: 'from-[#00D4FF] to-[#00F0FF]',
-    primary: '#00D4FF',
+    gradientDark: 'from-[#38BDF8] to-[#7DD3FC]',
+    primary: '#38BDF8',
     secondary: '#0088DD',
     lightBg: '#0A1A2A',
   },
@@ -106,8 +106,8 @@ export const kidColorPalette: KidColor[] = [
     id: 'sunset',
     name: 'Hot Orange',
     gradient: 'from-[#E65100] to-[#FF6B00]',
-    gradientDark: 'from-[#FF6B35] to-[#FF4500]',
-    primary: '#FF6B35',
+    gradientDark: 'from-[#FB923C] to-[#F97316]',
+    primary: '#FB923C',
     secondary: '#E65100',
     lightBg: '#1A1208',
   },
@@ -115,8 +115,8 @@ export const kidColorPalette: KidColor[] = [
     id: 'berry',
     name: 'Neon Red',
     gradient: 'from-[#CC0033] to-[#FF003C]',
-    gradientDark: 'from-[#FF2D55] to-[#FF0040]',
-    primary: '#FF2D55',
+    gradientDark: 'from-[#FB7185] to-[#F43F5E]',
+    primary: '#FB7185',
     secondary: '#CC0033',
     lightBg: '#2A0A0A',
   },
@@ -124,8 +124,8 @@ export const kidColorPalette: KidColor[] = [
     id: 'grape',
     name: 'UV Purple',
     gradient: 'from-[#8B00CC] to-[#A200FF]',
-    gradientDark: 'from-[#BF5FFF] to-[#9B30FF]',
-    primary: '#BF5FFF',
+    gradientDark: 'from-[#C084FC] to-[#A855F7]',
+    primary: '#C084FC',
     secondary: '#8B00CC',
     lightBg: '#1A0A2A',
   },
@@ -133,8 +133,8 @@ export const kidColorPalette: KidColor[] = [
     id: 'teal',
     name: 'Toxic Teal',
     gradient: 'from-[#009980] to-[#00C9A7]',
-    gradientDark: 'from-[#00FFD5] to-[#00E5CC]',
-    primary: '#00FFD5',
+    gradientDark: 'from-[#2DD4BF] to-[#14B8A6]',
+    primary: '#2DD4BF',
     secondary: '#009980',
     lightBg: '#0A1F1A',
   },
@@ -142,8 +142,8 @@ export const kidColorPalette: KidColor[] = [
     id: 'coral',
     name: 'Hot Pink',
     gradient: 'from-[#CC0066] to-[#FF1493]',
-    gradientDark: 'from-[#FF1493] to-[#FF007F]',
-    primary: '#FF1493',
+    gradientDark: 'from-[#F472B6] to-[#EC4899]',
+    primary: '#F472B6',
     secondary: '#CC0066',
     lightBg: '#2A0A1A',
   },
@@ -151,8 +151,8 @@ export const kidColorPalette: KidColor[] = [
     id: 'gold',
     name: 'Electric Gold',
     gradient: 'from-[#E6A800] to-[#FFD700]',
-    gradientDark: 'from-[#FFD700] to-[#FFBF00]',
-    primary: '#FFD700',
+    gradientDark: 'from-[#FCD34D] to-[#FBBF24]',
+    primary: '#FCD34D',
     secondary: '#E6A800',
     lightBg: '#1A1A08',
   },
@@ -251,7 +251,7 @@ export const darkTheme: ThemeColors = {
   text: {
     primary: '#F5F5F5',      // High contrast (18:1)
     secondary: '#C8C8D0',    // Muted (10:1)
-    muted: '#8888A0',        // Hints (5.5:1)
+    muted: '#9494AC',        // Hints (~4.8:1 on bg-accent, WCAG AA)
     inverse: '#0A0A0F',
   },
 
@@ -260,38 +260,38 @@ export const darkTheme: ThemeColors = {
     100: '#153015',
     200: '#204520',
     300: '#2B5F2B',
-    400: '#2ECC0E',
-    500: '#39FF14',          // Neon green
-    600: '#58CC02',
-    700: '#4CAD02',
+    400: '#3DBB2E',
+    500: '#4ADE80',          // Tailwind green-400 — vibrant, no halation
+    600: '#48B84E',
+    700: '#3D9E42',
     800: '#3E8E01',
     900: '#2D6A01',
   },
 
   secondary: {
-    500: '#00D4FF',          // Electric cyan
+    500: '#38BDF8',          // Tailwind sky-400
     600: '#1CB0F6',
   },
 
   status: {
-    pending: { bg: '#1A1A0A', border: '#FFD93D', text: '#FFD93D' },
-    claimed: { bg: '#0A1A2A', border: '#00D4FF', text: '#00D4FF' },
-    approved: { bg: '#0A1F0A', border: '#39FF14', text: '#39FF14' },
-    overdue: { bg: '#2A0A0A', border: '#FF2D55', text: '#FF2D55' },
+    pending: { bg: '#1A1A0A', border: '#FBBF24', text: '#FCD34D' },
+    claimed: { bg: '#0A1A2A', border: '#38BDF8', text: '#7DD3FC' },
+    approved: { bg: '#0A1F0A', border: '#4ADE80', text: '#86EFAC' },
+    overdue: { bg: '#2A0A0A', border: '#FB7185', text: '#FDA4AF' },
   },
 
-  accent: '#FF6B35',         // Neon orange
+  accent: '#FB923C',         // Tailwind orange-400
   purple: '#D8A8FF',
-  green: '#39FF14',          // Neon green
-  red: '#FF2D55',            // Electric pink
+  green: '#4ADE80',          // Tailwind green-400
+  red: '#FB7185',            // Tailwind rose-400
   yellow: '#FFE066',
-  blue: '#00D4FF',           // Electric cyan
-  celebration: '#FF2D55',    // Electric pink
+  blue: '#38BDF8',           // Tailwind sky-400
+  celebration: '#FB7185',    // Tailwind rose-400
 
-  border: '#39FF14',         // Neon green borders
+  border: '#3A8F5A',         // Muted forest green borders
   borderStrong: '#F5F5F5',   // White for max visibility
 
-  shadow: '4px 4px 0 #39FF14',
+  shadow: '4px 4px 0 #3A8F5A',
 };
 
 // Color utility functions

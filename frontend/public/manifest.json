@@ -1,6 +1,6 @@
 {
-  "name": "KidChores",
-  "short_name": "KidChores",
+  "name": "KidsChores",
+  "short_name": "KidsChores",
   "description": "Fun chore management for families",
   "start_url": "/",
   "display": "standalone",

@@ -127,7 +127,13 @@ class Kid(Base):
     # Notifications
     enable_notifications = Column(Boolean, default=True)
 
+    # Google OAuth (for kid sign-in via parent-linked Gmail)
+    google_email = Column(String(255), nullable=True, unique=True)  # Gmail linked by parent
+    google_id = Column(String(255), nullable=True)  # Google OAuth ID (set on first sign-in)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True)  # Link to User account
+
     # Relationships
+    user = relationship("User", backref="kid")
     chore_claims = relationship("ChoreClaim", back_populates="kid")
     reward_claims = relationship("RewardClaim", back_populates="kid")
 

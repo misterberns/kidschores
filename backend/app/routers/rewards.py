@@ -1,18 +1,38 @@
 """Rewards API endpoints."""
 from datetime import datetime, timezone
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..deps import require_admin
-from ..models import Reward, RewardClaim, Kid, User
+from ..models import Reward, RewardClaim, Kid, User, Parent
 from ..schemas import (
     RewardCreate, RewardUpdate, RewardResponse,
     RewardRedeemRequest, RewardApproveRequest, RewardClaimResponse
 )
+from ..services.email_service import email_service
 
 router = APIRouter()
+
+
+async def email_notify_parents_reward_redeemed(db: Session, kid_id: str, kid_name: str, reward_name: str, points_spent: int):
+    """Email all parents associated with this kid when a reward is redeemed."""
+    if not email_service.is_configured():
+        return
+    parents = db.query(Parent).all()
+    for parent in parents:
+        if kid_id in (parent.associated_kids or []):
+            if parent.user_id:
+                user = db.query(User).filter(User.id == parent.user_id).first()
+                if user and user.email:
+                    await email_service.send_reward_redeemed_email(
+                        to_email=user.email,
+                        parent_name=parent.name,
+                        kid_name=kid_name,
+                        reward_name=reward_name,
+                        points_spent=points_spent,
+                    )
 
 
 @router.get("", response_model=List[RewardResponse])
@@ -71,7 +91,7 @@ def delete_reward(reward_id: str, db: Session = Depends(get_db), _admin: User = 
 
 
 @router.post("/{reward_id}/redeem", response_model=RewardClaimResponse)
-def redeem_reward(reward_id: str, request: RewardRedeemRequest, db: Session = Depends(get_db)):
+def redeem_reward(reward_id: str, request: RewardRedeemRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Kid requests to redeem a reward."""
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     if not reward:
@@ -109,6 +129,10 @@ def redeem_reward(reward_id: str, request: RewardRedeemRequest, db: Session = De
     db.add(claim)
     db.commit()
     db.refresh(claim)
+
+    # Send email notification to parents (in background)
+    background_tasks.add_task(email_notify_parents_reward_redeemed, db, kid.id, kid.name, reward.name, reward.cost)
+
     return claim
 
 

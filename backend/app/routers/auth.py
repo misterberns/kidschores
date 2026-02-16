@@ -112,6 +112,8 @@ class MeResponse(BaseModel):
     user: UserResponse
     parent: Optional[dict]  # Parent profile if exists
     kids: List[KidSummary]  # Associated kids
+    role: str = "parent"  # "parent" or "kid"
+    kid_id: Optional[str] = None  # Set for kid sessions
 
 
 class VerifyPinRequest(BaseModel):
@@ -234,9 +236,16 @@ async def refresh(request: RefreshRequest, db: Session = Depends(get_db)):
             detail="User not found or inactive"
         )
 
+    # Preserve role and kid_id claims from original token
+    role = payload.get("role", "parent")
+    kid_id = payload.get("kid_id")
+    token_data = {"sub": user.id, "role": role}
+    if kid_id:
+        token_data["kid_id"] = kid_id
+
     # Generate new tokens
-    access_token = create_access_token({"sub": user.id})
-    refresh_token = create_refresh_token({"sub": user.id})
+    access_token = create_access_token(token_data)
+    refresh_token = create_refresh_token(token_data)
 
     return TokenResponse(
         access_token=access_token,
@@ -294,7 +303,39 @@ async def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db))
     name = google_user.get("name", email.split("@")[0])
     picture = google_user.get("picture")
 
-    # Find or create user
+    # Check if this Google email belongs to a kid (kid sign-in flow)
+    kid = db.query(Kid).filter(Kid.google_email == email).first()
+    if kid:
+        # Store Google ID on first sign-in
+        kid.google_id = google_id
+
+        # Find or create User for this kid
+        if kid.user_id:
+            user = db.query(User).filter(User.id == kid.user_id).first()
+        else:
+            user = User(
+                email=email,
+                display_name=kid.name,
+                oauth_provider="google",
+                oauth_id=google_id,
+                avatar_url=picture,
+            )
+            db.add(user)
+            db.flush()
+            kid.user_id = user.id
+
+        user.oauth_provider = "google"
+        user.oauth_id = google_id
+        user.avatar_url = picture
+        user.last_login = datetime.now(timezone.utc)
+        db.commit()
+
+        # JWT with kid role
+        access_token = create_access_token({"sub": user.id, "role": "kid", "kid_id": kid.id})
+        refresh_token = create_refresh_token({"sub": user.id, "role": "kid", "kid_id": kid.id})
+        return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+
+    # Parent sign-in flow: find or create user
     user = db.query(User).filter(
         (User.oauth_provider == "google") & (User.oauth_id == google_id)
     ).first()
@@ -329,9 +370,9 @@ async def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db))
     user.last_login = datetime.now(timezone.utc)
     db.commit()
 
-    # Generate tokens
-    access_token = create_access_token({"sub": user.id})
-    refresh_token = create_refresh_token({"sub": user.id})
+    # Generate tokens with parent role
+    access_token = create_access_token({"sub": user.id, "role": "parent"})
+    refresh_token = create_refresh_token({"sub": user.id, "role": "parent"})
 
     return TokenResponse(
         access_token=access_token,
@@ -342,7 +383,18 @@ async def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db))
 @router.get("/me", response_model=MeResponse)
 async def get_me(user: User = Depends(require_auth), db: Session = Depends(get_db)):
     """Get current user profile with parent and kids."""
-    # Get parent profile
+    # Check if this user is linked to a kid (kid session)
+    kid = db.query(Kid).filter(Kid.user_id == user.id).first()
+    if kid:
+        return MeResponse(
+            user=UserResponse.model_validate(user),
+            parent=None,
+            kids=[KidSummary(id=kid.id, name=kid.name, points=kid.points)],
+            role="kid",
+            kid_id=kid.id,
+        )
+
+    # Parent session: get parent profile
     parent = db.query(Parent).filter(Parent.user_id == user.id).first()
 
     # Get associated kids
@@ -363,6 +415,7 @@ async def get_me(user: User = Depends(require_auth), db: Session = Depends(get_d
             "associated_kids": parent.associated_kids or [],
         } if parent else None,
         kids=kids,
+        role="parent",
     )
 
 

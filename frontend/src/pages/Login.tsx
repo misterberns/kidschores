@@ -161,7 +161,8 @@ export function Login() {
                 setError('Google sign-in is not configured.');
                 return;
               }
-              const redirectUri = encodeURIComponent(`${window.location.origin}/auth/google/callback`);
+              const googleOrigin = import.meta.env.VITE_GOOGLE_REDIRECT_ORIGIN || window.location.origin;
+              const redirectUri = encodeURIComponent(`${googleOrigin}/auth/google/callback`);
               const scope = encodeURIComponent('openid email profile');
               window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
             }}

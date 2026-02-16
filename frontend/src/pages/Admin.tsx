@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CheckCircle2, Users, ClipboardList, Gift, User, UserPlus,
-  Plus, Pencil, Trash2, Check, X, Loader2, Bell, Lock, Unlock, Settings, HelpCircle
+  Plus, Pencil, Trash2, Check, X, Loader2, Bell, Lock, Unlock, Settings, HelpCircle, Mail, Link2, Unlink
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { kidsApi, choresApi, rewardsApi, approvalsApi, parentsApi } from '../api/client';
@@ -261,6 +261,7 @@ function AddKidForm({ onClose }: { onClose: () => void }) {
 
 function EditKidForm({ kid, onClose }: { kid: Kid; onClose: () => void }) {
   const [name, setName] = useState(kid.name);
+  const [googleEmail, setGoogleEmail] = useState(kid.google_email || '');
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -283,9 +284,16 @@ function EditKidForm({ kid, onClose }: { kid: Kid; onClose: () => void }) {
         onChange={(e) => setName(e.target.value)}
         placeholder="Kid's name"
       />
+      <FormInput
+        label="Google Email (for kid sign-in)"
+        type="email"
+        value={googleEmail}
+        onChange={(e) => setGoogleEmail(e.target.value)}
+        placeholder="kid@gmail.com"
+      />
       <div className="flex gap-2 mt-4">
         <button
-          onClick={() => mutation.mutate({ name })}
+          onClick={() => mutation.mutate({ name, google_email: googleEmail || undefined })}
           disabled={!name || mutation.isPending}
           className="flex-1 btn btn-primary"
         >
@@ -906,6 +914,84 @@ function EntityCard({
   );
 }
 
+function GoogleLinkButton({ kidId, kidName }: { kidId: string; kidName: string }) {
+  const [showInput, setShowInput] = useState(false);
+  const [email, setEmail] = useState('');
+  const queryClient = useQueryClient();
+  const toast = useToast();
+
+  const mutation = useMutation({
+    mutationFn: (emailVal: string) => kidsApi.linkGoogle(kidId, emailVal),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kids'] });
+      setShowInput(false);
+      setEmail('');
+      toast.success(`Google linked for ${kidName}`);
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || 'Failed to link');
+    },
+  });
+
+  if (!showInput) {
+    return (
+      <button
+        onClick={() => setShowInput(true)}
+        className="flex items-center gap-1 mt-1 text-xs text-primary-500 hover:text-primary-600 transition-colors"
+      >
+        <Link2 size={12} /> Connect Google
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1 mt-1">
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="kid@gmail.com"
+        className="text-xs border border-[var(--border-color)] rounded px-2 py-1 bg-bg-surface text-text-primary w-40"
+        autoFocus
+      />
+      <button
+        onClick={() => mutation.mutate(email)}
+        disabled={!email || mutation.isPending}
+        className="p-1 text-primary-500 hover:text-primary-600"
+      >
+        <Check size={14} />
+      </button>
+      <button onClick={() => { setShowInput(false); setEmail(''); }} className="p-1 text-text-muted hover:text-error-500">
+        <X size={14} />
+      </button>
+    </div>
+  );
+}
+
+function GoogleUnlinkButton({ kidId }: { kidId: string }) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+
+  const mutation = useMutation({
+    mutationFn: () => kidsApi.unlinkGoogle(kidId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kids'] });
+      toast.success('Google unlinked');
+    },
+  });
+
+  return (
+    <button
+      onClick={() => mutation.mutate()}
+      disabled={mutation.isPending}
+      className="p-0.5 text-text-muted hover:text-error-500 transition-colors ml-1"
+      title="Unlink Google"
+    >
+      <Unlink size={12} />
+    </button>
+  );
+}
+
 export function Admin() {
   const [activeTab, setActiveTab] = useState<Tab>('approvals');
   const [showAddForm, setShowAddForm] = useState<string | null>(null);
@@ -1076,6 +1162,15 @@ export function Admin() {
             >
               <p className="font-bold text-text-primary" data-testid={`kid-name-${kid.id}`}>{kid.name}</p>
               <p className="text-sm text-text-muted" data-testid={`kid-points-${kid.id}`}>{Math.floor(kid.points)} points</p>
+              {kid.google_email ? (
+                <div className="flex items-center gap-1 mt-1">
+                  <Mail size={12} className="text-primary-500" />
+                  <span className="text-xs text-text-muted">{kid.google_email}</span>
+                  <GoogleUnlinkButton kidId={kid.id} />
+                </div>
+              ) : (
+                <GoogleLinkButton kidId={kid.id} kidName={kid.name} />
+              )}
             </EntityCard>
           ))}
         </div>

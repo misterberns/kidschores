@@ -9,7 +9,7 @@ from ..deps import require_auth, require_admin
 from ..models import Kid, Chore, ChoreClaim, DailyMultiplier, User
 from ..schemas import (
     KidCreate, KidUpdate, KidResponse, KidStats, PointsAdjustRequest,
-    StreakInfo, DailyProgressResponse
+    StreakInfo, DailyProgressResponse, LinkGoogleRequest
 )
 
 # Streak milestones
@@ -259,3 +259,33 @@ def get_daily_progress(kid_id: str, db: Session = Depends(get_db)):
         bonus_points=bonus_points,
         multiplier=multiplier
     )
+
+
+@router.put("/{kid_id}/link-google")
+def link_google(kid_id: str, body: LinkGoogleRequest, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+    """Parent links a Google email to a kid."""
+    kid = db.query(Kid).filter(Kid.id == kid_id).first()
+    if not kid:
+        raise HTTPException(status_code=404, detail="Kid not found")
+
+    # Check email not already used by another kid
+    existing = db.query(Kid).filter(Kid.google_email == body.email.lower(), Kid.id != kid_id).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="Email already linked to another kid")
+
+    kid.google_email = body.email.lower()
+    db.commit()
+    return {"status": "linked", "google_email": kid.google_email}
+
+
+@router.delete("/{kid_id}/link-google")
+def unlink_google(kid_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+    """Parent unlinks Google from a kid."""
+    kid = db.query(Kid).filter(Kid.id == kid_id).first()
+    if not kid:
+        raise HTTPException(status_code=404, detail="Kid not found")
+
+    kid.google_email = None
+    kid.google_id = None
+    db.commit()
+    return {"status": "unlinked"}
