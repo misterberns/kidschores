@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KidsChores",
     description="Family chore management with points and rewards",
-    version="0.6.0",  # Keep in sync with VERSION file
+    version="0.6.1",  # Keep in sync with VERSION file
     lifespan=lifespan,
     redirect_slashes=False,  # Prevent 307 redirects for /api/kids vs /api/kids/
 )

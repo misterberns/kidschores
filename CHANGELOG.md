@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-02-16
+
+### Fixed
+- **Google OAuth invalid_client error**: Removed Dockerfile ARG/ENV that blanked `VITE_GOOGLE_CLIENT_ID` at build time — Google Client ID now correctly read from `frontend/.env.production`
+- **Register page Google redirect URI**: Used `window.location.origin` instead of `VITE_GOOGLE_REDIRECT_ORIGIN` env var, causing redirect URI mismatch on non-standard ports
+- **SQLite read-only database**: Non-root container user (UID 999) couldn't write to root-owned mounted volume — documented `chown -R 999:999` requirement for NAS deployments
+
+### Changed
+- **Frontend Google SSO configuration**: `VITE_GOOGLE_CLIENT_ID` and `VITE_GOOGLE_REDIRECT_ORIGIN` now set exclusively via `frontend/.env.production` (not Dockerfile build args)
+- **Documentation**: Updated README, `.env.example`, and Google SSO setup instructions to reflect build-time vs runtime variable separation
+
 ## [0.6.0] - 2026-02-16
 
 ### Changed
