@@ -7,14 +7,8 @@ WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Copy source and build
+# Copy source and build (Vite reads .env.production automatically)
 COPY . .
-
-# Vite bakes VITE_* env vars at build time
-ARG VITE_GOOGLE_CLIENT_ID
-ARG VITE_GOOGLE_REDIRECT_ORIGIN
-ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID \
-    VITE_GOOGLE_REDIRECT_ORIGIN=$VITE_GOOGLE_REDIRECT_ORIGIN
 
 RUN npm run build
 

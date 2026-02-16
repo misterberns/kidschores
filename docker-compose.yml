@@ -1,10 +1,6 @@
 services:
   frontend:
-    build:
-      context: ./frontend
-      args:
-        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
-        VITE_GOOGLE_REDIRECT_ORIGIN: ${VITE_GOOGLE_REDIRECT_ORIGIN:-}
+    build: ./frontend
     container_name: kidschores-ui
     ports:
       - "${UI_PORT:-3103}:80"
