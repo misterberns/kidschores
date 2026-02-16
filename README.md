@@ -87,7 +87,7 @@ services:
     restart: unless-stopped
 ```
 
-> See [`docker-compose.yml`](docker-compose.yml) for the full configuration with healthchecks, Google SSO build args, and email notification settings.
+> See [`docker-compose.yml`](docker-compose.yml) for the full configuration with healthchecks, Google SSO settings, and email notification settings.
 
 #### Homelab Deployment
 
@@ -132,12 +132,14 @@ npm run dev
 | `SMTP_FROM_NAME` | No | `KidsChores` | Sender display name |
 | `SMTP_USE_TLS` | No | `true` | Use TLS for SMTP |
 
-**Frontend (build-time — baked into image by Vite):**
+**Frontend (build-time — set in `frontend/.env.production`, NOT in `.env`):**
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_GOOGLE_CLIENT_ID` | No | Google OAuth client ID (must match backend `GOOGLE_CLIENT_ID`) |
-| `VITE_GOOGLE_REDIRECT_ORIGIN` | No | Base URL for OAuth redirect (e.g., `http://localhost:3103`) |
+| Variable | Required | File | Description |
+|----------|----------|------|-------------|
+| `VITE_GOOGLE_CLIENT_ID` | No | `frontend/.env.production` | Google OAuth client ID (must match backend `GOOGLE_CLIENT_ID`) |
+| `VITE_GOOGLE_REDIRECT_ORIGIN` | No | `frontend/.env.production` | Base URL for OAuth redirect (e.g., `http://localhost:3103`) |
+
+> **Important:** Frontend vars are baked into the image at build time by Vite. They must be set in `frontend/.env.production` before building — they are NOT read from the root `.env` file.
 
 ### Google SSO Setup (Optional)
 
@@ -155,18 +157,20 @@ KidsChores supports Google Sign-In for both parents and kids. Parents sign in or
    (e.g., `http://localhost:3103/auth/google/callback`)
 8. Copy the **Client ID** and **Client Secret**
 
-**Configure in `.env`:**
+**Configure backend vars in `.env`:**
 ```env
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret
 GOOGLE_REDIRECT_URI=http://localhost:3103/auth/google/callback
+```
 
-# Frontend needs client ID at build time
+**Configure frontend vars in `frontend/.env.production`:**
+```env
 VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 VITE_GOOGLE_REDIRECT_ORIGIN=http://localhost:3103
 ```
 
-**Rebuild frontend after setting Google vars** (they're baked in at build time):
+**Rebuild frontend after changing `frontend/.env.production`** (values are baked in at build time):
 ```bash
 docker compose up -d --build
 ```
