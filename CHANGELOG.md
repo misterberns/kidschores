@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-02-16
+
 ### Fixed
 - **Tailwind v4 theme system completely broken**: Added missing `@config` directive — ALL custom theme utility classes (`bg-primary-500`, `text-text-primary`, `bg-bg-surface`, etc.) were silently not generating CSS. Selected buttons, backgrounds, and text colors across entire app now work correctly.
 - **Kid selector invisible**: Selected kid button had transparent background (no `bg-primary-500` CSS) with dark text, invisible on dark themes. Now properly themed with ARIA `role="tab"` + `aria-selected` accessibility attributes.
