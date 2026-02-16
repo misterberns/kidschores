@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.6.0] - 2026-02-14
+## [0.5.2] - 2026-02-15
 
 ### Security
 - **bcrypt password hashing**: Migrated from SHA256 to bcrypt (12 rounds) with transparent rehash-on-login
@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Google SSO**: OAuth 2.0 authorization code flow with Google sign-in on Login and Register pages
+- **Kid Google sign-in**: Kids can sign in via parent portal link sharing (Google OAuth)
 - **Google callback page**: Handles OAuth redirect with loading state and error handling
 - **Admin middleware**: `require_admin` FastAPI dependency for guarding admin routes
 
@@ -28,10 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **API token lookup**: Prefix-based database query instead of O(n) full-table scan
 - **datetime fix**: All `datetime.utcnow()` replaced with `datetime.now(timezone.utc)` (Python 3.12+ deprecation)
 - **Config cleanup**: Removed dead `bcrypt_rounds` and `database_url` settings
-- **Version**: Bumped to 0.6.0
+- **Dark mode color softening**: Replaced 100% saturation neon colors with Tailwind palette equivalents; structural colors (borders/shadows) separated from content colors; all 5 seasonal themes updated; WCAG AA/AAA compliance verified
+- **Version**: Bumped to 0.5.2
 
 ### Fixed
 - Google OAuth redirect URI now includes `:8443` port for Traefik routing
+- Dark mode `--text-muted` contrast improved (4.08:1 → 4.8:1, WCAG AA compliance)
 
 ## [0.5.0] - 2026-01-09
 
