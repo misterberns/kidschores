@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Export error silent**: Added toast notifications for export success/failure
 - **Stats/Calendar loading states**: Added skeleton loaders while analytics data loads
 - **Christmas dark mode border contrast**: Brightened `--border-color` from `#993344` to `#AD3F52` (2.74:1 → 3.41:1, WCAG 1.4.11 compliance)
+- **Analytics stuck loading for kids with history**: Timezone-aware vs naive datetime comparison — old claims stored as naive UTC, v0.5.2 comparison used aware UTC, causing `TypeError`. Normalized all comparisons to naive UTC.
+- **Analytics/history error handling**: Added error state UI for all views (Stats, Calendar, List) — previously showed blank space on API failure
 
 ### Performance
 - **Backend N+1 query elimination**: `get_history`, `get_analytics`, and `export_csv` rewritten with SQL joins and bulk-loading (40+ queries per page → 3-4 queries)

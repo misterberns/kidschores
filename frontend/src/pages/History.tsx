@@ -339,14 +339,14 @@ export function History() {
     return Math.max(60, Math.min(diffDays, 365));
   }, [viewMode, monthOffset]);
 
-  const { data: analytics, isLoading: isLoadingAnalytics } = useQuery({
+  const { data: analytics, isLoading: isLoadingAnalytics, isError: isAnalyticsError } = useQuery({
     queryKey: ['analytics', activeKidId, analyticsDays],
     queryFn: () => activeKidId ? historyApi.getAnalytics(activeKidId, analyticsDays).then(res => res.data) : null,
     enabled: !!activeKidId,
   });
 
   // Fetch history
-  const { data: history, isLoading: isLoadingHistory } = useQuery({
+  const { data: history, isLoading: isLoadingHistory, isError: isHistoryError } = useQuery({
     queryKey: ['history', activeKidId, page],
     queryFn: () => activeKidId ? historyApi.getHistory(activeKidId, { page, per_page: 20 }).then(res => res.data) : null,
     enabled: !!activeKidId && viewMode === 'list',
@@ -489,6 +489,13 @@ export function History() {
           </div>
         </div>
       )}
+      {viewMode === 'stats' && !isLoadingAnalytics && isAnalyticsError && (
+        <div className="card p-6 text-center">
+          <XCircle size={48} className="mx-auto text-red-400 mb-3" />
+          <h3 className="font-bold text-text-primary mb-1">Failed to Load Stats</h3>
+          <p className="text-sm text-text-muted">Please try again later.</p>
+        </div>
+      )}
       {viewMode === 'stats' && !isLoadingAnalytics && analytics && (
         <div className="space-y-4">
           {/* Summary stats */}
@@ -567,6 +574,13 @@ export function History() {
           </div>
         </div>
       )}
+      {viewMode === 'calendar' && !isLoadingAnalytics && isAnalyticsError && (
+        <div className="card p-6 text-center">
+          <XCircle size={48} className="mx-auto text-red-400 mb-3" />
+          <h3 className="font-bold text-text-primary mb-1">Failed to Load Calendar</h3>
+          <p className="text-sm text-text-muted">Please try again later.</p>
+        </div>
+      )}
       {viewMode === 'calendar' && !isLoadingAnalytics && analytics && (
         <CalendarView
           dailyStats={analytics.daily_stats}
@@ -591,6 +605,12 @@ export function History() {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : isHistoryError ? (
+            <div className="card p-6 text-center">
+              <XCircle size={48} className="mx-auto text-red-400 mb-3" />
+              <h3 className="font-bold text-text-primary mb-1">Failed to Load History</h3>
+              <p className="text-sm text-text-muted">Please try again later.</p>
             </div>
           ) : history && history.items.length > 0 ? (
             <>

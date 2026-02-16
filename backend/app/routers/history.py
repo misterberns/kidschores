@@ -1,4 +1,5 @@
 """Chore history and analytics API endpoints."""
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
@@ -95,37 +96,34 @@ def get_history(
     db: Session = Depends(get_db)
 ):
     """Get paginated chore history for a kid."""
-    # Base query
-    query = db.query(ChoreClaim).filter(ChoreClaim.kid_id == kid_id)
+    # Base query with joins to avoid N+1
+    query = (
+        db.query(ChoreClaim, Chore, ChoreCategory)
+        .join(Chore, ChoreClaim.chore_id == Chore.id, isouter=True)
+        .join(ChoreCategory, Chore.category_id == ChoreCategory.id, isouter=True)
+        .filter(ChoreClaim.kid_id == kid_id)
+    )
 
     # Apply filters
     if status:
         query = query.filter(ChoreClaim.status == status)
-
     if start_date:
         query = query.filter(ChoreClaim.claimed_at >= start_date)
-
     if end_date:
         query = query.filter(ChoreClaim.claimed_at <= end_date)
-
     if category_id:
-        query = query.join(Chore).filter(Chore.category_id == category_id)
+        query = query.filter(Chore.category_id == category_id)
 
     # Get total count
     total = query.count()
 
     # Apply pagination
     offset = (page - 1) * per_page
-    claims = query.order_by(ChoreClaim.claimed_at.desc()).offset(offset).limit(per_page).all()
+    rows = query.order_by(ChoreClaim.claimed_at.desc()).offset(offset).limit(per_page).all()
 
-    # Build response items
+    # Build response items from joined results
     items = []
-    for claim in claims:
-        chore = db.query(Chore).filter(Chore.id == claim.chore_id).first()
-        category = None
-        if chore and chore.category_id:
-            category = db.query(ChoreCategory).filter(ChoreCategory.id == chore.category_id).first()
-
+    for claim, chore, category in rows:
         items.append(HistoryItem(
             id=claim.id,
             chore_id=claim.chore_id,
@@ -162,12 +160,16 @@ def get_analytics(
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Kid not found")
 
-    # Date ranges
-    now = datetime.now(timezone.utc)
+    # Date ranges — strip tzinfo for SQLite compatibility (SQLite stores naive datetimes;
+    # comparing aware vs naive raises TypeError for old records created before v0.5.2)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_start = today_start - timedelta(days=today_start.weekday())
     month_start = today_start.replace(day=1)
-    range_start = today_start - timedelta(days=days)
+
+    # Bulk-load all chores and categories (2 queries total instead of N+1)
+    all_chores = {c.id: c for c in db.query(Chore).all()}
+    all_categories = {c.id: c for c in db.query(ChoreCategory).all()}
 
     # Overall stats (approved claims only)
     approved_claims = db.query(ChoreClaim).filter(
@@ -179,47 +181,76 @@ def get_analytics(
     total_points = sum(c.points_awarded or 0 for c in approved_claims)
     avg_points = total_points / total_completed if total_completed > 0 else 0
 
-    # Today's stats
-    today_claims = [c for c in approved_claims if c.approved_at and c.approved_at >= today_start]
-    chores_today = len(today_claims)
-    points_today = sum(c.points_awarded or 0 for c in today_claims)
+    # Time-based stats + daily grouping in a single pass
+    chores_today = 0
+    points_today = 0.0
+    chores_this_week = 0
+    points_this_week = 0.0
+    chores_this_month = 0
+    points_this_month = 0.0
+    daily_map: dict[str, dict] = defaultdict(lambda: {"completed": 0, "total_points": 0.0})
+    category_counts: dict[str, dict] = {}
+    chore_counts: dict[str, dict] = {}
 
-    # This week's stats
-    week_claims = [c for c in approved_claims if c.approved_at and c.approved_at >= week_start]
-    chores_this_week = len(week_claims)
-    points_this_week = sum(c.points_awarded or 0 for c in week_claims)
-
-    # This month's stats
-    month_claims = [c for c in approved_claims if c.approved_at and c.approved_at >= month_start]
-    chores_this_month = len(month_claims)
-    points_this_month = sum(c.points_awarded or 0 for c in month_claims)
-
-    # Daily breakdown for chart
-    daily_stats = []
-    for i in range(days):
-        day = today_start - timedelta(days=days - 1 - i)
-        day_end = day + timedelta(days=1)
-        day_claims = [
-            c for c in approved_claims
-            if c.approved_at and day <= c.approved_at < day_end
-        ]
-        daily_stats.append(DailyStats(
-            date=day.strftime("%Y-%m-%d"),
-            completed=len(day_claims),
-            total_points=sum(c.points_awarded or 0 for c in day_claims),
-        ))
-
-    # Category breakdown
-    category_counts = {}
     for claim in approved_claims:
-        chore = db.query(Chore).filter(Chore.id == claim.chore_id).first()
+        pts = claim.points_awarded or 0
+
+        # Normalize approved_at to naive UTC (handles mix of aware/naive from pre/post v0.5.2)
+        approved_at = claim.approved_at
+        if approved_at and approved_at.tzinfo is not None:
+            approved_at = approved_at.replace(tzinfo=None)
+
+        # Time-based aggregation
+        if approved_at:
+            if approved_at >= today_start:
+                chores_today += 1
+                points_today += pts
+            if approved_at >= week_start:
+                chores_this_week += 1
+                points_this_week += pts
+            if approved_at >= month_start:
+                chores_this_month += 1
+                points_this_month += pts
+
+            # Daily stats grouping
+            day_key = approved_at.strftime("%Y-%m-%d")
+            daily_map[day_key]["completed"] += 1
+            daily_map[day_key]["total_points"] += pts
+
+        # Category breakdown (using bulk-loaded chores)
+        chore = all_chores.get(claim.chore_id)
         if chore:
             cat_id = chore.category_id or "uncategorized"
             if cat_id not in category_counts:
-                category_counts[cat_id] = {"count": 0, "points": 0}
+                category_counts[cat_id] = {"count": 0, "points": 0.0}
             category_counts[cat_id]["count"] += 1
-            category_counts[cat_id]["points"] += claim.points_awarded or 0
+            category_counts[cat_id]["points"] += pts
 
+            # Top chores
+            if claim.chore_id not in chore_counts:
+                chore_counts[claim.chore_id] = {
+                    "chore_id": claim.chore_id,
+                    "chore_name": chore.name,
+                    "chore_icon": chore.icon,
+                    "count": 0,
+                    "points": 0.0,
+                }
+            chore_counts[claim.chore_id]["count"] += 1
+            chore_counts[claim.chore_id]["points"] += pts
+
+    # Build daily_stats array from the map
+    daily_stats = []
+    for i in range(days):
+        day = today_start - timedelta(days=days - 1 - i)
+        day_key = day.strftime("%Y-%m-%d")
+        entry = daily_map.get(day_key, {"completed": 0, "total_points": 0.0})
+        daily_stats.append(DailyStats(
+            date=day_key,
+            completed=entry["completed"],
+            total_points=entry["total_points"],
+        ))
+
+    # Build category_stats from bulk-loaded categories
     category_stats = []
     for cat_id, stats in category_counts.items():
         if cat_id == "uncategorized":
@@ -231,7 +262,7 @@ def get_analytics(
                 points=stats["points"],
             ))
         else:
-            cat = db.query(ChoreCategory).filter(ChoreCategory.id == cat_id).first()
+            cat = all_categories.get(cat_id)
             if cat:
                 category_stats.append(CategoryStats(
                     category_id=cat.id,
@@ -240,21 +271,6 @@ def get_analytics(
                     count=stats["count"],
                     points=stats["points"],
                 ))
-
-    # Top chores
-    chore_counts = {}
-    for claim in approved_claims:
-        if claim.chore_id not in chore_counts:
-            chore = db.query(Chore).filter(Chore.id == claim.chore_id).first()
-            chore_counts[claim.chore_id] = {
-                "chore_id": claim.chore_id,
-                "chore_name": chore.name if chore else "Unknown",
-                "chore_icon": chore.icon if chore else "🧹",
-                "count": 0,
-                "points": 0,
-            }
-        chore_counts[claim.chore_id]["count"] += 1
-        chore_counts[claim.chore_id]["points"] += claim.points_awarded or 0
 
     top_chores = sorted(
         chore_counts.values(),
@@ -274,8 +290,8 @@ def get_analytics(
         points_today=points_today,
         points_this_week=points_this_week,
         points_this_month=points_this_month,
-        current_streak=kid.overall_chore_streak,
-        longest_streak=kid.longest_streak_ever,
+        current_streak=kid.overall_chore_streak or 0,
+        longest_streak=kid.longest_streak_ever or 0,
         daily_stats=daily_stats,
         category_stats=category_stats,
         top_chores=top_chores,
@@ -300,15 +316,20 @@ def export_history_csv(
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Kid not found")
 
-    # Query claims
-    query = db.query(ChoreClaim).filter(ChoreClaim.kid_id == kid_id)
+    # Query claims with joins to avoid N+1
+    query = (
+        db.query(ChoreClaim, Chore, ChoreCategory)
+        .join(Chore, ChoreClaim.chore_id == Chore.id, isouter=True)
+        .join(ChoreCategory, Chore.category_id == ChoreCategory.id, isouter=True)
+        .filter(ChoreClaim.kid_id == kid_id)
+    )
 
     if start_date:
         query = query.filter(ChoreClaim.claimed_at >= start_date)
     if end_date:
         query = query.filter(ChoreClaim.claimed_at <= end_date)
 
-    claims = query.order_by(ChoreClaim.claimed_at.desc()).all()
+    rows = query.order_by(ChoreClaim.claimed_at.desc()).all()
 
     # Build CSV
     output = io.StringIO()
@@ -317,12 +338,7 @@ def export_history_csv(
         "Date", "Chore", "Category", "Status", "Points", "Approved By", "Notes"
     ])
 
-    for claim in claims:
-        chore = db.query(Chore).filter(Chore.id == claim.chore_id).first()
-        category = None
-        if chore and chore.category_id:
-            category = db.query(ChoreCategory).filter(ChoreCategory.id == chore.category_id).first()
-
+    for claim, chore, category in rows:
         writer.writerow([
             claim.claimed_at.strftime("%Y-%m-%d %H:%M"),
             chore.name if chore else "Unknown",
