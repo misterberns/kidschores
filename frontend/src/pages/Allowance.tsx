@@ -257,15 +257,17 @@ export function Allowance() {
 
       {/* Kid selector */}
       {kids.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Select kid">
           {kids.map(kid => (
             <motion.button
               key={kid.id}
+              role="tab"
+              aria-selected={activeKidId === kid.id}
               onClick={() => setSelectedKid(kid.id)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors border-2 ${
                 activeKidId === kid.id
-                  ? 'bg-green-500 text-white'
-                  : 'bg-bg-accent text-text-secondary hover:bg-bg-elevated'
+                  ? 'bg-primary-500 border-primary-500 text-text-inverse'
+                  : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
               }`}
               whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}

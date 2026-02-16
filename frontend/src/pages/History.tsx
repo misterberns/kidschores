@@ -19,6 +19,7 @@ import {
 import { kidsApi, historyApi } from '../api/client';
 import type { HistoryItem, Analytics } from '../api/client';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { useToast } from '../hooks/useToast';
 
 type ViewMode = 'stats' | 'list' | 'calendar';
 
@@ -117,7 +118,7 @@ function HistoryItemCard({ item }: { item: HistoryItem }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {item.points_awarded && (
+          {item.points_awarded != null && (
             <span className="flex items-center gap-1 text-accent-500 font-medium">
               <Star size={14} fill="currentColor" />
               +{item.points_awarded}
@@ -192,8 +193,11 @@ function CategoryChart({ categoryStats }: { categoryStats: Analytics['category_s
   );
 }
 
-function CalendarView({ dailyStats }: { dailyStats: Analytics['daily_stats'] }) {
-  const [monthOffset, setMonthOffset] = useState(0);
+function CalendarView({ dailyStats, monthOffset, setMonthOffset }: {
+  dailyStats: Analytics['daily_stats'];
+  monthOffset: number;
+  setMonthOffset: React.Dispatch<React.SetStateAction<number>>;
+}) {
 
   const { weeks, monthName, year } = useMemo(() => {
     const today = new Date();
@@ -309,9 +313,11 @@ function CalendarView({ dailyStats }: { dailyStats: Analytics['daily_stats'] }) 
 
 export function History() {
   const prefersReducedMotion = useReducedMotion();
+  const toast = useToast();
   const [selectedKid, setSelectedKid] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('stats');
   const [page, setPage] = useState(1);
+  const [monthOffset, setMonthOffset] = useState(0);
 
   // Fetch kids
   const { data: kids = [] } = useQuery({
@@ -322,10 +328,20 @@ export function History() {
   const activeKid = selectedKid ? kids.find(k => k.id === selectedKid) : kids[0];
   const activeKidId = activeKid?.id;
 
-  // Fetch analytics
-  const { data: analytics } = useQuery({
-    queryKey: ['analytics', activeKidId],
-    queryFn: () => activeKidId ? historyApi.getAnalytics(activeKidId, 60).then(res => res.data) : null,
+  // Fetch analytics — extend range when calendar navigates to past months
+  const analyticsDays = useMemo(() => {
+    if (viewMode !== 'calendar') return 60;
+    // monthOffset is 0 (current) or negative (past months)
+    const today = new Date();
+    const targetMonth = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+    const diffMs = today.getTime() - targetMonth.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 31;
+    return Math.max(60, Math.min(diffDays, 365));
+  }, [viewMode, monthOffset]);
+
+  const { data: analytics, isLoading: isLoadingAnalytics } = useQuery({
+    queryKey: ['analytics', activeKidId, analyticsDays],
+    queryFn: () => activeKidId ? historyApi.getAnalytics(activeKidId, analyticsDays).then(res => res.data) : null,
     enabled: !!activeKidId,
   });
 
@@ -347,8 +363,10 @@ export function History() {
       a.download = `${activeKid?.name || 'kid'}_chore_history.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
+      toast.success('History exported successfully');
     } catch (error) {
       console.error('Export failed:', error);
+      toast.error('Failed to export history');
     }
   };
 
@@ -381,20 +399,22 @@ export function History() {
 
       {/* Kid selector */}
       {kids.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Select kid">
           {kids.map(kid => (
             <motion.button
               key={kid.id}
+              role="tab"
+              aria-selected={activeKidId === kid.id}
               onClick={() => {
                 setSelectedKid(kid.id);
                 setPage(1);
+                setMonthOffset(0);
               }}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors border-2 ${
                 activeKidId === kid.id
-                  ? 'bg-primary-500'
-                  : 'bg-bg-accent text-text-secondary hover:bg-bg-elevated'
+                  ? 'bg-primary-500 border-primary-500 text-text-inverse'
+                  : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
               }`}
-              style={activeKidId === kid.id ? { color: 'var(--text-inverse)' } : undefined}
               whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
             >
@@ -405,39 +425,42 @@ export function History() {
       )}
 
       {/* View toggle */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" role="tablist" aria-label="View mode">
         <button
+          role="tab"
+          aria-selected={viewMode === 'stats'}
           onClick={() => setViewMode('stats')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border-2 ${
             viewMode === 'stats'
-              ? 'bg-primary-500'
-              : 'bg-bg-accent text-text-secondary hover:bg-bg-elevated'
+              ? 'bg-primary-500 border-primary-500 text-text-inverse'
+              : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
           }`}
-          style={viewMode === 'stats' ? { color: 'var(--text-inverse)' } : undefined}
         >
           <BarChart3 size={16} />
           Stats
         </button>
         <button
+          role="tab"
+          aria-selected={viewMode === 'calendar'}
           onClick={() => setViewMode('calendar')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border-2 ${
             viewMode === 'calendar'
-              ? 'bg-primary-500'
-              : 'bg-bg-accent text-text-secondary hover:bg-bg-elevated'
+              ? 'bg-primary-500 border-primary-500 text-text-inverse'
+              : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
           }`}
-          style={viewMode === 'calendar' ? { color: 'var(--text-inverse)' } : undefined}
         >
           <Calendar size={16} />
           Calendar
         </button>
         <button
+          role="tab"
+          aria-selected={viewMode === 'list'}
           onClick={() => setViewMode('list')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border-2 ${
             viewMode === 'list'
-              ? 'bg-primary-500'
-              : 'bg-bg-accent text-text-secondary hover:bg-bg-elevated'
+              ? 'bg-primary-500 border-primary-500 text-text-inverse'
+              : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
           }`}
-          style={viewMode === 'list' ? { color: 'var(--text-inverse)' } : undefined}
         >
           <List size={16} />
           List
@@ -445,7 +468,28 @@ export function History() {
       </div>
 
       {/* Stats View */}
-      {viewMode === 'stats' && analytics && (
+      {viewMode === 'stats' && isLoadingAnalytics && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="card p-4 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-bg-accent rounded-full" />
+                  <div className="flex-1">
+                    <div className="h-6 bg-bg-accent rounded w-16 mb-2" />
+                    <div className="h-3 bg-bg-accent rounded w-24" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="card p-4 animate-pulse">
+            <div className="h-4 bg-bg-accent rounded w-48 mb-4" />
+            <div className="h-32 bg-bg-accent rounded" />
+          </div>
+        </div>
+      )}
+      {viewMode === 'stats' && !isLoadingAnalytics && analytics && (
         <div className="space-y-4">
           {/* Summary stats */}
           <div className="grid grid-cols-2 gap-3">
@@ -509,8 +553,26 @@ export function History() {
       )}
 
       {/* Calendar View */}
-      {viewMode === 'calendar' && analytics && (
-        <CalendarView dailyStats={analytics.daily_stats} />
+      {viewMode === 'calendar' && isLoadingAnalytics && (
+        <div className="card p-4 animate-pulse">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-8 h-8 bg-bg-accent rounded" />
+            <div className="h-5 bg-bg-accent rounded w-32" />
+            <div className="w-8 h-8 bg-bg-accent rounded" />
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: 35 }).map((_, i) => (
+              <div key={i} className="aspect-square bg-bg-accent rounded-lg" />
+            ))}
+          </div>
+        </div>
+      )}
+      {viewMode === 'calendar' && !isLoadingAnalytics && analytics && (
+        <CalendarView
+          dailyStats={analytics.daily_stats}
+          monthOffset={monthOffset}
+          setMonthOffset={setMonthOffset}
+        />
       )}
 
       {/* List View */}

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap');
+@config "../tailwind.config.js";
 
 /* ============================================
    KidChores Theme System - Neobrutalist Design
@@ -120,57 +121,57 @@
 
   --text-primary: #F5F5F5;      /* 18:1 on dark */
   --text-secondary: #C8C8D0;   /* 10:1 on dark */
-  --text-muted: #8888A0;       /* 5.5:1 on dark */
+  --text-muted: #9494AC;       /* ~4.8:1 on bg-accent, WCAG AA pass */
   --text-inverse: #0A0A0F;
 
-  /* Primary - neon green for dark mode */
+  /* Primary - softened green for dark mode */
   --primary-50: #0A1F0A;
   --primary-100: #153015;
   --primary-200: #204520;
   --primary-300: #2B5F2B;
-  --primary-400: #2ECC0E;
-  --primary-500: #39FF14;       /* Neon green */
-  --primary-600: #58CC02;
-  --primary-700: #4CAD02;
+  --primary-400: #3DBB2E;
+  --primary-500: #4ADE80;       /* Tailwind green-400 — vibrant, no halation */
+  --primary-600: #48B84E;
+  --primary-700: #3D9E42;
 
-  /* Secondary - electric cyan */
-  --secondary-500: #00D4FF;
+  /* Secondary - softened cyan */
+  --secondary-500: #38BDF8;     /* Tailwind sky-400 */
   --secondary-600: #1CB0F6;
 
-  /* Accent - neon orange */
-  --accent-500: #FF6B35;
+  /* Accent - softened orange */
+  --accent-500: #FB923C;        /* Tailwind orange-400 */
   --accent-600: #FF9600;
 
-  /* Celebration - electric pink */
-  --celebration: #FF2D55;
-  --celebration-light: #FF5C7C;
+  /* Celebration - softened pink */
+  --celebration: #FB7185;        /* Tailwind rose-400 */
+  --celebration-light: #FDA4AF;
 
-  /* Status - neon accents on deep dark backgrounds */
+  /* Status - softened accents on deep dark backgrounds */
   --status-pending-bg: #1A1A0A;
-  --status-pending-border: #FFD93D;
-  --status-pending-text: #FFD93D;
+  --status-pending-border: #FBBF24;
+  --status-pending-text: #FCD34D;
 
   --status-claimed-bg: #0A1A2A;
-  --status-claimed-border: #00D4FF;
-  --status-claimed-text: #00D4FF;
+  --status-claimed-border: #38BDF8;
+  --status-claimed-text: #7DD3FC;
 
   --status-approved-bg: #0A1F0A;
-  --status-approved-border: #39FF14;
-  --status-approved-text: #39FF14;
+  --status-approved-border: #4ADE80;
+  --status-approved-text: #86EFAC;
 
   --status-overdue-bg: #2A0A0A;
-  --status-overdue-border: #FF2D55;
-  --status-overdue-text: #FF2D55;
+  --status-overdue-border: #FB7185;
+  --status-overdue-text: #FDA4AF;
 
   --header-bg: #141420;
-  --header-from: #39FF14;
-  --header-to: #00D4FF;
+  --header-from: #4ADE80;
+  --header-to: #38BDF8;
 
-  /* ── Neobrutalist tokens (dark) ── */
-  --border-color: #39FF14;
-  --neo-shadow: 4px 4px 0 #39FF14;
-  --neo-shadow-hover: 6px 6px 0 #39FF14;
-  --neo-shadow-sm: 3px 3px 0 #39FF14;
+  /* ── Neobrutalist tokens (dark) — structural colors quieter than content ── */
+  --border-color: #3A8F5A;      /* Muted forest green */
+  --neo-shadow: 4px 4px 0 #3A8F5A;
+  --neo-shadow-hover: 6px 6px 0 #4ADE80;  /* Brightens to primary on hover */
+  --neo-shadow-sm: 3px 3px 0 #3A8F5A;
 }
 
 /* ============================================
@@ -250,36 +251,36 @@
   --text-muted: #A890C0;
   --text-inverse: #0A0A0F;
 
-  /* Neon orange primary + neon purple secondary */
-  --primary-500: #FF6600;
-  --secondary-500: #BF00FF;
+  /* Softened orange primary + softened purple secondary */
+  --primary-500: #FB923C;       /* Tailwind orange-400 */
+  --secondary-500: #A78BFA;     /* Tailwind violet-400 */
 
-  /* Neon orange borders + shadows */
-  --border-color: #FF6600;
-  --neo-shadow: 4px 4px 0 #FF6600;
-  --neo-shadow-hover: 6px 6px 0 #FF6600;
-  --neo-shadow-sm: 3px 3px 0 #FF6600;
+  /* Muted orange borders + shadows */
+  --border-color: #A05820;
+  --neo-shadow: 4px 4px 0 #A05820;
+  --neo-shadow-hover: 6px 6px 0 #FB923C;  /* Brightens to primary on hover */
+  --neo-shadow-sm: 3px 3px 0 #A05820;
 
-  /* Header - Orange to Purple neon */
-  --header-from: #FF6600;
-  --header-to: #BF00FF;
+  /* Header - Softened Orange to Purple */
+  --header-from: #FB923C;
+  --header-to: #A78BFA;
 
   /* Enhanced glow for dark mode */
-  --seasonal-glow: 0 0 30px rgba(255, 102, 0, 0.5);
+  --seasonal-glow: 0 0 30px rgba(251, 146, 60, 0.4);
 
   /* Status colors for dark bg */
   --status-pending-bg: #1A1A0A;
-  --status-pending-border: #FFD93D;
-  --status-pending-text: #FFD93D;
+  --status-pending-border: #FBBF24;
+  --status-pending-text: #FCD34D;
   --status-claimed-bg: #1A0F2E;
-  --status-claimed-border: #BF00FF;
-  --status-claimed-text: #BF00FF;
+  --status-claimed-border: #A78BFA;
+  --status-claimed-text: #C4B5FD;
   --status-approved-bg: #0A1F0A;
-  --status-approved-border: #39FF14;
-  --status-approved-text: #39FF14;
+  --status-approved-border: #4ADE80;
+  --status-approved-text: #86EFAC;
   --status-overdue-bg: #2A0A0A;
-  --status-overdue-border: #FF2D55;
-  --status-overdue-text: #FF2D55;
+  --status-overdue-border: #FB7185;
+  --status-overdue-text: #FDA4AF;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -339,35 +340,35 @@
   --text-muted: #A09090;
   --text-inverse: #0A0A0F;
 
-  /* Neon red primary + neon green secondary */
-  --primary-500: #FF0033;
-  --secondary-500: #00FF66;
+  /* Softened red primary + softened green secondary */
+  --primary-500: #F87171;       /* Tailwind red-400 */
+  --secondary-500: #4ADE80;     /* Tailwind green-400 */
 
-  /* Neon red borders + shadows */
-  --border-color: #FF0033;
-  --neo-shadow: 4px 4px 0 #FF0033;
-  --neo-shadow-hover: 6px 6px 0 #FF0033;
-  --neo-shadow-sm: 3px 3px 0 #FF0033;
+  /* Muted red borders + shadows — #AD3F52 = 3.41:1 on #0A0A0F (WCAG 1.4.11) */
+  --border-color: #AD3F52;
+  --neo-shadow: 4px 4px 0 #AD3F52;
+  --neo-shadow-hover: 6px 6px 0 #F87171;  /* Brightens to primary on hover */
+  --neo-shadow-sm: 3px 3px 0 #AD3F52;
 
-  /* Header - Red to Green neon */
-  --header-from: #FF0033;
-  --header-to: #00FF66;
+  /* Header - Softened Red to Green */
+  --header-from: #F87171;
+  --header-to: #4ADE80;
 
-  --seasonal-glow: 0 0 25px rgba(255, 0, 51, 0.4);
+  --seasonal-glow: 0 0 25px rgba(248, 113, 113, 0.35);
 
   /* Status colors for dark bg */
   --status-pending-bg: #1A1A0A;
-  --status-pending-border: #FFD700;
-  --status-pending-text: #FFD700;
+  --status-pending-border: #FBBF24;
+  --status-pending-text: #FCD34D;
   --status-claimed-bg: #0A1A15;
-  --status-claimed-border: #00FF66;
-  --status-claimed-text: #00FF66;
+  --status-claimed-border: #4ADE80;
+  --status-claimed-text: #86EFAC;
   --status-approved-bg: #0A1F0A;
-  --status-approved-border: #39FF14;
-  --status-approved-text: #39FF14;
+  --status-approved-border: #4ADE80;
+  --status-approved-text: #86EFAC;
   --status-overdue-bg: #2A0A0A;
-  --status-overdue-border: #FF2D55;
-  --status-overdue-text: #FF2D55;
+  --status-overdue-border: #FB7185;
+  --status-overdue-text: #FDA4AF;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -427,35 +428,35 @@
   --text-muted: #A890C0;
   --text-inverse: #0A0A0F;
 
-  /* Neon purple primary + neon pink secondary */
-  --primary-500: #BF5FFF;
-  --secondary-500: #FF00AA;
+  /* Softened purple primary + softened pink secondary */
+  --primary-500: #C084FC;       /* Tailwind purple-400 */
+  --secondary-500: #F472B6;     /* Tailwind pink-400 */
 
-  /* Neon purple borders + shadows */
-  --border-color: #BF5FFF;
-  --neo-shadow: 4px 4px 0 #BF5FFF;
-  --neo-shadow-hover: 6px 6px 0 #BF5FFF;
-  --neo-shadow-sm: 3px 3px 0 #BF5FFF;
+  /* Muted purple borders + shadows */
+  --border-color: #7858A0;
+  --neo-shadow: 4px 4px 0 #7858A0;
+  --neo-shadow-hover: 6px 6px 0 #C084FC;  /* Brightens to primary on hover */
+  --neo-shadow-sm: 3px 3px 0 #7858A0;
 
-  /* Header - Purple to Pink neon */
-  --header-from: #BF5FFF;
-  --header-to: #FF00AA;
+  /* Header - Softened Purple to Pink */
+  --header-from: #C084FC;
+  --header-to: #F472B6;
 
-  --seasonal-glow: 0 0 20px rgba(191, 95, 255, 0.4);
+  --seasonal-glow: 0 0 20px rgba(192, 132, 252, 0.35);
 
   /* Status colors for dark bg */
   --status-pending-bg: #1A1A0A;
-  --status-pending-border: #FFD700;
-  --status-pending-text: #FFD700;
+  --status-pending-border: #FBBF24;
+  --status-pending-text: #FCD34D;
   --status-claimed-bg: #150F25;
-  --status-claimed-border: #BF5FFF;
-  --status-claimed-text: #BF5FFF;
+  --status-claimed-border: #C084FC;
+  --status-claimed-text: #D8B4FE;
   --status-approved-bg: #0A1F0A;
-  --status-approved-border: #39FF14;
-  --status-approved-text: #39FF14;
+  --status-approved-border: #4ADE80;
+  --status-approved-text: #86EFAC;
   --status-overdue-bg: #2A0A0A;
-  --status-overdue-border: #FF2D55;
-  --status-overdue-text: #FF2D55;
+  --status-overdue-border: #FB7185;
+  --status-overdue-text: #FDA4AF;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -515,35 +516,35 @@
   --text-muted: #94A3B8;
   --text-inverse: #0A0A0F;
 
-  /* Neon cyan primary + neon orange secondary */
-  --primary-500: #00D4FF;
-  --secondary-500: #FF6B35;
+  /* Softened cyan primary + softened orange secondary */
+  --primary-500: #38BDF8;       /* Tailwind sky-400 */
+  --secondary-500: #FB923C;     /* Tailwind orange-400 */
 
-  /* Neon cyan borders + shadows */
-  --border-color: #00D4FF;
-  --neo-shadow: 4px 4px 0 #00D4FF;
-  --neo-shadow-hover: 6px 6px 0 #00D4FF;
-  --neo-shadow-sm: 3px 3px 0 #00D4FF;
+  /* Muted cyan borders + shadows */
+  --border-color: #3888A0;
+  --neo-shadow: 4px 4px 0 #3888A0;
+  --neo-shadow-hover: 6px 6px 0 #38BDF8;  /* Brightens to primary on hover */
+  --neo-shadow-sm: 3px 3px 0 #3888A0;
 
-  /* Header - Cyan to Orange neon */
-  --header-from: #00D4FF;
-  --header-to: #FF6B35;
+  /* Header - Softened Cyan to Orange */
+  --header-from: #38BDF8;
+  --header-to: #FB923C;
 
-  --seasonal-glow: 0 0 25px rgba(0, 212, 255, 0.4);
+  --seasonal-glow: 0 0 25px rgba(56, 189, 248, 0.35);
 
   /* Status colors for dark bg */
   --status-pending-bg: #1A1A0A;
-  --status-pending-border: #FFD700;
-  --status-pending-text: #FFD700;
+  --status-pending-border: #FBBF24;
+  --status-pending-text: #FCD34D;
   --status-claimed-bg: #0A1520;
-  --status-claimed-border: #00D4FF;
-  --status-claimed-text: #00D4FF;
+  --status-claimed-border: #38BDF8;
+  --status-claimed-text: #7DD3FC;
   --status-approved-bg: #0A1F0A;
-  --status-approved-border: #39FF14;
-  --status-approved-text: #39FF14;
+  --status-approved-border: #4ADE80;
+  --status-approved-text: #86EFAC;
   --status-overdue-bg: #2A0A0A;
-  --status-overdue-border: #FF2D55;
-  --status-overdue-text: #FF2D55;
+  --status-overdue-border: #FB7185;
+  --status-overdue-text: #FDA4AF;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -565,9 +566,9 @@
 }
 .theme-halloween.dark::before {
   background:
-    radial-gradient(ellipse at 10% 0%, rgba(255, 102, 0, 0.22) 0%, transparent 55%),
-    radial-gradient(ellipse at 90% 100%, rgba(191, 0, 255, 0.22) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 50%, rgba(255, 102, 0, 0.06) 0%, transparent 70%);
+    radial-gradient(ellipse at 10% 0%, rgba(251, 146, 60, 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 100%, rgba(167, 139, 250, 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(251, 146, 60, 0.06) 0%, transparent 70%);
 }
 
 /* Christmas - Warm red/gold corner glow */
@@ -584,9 +585,9 @@
 }
 .theme-christmas.dark::before {
   background:
-    radial-gradient(ellipse at 0% 0%, rgba(255, 0, 51, 0.22) 0%, transparent 50%),
+    radial-gradient(ellipse at 0% 0%, rgba(248, 113, 113, 0.22) 0%, transparent 50%),
     radial-gradient(ellipse at 100% 100%, rgba(255, 215, 0, 0.18) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(0, 255, 102, 0.06) 0%, transparent 60%);
+    radial-gradient(ellipse at 50% 50%, rgba(74, 222, 128, 0.06) 0%, transparent 60%);
 }
 
 /* Easter - Soft purple/pink pastel wash */
@@ -603,9 +604,9 @@
 }
 .theme-easter.dark::before {
   background:
-    radial-gradient(ellipse at 20% 10%, rgba(191, 95, 255, 0.2) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 90%, rgba(255, 0, 170, 0.18) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 50%, rgba(191, 95, 255, 0.05) 0%, transparent 60%);
+    radial-gradient(ellipse at 20% 10%, rgba(192, 132, 252, 0.2) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(244, 114, 182, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(192, 132, 252, 0.05) 0%, transparent 60%);
 }
 
 /* Summer - Warm sun glow from top */
@@ -622,9 +623,9 @@
 }
 .theme-summer.dark::before {
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(0, 212, 255, 0.22) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 100%, rgba(255, 107, 53, 0.15) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 60%);
+    radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(251, 146, 60, 0.15) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.05) 0%, transparent 60%);
 }
 
 /* ============================================
@@ -814,15 +815,15 @@ body {
 .kid-coral { background: linear-gradient(135deg, #CC0066, #FF1493); }
 .kid-gold { background: linear-gradient(135deg, #E6A800, #FFD700); }
 
-/* Dark mode: neon/electric kid gradients */
-.dark .kid-lime { background: linear-gradient(135deg, #39FF14, #00FF41); }
-.dark .kid-ocean { background: linear-gradient(135deg, #00D4FF, #00F0FF); }
-.dark .kid-sunset { background: linear-gradient(135deg, #FF6B35, #FF4500); }
-.dark .kid-berry { background: linear-gradient(135deg, #FF2D55, #FF0040); }
-.dark .kid-grape { background: linear-gradient(135deg, #BF5FFF, #9B30FF); }
-.dark .kid-teal { background: linear-gradient(135deg, #00FFD5, #00E5CC); }
-.dark .kid-coral { background: linear-gradient(135deg, #FF1493, #FF007F); }
-.dark .kid-gold { background: linear-gradient(135deg, #FFD700, #FFBF00); }
+/* Dark mode: softened vibrant kid gradients */
+.dark .kid-lime { background: linear-gradient(135deg, #4ADE80, #34D399); }
+.dark .kid-ocean { background: linear-gradient(135deg, #38BDF8, #7DD3FC); }
+.dark .kid-sunset { background: linear-gradient(135deg, #FB923C, #F97316); }
+.dark .kid-berry { background: linear-gradient(135deg, #FB7185, #F43F5E); }
+.dark .kid-grape { background: linear-gradient(135deg, #C084FC, #A855F7); }
+.dark .kid-teal { background: linear-gradient(135deg, #2DD4BF, #14B8A6); }
+.dark .kid-coral { background: linear-gradient(135deg, #F472B6, #EC4899); }
+.dark .kid-gold { background: linear-gradient(135deg, #FCD34D, #FBBF24); }
 
 /* Legacy aliases for backwards compatibility */
 .kid-sapphire { background: linear-gradient(135deg, #0088DD, #00AAEE); }

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Tailwind v4 theme system completely broken**: Added missing `@config` directive — ALL custom theme utility classes (`bg-primary-500`, `text-text-primary`, `bg-bg-surface`, etc.) were silently not generating CSS. Selected buttons, backgrounds, and text colors across entire app now work correctly.
+- **Kid selector invisible**: Selected kid button had transparent background (no `bg-primary-500` CSS) with dark text, invisible on dark themes. Now properly themed with ARIA `role="tab"` + `aria-selected` accessibility attributes.
+- **View toggle invisible**: Stats/Calendar/List and Today/All selected state had same invisible styling; replaced inline `style` with Tailwind `text-text-inverse` class
+- **Zero points not displayed**: `0` points treated as falsy, hiding the points badge; fixed with null check
+- **Calendar empty beyond 60 days**: Analytics query now dynamically extends range based on calendar navigation
+- **Export error silent**: Added toast notifications for export success/failure
+- **Stats/Calendar loading states**: Added skeleton loaders while analytics data loads
+- **Christmas dark mode border contrast**: Brightened `--border-color` from `#993344` to `#AD3F52` (2.74:1 → 3.41:1, WCAG 1.4.11 compliance)
+
+### Performance
+- **Backend N+1 query elimination**: `get_history`, `get_analytics`, and `export_csv` rewritten with SQL joins and bulk-loading (40+ queries per page → 3-4 queries)
+
 ## [0.5.2] - 2026-02-15
 
 ### Security
