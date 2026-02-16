@@ -22,19 +22,47 @@ A standalone family chore management web application with points, rewards, and a
 - **Rewards** - Define rewards with point costs for kids to redeem
 - **Parent Approval** - Parents approve chore completions and reward redemptions
 - **Points System** - Flexible points with multipliers and adjustments
+- **Google SSO** - Parents and kids sign in with Google (optional)
+- **Email Notifications** - Parents notified on chore claims and reward redemptions
+- **Seasonal Themes** - Halloween, Christmas, Easter, Summer, and default themes
+- **Mobile-Responsive** - Works on phones, tablets, and desktops
 
 ## Tech Stack
 
 - **Backend**: FastAPI + SQLAlchemy + SQLite
-- **Frontend**: React + Vite + Tailwind CSS v4
-- **Deployment**: Docker (Portainer) + Traefik reverse proxy
+- **Frontend**: React 19 + Vite + Tailwind CSS v4
+- **Deployment**: Docker multi-stage builds (backend: python:3.14-slim, frontend: nginx:1.27-alpine)
 
 ## Quick Start
 
 ### Docker Deployment (Recommended)
 
-1. Deploy via Portainer using the stack configuration
-2. Access at `https://localhost:3103` (or your configured domain)
+1. Clone and configure:
+   ```bash
+   git clone https://github.com/misterberns/kidschores.git
+   cd kidschores-app
+   cp .env.example .env
+   # Edit .env — at minimum set JWT_SECRET_KEY
+   ```
+
+2. Start the stack:
+   ```bash
+   docker compose up -d
+   ```
+
+3. Access at `http://localhost:3103`
+
+The frontend (nginx) automatically proxies `/api` requests to the backend. The backend runs as a non-root `kidschores` user. Data is persisted in `./data/` (SQLite database).
+
+```bash
+docker compose down          # Stop (data persists in ./data/)
+docker compose up -d --build # Rebuild after code changes
+docker compose logs -f       # View logs
+```
+
+#### Homelab Deployment
+
+For Portainer/Traefik deployments with HTTPS and pre-built registry images, use the stack file in the homelab repo: `portainer-stacks/kidschores-stack.yml` (Portainer Stack ID 137).
 
 ### Local Development
 
@@ -44,50 +72,119 @@ cd backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 
-# Frontend
+# Frontend (separate terminal)
 cd frontend
 npm install
 npm run dev
-```
-
-## API Documentation
-
-Once running, access the interactive API docs at:
-- Swagger UI: `/docs`
-- ReDoc: `/redoc`
-
-## Architecture
-
-```
-kidschores-app/
-├── backend/              # FastAPI application
-│   ├── app/
-│   │   ├── main.py       # FastAPI app entry point
-│   │   ├── database.py   # SQLAlchemy setup
-│   │   ├── models.py     # Database models
-│   │   ├── schemas.py    # Pydantic schemas
-│   │   └── routers/      # API endpoints
-│   └── requirements.txt
-├── frontend/             # React application
-│   ├── src/
-│   │   ├── api/          # API client
-│   │   ├── pages/        # Page components
-│   │   └── components/   # Shared components
-│   └── package.json
-├── CHANGELOG.md          # Version history
-├── VERSION               # Current version
-└── LICENSE               # GPL-3.0 License
 ```
 
 ## Configuration
 
 ### Environment Variables
 
-**Backend:**
-- `DATABASE_URL` - SQLite database path (default: `sqlite:///./kidschores.db`)
+**Backend (runtime):**
 
-**Frontend:**
-- `VITE_API_URL` - Backend API URL (default: `/api`)
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `JWT_SECRET_KEY` | Yes | auto-generated | JWT signing key (set a stable value for production) |
+| `DATABASE_PATH` | No | `./data/kidschores.db` | SQLite database file path |
+| `CORS_ORIGINS` | No | `https://localhost:3103` | Comma-separated allowed origins |
+| `TZ` | No | `America/Chicago` | Timezone |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | `1440` | JWT access token TTL (24h) |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | No | `30` | JWT refresh token TTL |
+| `GOOGLE_CLIENT_ID` | No | — | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | No | — | Google OAuth client secret |
+| `GOOGLE_REDIRECT_URI` | No | `https://localhost:3103/auth/google/callback` | OAuth redirect URI |
+| `SMTP_HOST` | No | — | SMTP server for email notifications |
+| `SMTP_PORT` | No | `587` | SMTP port |
+| `SMTP_USER` | No | — | SMTP username |
+| `SMTP_PASSWORD` | No | — | SMTP password |
+| `SMTP_FROM_EMAIL` | No | — | Sender email address |
+| `SMTP_FROM_NAME` | No | `KidsChores` | Sender display name |
+| `SMTP_USE_TLS` | No | `true` | Use TLS for SMTP |
+
+**Frontend (build-time — baked into image by Vite):**
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_GOOGLE_CLIENT_ID` | No | Google OAuth client ID (must match backend `GOOGLE_CLIENT_ID`) |
+| `VITE_GOOGLE_REDIRECT_ORIGIN` | No | Base URL for OAuth redirect (e.g., `http://localhost:3103`) |
+
+### Google SSO Setup (Optional)
+
+KidsChores supports Google Sign-In for both parents and kids. Parents sign in or register with Google; kids can be linked to a Gmail account from the Admin > Kids tab.
+
+**Setup:**
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Create a new project (or select existing)
+3. Navigate to **APIs & Services > Credentials**
+4. Click **Create Credentials > OAuth client ID**
+5. Application type: **Web application**
+6. Add **Authorized JavaScript origins**: your app URL (e.g., `http://localhost:3103`)
+7. Add **Authorized redirect URIs**: `<your-app-url>/auth/google/callback`
+   (e.g., `http://localhost:3103/auth/google/callback`)
+8. Copy the **Client ID** and **Client Secret**
+
+**Configure in `.env`:**
+```env
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_REDIRECT_URI=http://localhost:3103/auth/google/callback
+
+# Frontend needs client ID at build time
+VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+VITE_GOOGLE_REDIRECT_ORIGIN=http://localhost:3103
+```
+
+**Rebuild frontend after setting Google vars** (they're baked in at build time):
+```bash
+docker compose up -d --build
+```
+
+**Note:** Google requires a public TLD for production OAuth (`.lan` domains are rejected). For LAN-only deployments, use `localhost` or set up a public domain that resolves to your server's IP.
+
+## API Documentation
+
+Once running, access the interactive API docs at:
+- Swagger UI: `http://localhost:3103/api/docs`
+- ReDoc: `http://localhost:3103/api/redoc`
+
+## Architecture
+
+```
+kidschores-app/
+├── backend/                 # FastAPI application
+│   ├── Dockerfile           # Multi-stage: python:3.14-slim
+│   ├── .dockerignore
+│   ├── requirements.txt
+│   └── app/
+│       ├── main.py          # FastAPI entry point
+│       ├── config.py        # Settings (env vars via pydantic-settings)
+│       ├── database.py      # SQLAlchemy setup
+│       ├── models.py        # Database models
+│       ├── schemas.py       # Pydantic schemas
+│       ├── routers/         # API endpoints (auth, kids, chores, rewards)
+│       └── services/        # Business logic (email, etc.)
+├── frontend/                # React application
+│   ├── Dockerfile           # Multi-stage: node:22-alpine → nginx:1.27-alpine
+│   ├── .dockerignore
+│   ├── nginx.conf           # Nginx config (serves static + proxies /api)
+│   ├── package.json
+│   └── src/
+│       ├── api/             # API client (axios)
+│       ├── auth/            # Auth context + Google callback
+│       ├── pages/           # Page components
+│       ├── components/      # Shared components
+│       └── theme/           # Colors, seasonal themes
+├── scripts/
+│   └── kc-build.sh          # Build + push to registry
+├── docker-compose.yml       # Standalone deployment (builds locally)
+├── .env.example             # Environment variable template
+├── CHANGELOG.md             # Version history
+├── VERSION                  # Current version number
+└── LICENSE                  # GPL-3.0
+```
 
 ## Credits & Attribution
 

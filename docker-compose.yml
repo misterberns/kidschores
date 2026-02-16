@@ -1,28 +1,48 @@
-version: "3.8"
-
 services:
-  kidschores:
+  frontend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: kidschores
+      context: ./frontend
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+        VITE_GOOGLE_REDIRECT_ORIGIN: ${VITE_GOOGLE_REDIRECT_ORIGIN:-}
+    container_name: kidschores-ui
     ports:
-      - "3100:8000"
+      - "${UI_PORT:-3103}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:80 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build: ./backend
+    container_name: kidschores
     volumes:
-      - /volume1/docker/kidschores/data:/app/data
+      - ${DATA_DIR:-./data}:/app/data
     environment:
       - DATABASE_PATH=/app/data/kidschores.db
-      - TZ=America/Chicago
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3103}
+      - TZ=${TZ:-America/Chicago}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-30}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL:-}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME:-KidsChores}
+      - SMTP_USE_TLS=${SMTP_USE_TLS:-true}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-}
     restart: unless-stopped
-    networks:
-      - traefik-net
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.kidschores.rule=Host(`localhost:3103`)"
-      - "traefik.http.routers.kidschores.entrypoints=websecure"
-      - "traefik.http.routers.kidschores.tls=true"
-      - "traefik.http.services.kidschores.loadbalancer.server.port=8000"
-
-networks:
-  traefik-net:
-    external: true
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
