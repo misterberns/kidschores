@@ -60,6 +60,59 @@ docker compose up -d --build # Rebuild after code changes
 docker compose logs -f       # View logs
 ```
 
+**`docker-compose.yml`:**
+
+```yaml
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+        VITE_GOOGLE_REDIRECT_ORIGIN: ${VITE_GOOGLE_REDIRECT_ORIGIN:-}
+    container_name: kidschores-ui
+    ports:
+      - "${UI_PORT:-3103}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:80 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build: ./backend
+    container_name: kidschores
+    volumes:
+      - ${DATA_DIR:-./data}:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/kidschores.db
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3103}
+      - TZ=${TZ:-America/Chicago}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-30}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL:-}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME:-KidsChores}
+      - SMTP_USE_TLS=${SMTP_USE_TLS:-true}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+```
+
 #### Homelab Deployment
 
 For Portainer/Traefik deployments with HTTPS and pre-built registry images, use the stack file in the homelab repo: `portainer-stacks/kidschores-stack.yml` (Portainer Stack ID 137).
