@@ -119,4 +119,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Version
 
-Current version: **0.5.2** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.5.3** (see [CHANGELOG.md](CHANGELOG.md) for history)
