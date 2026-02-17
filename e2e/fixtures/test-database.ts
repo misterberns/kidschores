@@ -1,8 +1,7 @@
 import { test as base, APIRequestContext, Page } from '@playwright/test';
 
-// API URL - use deployed instance
-const DEPLOYED_URL = 'https://localhost:3103';
-const API_URL = process.env.API_URL || DEPLOYED_URL;
+// API URL - use environment variable or localhost default
+const API_URL = process.env.API_URL || 'http://localhost:3103';
 
 // Test user credentials
 const TEST_USER = {

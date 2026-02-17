@@ -5,10 +5,9 @@ import * as path from 'path';
 // Load environment variables
 dotenv.config();
 
-// Default URLs - use deployed instance or local dev servers
-const DEPLOYED_URL = 'https://localhost:3103';
-const API_URL = process.env.API_URL || DEPLOYED_URL;
-const FRONTEND_URL = process.env.FRONTEND_URL || DEPLOYED_URL;
+// Default URLs - use environment variables or localhost defaults
+const API_URL = process.env.API_URL || 'http://localhost:3103';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3103';
 
 export default defineConfig({
   testDir: '.',

@@ -22,8 +22,9 @@ from ..services.email_service import email_service
 
 router = APIRouter()
 
-# Base URL for invitation links (from environment or default)
-APP_BASE_URL = os.getenv("APP_BASE_URL", "https://localhost:3103")
+# Base URL for invitation links (from settings)
+from ..config import settings
+APP_BASE_URL = settings.app_base_url
 
 
 @router.get("", response_model=List[ParentResponse])

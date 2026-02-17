@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-02-16
+
+### Changed
+- **Open-sourced on GitHub**: All configuration defaults genericized for any deployment (no hardcoded infrastructure references)
+- **Build script**: Registry and repository now configurable via `DOCKER_REGISTRY` and `DOCKER_REPO` environment variables
+- **E2E tests**: All test URLs now use environment variables with `localhost:3103` defaults
+
+### Added
+- **CONTRIBUTING.md**: Development setup guide, coding standards, PR process
+- **SECURITY.md**: Vulnerability reporting policy
+- **CODE_OF_CONDUCT.md**: Contributor Covenant v2.1
+- **Nginx security headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+
+### Removed
+- Hardcoded infrastructure references from all configuration defaults
+- Stale `hacs.json` from upstream Home Assistant fork
+
 ## [0.6.1] - 2026-02-16
 
 ### Fixed
@@ -21,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.0] - 2026-02-16
 
 ### Changed
-- **Docker containerization**: Backend and frontend now build as self-contained Docker images pushed to Forgejo OCI container registry (`your-registry/kidschores-backend` and `kidschores-ui`)
+- **Docker containerization**: Backend and frontend now build as self-contained Docker images pushed to a container registry
 - **Multi-stage backend Dockerfile**: Dependencies installed in builder stage via venv, clean copy to production image. Eliminates ~90s pip install on every container restart.
 - **Multi-stage frontend Dockerfile**: Node.js builds static assets, served by nginx:1.27-alpine. No more volume-mounted dist/ directory.
 - **Non-root container user**: Backend runs as `kidschores` user (security best practice)

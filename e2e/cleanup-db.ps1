@@ -1,4 +1,4 @@
-$baseUrl = 'https://localhost:3103/api'
+$baseUrl = if ($env:API_URL) { "$env:API_URL/api" } else { 'http://localhost:3103/api' }
 
 # Delete all rewards
 $rewards = Invoke-RestMethod -Uri "$baseUrl/rewards" -SkipCertificateCheck

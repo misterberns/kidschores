@@ -1,7 +1,7 @@
 # KidsChores
 
-[![Version](https://img.shields.io/badge/Version-v0.6.1-green?style=flat-square)](https://github.com/misterberns/kidschores/releases)
-![Status](https://img.shields.io/badge/Status-Deployed-brightgreen?style=flat-square)
+[![Version](https://img.shields.io/badge/Version-v0.7.0-green?style=flat-square)](https://github.com/misterberns/kidschores/releases)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)
 ![License](https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square)
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)
@@ -27,6 +27,19 @@ A standalone family chore management web application with points, rewards, and a
 - **Seasonal Themes** - Halloween, Christmas, Easter, Summer, and default themes
 - **Mobile-Responsive** - Works on phones, tablets, and desktops
 
+## Screenshots
+
+<!-- Screenshots generated via `npx playwright test e2e/screenshots.spec.ts` -->
+
+| Light Mode | Dark Mode |
+|:---:|:---:|
+| ![Home Dashboard](screenshots/home-light.png) | ![Home Dashboard Dark](screenshots/home-dark.png) |
+| ![Chores](screenshots/chores-light.png) | ![Chores Dark](screenshots/chores-dark.png) |
+
+| Rewards | Admin | History |
+|:---:|:---:|:---:|
+| ![Rewards](screenshots/rewards-light.png) | ![Admin](screenshots/admin-light.png) | ![History](screenshots/history-light.png) |
+
 ## Tech Stack
 
 - **Backend**: FastAPI + SQLAlchemy + SQLite
@@ -40,7 +53,7 @@ A standalone family chore management web application with points, rewards, and a
 1. Clone and configure:
    ```bash
    git clone https://github.com/misterberns/kidschores.git
-   cd kidschores-app
+   cd kidschores
    cp .env.example .env
    # Edit .env — at minimum set JWT_SECRET_KEY
    ```
@@ -89,10 +102,6 @@ services:
 
 > See [`docker-compose.yml`](docker-compose.yml) for the full configuration with healthchecks, Google SSO settings, and email notification settings.
 
-#### Homelab Deployment
-
-For Portainer/Traefik deployments with HTTPS and pre-built registry images, use the stack file in the homelab repo: `portainer-stacks/kidschores-stack.yml` (Portainer Stack ID 137).
-
 ### Local Development
 
 ```bash
@@ -107,6 +116,8 @@ npm install
 npm run dev
 ```
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development setup instructions.
+
 ## Configuration
 
 ### Environment Variables
@@ -117,13 +128,14 @@ npm run dev
 |----------|----------|---------|-------------|
 | `JWT_SECRET_KEY` | Yes | auto-generated | JWT signing key (set a stable value for production) |
 | `DATABASE_PATH` | No | `./data/kidschores.db` | SQLite database file path |
-| `CORS_ORIGINS` | No | `https://localhost:3103` | Comma-separated allowed origins |
+| `CORS_ORIGINS` | No | `http://localhost:3103` | Comma-separated allowed origins |
+| `APP_BASE_URL` | No | `http://localhost:3103` | Base URL for email links (password reset, invitations) |
 | `TZ` | No | `America/Chicago` | Timezone |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | `1440` | JWT access token TTL (24h) |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | No | `30` | JWT refresh token TTL |
 | `GOOGLE_CLIENT_ID` | No | — | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | No | — | Google OAuth client secret |
-| `GOOGLE_REDIRECT_URI` | No | `https://localhost:3103/auth/google/callback` | OAuth redirect URI |
+| `GOOGLE_REDIRECT_URI` | No | `http://localhost:3103/auth/google/callback` | OAuth redirect URI |
 | `SMTP_HOST` | No | — | SMTP server for email notifications |
 | `SMTP_PORT` | No | `587` | SMTP port |
 | `SMTP_USER` | No | — | SMTP username |
@@ -186,7 +198,7 @@ Once running, access the interactive API docs at:
 ## Architecture
 
 ```
-kidschores-app/
+kidschores/
 ├── backend/                 # FastAPI application
 │   ├── Dockerfile           # Multi-stage: python:3.14-slim
 │   ├── .dockerignore
@@ -210,11 +222,14 @@ kidschores-app/
 │       ├── pages/           # Page components
 │       ├── components/      # Shared components
 │       └── theme/           # Colors, seasonal themes
+├── e2e/                     # End-to-end tests (Playwright)
 ├── scripts/
-│   └── kc-build.sh          # Build + push to registry
+│   └── kc-build.sh          # Build + push to container registry
 ├── docker-compose.yml       # Standalone deployment (builds locally)
 ├── .env.example             # Environment variable template
 ├── CHANGELOG.md             # Version history
+├── CONTRIBUTING.md           # Development guide
+├── SECURITY.md              # Security policy
 ├── VERSION                  # Current version number
 └── LICENSE                  # GPL-3.0
 ```
@@ -245,8 +260,8 @@ The original KidsChores-HA project is also GPL-3.0 licensed.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Version
 
-Current version: **0.6.1** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.7.0** (see [CHANGELOG.md](CHANGELOG.md) for history)

@@ -1,11 +1,38 @@
+# Environment files
+.env
+frontend/.env.production
+backend/.env
+
+# Dependencies
+node_modules/
+
+# Build output
+frontend/dist/
+frontend/dist.tar.gz
+
+# Data
+data/
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
 __pycache__/
 *.py[cod]
-
-# Build artifacts
-frontend/dist.tar.gz
+*.egg-info/
+venv/
 
 # Test artifacts
 frontend/playwright-report/
 frontend/test-results/
 e2e/test-output.txt
+
+# Misc
 _ul

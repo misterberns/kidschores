@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'https://localhost:3103',
+    baseURL: process.env.BASE_URL || 'http://localhost:3103',
     trace: 'on-first-retry',
     ignoreHTTPSErrors: true, // Self-signed cert
   },

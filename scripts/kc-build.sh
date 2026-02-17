@@ -4,11 +4,15 @@ set -e
 # KidsChores Docker Build & Push Script
 # Works from Git Bash on Windows with Docker Desktop
 # Usage: ./kc-build.sh [--push] [--version X.Y.Z]
+#
+# Environment variables:
+#   DOCKER_REGISTRY  - Container registry (default: ghcr.io/misterberns)
+#   DOCKER_REPO      - Repository namespace (default: kidschores)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-REGISTRY="your-registry"
-REPO="wakanda"
+REGISTRY="${DOCKER_REGISTRY:-ghcr.io/misterberns}"
+REPO="${DOCKER_REPO:-kidschores}"
 
 # Read version from VERSION file
 VERSION=$(cat "$APP_DIR/VERSION" | tr -d '[:space:]')

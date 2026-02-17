@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # Google OAuth (optional)
     google_client_id: Optional[str] = None
     google_client_secret: Optional[str] = None
-    google_redirect_uri: str = "https://localhost:3103/auth/google/callback"
+    google_redirect_uri: str = "http://localhost:3103/auth/google/callback"
 
     # API Tokens
     api_token_prefix: str = "kc_"  # Prefix for API tokens
@@ -28,8 +28,11 @@ class Settings(BaseSettings):
     reset_token_expire_minutes: int = 60  # 1 hour expiration
     reset_rate_limit_per_hour: int = 3  # Max reset requests per email per hour
 
+    # App Base URL (used for password reset links, invitation links)
+    app_base_url: str = "http://localhost:3103"
+
     # CORS Origins (comma-separated list or "*")
-    cors_origins: str = "https://localhost:3103"
+    cors_origins: str = "http://localhost:3103"
 
     class Config:
         env_file = ".env"

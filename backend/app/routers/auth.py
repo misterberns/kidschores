@@ -526,8 +526,8 @@ async def forgot_password(request: PasswordResetRequest, db: Session = Depends(g
     db.add(reset_token)
     db.commit()
 
-    # Build reset link (frontend URL with port 8443)
-    reset_link = f"https://localhost:3103/reset-password?token={plain_token}"
+    # Build reset link using configured base URL
+    reset_link = f"{settings.app_base_url}/reset-password?token={plain_token}"
 
     # Send email
     await email_service.send_password_reset_email(
