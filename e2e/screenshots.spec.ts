@@ -150,16 +150,84 @@ test.describe('README Screenshots', () => {
     await page.waitForTimeout(1000);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'rewards-light.png') });
 
+    // --- Rewards (Dark) ---
+    await page.evaluate(() => {
+      localStorage.setItem('kidschores-theme-mode', 'dark');
+    });
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'rewards-dark.png') });
+
+    // --- Allowance (Light) ---
+    await page.evaluate(() => {
+      localStorage.setItem('kidschores-theme-mode', 'light');
+    });
+    await page.goto('/allowance');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'allowance-light.png') });
+
+    // --- Allowance (Dark) ---
+    await page.evaluate(() => {
+      localStorage.setItem('kidschores-theme-mode', 'dark');
+    });
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'allowance-dark.png') });
+
     // --- Admin / Approvals (Light) ---
+    await page.evaluate(() => {
+      localStorage.setItem('kidschores-theme-mode', 'light');
+    });
     await page.goto('/admin');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'admin-light.png') });
 
+    // --- Admin / Approvals (Dark) ---
+    await page.evaluate(() => {
+      localStorage.setItem('kidschores-theme-mode', 'dark');
+    });
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'admin-dark.png') });
+
     // --- History (Light) ---
+    await page.evaluate(() => {
+      localStorage.setItem('kidschores-theme-mode', 'light');
+    });
     await page.goto('/history');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'history-light.png') });
+
+    // --- History (Dark) ---
+    await page.evaluate(() => {
+      localStorage.setItem('kidschores-theme-mode', 'dark');
+    });
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'history-dark.png') });
+  });
+
+  test('capture login screen', async ({ page }) => {
+    // --- Login (Light — default) ---
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'login-light.png') });
+
+    // --- Login (Dark) ---
+    await page.evaluate(() => {
+      localStorage.setItem('kidschores-theme-mode', 'dark');
+    });
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'login-dark.png') });
   });
 });

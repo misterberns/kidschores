@@ -29,16 +29,25 @@ A standalone family chore management web application with points, rewards, and a
 
 ## Screenshots
 
-<!-- Screenshots generated via `npx playwright test e2e/screenshots.spec.ts` -->
+<!-- Generated via: cd e2e && npx playwright test --config=playwright-screenshots.config.ts -->
 
 | Light Mode | Dark Mode |
 |:---:|:---:|
-| ![Home Dashboard](screenshots/home-light.png) | ![Home Dashboard Dark](screenshots/home-dark.png) |
+| ![Home](screenshots/home-light.png) | ![Home Dark](screenshots/home-dark.png) |
 | ![Chores](screenshots/chores-light.png) | ![Chores Dark](screenshots/chores-dark.png) |
 
-| Rewards | Admin | History |
-|:---:|:---:|:---:|
-| ![Rewards](screenshots/rewards-light.png) | ![Admin](screenshots/admin-light.png) | ![History](screenshots/history-light.png) |
+<details>
+<summary>More screenshots (Rewards, Allowance, Admin, History, Login)</summary>
+
+| Light Mode | Dark Mode |
+|:---:|:---:|
+| ![Rewards](screenshots/rewards-light.png) | ![Rewards Dark](screenshots/rewards-dark.png) |
+| ![Allowance](screenshots/allowance-light.png) | ![Allowance Dark](screenshots/allowance-dark.png) |
+| ![Admin](screenshots/admin-light.png) | ![Admin Dark](screenshots/admin-dark.png) |
+| ![History](screenshots/history-light.png) | ![History Dark](screenshots/history-dark.png) |
+| ![Login](screenshots/login-light.png) | ![Login Dark](screenshots/login-dark.png) |
+
+</details>
 
 ## Tech Stack
 
