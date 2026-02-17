@@ -122,51 +122,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Check auth on mount
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const token = getStoredToken();
-    if (!token) {
-      setState((prev) => ({ ...prev, isLoading: false }));
-      return;
-    }
-
-    try {
-      const response = await api.get('/auth/me');
-      const { user, parent, kids, role, kid_id } = response.data;
-      const isKid = role === 'kid';
-      setState({
-        user,
-        parent,
-        kids,
-        activeKidId: isKid ? kid_id : localStorage.getItem(ACTIVE_KID_KEY),
-        isLoading: false,
-        isAuthenticated: true,
-        role: role || 'parent',
-        kidId: kid_id || null,
-      });
-    } catch {
-      // Token invalid or expired, try refresh
-      const refreshed = await refreshToken();
-      if (!refreshed) {
-        clearTokens();
-        setState({
-          user: null,
-          parent: null,
-          kids: [],
-          activeKidId: null,
-          isLoading: false,
-          isAuthenticated: false,
-          role: 'parent',
-          kidId: null,
-        });
-      }
-    }
-  };
-
   const refreshToken = useCallback(async (): Promise<boolean> => {
     const refreshTokenValue = getStoredRefreshToken();
     if (!refreshTokenValue) return false;
@@ -210,6 +165,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const checkAuth = useCallback(async () => {
+    const token = getStoredToken();
+    if (!token) {
+      setState((prev) => ({ ...prev, isLoading: false }));
+      return;
+    }
+
+    try {
+      const response = await api.get('/auth/me');
+      const { user, parent, kids, role, kid_id } = response.data;
+      const isKid = role === 'kid';
+      setState({
+        user,
+        parent,
+        kids,
+        activeKidId: isKid ? kid_id : localStorage.getItem(ACTIVE_KID_KEY),
+        isLoading: false,
+        isAuthenticated: true,
+        role: role || 'parent',
+        kidId: kid_id || null,
+      });
+    } catch {
+      // Token invalid or expired, try refresh
+      const refreshed = await refreshToken();
+      if (!refreshed) {
+        clearTokens();
+        setState({
+          user: null,
+          parent: null,
+          kids: [],
+          activeKidId: null,
+          isLoading: false,
+          isAuthenticated: false,
+          role: 'parent',
+          kidId: null,
+        });
+      }
+    }
+  }, [refreshToken]);
+
+  // Check auth on mount
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   const login = async (email: string, password: string) => {
     const response = await api.post('/auth/login', { email, password });
     const { access_token, refresh_token } = response.data;
@@ -228,12 +228,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await checkAuth();
   };
 
-  const loginWithGoogle = async (code: string) => {
+  const loginWithGoogle = useCallback(async (code: string) => {
     const response = await api.post('/auth/google', { code });
     const { access_token, refresh_token } = response.data;
     storeTokens(access_token, refresh_token);
     await checkAuth();
-  };
+  }, [checkAuth]);
 
   const logout = () => {
     clearTokens();

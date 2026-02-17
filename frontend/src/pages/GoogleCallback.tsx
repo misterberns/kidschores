@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { AlertCircle } from 'lucide-react';
@@ -9,16 +9,21 @@ export function GoogleCallback() {
   const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
+  const hasCalledRef = useRef(false);
+
   useEffect(() => {
     const code = searchParams.get('code');
     if (!code) {
       setError('No authorization code received from Google.');
       return;
     }
+    if (hasCalledRef.current) return;
+    hasCalledRef.current = true;
 
     loginWithGoogle(code)
       .then(() => navigate('/', { replace: true }))
       .catch((err: any) => {
+        hasCalledRef.current = false; // Allow retry on error
         setError(
           err.response?.data?.detail || 'Google sign-in failed. Please try again.'
         );
