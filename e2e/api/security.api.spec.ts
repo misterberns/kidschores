@@ -22,20 +22,30 @@ const test = base.extend<{
 });
 
 /**
- * Helper: manual cleanup (same logic as test-database.ts fallback)
+ * Track entity IDs created during each test so we only clean up OUR test data.
+ * CRITICAL: Never use a blanket "delete all" pattern — it destroys production data
+ * when tests run against a shared database. (Incident: CHANGE-048)
  */
-async function cleanupEntities(ctx: APIRequestContext): Promise<void> {
-  try {
-    for (const entity of ['rewards', 'chores', 'kids', 'parents']) {
-      const resp = await ctx.get(`/api/${entity}`);
-      if (resp.ok()) {
-        const items = await resp.json();
-        for (const item of items) {
-          await ctx.delete(`/api/${entity}/${item.id}`);
-        }
-      }
-    }
-  } catch { /* best effort */ }
+const createdIds: { entity: string; id: string }[] = [];
+
+async function trackCreated(
+  ctx: APIRequestContext,
+  entity: string,
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const resp = await ctx.post(`/api/${entity}`, { data });
+  const body = await resp.json();
+  if (resp.ok()) {
+    createdIds.push({ entity, id: body.id });
+  }
+  return { ...body, _status: resp.status() };
+}
+
+async function cleanupTracked(ctx: APIRequestContext): Promise<void> {
+  for (const { entity, id } of [...createdIds].reverse()) {
+    try { await ctx.delete(`/api/${entity}/${id}`); } catch { /* best effort */ }
+  }
+  createdIds.length = 0;
 }
 
 
@@ -90,45 +100,39 @@ test.describe('Security — JWT Authentication', () => {
 });
 
 test.describe('Security — Admin Authorization', () => {
-  test.beforeEach(async ({ authCtx }) => {
-    await cleanupEntities(authCtx);
+  test.afterEach(async ({ authCtx }) => {
+    await cleanupTracked(authCtx);
   });
 
   test('authenticated user can create kid', async ({ authCtx }) => {
-    const response = await authCtx.post('/api/kids', {
-      data: TestData.kid.emma(),
-    });
-    expect(response.ok()).toBeTruthy();
-    const kid = await response.json();
+    const kid = await trackCreated(authCtx, 'kids', TestData.kid.emma());
+    expect(kid._status).toBe(200);
     expect(kid.name).toBe('Emma');
   });
 
   test('authenticated user can create chore', async ({ authCtx }) => {
-    const kidResp = await authCtx.post('/api/kids', { data: TestData.kid.emma() });
-    const kid = await kidResp.json();
-
-    const response = await authCtx.post('/api/chores', {
-      data: TestData.chore.cleanRoom([kid.id]),
-    });
-    expect(response.ok()).toBeTruthy();
+    const kid = await trackCreated(authCtx, 'kids', TestData.kid.emma());
+    const chore = await trackCreated(authCtx, 'chores', TestData.chore.cleanRoom([kid.id as string]));
+    expect(chore._status).toBe(200);
   });
 
   test('authenticated user can create reward', async ({ authCtx }) => {
-    const response = await authCtx.post('/api/rewards', {
-      data: TestData.reward.screenTime(),
-    });
-    expect(response.ok()).toBeTruthy();
+    const reward = await trackCreated(authCtx, 'rewards', TestData.reward.screenTime());
+    expect(reward._status).toBe(200);
   });
 
   test('authenticated user can delete entities', async ({ authCtx }) => {
-    const createResp = await authCtx.post('/api/kids', { data: TestData.kid.emma() });
-    const kid = await createResp.json();
+    const kid = await trackCreated(authCtx, 'kids', TestData.kid.emma());
 
     const deleteResp = await authCtx.delete(`/api/kids/${kid.id}`);
     expect(deleteResp.ok()).toBeTruthy();
 
     const getResp = await authCtx.get(`/api/kids/${kid.id}`);
     expect(getResp.status()).toBe(404);
+
+    // Already deleted — remove from tracked list so afterEach doesn't 404
+    const idx = createdIds.findIndex(e => e.id === kid.id);
+    if (idx !== -1) createdIds.splice(idx, 1);
   });
 });
 
@@ -176,15 +180,16 @@ test.describe('Security — PIN Verification', () => {
   let parentId: string;
 
   test.beforeEach(async ({ authCtx }) => {
-    await cleanupEntities(authCtx);
-
-    const kidResp = await authCtx.post('/api/kids', { data: TestData.kid.emma() });
-    const kid = await kidResp.json();
-
-    const parentResp = await authCtx.post('/api/parents', {
-      data: { ...TestData.parent.mom([kid.id]), pin: '1234' },
+    const kid = await trackCreated(authCtx, 'kids', TestData.kid.emma());
+    const parent = await trackCreated(authCtx, 'parents', {
+      ...TestData.parent.mom([kid.id as string]),
+      pin: '1234',
     });
-    parentId = (await parentResp.json()).id;
+    parentId = parent.id as string;
+  });
+
+  test.afterEach(async ({ authCtx }) => {
+    await cleanupTracked(authCtx);
   });
 
   test('correct PIN returns 200 with valid=true', async ({ authCtx }) => {
@@ -216,65 +221,54 @@ test.describe('Security — PIN Verification', () => {
 });
 
 test.describe('Security — Input Handling', () => {
-  test.beforeEach(async ({ authCtx }) => {
-    await cleanupEntities(authCtx);
+  test.afterEach(async ({ authCtx }) => {
+    await cleanupTracked(authCtx);
   });
 
   test('kid name with HTML tags is stored and retrieved safely', async ({ authCtx }) => {
     const xssName = '<script>alert("xss")</script>';
+    const kid = await trackCreated(authCtx, 'kids', { name: xssName, enable_notifications: true });
 
-    const response = await authCtx.post('/api/kids', {
-      data: { name: xssName, enable_notifications: true },
-    });
-
-    if (response.ok()) {
-      const kid = await response.json();
+    if (kid._status === 200) {
       const getResp = await authCtx.get(`/api/kids/${kid.id}`);
       const retrieved = await getResp.json();
       expect(retrieved.name).toBe(xssName);
     } else {
-      expect([400, 422]).toContain(response.status());
+      expect([400, 422]).toContain(kid._status);
     }
   });
 
   test('chore name with HTML entities is handled correctly', async ({ authCtx }) => {
-    const kidResp = await authCtx.post('/api/kids', { data: TestData.kid.emma() });
-    const kid = await kidResp.json();
+    const kid = await trackCreated(authCtx, 'kids', TestData.kid.emma());
 
     const htmlName = 'Clean <Room> & "Bathroom"';
-    const response = await authCtx.post('/api/chores', {
-      data: {
-        ...TestData.chore.cleanRoom([kid.id]),
-        name: htmlName,
-      },
+    const chore = await trackCreated(authCtx, 'chores', {
+      ...TestData.chore.cleanRoom([kid.id as string]),
+      name: htmlName,
     });
 
-    if (response.ok()) {
-      const chore = await response.json();
+    if (chore._status === 200) {
       const getResp = await authCtx.get(`/api/chores/${chore.id}`);
       const retrieved = await getResp.json();
       expect(retrieved.name).toBe(htmlName);
     } else {
-      expect([400, 422]).toContain(response.status());
+      expect([400, 422]).toContain(chore._status);
     }
   });
 
   test('reward name with script payload is handled safely', async ({ authCtx }) => {
     const payload = '<img src=x onerror=alert(1)>';
-    const response = await authCtx.post('/api/rewards', {
-      data: {
-        ...TestData.reward.screenTime(),
-        name: payload,
-      },
+    const reward = await trackCreated(authCtx, 'rewards', {
+      ...TestData.reward.screenTime(),
+      name: payload,
     });
 
-    if (response.ok()) {
-      const reward = await response.json();
+    if (reward._status === 200) {
       const getResp = await authCtx.get(`/api/rewards/${reward.id}`);
       const retrieved = await getResp.json();
       expect(retrieved.name).toBe(payload);
     } else {
-      expect([400, 422]).toContain(response.status());
+      expect([400, 422]).toContain(reward._status);
     }
   });
 });

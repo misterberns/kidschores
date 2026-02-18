@@ -11,49 +11,12 @@ const TEST_USER = {
 };
 
 /**
- * Manual cleanup fallback - deletes entities one by one via individual API calls
+ * DANGER: This function previously deleted ALL entities from ALL users.
+ * It caused CHANGE-048 (production data loss) when tests ran against a shared database.
+ *
+ * REMOVED: Tests must now track and clean up only their own created entities.
+ * Use the trackCreated/cleanupTracked pattern from security.api.spec.ts.
  */
-async function manualCleanup(apiContext: APIRequestContext): Promise<void> {
-  try {
-    // Delete all rewards
-    const rewardsResp = await apiContext.get('/api/rewards');
-    if (rewardsResp.ok()) {
-      const rewards = await rewardsResp.json();
-      for (const reward of rewards) {
-        await apiContext.delete(`/api/rewards/${reward.id}`);
-      }
-    }
-
-    // Delete all chores
-    const choresResp = await apiContext.get('/api/chores');
-    if (choresResp.ok()) {
-      const chores = await choresResp.json();
-      for (const chore of chores) {
-        await apiContext.delete(`/api/chores/${chore.id}`);
-      }
-    }
-
-    // Delete all kids
-    const kidsResp = await apiContext.get('/api/kids');
-    if (kidsResp.ok()) {
-      const kids = await kidsResp.json();
-      for (const kid of kids) {
-        await apiContext.delete(`/api/kids/${kid.id}`);
-      }
-    }
-
-    // Delete all parents
-    const parentsResp = await apiContext.get('/api/parents');
-    if (parentsResp.ok()) {
-      const parents = await parentsResp.json();
-      for (const parent of parents) {
-        await apiContext.delete(`/api/parents/${parent.id}`);
-      }
-    }
-  } catch (error) {
-    console.log('Error during manual cleanup:', error);
-  }
-}
 
 /**
  * Get or create test user and return auth tokens
@@ -177,31 +140,16 @@ export const test = base.extend<TestFixtures>({
     await context.dispose();
   },
 
-  // Database reset fixture - uses dedicated /api/test/reset endpoint
-  resetDatabase: async ({ apiContext }, use) => {
+  // Database reset fixture — DEPRECATED: do NOT use blanket reset against shared databases.
+  // Tests should track and clean up only their own entities.
+  // Kept for backward compatibility but now a no-op with a warning.
+  resetDatabase: async ({ apiContext: _apiContext }, use) => {
     const reset = async () => {
-      try {
-        // Use the dedicated reset endpoint for atomic, reliable cleanup
-        const resp = await apiContext.post('/api/test/reset');
-        if (!resp.ok()) {
-          console.log('Reset endpoint failed, falling back to manual cleanup');
-          // Fallback: delete entities one by one if reset endpoint fails
-          await manualCleanup(apiContext);
-        }
-      } catch (error) {
-        console.log('Error calling reset endpoint:', error);
-        // Fallback to manual cleanup
-        await manualCleanup(apiContext);
-      }
-
-      // Small delay to ensure cleanup is complete
-      await new Promise(resolve => setTimeout(resolve, 50));
+      console.warn(
+        'WARNING: resetDatabase is deprecated after CHANGE-048 (production data loss). ' +
+        'Tests must track and clean up only their own entities.',
+      );
     };
-
-    // Reset before test starts
-    await reset();
-
-    // Provide reset function to test (can call again if needed)
     await use(reset);
   },
 
