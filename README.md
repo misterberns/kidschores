@@ -1,6 +1,6 @@
 # KidsChores
 
-[![Version](https://img.shields.io/badge/Version-v0.7.0-green?style=flat-square)](https://github.com/misterberns/kidschores/releases)
+[![Version](https://img.shields.io/badge/Version-v0.7.5-green?style=flat-square)](https://github.com/misterberns/kidschores/releases)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)
 ![License](https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square)
 
@@ -26,6 +26,9 @@ A standalone family chore management web application with points, rewards, and a
 - **Email Notifications** - Parents notified on chore claims and reward redemptions
 - **Seasonal Themes** - Halloween, Christmas, Easter, Summer, and default themes
 - **Mobile-Responsive** - Works on phones, tablets, and desktops
+- **Security** - JWT auth on all endpoints, rate limiting, bcrypt hashing, CORS restriction
+- **Error Handling** - React error boundaries, global error handler, auto-toast notifications
+- **E2E Testing** - Playwright test suite (34+ tests: API security, accessibility, error handling)
 
 ## Screenshots
 
@@ -231,7 +234,11 @@ kidschores/
 │       ├── pages/           # Page components
 │       ├── components/      # Shared components
 │       └── theme/           # Colors, seasonal themes
-├── e2e/                     # End-to-end tests (Playwright)
+├── e2e/                     # Playwright end-to-end tests
+│   ├── api/                 # API tests (CRUD, security)
+│   ├── ui/                  # UI tests (accessibility, error handling)
+│   ├── fixtures/            # Shared test fixtures and auth helpers
+│   └── pages/               # Page Object Models
 ├── scripts/
 │   └── kc-build.sh          # Build + push to container registry
 ├── docker-compose.yml       # Standalone deployment (builds locally)
@@ -273,4 +280,4 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ## Version
 
-Current version: **0.7.0** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.7.5** (see [CHANGELOG.md](CHANGELOG.md) for history)
