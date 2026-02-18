@@ -231,6 +231,13 @@ export default function Help() {
           </AccordionItem>
         </AccordionSection>
       </motion.div>
+
+      {/* App Version */}
+      <motion.div variants={prefersReducedMotion ? undefined : cardVariants} className="mt-8 text-center">
+        <p className="text-xs text-text-muted font-mono opacity-60">
+          KidsChores v{__APP_VERSION__}
+        </p>
+      </motion.div>
     </motion.div>
   );
 }

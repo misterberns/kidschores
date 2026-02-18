@@ -258,9 +258,6 @@ function AppContent() {
 
           <h1 className="text-2xl font-black text-center flex items-center gap-2">
             <Logo variant="horizontal" size={180} alt="KidsChores" />
-            <span className="text-[10px] font-mono text-text-muted opacity-60 -ml-1 mt-3 self-end">
-              v{__APP_VERSION__}
-            </span>
             <SeasonIcon
               size={28}
               style={{ color: seasonalOverride.iconColor }}
