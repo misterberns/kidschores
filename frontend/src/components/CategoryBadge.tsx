@@ -60,7 +60,7 @@ export function CategoryFilter({
         className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
           selected === null
             ? 'bg-primary-500'
-            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+            : 'bg-bg-accent text-text-secondary hover:bg-bg-accent/80'
         }`}
         style={selected === null ? { color: 'var(--text-inverse)' } : undefined}
       >

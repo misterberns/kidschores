@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import axios from 'axios';
+import { toast } from 'sonner';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Home as HomeIcon, ClipboardList, Gift, Users, LogOut, Bell, Wallet, History as HistoryIcon } from 'lucide-react';
 import { Home } from './pages/Home';
@@ -24,8 +26,24 @@ import { pageVariants } from './utils/animations';
 import { Logo } from './components/Logo';
 import { SeasonalParticles } from './components/SeasonalParticles';
 import { ToastProvider } from './components/notifications/ToastProvider';
+import ErrorBoundary from './components/ErrorBoundary';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    mutations: {
+      onError: (error: unknown) => {
+        if (axios.isAxiosError(error) && error.response) {
+          const detail = error.response.data?.detail;
+          if (typeof detail === 'string') {
+            toast.error(detail);
+          } else if (Array.isArray(detail)) {
+            toast.error(detail.map((d: { msg: string }) => d.msg).join(', '));
+          }
+        }
+      },
+    },
+  },
+});
 
 function NavBar() {
   const location = useLocation();
@@ -240,6 +258,9 @@ function AppContent() {
 
           <h1 className="text-2xl font-black text-center flex items-center gap-2">
             <Logo variant="horizontal" size={180} alt="KidsChores" />
+            <span className="text-[10px] font-mono text-text-muted opacity-60 -ml-1 mt-3 self-end">
+              v{__APP_VERSION__}
+            </span>
             <SeasonIcon
               size={28}
               style={{ color: seasonalOverride.iconColor }}
@@ -279,15 +300,17 @@ function AppContent() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <ToastProvider />
-        <BrowserRouter>
-          <AuthProvider>
-            <AppRoutes />
-          </AuthProvider>
-        </BrowserRouter>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <ToastProvider />
+          <BrowserRouter>
+            <AuthProvider>
+              <AppRoutes />
+            </AuthProvider>
+          </BrowserRouter>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

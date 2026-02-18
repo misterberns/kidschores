@@ -75,8 +75,11 @@ class ParentCreate(ParentBase):
     pass
 
 
-class ParentResponse(ParentBase):
+class ParentResponse(BaseModel):
     id: str
+    name: str
+    associated_kids: List[str] = []
+    enable_notifications: bool = True
     created_at: datetime
 
     class Config:
@@ -144,7 +147,7 @@ class ChoreClaimRequest(BaseModel):
 
 
 class ChoreApproveRequest(BaseModel):
-    parent_name: str
+    parent_name: Optional[str] = None  # Derived from JWT if not provided
     points_awarded: Optional[float] = None
 
 
@@ -199,7 +202,7 @@ class RewardRedeemRequest(BaseModel):
 
 
 class RewardApproveRequest(BaseModel):
-    parent_name: str
+    parent_name: Optional[str] = None  # Derived from JWT if not provided
 
 
 class RewardClaimResponse(BaseModel):
@@ -539,3 +542,29 @@ class ParentCreateWithInvite(ParentBase):
     """Extended parent creation with optional email invitation."""
     email: Optional[EmailStr] = None
     send_invite: bool = False
+
+
+# --- Generic Response Schemas ---
+
+class MessageResponse(BaseModel):
+    """Generic message response."""
+    message: str
+
+
+class PendingCountResponse(BaseModel):
+    """Count of pending approvals."""
+    chores: int
+    rewards: int
+    total: int
+
+
+class ApprovalHistoryItem(BaseModel):
+    """A single item in the approval history."""
+    type: str
+    id: str
+    kid_name: str
+    item_name: str
+    status: str
+    points: Optional[float] = None
+    approved_by: Optional[str] = None
+    timestamp: Optional[datetime] = None

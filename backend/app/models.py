@@ -236,13 +236,13 @@ class ChoreClaim(Base):
     __tablename__ = "chore_claims"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    kid_id = Column(String(36), ForeignKey("kids.id"), nullable=False)
-    chore_id = Column(String(36), ForeignKey("chores.id"), nullable=False)
+    kid_id = Column(String(36), ForeignKey("kids.id"), nullable=False, index=True)
+    chore_id = Column(String(36), ForeignKey("chores.id"), nullable=False, index=True)
 
-    status = Column(String(20), default="pending")  # pending, claimed, approved, disapproved, expired
+    status = Column(String(20), default="pending", index=True)  # pending, claimed, approved, disapproved, expired
     points_awarded = Column(Float, nullable=True)
 
-    claimed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    claimed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     approved_at = Column(DateTime, nullable=True)
     approved_by = Column(String(100), nullable=True)  # Parent name
 
@@ -277,10 +277,10 @@ class RewardClaim(Base):
     __tablename__ = "reward_claims"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    kid_id = Column(String(36), ForeignKey("kids.id"), nullable=False)
+    kid_id = Column(String(36), ForeignKey("kids.id"), nullable=False, index=True)
     reward_id = Column(String(36), ForeignKey("rewards.id"), nullable=False)
 
-    status = Column(String(20), default="pending")  # pending, approved, disapproved
+    status = Column(String(20), default="pending", index=True)  # pending, approved, disapproved
     points_spent = Column(Integer, nullable=True)
 
     requested_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -387,7 +387,7 @@ class PushSubscription(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     user_id = Column(String(36), ForeignKey("users.id"), nullable=True)
-    kid_id = Column(String(36), ForeignKey("kids.id"), nullable=True)
+    kid_id = Column(String(36), ForeignKey("kids.id"), nullable=True, index=True)
 
     endpoint = Column(Text, nullable=False)
     p256dh_key = Column(String(255), nullable=False)
@@ -461,12 +461,12 @@ class AllowancePayout(Base):
     __tablename__ = "allowance_payouts"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    kid_id = Column(String(36), ForeignKey("kids.id"), nullable=False)
+    kid_id = Column(String(36), ForeignKey("kids.id"), nullable=False, index=True)
 
     points_converted = Column(Integer, nullable=False)
     dollar_amount = Column(Float, nullable=False)
     payout_method = Column(String(50), default="cash")  # cash, bank, gift_card
-    status = Column(String(20), default="pending")  # pending, paid, cancelled
+    status = Column(String(20), default="pending", index=True)  # pending, paid, cancelled
     notes = Column(Text, nullable=True)
 
     requested_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

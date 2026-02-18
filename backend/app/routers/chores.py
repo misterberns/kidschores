@@ -1,19 +1,22 @@
 """Chores API endpoints."""
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..deps import require_admin
+from ..deps import require_auth, require_admin
 from ..models import Chore, ChoreClaim, Kid, DailyMultiplier, PushSubscription, User, Parent
 from ..schemas import (
     ChoreCreate, ChoreUpdate, ChoreResponse, ChoreWithStatus,
     ChoreClaimRequest, ChoreApproveRequest, ChoreClaimResponse,
-    TodaysChoreResponse, ApprovalWithStreakResponse
+    TodaysChoreResponse, ApprovalWithStreakResponse, MessageResponse
 )
 from ..services.push_service import push_service
 from ..services.email_service import email_service
+
+logger = logging.getLogger(__name__)
 
 # Streak milestones that trigger celebrations
 STREAK_MILESTONES = [3, 7, 14, 30, 50, 100, 365]
@@ -24,66 +27,74 @@ router = APIRouter()
 
 def notify_parents_chore_claimed(db: Session, kid_name: str, chore_name: str):
     """Send push notification to all parent devices when a chore is claimed."""
-    # Get all parent subscriptions (subscriptions without kid_id)
-    subscriptions = db.query(PushSubscription).filter(
-        PushSubscription.kid_id.is_(None)
-    ).all()
+    try:
+        subscriptions = db.query(PushSubscription).filter(
+            PushSubscription.kid_id.is_(None)
+        ).all()
 
-    for sub in subscriptions:
-        subscription_info = {
-            "endpoint": sub.endpoint,
-            "keys": {
-                "p256dh": sub.p256dh_key,
-                "auth": sub.auth_key,
+        for sub in subscriptions:
+            subscription_info = {
+                "endpoint": sub.endpoint,
+                "keys": {
+                    "p256dh": sub.p256dh_key,
+                    "auth": sub.auth_key,
+                }
             }
-        }
-        try:
-            push_service.send_chore_claimed(subscription_info, kid_name, chore_name)
-        except Exception as e:
-            print(f"Failed to send push notification: {e}")
+            try:
+                push_service.send_chore_claimed(subscription_info, kid_name, chore_name)
+            except Exception as e:
+                logger.error(f"Failed to send push notification: {e}")
+    except Exception as e:
+        logger.error(f"Background task notify_parents_chore_claimed failed: {e}")
 
 
 def notify_kid_chore_approved(db: Session, kid_id: str, chore_name: str, points: int):
     """Send push notification to kid's devices when a chore is approved."""
-    subscriptions = db.query(PushSubscription).filter(
-        PushSubscription.kid_id == kid_id
-    ).all()
+    try:
+        subscriptions = db.query(PushSubscription).filter(
+            PushSubscription.kid_id == kid_id
+        ).all()
 
-    for sub in subscriptions:
-        subscription_info = {
-            "endpoint": sub.endpoint,
-            "keys": {
-                "p256dh": sub.p256dh_key,
-                "auth": sub.auth_key,
+        for sub in subscriptions:
+            subscription_info = {
+                "endpoint": sub.endpoint,
+                "keys": {
+                    "p256dh": sub.p256dh_key,
+                    "auth": sub.auth_key,
+                }
             }
-        }
-        try:
-            push_service.send_chore_approved(subscription_info, chore_name, points)
-        except Exception as e:
-            print(f"Failed to send push notification: {e}")
+            try:
+                push_service.send_chore_approved(subscription_info, chore_name, points)
+            except Exception as e:
+                logger.error(f"Failed to send push notification: {e}")
+    except Exception as e:
+        logger.error(f"Background task notify_kid_chore_approved failed: {e}")
 
 
 async def email_notify_parents_chore_claimed(db: Session, kid_id: str, kid_name: str, chore_name: str):
     """Email all parents associated with this kid when a chore is claimed."""
-    if not email_service.is_configured():
-        return
-    parents = db.query(Parent).all()
-    for parent in parents:
-        if kid_id in (parent.associated_kids or []):
-            if parent.user_id:
-                user = db.query(User).filter(User.id == parent.user_id).first()
-                if user and user.email:
-                    await email_service.send_chore_claimed_email(
-                        to_email=user.email,
-                        parent_name=parent.name,
-                        kid_name=kid_name,
-                        chore_name=chore_name,
-                    )
+    try:
+        if not email_service.is_configured():
+            return
+        parents = db.query(Parent).all()
+        for parent in parents:
+            if kid_id in (parent.associated_kids or []):
+                if parent.user_id:
+                    user = db.query(User).filter(User.id == parent.user_id).first()
+                    if user and user.email:
+                        await email_service.send_chore_claimed_email(
+                            to_email=user.email,
+                            parent_name=parent.name,
+                            kid_name=kid_name,
+                            chore_name=chore_name,
+                        )
+    except Exception as e:
+        logger.error(f"Background task email_notify_parents_chore_claimed failed: {e}")
 
 
 @router.get("", response_model=List[ChoreResponse])
 @router.get("/", response_model=List[ChoreResponse], include_in_schema=False)
-def list_chores(db: Session = Depends(get_db)):
+def list_chores(db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """List all chores."""
     return db.query(Chore).all()
 
@@ -100,7 +111,7 @@ def create_chore(chore: ChoreCreate, db: Session = Depends(get_db), _admin: User
 
 
 @router.get("/{chore_id}", response_model=ChoreResponse)
-def get_chore(chore_id: str, db: Session = Depends(get_db)):
+def get_chore(chore_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Get chore by ID."""
     chore = db.query(Chore).filter(Chore.id == chore_id).first()
     if not chore:
@@ -137,7 +148,7 @@ def delete_chore(chore_id: str, db: Session = Depends(get_db), _admin: User = De
 
 
 @router.get("/today/{kid_id}", response_model=List[TodaysChoreResponse])
-def get_todays_chores(kid_id: str, db: Session = Depends(get_db)):
+def get_todays_chores(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Get chores applicable for today for a specific kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -213,7 +224,7 @@ def get_todays_chores(kid_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/kid/{kid_id}", response_model=List[ChoreWithStatus])
-def get_chores_for_kid(kid_id: str, db: Session = Depends(get_db)):
+def get_chores_for_kid(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Get all chores assigned to a kid with their status."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -256,7 +267,8 @@ def claim_chore(
     chore_id: str,
     request: ChoreClaimRequest,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_auth),
 ):
     """Kid claims a chore."""
     chore = db.query(Chore).filter(Chore.id == chore_id).first()
@@ -309,7 +321,8 @@ def approve_chore(
     chore_id: str,
     request: ChoreApproveRequest,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
 ):
     """Parent approves a claimed chore."""
     # Find the pending claim
@@ -328,10 +341,16 @@ def approve_chore(
     points = request.points_awarded if request.points_awarded else chore.default_points
     points_with_multiplier = int(points * kid.points_multiplier)
 
+    # Derive parent_name from JWT if not provided
+    parent_name = request.parent_name
+    if not parent_name:
+        parent = db.query(Parent).filter(Parent.user_id == admin.id).first()
+        parent_name = parent.name if parent else (admin.display_name or admin.email)
+
     # Update claim
     claim.status = "approved"
     claim.approved_at = datetime.now(timezone.utc)
-    claim.approved_by = request.parent_name
+    claim.approved_by = parent_name
     claim.points_awarded = points_with_multiplier
 
     # Award points to kid
@@ -359,8 +378,8 @@ def approve_chore(
     return claim
 
 
-@router.post("/{chore_id}/disapprove")
-def disapprove_chore(chore_id: str, request: ChoreApproveRequest, db: Session = Depends(get_db)):
+@router.post("/{chore_id}/disapprove", response_model=MessageResponse)
+def disapprove_chore(chore_id: str, request: ChoreApproveRequest, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     """Parent disapproves a claimed chore."""
     claim = db.query(ChoreClaim).filter(
         ChoreClaim.chore_id == chore_id,
@@ -370,9 +389,15 @@ def disapprove_chore(chore_id: str, request: ChoreApproveRequest, db: Session = 
     if not claim:
         raise HTTPException(status_code=404, detail="No pending claim found for this chore")
 
+    # Derive parent_name from JWT if not provided
+    parent_name = request.parent_name
+    if not parent_name:
+        parent = db.query(Parent).filter(Parent.user_id == admin.id).first()
+        parent_name = parent.name if parent else (admin.display_name or admin.email)
+
     claim.status = "disapproved"
     claim.approved_at = datetime.now(timezone.utc)
-    claim.approved_by = request.parent_name
+    claim.approved_by = parent_name
 
     db.commit()
     return {"message": "Chore disapproved"}

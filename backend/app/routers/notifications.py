@@ -1,12 +1,16 @@
 """Push notification subscription endpoints."""
+import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from ..database import get_db
-from ..models import PushSubscription, NotificationPreference, Kid, Parent
+from ..deps import require_auth
+from ..models import PushSubscription, NotificationPreference, Kid, Parent, User
 from ..services.push_service import push_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -35,7 +39,7 @@ class VapidKeyResponse(BaseModel):
 
 # Endpoints
 @router.get("/vapid-key", response_model=VapidKeyResponse)
-def get_vapid_key():
+def get_vapid_key(_user: User = Depends(require_auth)):
     """Get the VAPID public key for push subscription."""
     public_key = push_service.get_public_key()
     if not public_key:
@@ -52,6 +56,7 @@ def subscribe(
     user_id: Optional[str] = None,
     kid_id: Optional[str] = None,
     db: Session = Depends(get_db),
+    _user: User = Depends(require_auth),
 ):
     """Subscribe to push notifications."""
     # Check if subscription already exists
@@ -85,6 +90,7 @@ def subscribe(
 def unsubscribe(
     endpoint: str,
     db: Session = Depends(get_db),
+    _user: User = Depends(require_auth),
 ):
     """Unsubscribe from push notifications."""
     subscription = db.query(PushSubscription).filter(
@@ -104,6 +110,7 @@ def unsubscribe(
 def send_test_notification(
     endpoint: str,
     db: Session = Depends(get_db),
+    _user: User = Depends(require_auth),
 ):
     """Send a test push notification."""
     subscription = db.query(PushSubscription).filter(
@@ -139,6 +146,7 @@ def send_test_notification(
 def get_preferences(
     user_id: str,
     db: Session = Depends(get_db),
+    _user: User = Depends(require_auth),
 ):
     """Get notification preferences for a user."""
     prefs = db.query(NotificationPreference).filter(
@@ -171,6 +179,7 @@ def update_preferences(
     user_id: str,
     updates: NotificationPreferenceUpdate,
     db: Session = Depends(get_db),
+    _user: User = Depends(require_auth),
 ):
     """Update notification preferences for a user."""
     prefs = db.query(NotificationPreference).filter(
@@ -203,51 +212,57 @@ def update_preferences(
 # Helper function to send notifications to all subscribers
 def notify_all_parents(db: Session, title: str, body: str, tag: str = None, url: str = None):
     """Send push notification to all parent subscribers."""
-    subscriptions = db.query(PushSubscription).filter(
-        PushSubscription.kid_id.is_(None)  # Parent subscriptions don't have kid_id
-    ).all()
+    try:
+        subscriptions = db.query(PushSubscription).filter(
+            PushSubscription.kid_id.is_(None)  # Parent subscriptions don't have kid_id
+        ).all()
 
-    for sub in subscriptions:
-        subscription_info = {
-            "endpoint": sub.endpoint,
-            "keys": {
-                "p256dh": sub.p256dh_key,
-                "auth": sub.auth_key,
+        for sub in subscriptions:
+            subscription_info = {
+                "endpoint": sub.endpoint,
+                "keys": {
+                    "p256dh": sub.p256dh_key,
+                    "auth": sub.auth_key,
+                }
             }
-        }
-        try:
-            push_service.send_notification(
-                subscription_info=subscription_info,
-                title=title,
-                body=body,
-                tag=tag,
-                url=url,
-            )
-        except Exception as e:
-            print(f"Failed to send notification to {sub.endpoint}: {e}")
+            try:
+                push_service.send_notification(
+                    subscription_info=subscription_info,
+                    title=title,
+                    body=body,
+                    tag=tag,
+                    url=url,
+                )
+            except Exception as e:
+                logger.error(f"Failed to send notification to {sub.endpoint}: {e}")
+    except Exception as e:
+        logger.error(f"Background task notify_all_parents failed: {e}")
 
 
 def notify_kid(db: Session, kid_id: str, title: str, body: str, tag: str = None, url: str = None):
     """Send push notification to a specific kid's device."""
-    subscriptions = db.query(PushSubscription).filter(
-        PushSubscription.kid_id == kid_id
-    ).all()
+    try:
+        subscriptions = db.query(PushSubscription).filter(
+            PushSubscription.kid_id == kid_id
+        ).all()
 
-    for sub in subscriptions:
-        subscription_info = {
-            "endpoint": sub.endpoint,
-            "keys": {
-                "p256dh": sub.p256dh_key,
-                "auth": sub.auth_key,
+        for sub in subscriptions:
+            subscription_info = {
+                "endpoint": sub.endpoint,
+                "keys": {
+                    "p256dh": sub.p256dh_key,
+                    "auth": sub.auth_key,
+                }
             }
-        }
-        try:
-            push_service.send_notification(
-                subscription_info=subscription_info,
-                title=title,
-                body=body,
-                tag=tag,
-                url=url,
-            )
-        except Exception as e:
-            print(f"Failed to send notification to {sub.endpoint}: {e}")
+            try:
+                push_service.send_notification(
+                    subscription_info=subscription_info,
+                    title=title,
+                    body=body,
+                    tag=tag,
+                    url=url,
+                )
+            except Exception as e:
+                logger.error(f"Failed to send notification to {sub.endpoint}: {e}")
+    except Exception as e:
+        logger.error(f"Background task notify_kid failed: {e}")

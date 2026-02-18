@@ -1,5 +1,5 @@
 # Stage 1: Build dependencies in isolated venv
-FROM python:3.14-slim AS builder
+FROM python:3.13-slim AS builder
 
 WORKDIR /build
 
@@ -8,7 +8,7 @@ RUN python -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Production image
-FROM python:3.14-slim
+FROM python:3.13-slim
 
 # Prevent bytecode files and enable unbuffered output
 ENV PYTHONDONTWRITEBYTECODE=1 \

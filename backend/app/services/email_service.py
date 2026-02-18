@@ -1,10 +1,13 @@
 """Email notification service using aiosmtplib."""
+import html
+import logging
 import os
-import asyncio
 from typing import Optional, List
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import aiosmtplib
+
+logger = logging.getLogger(__name__)
 
 # Email configuration from environment
 SMTP_HOST = os.getenv("SMTP_HOST", "localhost")
@@ -53,11 +56,11 @@ class EmailService:
             True if sent successfully, False otherwise
         """
         if not self._is_configured:
-            print("Email service not configured. Skipping email send.")
-            print(f"  SMTP_HOST={self.host}, SMTP_USER={self.username}, HAS_PASSWORD={bool(self.password)}")
+            logger.warning("Email service not configured, skipping send")
+            logger.debug(f"SMTP_HOST={self.host}, SMTP_USER={self.username}, HAS_PASSWORD={bool(self.password)}")
             return False
 
-        print(f"Attempting to send email to {to_email} via {self.host}:{self.port}")
+        logger.info(f"Sending email to {to_email} via {self.host}:{self.port}")
         try:
             # Create message
             message = MIMEMultipart("alternative")
@@ -73,7 +76,7 @@ class EmailService:
             message.attach(MIMEText(html_content, "html"))
 
             # Send email
-            print(f"Connecting to SMTP: {self.host}:{self.port} with TLS={self.use_tls}")
+            logger.debug(f"Connecting to SMTP: {self.host}:{self.port} TLS={self.use_tls}")
             await aiosmtplib.send(
                 message,
                 hostname=self.host,
@@ -83,13 +86,11 @@ class EmailService:
                 start_tls=self.use_tls,
             )
 
-            print(f"Email sent successfully to {to_email}")
+            logger.info(f"Email sent to {to_email}")
             return True
 
         except Exception as e:
-            print(f"Failed to send email to {to_email}: {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Failed to send email to {to_email}: {e}", exc_info=True)
             return False
 
     async def send_chore_claimed_email(
@@ -100,6 +101,10 @@ class EmailService:
         chore_name: str,
     ) -> bool:
         """Send email when a chore is claimed."""
+        # Escape user-supplied values for HTML safety
+        parent_name = html.escape(parent_name)
+        kid_name = html.escape(kid_name)
+        chore_name = html.escape(chore_name)
         subject = f"[KidsChores] {kid_name} claimed '{chore_name}'"
 
         html_content = f"""
@@ -158,6 +163,8 @@ class EmailService:
         points_awarded: int,
     ) -> bool:
         """Send email when a chore is approved."""
+        kid_name = html.escape(kid_name)
+        chore_name = html.escape(chore_name)
         subject = f"[KidsChores] Great job, {kid_name}! '{chore_name}' approved!"
 
         html_content = f"""
@@ -217,11 +224,13 @@ class EmailService:
         kids_summary: List[dict],
     ) -> bool:
         """Send daily summary email to parents."""
+        parent_name = html.escape(parent_name)
         subject = "[KidsChores] Daily Summary"
 
-        # Build summary HTML
+        # Build summary HTML (escape kid names)
         kids_html = ""
         for kid in kids_summary:
+            kid['name'] = html.escape(str(kid.get('name', '')))
             kids_html += f"""
             <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #e5e7eb;">
                 <h3 style="margin: 0 0 10px 0; color: #10b981;">{kid['name']}</h3>
@@ -283,6 +292,7 @@ class EmailService:
         streak_days: int,
     ) -> bool:
         """Send email for streak milestones."""
+        kid_name = html.escape(kid_name)
         milestone_messages = {
             3: "Getting started! Keep it up!",
             7: "One full week! That's dedication!",
@@ -349,6 +359,8 @@ class EmailService:
         invite_link: str,
     ) -> bool:
         """Send parent invitation email with secure link to create account."""
+        parent_name = html.escape(parent_name)
+        invite_link = html.escape(invite_link)
         subject = "[KidsChores] You're Invited!"
 
         html_content = f"""
@@ -437,6 +449,8 @@ If you didn't expect this invitation, you can safely ignore this email.
         display_name: str,
     ) -> bool:
         """Send password reset email with secure link."""
+        display_name = html.escape(display_name)
+        reset_link = html.escape(reset_link)
         subject = "[KidsChores] Reset Your Password"
 
         html_content = f"""
@@ -514,6 +528,7 @@ KidsChores
         display_name: str,
     ) -> bool:
         """Send confirmation email after password has been changed."""
+        display_name = html.escape(display_name)
         subject = "[KidsChores] Your Password Has Been Changed"
 
         html_content = f"""
@@ -578,6 +593,9 @@ KidsChores
         points_spent: int,
     ) -> bool:
         """Send email when a kid redeems a reward."""
+        parent_name = html.escape(parent_name)
+        kid_name = html.escape(kid_name)
+        reward_name = html.escape(reward_name)
         subject = f"[KidsChores] {kid_name} redeemed '{reward_name}'"
 
         html_content = f"""

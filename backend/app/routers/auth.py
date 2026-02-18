@@ -1,8 +1,11 @@
 """Authentication endpoints."""
+import logging
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -144,11 +147,15 @@ async def register(request: RegisterRequest, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
 
+    # First registered user is automatically admin
+    is_first_user = db.query(User).count() == 0
+
     # Create user
     user = User(
         email=request.email.lower(),
         password_hash=hash_password(request.password),
         display_name=request.display_name,
+        is_admin=is_first_user,
     )
     db.add(user)
     db.flush()  # Get the ID

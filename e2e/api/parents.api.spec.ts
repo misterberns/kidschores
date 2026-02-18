@@ -112,8 +112,10 @@ test.describe('Parents API', () => {
       });
       const parent = await createResp.json();
 
-      // PIN is passed as query parameter
-      const response = await apiContext.post(`/api/parents/${parent.id}/verify-pin?pin=1234`);
+      // PIN is passed as request body
+      const response = await apiContext.post(`/api/parents/${parent.id}/verify-pin`, {
+        data: { pin: '1234' },
+      });
 
       expect(response.ok()).toBeTruthy();
       const result = await response.json();
@@ -130,7 +132,9 @@ test.describe('Parents API', () => {
       const parent = await createResp.json();
 
       // Incorrect PIN should return 401
-      const response = await apiContext.post(`/api/parents/${parent.id}/verify-pin?pin=9999`);
+      const response = await apiContext.post(`/api/parents/${parent.id}/verify-pin`, {
+        data: { pin: '9999' },
+      });
 
       expect(response.status()).toBe(401);
     });
@@ -145,7 +149,9 @@ test.describe('Parents API', () => {
       const parent = await createResp.json();
 
       // When no PIN is set, any PIN should be accepted
-      const response = await apiContext.post(`/api/parents/${parent.id}/verify-pin?pin=1234`);
+      const response = await apiContext.post(`/api/parents/${parent.id}/verify-pin`, {
+        data: { pin: '1234' },
+      });
 
       expect(response.ok()).toBeTruthy();
       const result = await response.json();
@@ -172,11 +178,15 @@ test.describe('Parents API', () => {
       });
 
       // Verify old PIN fails (returns 401)
-      const oldPinResp = await apiContext.post(`/api/parents/${parent.id}/verify-pin?pin=1234`);
+      const oldPinResp = await apiContext.post(`/api/parents/${parent.id}/verify-pin`, {
+        data: { pin: '1234' },
+      });
       expect(oldPinResp.status()).toBe(401);
 
       // Verify new PIN works
-      const newPinResp = await apiContext.post(`/api/parents/${parent.id}/verify-pin?pin=5678`);
+      const newPinResp = await apiContext.post(`/api/parents/${parent.id}/verify-pin`, {
+        data: { pin: '5678' },
+      });
       expect(newPinResp.ok()).toBeTruthy();
       const newResult = await newPinResp.json();
       expect(newResult.valid).toBe(true);

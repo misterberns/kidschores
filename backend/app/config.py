@@ -1,5 +1,4 @@
 """Application configuration settings."""
-import secrets
 from typing import Optional
 from pydantic_settings import BaseSettings
 
@@ -11,7 +10,7 @@ class Settings(BaseSettings):
     database_path: str = "./data/kidschores.db"
 
     # JWT Settings (home network - longer expiry for convenience)
-    jwt_secret_key: str = secrets.token_urlsafe(32)  # Auto-generate if not set
+    jwt_secret_key: str  # REQUIRED — app fails to start without it
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440  # 24 hours
     refresh_token_expire_days: int = 30

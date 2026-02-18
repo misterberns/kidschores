@@ -154,12 +154,22 @@ export interface TestFixtures {
  * Extended test with custom fixtures
  */
 export const test = base.extend<TestFixtures>({
-  // Create an API context for making requests
+  // Create an authenticated API context for making requests
   apiContext: async ({ playwright }, use) => {
+    // Get auth tokens first (register/login test user)
+    const tempCtx = await playwright.request.newContext({
+      baseURL: API_URL,
+      extraHTTPHeaders: { 'Content-Type': 'application/json' },
+      ignoreHTTPSErrors: true,
+    });
+    const tokens = await getAuthTokens(tempCtx);
+    await tempCtx.dispose();
+
     const context = await playwright.request.newContext({
       baseURL: API_URL,
       extraHTTPHeaders: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokens.accessToken}`,
       },
       ignoreHTTPSErrors: true, // Accept self-signed certificates
     });

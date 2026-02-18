@@ -1,17 +1,24 @@
 """Approvals API endpoints - pending chore/reward approvals."""
+import logging
 from typing import List
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+
+logger = logging.getLogger(__name__)
 
 from ..database import get_db
-from ..models import ChoreClaim, RewardClaim, Kid, Chore, Reward
-from ..schemas import PendingApprovalsResponse, ChoreClaimResponse, RewardClaimResponse
+from ..deps import require_auth
+from ..models import ChoreClaim, RewardClaim, Kid, Chore, Reward, User
+from ..schemas import (
+    PendingApprovalsResponse, ChoreClaimResponse, RewardClaimResponse,
+    PendingCountResponse, ApprovalHistoryItem,
+)
 
 router = APIRouter()
 
 
 @router.get("/pending", response_model=PendingApprovalsResponse)
-def get_pending_approvals(db: Session = Depends(get_db)):
+def get_pending_approvals(db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Get all pending approvals for parents to review."""
     # Get pending chore claims
     chore_claims = db.query(ChoreClaim).filter(
@@ -29,8 +36,8 @@ def get_pending_approvals(db: Session = Depends(get_db)):
     )
 
 
-@router.get("/pending/count")
-def get_pending_count(db: Session = Depends(get_db)):
+@router.get("/pending/count", response_model=PendingCountResponse)
+def get_pending_count(db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Get count of pending approvals."""
     chore_count = db.query(ChoreClaim).filter(
         ChoreClaim.status == "claimed"
@@ -47,17 +54,24 @@ def get_pending_count(db: Session = Depends(get_db)):
     }
 
 
-@router.get("/history")
+@router.get("/history", response_model=List[ApprovalHistoryItem])
 def get_approval_history(
     limit: int = 50,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_auth),
 ):
     """Get recent approval history."""
-    chore_history = db.query(ChoreClaim).filter(
+    chore_history = db.query(ChoreClaim).options(
+        joinedload(ChoreClaim.kid),
+        joinedload(ChoreClaim.chore),
+    ).filter(
         ChoreClaim.status.in_(["approved", "disapproved"])
     ).order_by(ChoreClaim.approved_at.desc()).limit(limit).all()
 
-    reward_history = db.query(RewardClaim).filter(
+    reward_history = db.query(RewardClaim).options(
+        joinedload(RewardClaim.kid),
+        joinedload(RewardClaim.reward),
+    ).filter(
         RewardClaim.status.in_(["approved", "disapproved"])
     ).order_by(RewardClaim.approved_at.desc()).limit(limit).all()
 
@@ -65,13 +79,11 @@ def get_approval_history(
     all_history = []
 
     for claim in chore_history:
-        kid = db.query(Kid).filter(Kid.id == claim.kid_id).first()
-        chore = db.query(Chore).filter(Chore.id == claim.chore_id).first()
         all_history.append({
             "type": "chore",
             "id": claim.id,
-            "kid_name": kid.name if kid else "Unknown",
-            "item_name": chore.name if chore else "Unknown",
+            "kid_name": claim.kid.name if claim.kid else "Unknown",
+            "item_name": claim.chore.name if claim.chore else "Unknown",
             "status": claim.status,
             "points": claim.points_awarded,
             "approved_by": claim.approved_by,
@@ -79,13 +91,11 @@ def get_approval_history(
         })
 
     for claim in reward_history:
-        kid = db.query(Kid).filter(Kid.id == claim.kid_id).first()
-        reward = db.query(Reward).filter(Reward.id == claim.reward_id).first()
         all_history.append({
             "type": "reward",
             "id": claim.id,
-            "kid_name": kid.name if kid else "Unknown",
-            "item_name": reward.name if reward else "Unknown",
+            "kid_name": claim.kid.name if claim.kid else "Unknown",
+            "item_name": claim.reward.name if claim.reward else "Unknown",
             "status": claim.status,
             "points": -claim.points_spent if claim.points_spent else 0,
             "approved_by": claim.approved_by,

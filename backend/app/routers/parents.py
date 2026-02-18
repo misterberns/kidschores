@@ -1,14 +1,20 @@
 """Parents API endpoints."""
+import logging
 import os
 import secrets
 import hashlib
+import time
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..deps import require_admin
+from ..deps import require_auth, require_admin
 from ..models import Parent, ParentInvitation, User
 from ..security import verify_pin, hash_pin
 from ..schemas import (
@@ -20,6 +26,15 @@ from ..schemas import (
 )
 from ..services.email_service import email_service
 
+# PIN verification rate limiting
+_pin_attempts: dict[str, list[float]] = defaultdict(list)
+PIN_RATE_LIMIT = 5  # max attempts
+PIN_RATE_WINDOW = 300  # 5 minutes
+
+
+class VerifyPinRequest(BaseModel):
+    pin: str
+
 router = APIRouter()
 
 # Base URL for invitation links (from settings)
@@ -29,7 +44,7 @@ APP_BASE_URL = settings.app_base_url
 
 @router.get("", response_model=List[ParentResponse])
 @router.get("/", response_model=List[ParentResponse], include_in_schema=False)
-def list_parents(db: Session = Depends(get_db)):
+def list_parents(db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """List all parents."""
     return db.query(Parent).all()
 
@@ -111,7 +126,7 @@ async def create_parent(
 
 
 @router.get("/{parent_id}", response_model=ParentResponse)
-def get_parent(parent_id: str, db: Session = Depends(get_db)):
+def get_parent(parent_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Get parent by ID."""
     parent = db.query(Parent).filter(Parent.id == parent_id).first()
     if not parent:
@@ -148,8 +163,16 @@ def delete_parent(parent_id: str, db: Session = Depends(get_db), _admin: User = 
 
 
 @router.post("/{parent_id}/verify-pin")
-def verify_pin_endpoint(parent_id: str, pin: str, db: Session = Depends(get_db)):
+def verify_pin_endpoint(parent_id: str, request: VerifyPinRequest, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Verify parent PIN for approval actions."""
+    # Rate limiting
+    now = time.time()
+    attempts = _pin_attempts[parent_id]
+    # Prune old attempts outside the window
+    _pin_attempts[parent_id] = [t for t in attempts if now - t < PIN_RATE_WINDOW]
+    if len(_pin_attempts[parent_id]) >= PIN_RATE_LIMIT:
+        raise HTTPException(status_code=429, detail="Too many PIN attempts. Try again later.")
+
     parent = db.query(Parent).filter(Parent.id == parent_id).first()
     if not parent:
         raise HTTPException(status_code=404, detail="Parent not found")
@@ -159,16 +182,18 @@ def verify_pin_endpoint(parent_id: str, pin: str, db: Session = Depends(get_db))
         return {"valid": True, "message": "No PIN set"}
 
     # Try hashed PIN first
-    if parent.pin_hash and verify_pin(pin, parent.pin_hash):
+    if parent.pin_hash and verify_pin(request.pin, parent.pin_hash):
         return {"valid": True, "message": "PIN verified"}
 
     # Legacy plaintext PIN — verify and migrate to bcrypt
-    if parent.pin and parent.pin == pin:
-        parent.pin_hash = hash_pin(pin)
+    if parent.pin and parent.pin == request.pin:
+        parent.pin_hash = hash_pin(request.pin)
         parent.pin = None  # Remove plaintext
         db.commit()
         return {"valid": True, "message": "PIN verified"}
 
+    # Record failed attempt
+    _pin_attempts[parent_id].append(now)
     raise HTTPException(status_code=401, detail="Invalid PIN")
 
 
@@ -178,6 +203,7 @@ async def send_parent_invitation(
     invitation: ParentInvitationCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
 ):
     """Send an email invitation to an existing parent."""
     # Verify parent exists

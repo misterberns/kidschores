@@ -1,15 +1,19 @@
 """Rewards API endpoints."""
+import logging
 from datetime import datetime, timezone
 from typing import List
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+logger = logging.getLogger(__name__)
+
 from ..database import get_db
-from ..deps import require_admin
+from ..deps import require_auth, require_admin
 from ..models import Reward, RewardClaim, Kid, User, Parent
 from ..schemas import (
     RewardCreate, RewardUpdate, RewardResponse,
-    RewardRedeemRequest, RewardApproveRequest, RewardClaimResponse
+    RewardRedeemRequest, RewardApproveRequest, RewardClaimResponse,
+    MessageResponse
 )
 from ..services.email_service import email_service
 
@@ -37,7 +41,7 @@ async def email_notify_parents_reward_redeemed(db: Session, kid_id: str, kid_nam
 
 @router.get("", response_model=List[RewardResponse])
 @router.get("/", response_model=List[RewardResponse], include_in_schema=False)
-def list_rewards(db: Session = Depends(get_db)):
+def list_rewards(db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """List all rewards."""
     return db.query(Reward).all()
 
@@ -54,7 +58,7 @@ def create_reward(reward: RewardCreate, db: Session = Depends(get_db), _admin: U
 
 
 @router.get("/{reward_id}", response_model=RewardResponse)
-def get_reward(reward_id: str, db: Session = Depends(get_db)):
+def get_reward(reward_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Get reward by ID."""
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     if not reward:
@@ -91,7 +95,7 @@ def delete_reward(reward_id: str, db: Session = Depends(get_db), _admin: User = 
 
 
 @router.post("/{reward_id}/redeem", response_model=RewardClaimResponse)
-def redeem_reward(reward_id: str, request: RewardRedeemRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def redeem_reward(reward_id: str, request: RewardRedeemRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Kid requests to redeem a reward."""
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     if not reward:
@@ -137,7 +141,7 @@ def redeem_reward(reward_id: str, request: RewardRedeemRequest, background_tasks
 
 
 @router.post("/{reward_id}/approve", response_model=RewardClaimResponse)
-def approve_reward(reward_id: str, request: RewardApproveRequest, db: Session = Depends(get_db)):
+def approve_reward(reward_id: str, request: RewardApproveRequest, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     """Parent approves a reward redemption."""
     # Find pending claim
     claim = db.query(RewardClaim).filter(
@@ -151,21 +155,27 @@ def approve_reward(reward_id: str, request: RewardApproveRequest, db: Session = 
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     kid = db.query(Kid).filter(Kid.id == claim.kid_id).first()
 
+    # Derive parent_name from JWT if not provided
+    parent_name = request.parent_name
+    if not parent_name:
+        parent = db.query(Parent).filter(Parent.user_id == admin.id).first()
+        parent_name = parent.name if parent else (admin.display_name or admin.email)
+
     # Deduct points
     kid.points -= reward.cost
 
     # Update claim
     claim.status = "approved"
     claim.approved_at = datetime.now(timezone.utc)
-    claim.approved_by = request.parent_name
+    claim.approved_by = parent_name
 
     db.commit()
     db.refresh(claim)
     return claim
 
 
-@router.post("/{reward_id}/disapprove")
-def disapprove_reward(reward_id: str, request: RewardApproveRequest, db: Session = Depends(get_db)):
+@router.post("/{reward_id}/disapprove", response_model=MessageResponse)
+def disapprove_reward(reward_id: str, request: RewardApproveRequest, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     """Parent disapproves a reward redemption."""
     claim = db.query(RewardClaim).filter(
         RewardClaim.reward_id == reward_id,
@@ -175,9 +185,15 @@ def disapprove_reward(reward_id: str, request: RewardApproveRequest, db: Session
     if not claim:
         raise HTTPException(status_code=404, detail="No pending redemption found")
 
+    # Derive parent_name from JWT if not provided
+    parent_name = request.parent_name
+    if not parent_name:
+        parent = db.query(Parent).filter(Parent.user_id == admin.id).first()
+        parent_name = parent.name if parent else (admin.display_name or admin.email)
+
     claim.status = "disapproved"
     claim.approved_at = datetime.now(timezone.utc)
-    claim.approved_by = request.parent_name
+    claim.approved_by = parent_name
 
     db.commit()
     return {"message": "Reward disapproved"}

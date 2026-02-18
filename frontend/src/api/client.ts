@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -8,6 +9,28 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Global error interceptor — auto-toast for network/server errors
+// 401 is NOT toasted here (AuthContext handles token refresh)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (!error.response) {
+      toast.error('Connection error', {
+        description: 'Could not reach the server. Check your connection.',
+      });
+    } else if (error.response.status === 403) {
+      toast.error('Access denied', {
+        description: "You don't have permission for this action.",
+      });
+    } else if (error.response.status >= 500) {
+      toast.error('Server error', {
+        description: 'Something went wrong. Please try again.',
+      });
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Types
 export interface Kid {
@@ -86,9 +109,31 @@ export interface Reward {
   requires_approval: boolean;
 }
 
+export interface PendingChoreClaim {
+  id: string;
+  kid_id: string;
+  chore_id: string;
+  status: string;
+  points_awarded: number | null;
+  claimed_at: string;
+  approved_at: string | null;
+  approved_by: string | null;
+}
+
+export interface PendingRewardClaim {
+  id: string;
+  kid_id: string;
+  reward_id: string;
+  status: string;
+  points_spent: number | null;
+  requested_at: string;
+  approved_at: string | null;
+  approved_by: string | null;
+}
+
 export interface PendingApprovals {
-  chores: any[];
-  rewards: any[];
+  chores: PendingChoreClaim[];
+  rewards: PendingRewardClaim[];
 }
 
 export interface Parent {

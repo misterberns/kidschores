@@ -44,7 +44,6 @@ export function usePushNotifications() {
 
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('[Push] Service worker registered:', registration);
       return registration;
     } catch (error) {
       console.error('[Push] Service worker registration failed:', error);

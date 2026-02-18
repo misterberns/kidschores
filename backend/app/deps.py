@@ -29,7 +29,7 @@ async def get_current_user(
 
     # Try JWT token first
     payload = decode_token(token)
-    if payload and payload.get("type") in ("access", "refresh"):
+    if payload and payload.get("type") == "access":
         user_id = payload.get("sub")
         if user_id:
             user = db.query(User).filter(User.id == user_id).first()

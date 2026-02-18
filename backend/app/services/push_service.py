@@ -1,8 +1,11 @@
 """Push notification service using pywebpush."""
+import logging
 import os
 import json
 from typing import Optional
 from pywebpush import webpush, WebPushException
+
+logger = logging.getLogger(__name__)
 
 # VAPID keys should be set as environment variables
 # Generate with: npx web-push generate-vapid-keys
@@ -51,7 +54,7 @@ class PushNotificationService:
             True if notification was sent successfully, False otherwise
         """
         if not self.private_key or not self.public_key:
-            print("VAPID keys not configured. Push notifications disabled.")
+            logger.warning("VAPID keys not configured, push notifications disabled")
             return False
 
         payload = {
@@ -73,7 +76,7 @@ class PushNotificationService:
             )
             return True
         except WebPushException as e:
-            print(f"Push notification failed: {e}")
+            logger.error(f"Push notification failed: {e}")
             # If subscription is expired or invalid, return False
             # The caller should delete the subscription
             if e.response and e.response.status_code in [404, 410]:

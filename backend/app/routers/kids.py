@@ -1,8 +1,11 @@
 """Kids API endpoints."""
+import logging
 from datetime import datetime, timedelta
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from ..database import get_db
 from ..deps import require_auth, require_admin
@@ -20,7 +23,7 @@ router = APIRouter()
 
 @router.get("", response_model=List[KidResponse])
 @router.get("/", response_model=List[KidResponse], include_in_schema=False)
-def list_kids(db: Session = Depends(get_db)):
+def list_kids(db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """List all kids."""
     return db.query(Kid).all()
 
@@ -37,7 +40,7 @@ def create_kid(kid: KidCreate, db: Session = Depends(get_db), _admin: User = Dep
 
 
 @router.get("/{kid_id}", response_model=KidResponse)
-def get_kid(kid_id: str, db: Session = Depends(get_db)):
+def get_kid(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Get kid by ID."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -74,7 +77,7 @@ def delete_kid(kid_id: str, db: Session = Depends(get_db), _admin: User = Depend
 
 
 @router.get("/{kid_id}/stats", response_model=KidStats)
-def get_kid_stats(kid_id: str, db: Session = Depends(get_db)):
+def get_kid_stats(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Get detailed kid statistics."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -130,7 +133,7 @@ def adjust_points(kid_id: str, request: PointsAdjustRequest, db: Session = Depen
 
 
 @router.get("/{kid_id}/streaks", response_model=StreakInfo)
-def get_kid_streaks(kid_id: str, db: Session = Depends(get_db)):
+def get_kid_streaks(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Get detailed streak information for a kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -172,7 +175,7 @@ def get_kid_streaks(kid_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/{kid_id}/streak-freeze", response_model=KidResponse)
-def use_streak_freeze(kid_id: str, db: Session = Depends(get_db)):
+def use_streak_freeze(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Use a streak freeze to protect the streak for one day."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -189,7 +192,7 @@ def use_streak_freeze(kid_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/{kid_id}/daily-progress", response_model=DailyProgressResponse)
-def get_daily_progress(kid_id: str, db: Session = Depends(get_db)):
+def get_daily_progress(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Get daily chore completion progress for a kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:

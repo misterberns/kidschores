@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-02-18
+
+### Security
+- **Authentication on all endpoints**: All 10 API routers now require JWT authentication (previously some were unprotected)
+- **JWT secret required at startup**: App refuses to start with default/empty JWT secret
+- **Parent name from JWT**: Approval endpoints derive parent_name from JWT token, not request body
+- **PIN rate limiting**: 5 attempts per minute per parent ID with lockout
+- **HTML escape in emails**: All user-supplied values escaped in email templates
+- **PIN removed from API responses**: ParentResponse schema no longer includes PIN hash
+- **Refresh token rejection**: Access-only endpoints reject refresh tokens
+
+### Added
+- **React Error Boundary**: Graceful crash recovery with retry UI
+- **Axios error interceptor**: Auto-toast for network errors, 403, and 500+ responses
+- **Global mutation error handling**: QueryClient default onError catches 400/422 validation errors across all 25+ mutations
+- **Background task error handling**: All background tasks (notifications, email) wrapped in try/except with structured logging
+- **Database indexes**: 9 indexes on frequently-queried columns (ChoreClaim, RewardClaim, AllowancePayout, PushSubscription)
+- **Response schemas**: MessageResponse, PendingCountResponse, ApprovalHistoryItem for previously untyped endpoints
+- **Typed approval claims**: PendingChoreClaim and PendingRewardClaim interfaces replace `any[]`
+
+### Changed
+- **Admin page decomposed**: Monolithic Admin.tsx (1,311 lines) split into 9 self-contained components in components/admin/
+- **N+1 query fix**: Approval history endpoint uses joinedload instead of per-row queries
+- **Structured logging**: All 10 routers have loggers; email_service and push_service replaced 9 print() calls with proper logging
+- **Dependencies pinned**: All 15 backend packages pinned to exact versions for reproducible builds
+
+### Fixed
+- **ErrorBoundary type import**: ReactNode import uses type-only syntax for verbatimModuleSyntax compatibility
+- **Theme token consistency**: CategoryBadge and ErrorBoundary use CSS custom properties instead of hardcoded gray classes
+
+### Removed
+- **Dead CSS**: Deleted unused App.css (Vite template boilerplate)
+- **Console.log**: Removed production console.log from push notification hook
+
+### Accessibility
+- **Delete modal**: Added role="dialog", aria-modal="true", aria-labelledby
+- **Google link input**: Added aria-label for screen readers
+
 ## [0.7.0] - 2026-02-16
 
 ### Changed

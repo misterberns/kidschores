@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from .config import settings
-from .database import init_db
+from .database import init_db, ensure_indexes
 from .routers import kids, chores, rewards, parents, approvals, auth, api_tokens, notifications, categories, allowance, history
 from .scheduler import start_scheduler, shutdown_scheduler
 
@@ -17,7 +17,10 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize database and scheduler on startup."""
+    if not settings.jwt_secret_key or settings.jwt_secret_key == "change-me-to-a-random-string":
+        raise RuntimeError("JWT_SECRET_KEY must be set to a secure random value")
     init_db()
+    ensure_indexes()
     logger.info("Database initialized")
 
     # Start background scheduler
@@ -34,7 +37,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KidsChores",
     description="Family chore management with points and rewards",
-    version="0.7.0",  # Keep in sync with VERSION file
+    version="0.7.5",  # Keep in sync with VERSION file
     lifespan=lifespan,
     redirect_slashes=False,  # Prevent 307 redirects for /api/kids vs /api/kids/
 )

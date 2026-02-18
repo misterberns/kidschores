@@ -1,6 +1,6 @@
 """Database connection and session management."""
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from .models import Base
@@ -31,6 +31,25 @@ def init_db():
     It won't modify existing tables or drop data.
     """
     Base.metadata.create_all(bind=engine)
+
+
+def ensure_indexes():
+    """Create indexes on existing tables (create_all only handles new tables)."""
+    indexes = [
+        "CREATE INDEX IF NOT EXISTS ix_chore_claims_status ON chore_claims (status)",
+        "CREATE INDEX IF NOT EXISTS ix_chore_claims_kid_id ON chore_claims (kid_id)",
+        "CREATE INDEX IF NOT EXISTS ix_chore_claims_chore_id ON chore_claims (chore_id)",
+        "CREATE INDEX IF NOT EXISTS ix_chore_claims_claimed_at ON chore_claims (claimed_at)",
+        "CREATE INDEX IF NOT EXISTS ix_reward_claims_status ON reward_claims (status)",
+        "CREATE INDEX IF NOT EXISTS ix_reward_claims_kid_id ON reward_claims (kid_id)",
+        "CREATE INDEX IF NOT EXISTS ix_allowance_payouts_kid_id ON allowance_payouts (kid_id)",
+        "CREATE INDEX IF NOT EXISTS ix_allowance_payouts_status ON allowance_payouts (status)",
+        "CREATE INDEX IF NOT EXISTS ix_push_subscriptions_kid_id ON push_subscriptions (kid_id)",
+    ]
+    with engine.connect() as conn:
+        for sql in indexes:
+            conn.execute(text(sql))
+        conn.commit()
 
 
 def get_db():

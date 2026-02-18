@@ -1,11 +1,15 @@
 """Chore category API endpoints."""
+import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
+logger = logging.getLogger(__name__)
+
 from ..database import get_db
-from ..models import ChoreCategory, Chore
+from ..deps import require_auth, require_admin
+from ..models import ChoreCategory, Chore, User
 
 router = APIRouter()
 
@@ -55,7 +59,7 @@ PREDEFINED_CATEGORIES = [
 
 @router.get("", response_model=List[CategoryResponse])
 @router.get("/", response_model=List[CategoryResponse], include_in_schema=False)
-def list_categories(db: Session = Depends(get_db)):
+def list_categories(db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """List all categories with chore counts."""
     categories = db.query(ChoreCategory).order_by(ChoreCategory.sort_order).all()
 
@@ -77,7 +81,7 @@ def list_categories(db: Session = Depends(get_db)):
 
 @router.post("", response_model=CategoryResponse)
 @router.post("/", response_model=CategoryResponse, include_in_schema=False)
-def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
+def create_category(category: CategoryCreate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Create a new category."""
     # If sort_order not provided, put at end
     if category.sort_order is None:
@@ -109,13 +113,13 @@ def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/predefined")
-def get_predefined_categories():
+def get_predefined_categories(_user: User = Depends(require_auth)):
     """Get list of predefined category templates."""
     return PREDEFINED_CATEGORIES
 
 
 @router.post("/seed-defaults")
-def seed_default_categories(db: Session = Depends(get_db)):
+def seed_default_categories(db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Seed the database with predefined categories."""
     created = []
     for i, cat_data in enumerate(PREDEFINED_CATEGORIES):
@@ -138,7 +142,7 @@ def seed_default_categories(db: Session = Depends(get_db)):
 
 
 @router.get("/{category_id}", response_model=CategoryResponse)
-def get_category(category_id: str, db: Session = Depends(get_db)):
+def get_category(category_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
     """Get a category by ID."""
     category = db.query(ChoreCategory).filter(ChoreCategory.id == category_id).first()
     if not category:
@@ -160,7 +164,8 @@ def get_category(category_id: str, db: Session = Depends(get_db)):
 def update_category(
     category_id: str,
     category_update: CategoryUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
 ):
     """Update a category."""
     category = db.query(ChoreCategory).filter(ChoreCategory.id == category_id).first()
@@ -187,7 +192,7 @@ def update_category(
 
 
 @router.delete("/{category_id}")
-def delete_category(category_id: str, db: Session = Depends(get_db)):
+def delete_category(category_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Delete a category. Chores will have their category set to null."""
     category = db.query(ChoreCategory).filter(ChoreCategory.id == category_id).first()
     if not category:
@@ -208,7 +213,8 @@ def delete_category(category_id: str, db: Session = Depends(get_db)):
 def reorder_category(
     category_id: str,
     new_order: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
 ):
     """Reorder a category."""
     category = db.query(ChoreCategory).filter(ChoreCategory.id == category_id).first()
