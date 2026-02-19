@@ -5,9 +5,9 @@ import * as path from 'path';
 // Load environment variables
 dotenv.config();
 
-// Default URLs - use environment variables or localhost defaults
-const API_URL = process.env.API_URL || 'http://localhost:3103';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3103';
+// Default URLs - test instance on NAS (override via .env or environment variables)
+const API_URL = process.env.API_URL || 'http://192.168.87.35:3104';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://192.168.87.35:3104';
 
 export default defineConfig({
   testDir: '.',

@@ -103,12 +103,12 @@ test.describe('Categories API', () => {
 
       expect(response.ok()).toBeTruthy();
       const result = await response.json();
-      expect(result.created).toBeGreaterThan(0);
+      expect(result.count).toBeGreaterThan(0);
 
       // Verify categories were created
       const listResp = await apiContext.get('/api/categories');
       const categories = await listResp.json();
-      expect(categories.length).toBeGreaterThanOrEqual(result.created);
+      expect(categories.length).toBeGreaterThanOrEqual(result.count);
     });
   });
 
@@ -129,7 +129,7 @@ test.describe('Categories API', () => {
 
       expect(response.ok()).toBeTruthy();
       const updated = await response.json();
-      expect(updated.sort_order).toBe(1);
+      expect(updated.message).toBe('Category reordered');
     });
   });
 

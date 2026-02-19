@@ -1,7 +1,7 @@
 import { test as base, APIRequestContext, Page } from '@playwright/test';
 
-// API URL - use environment variable or localhost default
-const API_URL = process.env.API_URL || 'http://localhost:3103';
+// API URL - defaults to test instance on NAS (NOT production port 3103)
+const API_URL = process.env.API_URL || 'http://192.168.87.35:3104';
 
 // Test user credentials
 const TEST_USER = {
@@ -10,23 +10,22 @@ const TEST_USER = {
   displayName: 'E2E Test Parent',
 };
 
-/**
- * DANGER: This function previously deleted ALL entities from ALL users.
- * It caused CHANGE-048 (production data loss) when tests ran against a shared database.
- *
- * REMOVED: Tests must now track and clean up only their own created entities.
- * Use the trackCreated/cleanupTracked pattern from security.api.spec.ts.
- */
+// Cache auth tokens across tests to avoid rate limiting (5 req / 5 min)
+let _cachedTokens: { accessToken: string; refreshToken: string } | null = null;
 
 /**
- * Get or create test user and return auth tokens
+ * Get or create test user and return auth tokens.
+ * Caches tokens to avoid hitting the login rate limiter.
+ * Tries login first, falls back to registration if user doesn't exist.
  */
 async function getAuthTokens(apiContext: APIRequestContext): Promise<{
   accessToken: string;
   refreshToken: string;
 }> {
+  if (_cachedTokens) return _cachedTokens;
+
   // Try to login first
-  let loginResp = await apiContext.post('/api/auth/login', {
+  const loginResp = await apiContext.post('/api/auth/login', {
     data: {
       email: TEST_USER.email,
       password: TEST_USER.password,
@@ -35,10 +34,11 @@ async function getAuthTokens(apiContext: APIRequestContext): Promise<{
 
   if (loginResp.ok()) {
     const data = await loginResp.json();
-    return {
+    _cachedTokens = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
     };
+    return _cachedTokens;
   }
 
   // If login fails (user doesn't exist), register
@@ -52,14 +52,20 @@ async function getAuthTokens(apiContext: APIRequestContext): Promise<{
 
   if (registerResp.ok()) {
     const data = await registerResp.json();
-    return {
+    _cachedTokens = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
     };
+    return _cachedTokens;
   }
 
-  // If registration also fails, throw
-  throw new Error(`Failed to authenticate test user: ${await registerResp.text()}`);
+  // Both failed - include both error details for debugging
+  const registerError = await registerResp.text();
+  throw new Error(
+    `Failed to authenticate test user.\n` +
+    `  Login status: ${loginResp.status()} ${loginResp.statusText()}\n` +
+    `  Register status: ${registerResp.status()} ${registerError}`
+  );
 }
 
 /**
@@ -73,7 +79,6 @@ async function setAuthInBrowser(
   await page.goto('/login');
 
   // Set tokens in localStorage (matching the AuthContext storage pattern)
-  // AuthContext uses 'kc_access_token' and 'kc_refresh_token' keys
   await page.evaluate((tokens) => {
     localStorage.setItem('kc_access_token', tokens.accessToken);
     localStorage.setItem('kc_refresh_token', tokens.refreshToken);
@@ -105,7 +110,7 @@ export interface TestFixtures {
   apiContext: APIRequestContext;
   /** Authenticated API context with auth headers */
   authApiContext: APIRequestContext;
-  /** Reset database to clean state before test */
+  /** Reset database to clean state before test (safe: targets test instance only) */
   resetDatabase: () => Promise<void>;
   /** Auth tokens for authenticated requests */
   authTokens: { accessToken: string; refreshToken: string };
@@ -134,21 +139,22 @@ export const test = base.extend<TestFixtures>({
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${tokens.accessToken}`,
       },
-      ignoreHTTPSErrors: true, // Accept self-signed certificates
+      ignoreHTTPSErrors: true,
     });
     await use(context);
     await context.dispose();
   },
 
-  // Database reset fixture — DEPRECATED: do NOT use blanket reset against shared databases.
-  // Tests should track and clean up only their own entities.
-  // Kept for backward compatibility but now a no-op with a warning.
-  resetDatabase: async ({ apiContext: _apiContext }, use) => {
+  // Database reset fixture — calls POST /api/test/reset on test instance.
+  // Safe because test instance has ENVIRONMENT=test and its own isolated database.
+  // NEVER point this at production (port 3103) — the endpoint is blocked there.
+  resetDatabase: async ({ apiContext }, use) => {
     const reset = async () => {
-      console.warn(
-        'WARNING: resetDatabase is deprecated after CHANGE-048 (production data loss). ' +
-        'Tests must track and clean up only their own entities.',
-      );
+      const resp = await apiContext.post('/api/test/reset');
+      if (!resp.ok()) {
+        const text = await resp.text();
+        throw new Error(`resetDatabase failed: ${resp.status()} ${text}`);
+      }
     };
     await use(reset);
   },

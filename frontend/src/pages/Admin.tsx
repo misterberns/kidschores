@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, User, ClipboardList, Gift, Users, Settings, HelpCircle } from 'lucide-react';
+import { CheckCircle2, User, ClipboardList, Gift, Users, Settings, HelpCircle, Wand2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { approvalsApi } from '../api/client';
 import { ApprovalsList, KidsSection, ChoresSection, RewardsSection, ParentsSection } from '../components/admin';
@@ -31,13 +31,22 @@ export function Admin() {
           <Settings size={24} className="text-primary-500" />
           Parent Dashboard
         </h2>
-        <Link
-          to="/help"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
-        >
-          <HelpCircle size={18} />
-          <span className="hidden sm:inline">Help</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/onboarding"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
+          >
+            <Wand2 size={18} />
+            <span className="hidden sm:inline">Setup Wizard</span>
+          </Link>
+          <Link
+            to="/help"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
+          >
+            <HelpCircle size={18} />
+            <span className="hidden sm:inline">Help</span>
+          </Link>
+        </div>
       </div>
 
       {/* Tabs */}

@@ -1,5 +1,6 @@
 """KidsChores Standalone Web App - FastAPI Backend."""
 import logging
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -37,7 +38,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KidsChores",
     description="Family chore management with points and rewards",
-    version="0.7.5",  # Keep in sync with VERSION file
+    version="0.7.6",  # Keep in sync with VERSION file
     lifespan=lifespan,
     redirect_slashes=False,  # Prevent 307 redirects for /api/kids vs /api/kids/
 )
@@ -64,6 +65,11 @@ app.include_router(notifications.router, prefix="/api", tags=["Notifications"])
 app.include_router(categories.router, prefix="/api/categories", tags=["Categories"])
 app.include_router(allowance.router, prefix="/api/allowance", tags=["Allowance"])
 app.include_router(history.router, prefix="/api/history", tags=["History"])
+
+# Test endpoints - only in non-production environments
+if os.environ.get("ENVIRONMENT") != "production":
+    from .routers import test as test_router
+    app.include_router(test_router.router, prefix="/api/test", tags=["Testing"])
 
 
 @app.get("/")

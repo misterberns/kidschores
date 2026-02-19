@@ -102,6 +102,7 @@ class ChoreBase(BaseModel):
     due_date: Optional[datetime] = None
     allow_multiple_claims_per_day: bool = False
     partial_allowed: bool = False
+    category_id: Optional[str] = None
 
 
 class ChoreCreate(ChoreBase):
@@ -122,6 +123,7 @@ class ChoreUpdate(BaseModel):
     due_date: Optional[datetime] = None
     allow_multiple_claims_per_day: Optional[bool] = None
     partial_allowed: Optional[bool] = None
+    category_id: Optional[str] = None
 
 
 class ChoreResponse(ChoreBase):

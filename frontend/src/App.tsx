@@ -19,6 +19,7 @@ import NotificationSettings from './pages/NotificationSettings';
 import { Allowance } from './pages/Allowance';
 import { History } from './pages/History';
 import Help from './pages/Help';
+import { Onboarding } from './pages/Onboarding';
 import { AuthProvider, useAuth, ProtectedRoute } from './auth';
 import { ThemeProvider, useTheme, ThemeToggle } from './theme';
 import { useReducedMotion } from './hooks/useReducedMotion';
@@ -140,6 +141,7 @@ function AnimatedRoutes() {
           <Route path="/allowance" element={<Allowance />} />
           <Route path="/history" element={<History />} />
           {role === 'parent' && <Route path="/admin" element={<Admin />} />}
+          {role === 'parent' && <Route path="/onboarding" element={<Onboarding />} />}
           <Route path="/notifications" element={<NotificationSettings />} />
           <Route path="/help" element={<Help />} />
         </Routes>

@@ -1,5 +1,5 @@
 # Environment files
-.env
+/.env
 frontend/.env.production
 backend/.env
 
@@ -10,8 +10,9 @@ node_modules/
 frontend/dist/
 frontend/dist.tar.gz
 
-# Data
-data/
+# Data (SQLite databases, not source data files)
+/data/
+backend/data/
 *.db
 
 # IDE

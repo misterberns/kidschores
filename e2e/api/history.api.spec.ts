@@ -2,6 +2,10 @@ import { test, expect } from '../fixtures/test-database';
 import { TestData } from '../fixtures/test-data';
 
 test.describe('History API', () => {
+  // History tests run many sequential API calls (create chores, claim, approve)
+  // NAS latency means these need longer than the default 30s timeout
+  test.describe.configure({ timeout: 120_000 });
+
   let kidId: string;
   let choreId: string;
 

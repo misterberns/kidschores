@@ -1,6 +1,6 @@
 # KidsChores
 
-[![Version](https://img.shields.io/badge/Version-v0.7.5-green?style=flat-square)](https://github.com/misterberns/kidschores/releases)
+[![Version](https://img.shields.io/badge/Version-v0.7.6-green?style=flat-square)](https://github.com/misterberns/kidschores/releases)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)
 ![License](https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square)
 
@@ -280,4 +280,4 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ## Version
 
-Current version: **0.7.5** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.7.6** (see [CHANGELOG.md](CHANGELOG.md) for history)

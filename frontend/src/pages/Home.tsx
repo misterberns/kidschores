@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { Navigate } from 'react-router-dom';
 import { Star, Award, User, AlertCircle } from 'lucide-react';
 import { kidsApi } from '../api/client';
+import { useAuth } from '../auth';
 import type { Kid } from '../api/client';
 import { useTheme } from '../theme';
 import type { SeasonalTheme } from '../theme/seasonal';
@@ -159,6 +161,7 @@ export function Home() {
   // Must call all hooks before any conditional returns (React Rules of Hooks)
   const prefersReducedMotion = useReducedMotion();
   const { seasonal } = useTheme();
+  const { role } = useAuth();
 
   if (isLoading) {
     return (
@@ -182,6 +185,10 @@ export function Home() {
   }
 
   if (!kids || kids.length === 0) {
+    // Redirect parents to onboarding wizard; kids see a simple message
+    if (role === 'parent') {
+      return <Navigate to="/onboarding" replace />;
+    }
     return (
       <div className="text-center py-12">
         <div className="mx-auto mb-4">
@@ -189,7 +196,7 @@ export function Home() {
         </div>
         <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary">No kids yet!</h2>
         <p className="mt-2 text-text-secondary">
-          Add kids from the Parent section to get started.
+          Ask a parent to set things up.
         </p>
       </div>
     );

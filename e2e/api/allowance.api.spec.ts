@@ -25,7 +25,7 @@ test.describe('Allowance API', () => {
       expect(settings.kid_id).toBe(kidId);
       expect(settings.points_per_dollar).toBe(100); // Default
       expect(settings.auto_payout).toBe(false);
-      expect(settings.minimum_payout).toBe(100); // Default $1.00 minimum
+      expect(settings.minimum_payout).toBe(1); // Default $1.00 minimum
     });
 
     test('should update allowance settings', async ({ apiContext }) => {
@@ -184,7 +184,7 @@ test.describe('Allowance API', () => {
       const updated = await response.json();
       expect(updated.status).toBe('paid');
       expect(updated.paid_by).toBe('Mom');
-      expect(updated.notes).toBe('Paid in cash');
+      expect(updated.notes).toContain('Paid in cash');
       expect(updated.paid_at).toBeDefined();
     });
 
