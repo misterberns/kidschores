@@ -644,7 +644,7 @@ export function Onboarding() {
   };
 
   const skipSetup = () => {
-    navigate('/', { replace: true });
+    goNext();
   };
 
   // Can proceed from current step?

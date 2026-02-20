@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, UserPlus, Pencil, Users, Lock, Unlock, Bell } from 'lucide-react';
 import { kidsApi, parentsApi } from '../../api/client';
@@ -226,6 +226,7 @@ export function ParentsSection() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingParent, setEditingParent] = useState<Parent | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const editFormRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { data: kids = [] } = useQuery({
@@ -246,52 +247,62 @@ export function ParentsSection() {
     },
   });
 
+  useEffect(() => {
+    if (editingParent && editFormRef.current) {
+      editFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [editingParent]);
+
   return (
     <div className="space-y-3">
-      {editingParent ? (
-        <EditParentForm parent={editingParent} kids={kids} onClose={() => setEditingParent(null)} />
-      ) : showAddForm ? (
+      {showAddForm ? (
         <AddParentForm kids={kids} onClose={() => setShowAddForm(false)} />
       ) : (
         <button
           data-testid="add-parent-btn"
-          onClick={() => setShowAddForm(true)}
+          onClick={() => { setShowAddForm(true); setEditingParent(null); }}
           className="w-full border-2 border-dashed border-status-approved-border text-status-approved-text py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-status-approved-bg transition-colors"
         >
           <Plus size={20} /> Add Parent
         </button>
       )}
       {parents.map((parent) => (
-        <EntityCard
-          key={parent.id}
-          testId={`entity-parent-${parent.id}`}
-          onEdit={() => setEditingParent(parent)}
-          onDelete={() => setDeleteConfirm({ id: parent.id, name: parent.name })}
-          icon={<div className="w-10 h-10 bg-status-approved-bg rounded-full flex items-center justify-center"><Users size={20} className="text-status-approved-text" /></div>}
-        >
-          <p className="font-bold text-text-primary" data-testid={`parent-name-${parent.id}`}>{parent.name}</p>
-          <p className="text-sm text-text-muted" data-testid={`parent-kids-${parent.id}`}>
-            {parent.associated_kids.length > 0
-              ? `Kids: ${parent.associated_kids.map(kidId => kids.find(k => k.id === kidId)?.name || kidId).join(', ')}`
-              : 'No kids assigned'}
-          </p>
-          <div className="flex items-center gap-2 mt-1">
-            {parent.pin ? (
-              <span className="flex items-center gap-1 text-xs text-text-muted">
-                <Lock size={12} /> PIN set
-              </span>
-            ) : (
-              <span className="flex items-center gap-1 text-xs text-text-muted">
-                <Unlock size={12} /> No PIN
-              </span>
-            )}
-            {parent.enable_notifications && (
-              <span className="flex items-center gap-1 text-xs text-text-muted">
-                <Bell size={12} /> Notifications on
-              </span>
-            )}
+        editingParent?.id === parent.id ? (
+          <div key={parent.id} ref={editFormRef}>
+            <EditParentForm parent={parent} kids={kids} onClose={() => setEditingParent(null)} />
           </div>
-        </EntityCard>
+        ) : (
+          <EntityCard
+            key={parent.id}
+            testId={`entity-parent-${parent.id}`}
+            onEdit={() => { setEditingParent(parent); setShowAddForm(false); }}
+            onDelete={() => setDeleteConfirm({ id: parent.id, name: parent.name })}
+            icon={<div className="w-10 h-10 bg-status-approved-bg rounded-full flex items-center justify-center"><Users size={20} className="text-status-approved-text" /></div>}
+          >
+            <p className="font-bold text-text-primary" data-testid={`parent-name-${parent.id}`}>{parent.name}</p>
+            <p className="text-sm text-text-muted" data-testid={`parent-kids-${parent.id}`}>
+              {parent.associated_kids.length > 0
+                ? `Kids: ${parent.associated_kids.map(kidId => kids.find(k => k.id === kidId)?.name || kidId).join(', ')}`
+                : 'No kids assigned'}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              {parent.pin ? (
+                <span className="flex items-center gap-1 text-xs text-text-muted">
+                  <Lock size={12} /> PIN set
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-xs text-text-muted">
+                  <Unlock size={12} /> No PIN
+                </span>
+              )}
+              {parent.enable_notifications && (
+                <span className="flex items-center gap-1 text-xs text-text-muted">
+                  <Bell size={12} /> Notifications on
+                </span>
+              )}
+            </div>
+          </EntityCard>
+        )
       ))}
 
       {deleteConfirm && (

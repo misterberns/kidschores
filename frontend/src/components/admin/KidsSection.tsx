@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, UserPlus, Pencil, Check, X, User, Mail, Link2, Unlink } from 'lucide-react';
 import { kidsApi } from '../../api/client';
@@ -179,6 +179,7 @@ export function KidsSection() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingKid, setEditingKid] = useState<Kid | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const editFormRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { data: kids = [] } = useQuery({
@@ -194,41 +195,51 @@ export function KidsSection() {
     },
   });
 
+  useEffect(() => {
+    if (editingKid && editFormRef.current) {
+      editFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [editingKid]);
+
   return (
     <div className="space-y-3">
-      {editingKid ? (
-        <EditKidForm kid={editingKid} onClose={() => setEditingKid(null)} />
-      ) : showAddForm ? (
+      {showAddForm ? (
         <AddKidForm onClose={() => setShowAddForm(false)} />
       ) : (
         <button
           data-testid="add-kid-btn"
-          onClick={() => setShowAddForm(true)}
+          onClick={() => { setShowAddForm(true); setEditingKid(null); }}
           className="w-full border-2 border-dashed border-primary-500 text-primary-500 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-50 transition-colors"
         >
           <Plus size={20} /> Add Kid
         </button>
       )}
       {kids.map((kid) => (
-        <EntityCard
-          key={kid.id}
-          testId={`entity-kid-${kid.id}`}
-          onEdit={() => setEditingKid(kid)}
-          onDelete={() => setDeleteConfirm({ id: kid.id, name: kid.name })}
-          icon={<div className="w-10 h-10 bg-bg-accent rounded-full flex items-center justify-center"><User size={20} className="text-text-muted" /></div>}
-        >
-          <p className="font-bold text-text-primary" data-testid={`kid-name-${kid.id}`}>{kid.name}</p>
-          <p className="text-sm text-text-muted" data-testid={`kid-points-${kid.id}`}>{Math.floor(kid.points)} points</p>
-          {kid.google_email ? (
-            <div className="flex items-center gap-1 mt-1">
-              <Mail size={12} className="text-primary-500" />
-              <span className="text-xs text-text-muted">{kid.google_email}</span>
-              <GoogleUnlinkButton kidId={kid.id} />
-            </div>
-          ) : (
-            <GoogleLinkButton kidId={kid.id} kidName={kid.name} />
-          )}
-        </EntityCard>
+        editingKid?.id === kid.id ? (
+          <div key={kid.id} ref={editFormRef}>
+            <EditKidForm kid={kid} onClose={() => setEditingKid(null)} />
+          </div>
+        ) : (
+          <EntityCard
+            key={kid.id}
+            testId={`entity-kid-${kid.id}`}
+            onEdit={() => { setEditingKid(kid); setShowAddForm(false); }}
+            onDelete={() => setDeleteConfirm({ id: kid.id, name: kid.name })}
+            icon={<div className="w-10 h-10 bg-bg-accent rounded-full flex items-center justify-center"><User size={20} className="text-text-muted" /></div>}
+          >
+            <p className="font-bold text-text-primary" data-testid={`kid-name-${kid.id}`}>{kid.name}</p>
+            <p className="text-sm text-text-muted" data-testid={`kid-points-${kid.id}`}>{Math.floor(kid.points)} points</p>
+            {kid.google_email ? (
+              <div className="flex items-center gap-1 mt-1">
+                <Mail size={12} className="text-primary-500" />
+                <span className="text-xs text-text-muted">{kid.google_email}</span>
+                <GoogleUnlinkButton kidId={kid.id} />
+              </div>
+            ) : (
+              <GoogleLinkButton kidId={kid.id} kidName={kid.name} />
+            )}
+          </EntityCard>
+        )
       ))}
 
       {deleteConfirm && (

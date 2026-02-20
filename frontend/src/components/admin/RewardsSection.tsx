@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil } from 'lucide-react';
 import { rewardsApi } from '../../api/client';
@@ -106,6 +106,7 @@ export function RewardsSection() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingReward, setEditingReward] = useState<Reward | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const editFormRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { data: rewards = [] } = useQuery({
@@ -121,32 +122,42 @@ export function RewardsSection() {
     },
   });
 
+  useEffect(() => {
+    if (editingReward && editFormRef.current) {
+      editFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [editingReward]);
+
   return (
     <div className="space-y-3">
-      {editingReward ? (
-        <EditRewardForm reward={editingReward} onClose={() => setEditingReward(null)} />
-      ) : showAddForm ? (
+      {showAddForm ? (
         <AddRewardForm onClose={() => setShowAddForm(false)} />
       ) : (
         <button
           data-testid="add-reward-btn"
-          onClick={() => setShowAddForm(true)}
+          onClick={() => { setShowAddForm(true); setEditingReward(null); }}
           className="w-full border-2 border-dashed border-accent-500 text-accent-500 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-accent-500/10 transition-colors"
         >
           <Plus size={20} /> Add Reward
         </button>
       )}
       {rewards.map((reward) => (
-        <EntityCard
-          key={reward.id}
-          testId={`entity-reward-${reward.id}`}
-          onEdit={() => setEditingReward(reward)}
-          onDelete={() => setDeleteConfirm({ id: reward.id, name: reward.name })}
-          icon={<div className="w-10 h-10 bg-accent-500/20 rounded-md border-2 border-[var(--border-color)] flex items-center justify-center"><DynamicIcon icon={reward.icon || 'mdi:gift'} size={20} /></div>}
-        >
-          <p className="font-bold text-text-primary" data-testid={`reward-name-admin-${reward.id}`}>{reward.name}</p>
-          <p className="text-sm text-text-muted" data-testid={`reward-cost-admin-${reward.id}`}>{reward.cost} points</p>
-        </EntityCard>
+        editingReward?.id === reward.id ? (
+          <div key={reward.id} ref={editFormRef}>
+            <EditRewardForm reward={reward} onClose={() => setEditingReward(null)} />
+          </div>
+        ) : (
+          <EntityCard
+            key={reward.id}
+            testId={`entity-reward-${reward.id}`}
+            onEdit={() => { setEditingReward(reward); setShowAddForm(false); }}
+            onDelete={() => setDeleteConfirm({ id: reward.id, name: reward.name })}
+            icon={<div className="w-10 h-10 bg-accent-500/20 rounded-md border-2 border-[var(--border-color)] flex items-center justify-center"><DynamicIcon icon={reward.icon || 'mdi:gift'} size={20} /></div>}
+          >
+            <p className="font-bold text-text-primary" data-testid={`reward-name-admin-${reward.id}`}>{reward.name}</p>
+            <p className="text-sm text-text-muted" data-testid={`reward-cost-admin-${reward.id}`}>{reward.cost} points</p>
+          </EntityCard>
+        )
       ))}
 
       {deleteConfirm && (
