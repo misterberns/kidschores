@@ -643,6 +643,10 @@ export function Onboarding() {
     navigate('/', { replace: true });
   };
 
+  const skipSetup = () => {
+    navigate('/', { replace: true });
+  };
+
   // Can proceed from current step?
   const canProceed = () => {
     if (step === 1) return kidNames.some((n) => n.trim());
@@ -733,6 +737,16 @@ export function Onboarding() {
           {step < 5 && <ChevronRight size={18} />}
         </button>
       </div>
+      {step < 5 && (
+        <div className="mt-3 text-center">
+          <button
+            onClick={skipSetup}
+            className="text-sm text-text-muted hover:text-text-secondary transition-colors py-2 px-4"
+          >
+            Skip for now
+          </button>
+        </div>
+      )}
     </div>
   );
 }

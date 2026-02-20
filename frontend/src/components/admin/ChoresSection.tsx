@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil } from 'lucide-react';
-import { kidsApi, choresApi } from '../../api/client';
-import type { Kid, Chore } from '../../api/client';
+import { kidsApi, choresApi, parentsApi } from '../../api/client';
+import type { Kid, Chore, Parent } from '../../api/client';
 import { DynamicIcon } from '../DynamicIcon';
 import { FormInput, FormSelect } from './FormElements';
 import { EntityCard } from './EntityCard';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 
-function AddChoreForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) {
+function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent[]; onClose: () => void }) {
   const [name, setName] = useState('');
   const [points, setPoints] = useState(10);
   const [selectedKids, setSelectedKids] = useState<string[]>([]);
@@ -70,6 +70,34 @@ function AddChoreForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) {
             </button>
           ))}
         </div>
+        {parents.length > 0 && (
+          <>
+            <p className="text-xs text-text-muted mt-2 mb-1">Adults:</p>
+            <div className="flex gap-2 flex-wrap">
+              {parents.map((parent) => (
+                <button
+                  key={parent.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedKids(prev =>
+                      prev.includes(parent.id)
+                        ? prev.filter(id => id !== parent.id)
+                        : [...prev, parent.id]
+                    );
+                  }}
+                  className="px-3 py-1.5 rounded-full border-2 font-medium transition-colors"
+                  style={{
+                    backgroundColor: selectedKids.includes(parent.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
+                    borderColor: selectedKids.includes(parent.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
+                    color: selectedKids.includes(parent.id) ? 'var(--text-inverse)' : 'var(--text-secondary)'
+                  }}
+                >
+                  {parent.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
       <FormSelect
         label="Recurring"
@@ -137,7 +165,7 @@ function AddChoreForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) {
   );
 }
 
-function EditChoreForm({ chore, kids, onClose }: { chore: Chore; kids: Kid[]; onClose: () => void }) {
+function EditChoreForm({ chore, kids, parents, onClose }: { chore: Chore; kids: Kid[]; parents: Parent[]; onClose: () => void }) {
   const [name, setName] = useState(chore.name);
   const [points, setPoints] = useState(chore.default_points);
   const [selectedKids, setSelectedKids] = useState<string[]>(chore.assigned_kids || []);
@@ -199,6 +227,34 @@ function EditChoreForm({ chore, kids, onClose }: { chore: Chore; kids: Kid[]; on
             </button>
           ))}
         </div>
+        {parents.length > 0 && (
+          <>
+            <p className="text-xs text-text-muted mt-2 mb-1">Adults:</p>
+            <div className="flex gap-2 flex-wrap">
+              {parents.map((parent) => (
+                <button
+                  key={parent.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedKids(prev =>
+                      prev.includes(parent.id)
+                        ? prev.filter(id => id !== parent.id)
+                        : [...prev, parent.id]
+                    );
+                  }}
+                  className="px-3 py-1.5 rounded-full border-2 font-medium transition-colors"
+                  style={{
+                    backgroundColor: selectedKids.includes(parent.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
+                    borderColor: selectedKids.includes(parent.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
+                    color: selectedKids.includes(parent.id) ? 'var(--text-inverse)' : 'var(--text-secondary)'
+                  }}
+                >
+                  {parent.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
       <FormSelect
         label="Recurring"
@@ -270,6 +326,7 @@ export function ChoresSection() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingChore, setEditingChore] = useState<Chore | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const editFormRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { data: kids = [] } = useQuery({
@@ -282,6 +339,11 @@ export function ChoresSection() {
     queryFn: () => choresApi.list().then(res => res.data),
   });
 
+  const { data: parents = [] } = useQuery({
+    queryKey: ['parents'],
+    queryFn: () => parentsApi.list().then(res => res.data),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => choresApi.delete(id),
     onSuccess: () => {
@@ -290,42 +352,56 @@ export function ChoresSection() {
     },
   });
 
+  useEffect(() => {
+    if (editingChore && editFormRef.current) {
+      editFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [editingChore]);
+
   return (
     <div className="space-y-3">
-      {editingChore ? (
-        <EditChoreForm chore={editingChore} kids={kids} onClose={() => setEditingChore(null)} />
-      ) : showAddForm ? (
-        <AddChoreForm kids={kids} onClose={() => setShowAddForm(false)} />
+      {showAddForm ? (
+        <AddChoreForm kids={kids} parents={parents} onClose={() => setShowAddForm(false)} />
       ) : (
         <button
           data-testid="add-chore-btn"
-          onClick={() => setShowAddForm(true)}
+          onClick={() => { setShowAddForm(true); setEditingChore(null); }}
           className="w-full border-2 border-dashed border-status-claimed-border text-status-claimed-text py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-status-claimed-bg transition-colors"
         >
           <Plus size={20} /> Add Chore
         </button>
       )}
       {chores.map((chore) => (
-        <EntityCard
-          key={chore.id}
-          testId={`entity-chore-${chore.id}`}
-          onEdit={() => setEditingChore(chore)}
-          onDelete={() => setDeleteConfirm({ id: chore.id, name: chore.name })}
-          icon={<div className="w-10 h-10 bg-bg-accent rounded-md border-2 border-[var(--border-color)] flex items-center justify-center"><DynamicIcon icon={chore.icon || '🧹'} size={20} /></div>}
-        >
-          <p className="font-bold text-text-primary" data-testid={`chore-name-admin-${chore.id}`}>{chore.name}</p>
-          <p className="text-sm text-text-muted" data-testid={`chore-points-admin-${chore.id}`}>
-            {chore.default_points} points
-            {chore.recurring_frequency && chore.recurring_frequency !== 'none' && (
-              <span className="ml-2 text-primary-500">• {chore.recurring_frequency}</span>
-            )}
-          </p>
-          {chore.assigned_kids && chore.assigned_kids.length > 0 && (
-            <p className="text-xs text-text-muted" data-testid={`chore-assigned-admin-${chore.id}`}>
-              Assigned: {chore.assigned_kids.map(kidId => kids.find(k => k.id === kidId)?.name || kidId).join(', ')}
+        editingChore?.id === chore.id ? (
+          <div key={chore.id} ref={editFormRef}>
+            <EditChoreForm chore={chore} kids={kids} parents={parents} onClose={() => setEditingChore(null)} />
+          </div>
+        ) : (
+          <EntityCard
+            key={chore.id}
+            testId={`entity-chore-${chore.id}`}
+            onEdit={() => { setEditingChore(chore); setShowAddForm(false); }}
+            onDelete={() => setDeleteConfirm({ id: chore.id, name: chore.name })}
+            icon={<div className="w-10 h-10 bg-bg-accent rounded-md border-2 border-[var(--border-color)] flex items-center justify-center"><DynamicIcon icon={chore.icon || '🧹'} size={20} /></div>}
+          >
+            <p className="font-bold text-text-primary" data-testid={`chore-name-admin-${chore.id}`}>{chore.name}</p>
+            <p className="text-sm text-text-muted" data-testid={`chore-points-admin-${chore.id}`}>
+              {chore.default_points} points
+              {chore.recurring_frequency && chore.recurring_frequency !== 'none' && (
+                <span className="ml-2 text-primary-500">• {chore.recurring_frequency}</span>
+              )}
             </p>
-          )}
-        </EntityCard>
+            {chore.assigned_kids && chore.assigned_kids.length > 0 && (
+              <p className="text-xs text-text-muted" data-testid={`chore-assigned-admin-${chore.id}`}>
+                Assigned: {chore.assigned_kids.map(id =>
+                  kids.find(k => k.id === id)?.name ||
+                  parents.find(p => p.id === id)?.name ||
+                  id
+                ).join(', ')}
+              </p>
+            )}
+          </EntityCard>
+        )
       ))}
 
       {deleteConfirm && (

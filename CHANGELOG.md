@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.7] - 2026-02-19
+
+### Added
+- **Onboarding skip button**: "Skip for now" link visible on all wizard steps (except final), navigates directly to dashboard
+- **Adult chore assignees**: Parents can now be assigned to chores alongside kids in Add/Edit forms, with "Adults:" section below kid toggles
+- **Inline chore editing**: Edit form now expands in-place on the chore card instead of jumping to top of section, with smooth scroll-into-view
+
+### Changed
+- Chore card "Assigned" display resolves both kid and parent names
+
 ## [0.7.5] - 2026-02-18
 
 ### Security
