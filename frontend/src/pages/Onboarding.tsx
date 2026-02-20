@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -123,10 +123,12 @@ function AddKidsStep({ kidNames, setKidNames }: {
 }
 
 // Step 3: Categories
-function CategoriesStep({ categories, seeded, onSeed }: {
+function CategoriesStep({ categories, seeded, onSeed, selectedCategories, onToggleCategory }: {
   categories: ChoreCategory[];
   seeded: boolean;
   onSeed: () => void;
+  selectedCategories: Set<string>;
+  onToggleCategory: (id: string) => void;
 }) {
   const { seasonal } = useTheme();
 
@@ -149,24 +151,36 @@ function CategoriesStep({ categories, seeded, onSeed }: {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {categories.map((cat) => (
-            <div
-              key={cat.id}
-              className="card p-3 flex items-center gap-3 border-2"
-              style={{ borderColor: cat.color }}
-            >
-              <span className="text-2xl">{cat.icon}</span>
-              <span className="font-bold text-text-primary">{cat.name}</span>
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            {categories.map((cat) => {
+              const isSelected = selectedCategories.has(cat.id);
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => onToggleCategory(cat.id)}
+                  className="card p-3 flex items-center gap-3 border-2 text-left transition-all"
+                  style={{
+                    borderColor: isSelected ? cat.color : 'var(--border-primary)',
+                    backgroundColor: isSelected ? `${cat.color}15` : undefined,
+                    opacity: isSelected ? 1 : 0.5,
+                  }}
+                >
+                  <span className="text-2xl">{cat.icon}</span>
+                  <span className="font-bold text-text-primary flex-1">{cat.name}</span>
+                  {isSelected && <Check size={18} style={{ color: cat.color }} />}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-text-muted text-center mt-3">Tap to deselect categories you don't need</p>
+        </>
       )}
     </div>
   );
 }
 
-// Step 4: Add Chores
+// Step 4: Add Chores (Accordion layout)
 function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores }: {
   categories: ChoreCategory[];
   createdKidIds: string[];
@@ -174,14 +188,14 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
   setAddedChores: (chores: AddedChore[]) => void;
 }) {
   const { seasonal } = useTheme();
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(categories[0]?.name || null);
   const [customName, setCustomName] = useState('');
   const [customIcon, setCustomIcon] = useState('🧹');
   const [customPoints, setCustomPoints] = useState(10);
   const [customFrequency, setCustomFrequency] = useState('daily');
+  const [customCategoryId, setCustomCategoryId] = useState('');
   const [showCustomForm, setShowCustomForm] = useState(false);
 
-  const suggestions = selectedCategory ? CHORE_SUGGESTIONS[selectedCategory] || [] : [];
   const addedNames = new Set(addedChores.map((c) => c.name));
 
   const addSuggestion = (s: ChoreSuggestion, categoryId: string) => {
@@ -197,16 +211,33 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
     }]);
   };
 
+  const addAllSuggestions = (catName: string, catId: string) => {
+    const catSuggestions = CHORE_SUGGESTIONS[catName] || [];
+    const newChores = catSuggestions
+      .filter(s => !addedNames.has(s.name))
+      .map(s => ({
+        name: s.name,
+        icon: s.icon,
+        default_points: s.points,
+        recurring_frequency: s.frequency,
+        shared_chore: s.shared || false,
+        category_id: catId,
+        assigned_kids: createdKidIds,
+      }));
+    if (newChores.length > 0) {
+      setAddedChores([...addedChores, ...newChores]);
+    }
+  };
+
   const addCustom = () => {
-    if (!customName.trim()) return;
-    const cat = categories.find((c) => c.name === selectedCategory);
+    if (!customName.trim() || !customCategoryId) return;
     setAddedChores([...addedChores, {
       name: customName.trim(),
       icon: customIcon,
       default_points: customPoints,
       recurring_frequency: customFrequency,
       shared_chore: false,
-      category_id: cat?.id || '',
+      category_id: customCategoryId,
       assigned_kids: createdKidIds,
     }]);
     setCustomName('');
@@ -217,124 +248,179 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
     setAddedChores(addedChores.filter((_, i) => i !== index));
   };
 
+  const choresByCategory = (catId: string) => addedChores.filter(c => c.category_id === catId);
+
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
         <ChorbiePresets.Encourage size={48} season={seasonal} />
         <div>
           <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary">Add Chores</h2>
-          <p className="text-text-secondary text-sm">Pick a category, then tap suggestions or create your own</p>
+          <p className="text-text-secondary text-sm">Expand a category to add chores</p>
         </div>
       </div>
 
-      {/* Category picker */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => { setSelectedCategory(cat.name); setShowCustomForm(false); }}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap text-sm font-medium transition-all border-2 ${
-              selectedCategory === cat.name
-                ? 'text-white shadow-md'
-                : 'bg-bg-surface text-text-secondary border-bg-accent hover:border-primary-300'
-            }`}
-            style={selectedCategory === cat.name ? { backgroundColor: cat.color, borderColor: cat.color } : undefined}
-          >
-            <span>{cat.icon}</span>
-            <span>{cat.name}</span>
-          </button>
-        ))}
-      </div>
+      {/* Accordion categories */}
+      <div className="space-y-2 mb-4">
+        {categories.map((cat) => {
+          const isExpanded = expandedCategory === cat.name;
+          const suggestions = CHORE_SUGGESTIONS[cat.name] || [];
+          const catChores = choresByCategory(cat.id);
+          const allSuggestionsAdded = suggestions.length > 0 && suggestions.every(s => addedNames.has(s.name));
 
-      {/* Suggestions */}
-      {selectedCategory && suggestions.length > 0 && (
-        <div className="mb-4">
-          <p className="text-xs font-medium text-text-muted mb-2 uppercase tracking-wider">Suggestions</p>
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((s) => {
-              const isAdded = addedNames.has(s.name);
-              const cat = categories.find((c) => c.name === selectedCategory);
-              return (
-                <button
-                  key={s.name}
-                  onClick={() => cat && addSuggestion(s, cat.id)}
-                  disabled={isAdded}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all border-2 ${
-                    isAdded
-                      ? 'bg-primary-50 border-primary-300 text-primary-600'
-                      : 'bg-bg-surface border-bg-accent text-text-primary hover:border-primary-400'
-                  }`}
-                >
-                  <span>{s.icon}</span>
-                  <span>{s.name}</span>
-                  <span className="text-text-muted text-xs">{s.points}pts</span>
-                  {isAdded && <Check size={14} className="text-primary-500" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Custom chore form */}
-      {selectedCategory && (
-        <>
-          {!showCustomForm ? (
-            <button
-              onClick={() => setShowCustomForm(true)}
-              className="flex items-center gap-2 text-primary-500 hover:text-primary-600 font-medium text-sm mb-4"
+          return (
+            <div
+              key={cat.id}
+              className="card overflow-hidden border-2 transition-colors"
+              style={{ borderColor: isExpanded ? cat.color : 'var(--border-primary)' }}
             >
-              <Plus size={16} /> Create custom chore
-            </button>
-          ) : (
-            <div className="card p-4 mb-4 border-2 border-primary-200">
-              <div className="grid grid-cols-2 gap-3">
-                <FormInput label="Name" value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="Chore name" />
-                <FormInput label="Icon" value={customIcon} onChange={(e) => setCustomIcon(e.target.value)} placeholder="Emoji" />
-                <FormInput label="Points" type="number" value={customPoints} onChange={(e) => setCustomPoints(Number(e.target.value))} />
-                <FormSelect label="Frequency" value={customFrequency} onChange={(e) => setCustomFrequency(e.target.value)}>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="none">One-time</option>
-                </FormSelect>
-              </div>
-              <div className="flex gap-2 mt-3">
-                <button onClick={addCustom} disabled={!customName.trim()} className="btn btn-primary flex-1">Add</button>
-                <button onClick={() => setShowCustomForm(false)} className="btn btn-secondary flex-1">Cancel</button>
-              </div>
+              {/* Accordion header */}
+              <button
+                onClick={() => setExpandedCategory(isExpanded ? null : cat.name)}
+                className="w-full flex items-center gap-3 p-3 text-left hover:bg-bg-accent/50 transition-colors"
+              >
+                <span className="text-xl">{cat.icon}</span>
+                <span className="font-bold text-text-primary flex-1">{cat.name}</span>
+                {catChores.length > 0 && (
+                  <span
+                    className="text-xs font-bold px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: `${cat.color}20`, color: cat.color }}
+                  >
+                    {catChores.length}
+                  </span>
+                )}
+                <motion.span
+                  animate={{ rotate: isExpanded ? 90 : 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                  className="text-text-secondary"
+                >
+                  <ChevronRight size={18} />
+                </motion.span>
+              </button>
+
+              {/* Accordion content */}
+              <AnimatePresence initial={false}>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-3 pb-3 border-t border-border-primary pt-3">
+                      {/* Suggestion chips */}
+                      {suggestions.length > 0 && (
+                        <div className="mb-3">
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            {suggestions.map((s) => {
+                              const isAdded = addedNames.has(s.name);
+                              return (
+                                <button
+                                  key={s.name}
+                                  onClick={() => addSuggestion(s, cat.id)}
+                                  disabled={isAdded}
+                                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all border-2 ${
+                                    isAdded
+                                      ? 'bg-primary-50 border-primary-300 text-primary-600'
+                                      : 'bg-bg-surface border-bg-accent text-text-primary hover:border-primary-400'
+                                  }`}
+                                >
+                                  <span>{s.icon}</span>
+                                  <span>{s.name}</span>
+                                  <span className="text-text-muted text-xs">{s.points}pts</span>
+                                  {isAdded && <Check size={14} className="text-primary-500" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {!allSuggestionsAdded && (
+                            <button
+                              onClick={() => addAllSuggestions(cat.name, cat.id)}
+                              className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors hover:bg-bg-accent/50"
+                              style={{ color: cat.color }}
+                            >
+                              <Sparkles size={14} /> Add All Suggestions
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Added chores from this category */}
+                      {catChores.length > 0 && (
+                        <div className="space-y-1.5">
+                          {catChores.map((chore) => {
+                            const globalIdx = addedChores.indexOf(chore);
+                            return (
+                              <div key={globalIdx} className="flex items-center justify-between bg-bg-surface rounded-lg px-3 py-2">
+                                <div className="flex items-center gap-2">
+                                  <Check size={14} className="text-primary-500" />
+                                  <span className="text-sm font-medium text-text-primary">{chore.icon} {chore.name}</span>
+                                  <span className="text-xs text-text-muted">{chore.default_points}pts</span>
+                                </div>
+                                <button onClick={() => removeChore(globalIdx)} className="text-text-muted hover:text-error-500">
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {suggestions.length === 0 && catChores.length === 0 && (
+                        <p className="text-sm text-text-muted">No suggestions available. Use "Create Custom Chore" below.</p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          )}
-        </>
+          );
+        })}
+      </div>
+
+      {/* Custom chore form - always accessible */}
+      {!showCustomForm ? (
+        <button
+          onClick={() => {
+            setShowCustomForm(true);
+            if (!customCategoryId && categories.length > 0) setCustomCategoryId(categories[0].id);
+          }}
+          className="flex items-center gap-2 text-primary-500 hover:text-primary-600 font-medium text-sm mb-4"
+        >
+          <Plus size={16} /> Create Custom Chore
+        </button>
+      ) : (
+        <div className="card p-4 mb-4 border-2 border-primary-200">
+          <div className="grid grid-cols-2 gap-3">
+            <FormInput label="Name" value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="Chore name" />
+            <FormInput label="Icon" value={customIcon} onChange={(e) => setCustomIcon(e.target.value)} placeholder="Emoji" />
+            <FormInput label="Points" type="number" value={customPoints} onChange={(e) => setCustomPoints(Number(e.target.value))} />
+            <FormSelect label="Frequency" value={customFrequency} onChange={(e) => setCustomFrequency(e.target.value)}>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="none">One-time</option>
+            </FormSelect>
+            <div className="col-span-2">
+              <FormSelect label="Category" value={customCategoryId} onChange={(e) => setCustomCategoryId(e.target.value)}>
+                <option value="">Select category</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                ))}
+              </FormSelect>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <button onClick={addCustom} disabled={!customName.trim() || !customCategoryId} className="btn btn-primary flex-1">Add</button>
+            <button onClick={() => setShowCustomForm(false)} className="btn btn-secondary flex-1">Cancel</button>
+          </div>
+        </div>
       )}
 
-      {/* Added chores list */}
+      {/* Total counter */}
       {addedChores.length > 0 && (
-        <div>
-          <p className="text-xs font-medium text-text-muted mb-2 uppercase tracking-wider">
-            Added ({addedChores.length})
-          </p>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {addedChores.map((chore, i) => {
-              const cat = categories.find((c) => c.id === chore.category_id);
-              return (
-                <div key={i} className="flex items-center justify-between bg-bg-surface rounded-xl px-3 py-2 border border-bg-accent">
-                  <div className="flex items-center gap-2">
-                    <span>{chore.icon}</span>
-                    <span className="font-medium text-text-primary text-sm">{chore.name}</span>
-                    {cat && (
-                      <span className="text-xs px-1.5 py-0.5 rounded-md" style={{ backgroundColor: cat.color + '20', color: cat.color }}>
-                        {cat.name}
-                      </span>
-                    )}
-                    <span className="text-xs text-text-muted">{chore.default_points}pts</span>
-                  </div>
-                  <button onClick={() => removeChore(i)} className="text-text-muted hover:text-error-500">
-                    <X size={16} />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+        <div className="text-center text-sm font-medium text-text-secondary pt-2 border-t border-border-primary">
+          Total: {addedChores.length} chore{addedChores.length !== 1 ? 's' : ''} added
         </div>
       )}
     </div>
@@ -533,6 +619,7 @@ export function Onboarding() {
   const [categoriesSeeded, setCategoriesSeeded] = useState(false);
   const [addedChores, setAddedChores] = useState<AddedChore[]>([]);
   const [addedRewards, setAddedRewards] = useState<AddedReward[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
 
   // Fetch categories (refreshed after seeding)
@@ -540,6 +627,22 @@ export function Onboarding() {
     queryKey: ['categories'],
     queryFn: () => categoriesApi.list().then((r) => r.data),
   });
+
+  // Initialize selectedCategories when categories load
+  useEffect(() => {
+    if (categories.length > 0 && selectedCategories.size === 0) {
+      setSelectedCategories(new Set(categories.map(c => c.id)));
+    }
+  }, [categories]);
+
+  const toggleCategory = (id: string) => {
+    setSelectedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   // Mutations
   const seedCategories = useMutation({
@@ -586,6 +689,25 @@ export function Onboarding() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Step 3 → 4: Delete deselected categories
+  const saveCategories = async () => {
+    const deselected = categories.filter(c => !selectedCategories.has(c.id));
+    if (deselected.length > 0) {
+      setSaving(true);
+      try {
+        for (const cat of deselected) {
+          await categoriesApi.delete(cat.id);
+        }
+        queryClient.invalidateQueries({ queryKey: ['categories'] });
+      } catch {
+        toast.error('Failed to remove categories');
+      } finally {
+        setSaving(false);
+      }
+    }
+    goNext();
   };
 
   // Step 4 → 5: Create chores via API
@@ -657,7 +779,7 @@ export function Onboarding() {
   // Next button handler per step
   const handleNext = () => {
     if (step === 1) return saveKids();
-    if (step === 2) return goNext();
+    if (step === 2) return saveCategories();
     if (step === 3) return saveChores();
     if (step === 4) return saveRewards();
     if (step === 5) return finish();
@@ -695,11 +817,13 @@ export function Onboarding() {
               categories={categories}
               seeded={categoriesSeeded}
               onSeed={() => seedCategories.mutate()}
+              selectedCategories={selectedCategories}
+              onToggleCategory={toggleCategory}
             />
           )}
           {step === 3 && (
             <AddChoresStep
-              categories={categories}
+              categories={categories.filter(c => selectedCategories.has(c.id))}
               createdKidIds={createdKidIds}
               addedChores={addedChores}
               setAddedChores={setAddedChores}

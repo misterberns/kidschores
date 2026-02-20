@@ -2,6 +2,7 @@
 import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -125,7 +126,7 @@ def seed_default_categories(db: Session = Depends(get_db), _admin: User = Depend
     for i, cat_data in enumerate(PREDEFINED_CATEGORIES):
         # Check if category already exists
         existing = db.query(ChoreCategory).filter(
-            ChoreCategory.name == cat_data["name"]
+            func.lower(ChoreCategory.name) == cat_data["name"].lower()
         ).first()
         if not existing:
             category = ChoreCategory(

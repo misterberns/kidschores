@@ -173,7 +173,7 @@ class ChoreCategory(Base):
     __tablename__ = "chore_categories"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    name = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False, unique=True)
     icon = Column(String(50), default="📁")
     color = Column(String(20), default="#6366f1")  # Hex color
     sort_order = Column(Integer, default=0)

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.8] - 2026-02-20
+
+### Added
+- **Category selection toggle**: Onboarding CategoriesStep cards are now interactive — tap to select/deselect with visual feedback (colored border, tinted background, checkmark)
+- **Accordion chore picker**: AddChoresStep redesigned with expandable accordion sections per category, replacing horizontal scroll strip
+- **Bulk "Add All Suggestions"**: One-tap button to add all suggested chores for a category at once
+- **Count badges**: Per-category chore count badges on accordion headers
+- **Custom chore category selector**: Custom chore form now includes category dropdown (accessible without selecting a category first)
+- **Total chore counter**: Summary footer showing total chores added across all categories
+
+### Fixed
+- **Duplicate categories**: Case-insensitive dedup guard on seed-defaults endpoint, unique constraint on category name column
+- **E2E auth rate limiting**: File-based token caching in test-database.ts shared across all 17 test files (3-tier cache: in-memory, file, API)
+
+### Changed
+- Category deselection in onboarding deletes unwanted categories before advancing to Add Chores step
+
 ## [0.7.7] - 2026-02-19
 
 ### Added

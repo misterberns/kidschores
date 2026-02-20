@@ -1,4 +1,7 @@
 import { test as base, APIRequestContext, Page } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 // API URL - defaults to test instance on NAS (NOT production port 3103)
 const API_URL = process.env.API_URL || 'http://192.168.87.35:3104';
@@ -10,21 +13,40 @@ const TEST_USER = {
   displayName: 'E2E Test Parent',
 };
 
-// Cache auth tokens across tests to avoid rate limiting (5 req / 5 min)
+// File-based token cache shared across all test files and workers.
+// Solves: module-scoped _cachedTokens only works within a single file import,
+// but 17+ spec files each get their own module instance, exhausting the
+// backend's 5 req/5min login rate limit.
+const TOKEN_CACHE_FILE = path.join(os.tmpdir(), 'kc-e2e-tokens.json');
+const TOKEN_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
+
+// In-memory cache for this process (fastest path)
 let _cachedTokens: { accessToken: string; refreshToken: string } | null = null;
 
 /**
  * Get or create test user and return auth tokens.
- * Caches tokens to avoid hitting the login rate limiter.
- * Tries login first, falls back to registration if user doesn't exist.
+ * Uses a 3-tier cache: in-memory → temp file → API call.
+ * The temp file ensures all spec files share one login call per test run.
  */
 async function getAuthTokens(apiContext: APIRequestContext): Promise<{
   accessToken: string;
   refreshToken: string;
 }> {
+  // Tier 1: In-memory cache (same process, same file)
   if (_cachedTokens) return _cachedTokens;
 
-  // Try to login first
+  // Tier 2: File-based cache (cross-file, cross-worker)
+  try {
+    if (fs.existsSync(TOKEN_CACHE_FILE)) {
+      const stat = fs.statSync(TOKEN_CACHE_FILE);
+      if (Date.now() - stat.mtimeMs < TOKEN_MAX_AGE_MS) {
+        _cachedTokens = JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, 'utf-8'));
+        return _cachedTokens!;
+      }
+    }
+  } catch { /* file corrupt or stale — fall through to API */ }
+
+  // Tier 3: Authenticate against the live backend
   const loginResp = await apiContext.post('/api/auth/login', {
     data: {
       email: TEST_USER.email,
@@ -38,10 +60,19 @@ async function getAuthTokens(apiContext: APIRequestContext): Promise<{
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
     };
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(_cachedTokens)); } catch { /* best-effort */ }
     return _cachedTokens;
   }
 
-  // If login fails (user doesn't exist), register
+  // Don't attempt register if rate limited — it won't help
+  if (loginResp.status() === 429) {
+    throw new Error(
+      `Rate limited on login (429). Cached tokens expired or missing.\n` +
+      `  Delete ${TOKEN_CACHE_FILE} and wait 5 minutes before retrying.`
+    );
+  }
+
+  // Login failed (user doesn't exist) — try register
   const registerResp = await apiContext.post('/api/auth/register', {
     data: {
       email: TEST_USER.email,
@@ -56,10 +87,11 @@ async function getAuthTokens(apiContext: APIRequestContext): Promise<{
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
     };
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(_cachedTokens)); } catch { /* best-effort */ }
     return _cachedTokens;
   }
 
-  // Both failed - include both error details for debugging
+  // Both failed
   const registerError = await registerResp.text();
   throw new Error(
     `Failed to authenticate test user.\n` +
