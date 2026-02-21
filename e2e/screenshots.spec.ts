@@ -11,6 +11,7 @@
  *   API_URL=https://your-instance npx playwright test e2e/screenshots.spec.ts --project=chromium
  */
 import { test, expect } from './fixtures/test-database';
+import type { Page } from '@playwright/test';
 import { ApiHelpers } from './fixtures/api-helpers';
 import * as path from 'path';
 
@@ -96,14 +97,103 @@ async function seedData(api: ApiHelpers) {
   return { emma, jack, sophia };
 }
 
+// Toggle dark/light mode in-place without page reload (preserves wizard state)
+async function setThemeMode(page: Page, mode: 'light' | 'dark') {
+  await page.evaluate((m) => {
+    localStorage.setItem('kidschores-theme-mode', m);
+    document.documentElement.classList.toggle('dark', m === 'dark');
+  }, mode);
+  await page.waitForTimeout(300);
+}
+
+// Capture light + dark screenshot pair without reload
+async function captureThemePair(page: Page, baseName: string) {
+  await setThemeMode(page, 'light');
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${baseName}-light.png`) });
+  await setThemeMode(page, 'dark');
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${baseName}-dark.png`) });
+  await setThemeMode(page, 'light');
+}
+
 test.describe('README Screenshots', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
-  test('capture all screenshots', async ({ authenticatedPage: page, authApiContext }) => {
+  test('capture onboarding screenshots', async ({ authenticatedPage: page, resetDatabase }) => {
+    test.setTimeout(90_000);
+
+    // Empty DB so onboarding wizard is accessible
+    await resetDatabase();
+
+    await setThemeMode(page, 'light');
+    await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+
+    // --- Step 0: Welcome ---
+    await captureThemePair(page, 'onboarding-welcome');
+    await page.getByRole('button', { name: /let's go/i }).click();
+    await page.waitForTimeout(500);
+
+    // --- Step 1: Add Kids ---
+    const nameInputs = page.getByPlaceholder('Enter name');
+    await nameInputs.first().fill('Emma');
+    await page.getByText('Add another kid').click();
+    await page.waitForTimeout(200);
+    await nameInputs.nth(1).fill('Jack');
+    await page.getByText('Add another kid').click();
+    await page.waitForTimeout(200);
+    await nameInputs.nth(2).fill('Sophia');
+    await page.waitForTimeout(300);
+    await captureThemePair(page, 'onboarding-kids');
+    await page.getByRole('button', { name: /create 3 kids/i }).click();
+    await page.waitForTimeout(2000);
+
+    // --- Step 2: Categories ---
+    await page.getByRole('button', { name: /load default categories/i }).click();
+    await page.waitForTimeout(1500);
+    await captureThemePair(page, 'onboarding-categories');
+    await page.getByRole('button', { name: /next: add chores/i }).click();
+    await page.waitForTimeout(500);
+
+    // --- Step 3: Add Chores ---
+    // Bedroom is expanded by default — add all its suggestions (Clean Room + Make Bed)
+    await page.getByText('Add All Suggestions').first().click();
+    await page.waitForTimeout(300);
+    // Expand Kitchen accordion and add two chores
+    await page.locator('button').filter({ hasText: 'Kitchen' }).first().click();
+    await page.waitForTimeout(400);
+    await page.locator('button:not(:disabled)').filter({ hasText: 'Wash Dishes' }).first().click();
+    await page.waitForTimeout(200);
+    await page.locator('button:not(:disabled)').filter({ hasText: 'Set Table' }).first().click();
+    await page.waitForTimeout(300);
+    await captureThemePair(page, 'onboarding-chores');
+    await page.getByRole('button', { name: /save 4 chores/i }).click();
+    await page.waitForTimeout(2500);
+
+    // --- Step 4: Add Rewards ---
+    await page.locator('button:not(:disabled)').filter({ hasText: 'Extra Screen Time' }).first().click();
+    await page.waitForTimeout(200);
+    await page.locator('button:not(:disabled)').filter({ hasText: 'Pick Dinner' }).first().click();
+    await page.waitForTimeout(200);
+    await page.locator('button:not(:disabled)').filter({ hasText: 'Ice Cream' }).first().click();
+    await page.waitForTimeout(200);
+    await page.locator('button:not(:disabled)').filter({ hasText: 'Movie Night' }).first().click();
+    await page.waitForTimeout(300);
+    await captureThemePair(page, 'onboarding-rewards');
+    await page.getByRole('button', { name: /save 4 rewards/i }).click();
+    await page.waitForTimeout(2500);
+
+    // --- Step 5: Done ---
+    await page.waitForTimeout(500);
+    await captureThemePair(page, 'onboarding-done');
+  });
+
+  test('capture all screenshots', async ({ authenticatedPage: page, authApiContext, resetDatabase }) => {
     test.setTimeout(120_000); // Seeding + 14 screenshots needs more than 30s
     const api = new ApiHelpers(authApiContext);
 
-    // Reset and seed data
+    // Clean up from onboarding test, then seed fresh data
+    await resetDatabase();
     await seedData(api);
 
     // Wait for data to be available
