@@ -75,6 +75,16 @@ export default defineConfig({
         baseURL: FRONTEND_URL,
       },
     },
+
+    // Screenshots - README documentation capture
+    {
+      name: 'screenshots',
+      testMatch: /screenshots\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: FRONTEND_URL,
+      },
+    },
   ],
 
   // webServer config disabled when testing against deployed instance

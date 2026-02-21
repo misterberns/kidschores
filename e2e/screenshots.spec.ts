@@ -100,6 +100,7 @@ test.describe('README Screenshots', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
   test('capture all screenshots', async ({ authenticatedPage: page, authApiContext }) => {
+    test.setTimeout(120_000); // Seeding + 14 screenshots needs more than 30s
     const api = new ApiHelpers(authApiContext);
 
     // Reset and seed data
