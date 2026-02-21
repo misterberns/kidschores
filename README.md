@@ -1,19 +1,32 @@
-# KidsChores
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="frontend/src/assets/logo/kc-logo-horizontal-dark.svg">
+    <img src="frontend/src/assets/logo/kc-logo-horizontal.svg" width="400" alt="KidsChores">
+  </picture>
+</p>
 
-[![Version](https://img.shields.io/badge/Version-v0.7.8-green?style=flat-square)](https://github.com/misterberns/kidschores/releases)
-![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)
-![License](https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square)
+<p align="center">
+  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.7.8-green?style=flat-square" alt="Version"></a>
+  <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status">
+  <img src="https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square" alt="License">
+</p>
 
-![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?style=flat-square&logo=vite&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=flat-square&logo=python&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+<p align="center">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Vite-6.x-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite">
+  <img src="https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/Python-3.13-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white" alt="SQLite">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
+</p>
 
-A standalone family chore management web application with points, rewards, and approval workflows.
+<p align="center">A standalone family chore management web application with points, rewards, and approval workflows.</p>
+
+<p align="center">
+  <img src="screenshots/home-light.png" alt="KidsChores Dashboard" width="800">
+</p>
 
 ## Features
 
@@ -31,8 +44,6 @@ A standalone family chore management web application with points, rewards, and a
 - **E2E Testing** - Playwright test suite (100+ tests: API, UI, accessibility, workflows)
 
 ## Screenshots
-
-![KidsChores Dashboard](screenshots/home-light.png)
 
 <details>
 <summary>App Pages (light + dark)</summary>
