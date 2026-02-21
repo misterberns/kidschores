@@ -28,7 +28,7 @@ A standalone family chore management web application with points, rewards, and a
 - **Mobile-Responsive** - Works on phones, tablets, and desktops
 - **Security** - JWT auth on all endpoints, rate limiting, bcrypt hashing, CORS restriction
 - **Error Handling** - React error boundaries, global error handler, auto-toast notifications
-- **E2E Testing** - Playwright test suite (34+ tests: API security, accessibility, error handling)
+- **E2E Testing** - Playwright test suite (100+ tests: API, UI, accessibility, workflows)
 
 ## Screenshots
 
