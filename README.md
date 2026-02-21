@@ -52,6 +52,20 @@ A standalone family chore management web application with points, rewards, and a
 
 </details>
 
+<details>
+<summary>Onboarding Wizard (Welcome, Kids, Categories, Chores, Rewards, Done)</summary>
+
+| Light Mode | Dark Mode |
+|:---:|:---:|
+| ![Welcome](screenshots/onboarding-welcome-light.png) | ![Welcome Dark](screenshots/onboarding-welcome-dark.png) |
+| ![Add Kids](screenshots/onboarding-kids-light.png) | ![Add Kids Dark](screenshots/onboarding-kids-dark.png) |
+| ![Categories](screenshots/onboarding-categories-light.png) | ![Categories Dark](screenshots/onboarding-categories-dark.png) |
+| ![Chores](screenshots/onboarding-chores-light.png) | ![Chores Dark](screenshots/onboarding-chores-dark.png) |
+| ![Rewards](screenshots/onboarding-rewards-light.png) | ![Rewards Dark](screenshots/onboarding-rewards-dark.png) |
+| ![Done](screenshots/onboarding-done-light.png) | ![Done Dark](screenshots/onboarding-done-dark.png) |
+
+</details>
+
 ## Tech Stack
 
 - **Backend**: FastAPI + SQLAlchemy + SQLite
