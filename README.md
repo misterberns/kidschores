@@ -32,28 +32,24 @@ A standalone family chore management web application with points, rewards, and a
 
 ## Screenshots
 
-<!-- Generated via: cd e2e && npx playwright test --config=playwright-screenshots.config.ts -->
+![KidsChores Dashboard](screenshots/home-light.png)
+
+<details>
+<summary>App Pages (light + dark)</summary>
 
 | Light Mode | Dark Mode |
 |:---:|:---:|
 | ![Home](screenshots/home-light.png) | ![Home Dark](screenshots/home-dark.png) |
 | ![Chores](screenshots/chores-light.png) | ![Chores Dark](screenshots/chores-dark.png) |
-
-<details>
-<summary>More screenshots (Rewards, Allowance, Admin, History, Login)</summary>
-
-| Light Mode | Dark Mode |
-|:---:|:---:|
 | ![Rewards](screenshots/rewards-light.png) | ![Rewards Dark](screenshots/rewards-dark.png) |
 | ![Allowance](screenshots/allowance-light.png) | ![Allowance Dark](screenshots/allowance-dark.png) |
 | ![Admin](screenshots/admin-light.png) | ![Admin Dark](screenshots/admin-dark.png) |
 | ![History](screenshots/history-light.png) | ![History Dark](screenshots/history-dark.png) |
-| ![Login](screenshots/login-light.png) | ![Login Dark](screenshots/login-dark.png) |
 
 </details>
 
 <details>
-<summary>Onboarding Wizard (Welcome, Kids, Categories, Chores, Rewards, Done)</summary>
+<summary>Onboarding Wizard (light + dark)</summary>
 
 | Light Mode | Dark Mode |
 |:---:|:---:|
@@ -63,6 +59,15 @@ A standalone family chore management web application with points, rewards, and a
 | ![Chores](screenshots/onboarding-chores-light.png) | ![Chores Dark](screenshots/onboarding-chores-dark.png) |
 | ![Rewards](screenshots/onboarding-rewards-light.png) | ![Rewards Dark](screenshots/onboarding-rewards-dark.png) |
 | ![Done](screenshots/onboarding-done-light.png) | ![Done Dark](screenshots/onboarding-done-dark.png) |
+
+</details>
+
+<details>
+<summary>Login (light + dark)</summary>
+
+| Light Mode | Dark Mode |
+|:---:|:---:|
+| ![Login](screenshots/login-light.png) | ![Login Dark](screenshots/login-dark.png) |
 
 </details>
 
