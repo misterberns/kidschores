@@ -6,4 +6,7 @@ dist
 e2e/
 playwright-report/
 test-results/
+src/test/
+src/**/__tests__/
+vitest.config.ts
 *.md

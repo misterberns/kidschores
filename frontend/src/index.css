@@ -3,20 +3,20 @@
 @config "../tailwind.config.js";
 
 /* ============================================
-   KidChores Theme System - Neobrutalist Design
+   KidChores Theme System - Modern Warm Minimal
    ============================================
    Primary: Feather Green (#58CC02)
    Secondary: Sky Blue (#1CB0F6)
    Accent: Warm Orange (#FF9600)
-   Style: Thick borders, hard shadows, sharp corners
+   Style: Soft borders, subtle shadows, rounded corners
    ============================================ */
 
 :root {
   /* ═══════════════════════════════════════════════════════
-     LIGHT MODE (Default) - Neobrutalist, Bold, Sharp
+     LIGHT MODE (Default) - Modern Warm Minimal
      ═══════════════════════════════════════════════════════ */
 
-  /* Backgrounds - Warm cream base (neobrutalist signature) */
+  /* Backgrounds - Warm cream base */
   --bg-base: #F0EDE8;
   --bg-surface: #FFFFFF;
   --bg-elevated: #FFFFFF;
@@ -102,12 +102,12 @@
   --transition-normal: 250ms;
   --transition-slow: 350ms;
 
-  /* ── Neobrutalist tokens ── */
-  --border-color: #1A1A1A;
-  --neo-shadow: 4px 4px 0 #1A1A1A;
-  --neo-shadow-hover: 6px 6px 0 #1A1A1A;
-  --neo-shadow-sm: 3px 3px 0 #1A1A1A;
-  --neo-radius: 0.375rem;
+  /* ── Modern Warm Minimal tokens ── */
+  --border-color: #D1CDC4;
+  --neo-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --neo-shadow-hover: 0 4px 12px rgba(0,0,0,0.10);
+  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --neo-radius: 0.5rem;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -167,11 +167,11 @@
   --header-from: #4ADE80;
   --header-to: #38BDF8;
 
-  /* ── Neobrutalist tokens (dark) — structural colors quieter than content ── */
-  --border-color: #3A8F5A;      /* Muted forest green */
-  --neo-shadow: 4px 4px 0 #3A8F5A;
-  --neo-shadow-hover: 6px 6px 0 #4ADE80;  /* Brightens to primary on hover */
-  --neo-shadow-sm: 3px 3px 0 #3A8F5A;
+  /* ── Modern Warm Minimal tokens (dark) ── */
+  --border-color: #2A2A3A;
+  --neo-shadow: 0 1px 3px rgba(0,0,0,0.20), 0 1px 2px rgba(0,0,0,0.15);
+  --neo-shadow-hover: 0 4px 12px rgba(0,0,0,0.25);
+  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.12);
 }
 
 /* ============================================
@@ -255,11 +255,11 @@
   --primary-500: #FB923C;       /* Tailwind orange-400 */
   --secondary-500: #A78BFA;     /* Tailwind violet-400 */
 
-  /* Muted orange borders + shadows */
-  --border-color: #A05820;
-  --neo-shadow: 4px 4px 0 #A05820;
-  --neo-shadow-hover: 6px 6px 0 #FB923C;  /* Brightens to primary on hover */
-  --neo-shadow-sm: 3px 3px 0 #A05820;
+  /* Muted orange borders + soft shadows */
+  --border-color: #5A3820;
+  --neo-shadow: 0 1px 3px rgba(251,146,60,0.12), 0 1px 2px rgba(0,0,0,0.15);
+  --neo-shadow-hover: 0 4px 12px rgba(251,146,60,0.20);
+  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.12);
 
   /* Header - Softened Orange to Purple */
   --header-from: #FB923C;
@@ -344,11 +344,11 @@
   --primary-500: #F87171;       /* Tailwind red-400 */
   --secondary-500: #4ADE80;     /* Tailwind green-400 */
 
-  /* Muted red borders + shadows — #AD3F52 = 3.41:1 on #0A0A0F (WCAG 1.4.11) */
-  --border-color: #AD3F52;
-  --neo-shadow: 4px 4px 0 #AD3F52;
-  --neo-shadow-hover: 6px 6px 0 #F87171;  /* Brightens to primary on hover */
-  --neo-shadow-sm: 3px 3px 0 #AD3F52;
+  /* Muted red borders + soft shadows */
+  --border-color: #4A2030;
+  --neo-shadow: 0 1px 3px rgba(248,113,113,0.12), 0 1px 2px rgba(0,0,0,0.15);
+  --neo-shadow-hover: 0 4px 12px rgba(248,113,113,0.20);
+  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.12);
 
   /* Header - Softened Red to Green */
   --header-from: #F87171;
@@ -432,11 +432,11 @@
   --primary-500: #C084FC;       /* Tailwind purple-400 */
   --secondary-500: #F472B6;     /* Tailwind pink-400 */
 
-  /* Muted purple borders + shadows */
-  --border-color: #7858A0;
-  --neo-shadow: 4px 4px 0 #7858A0;
-  --neo-shadow-hover: 6px 6px 0 #C084FC;  /* Brightens to primary on hover */
-  --neo-shadow-sm: 3px 3px 0 #7858A0;
+  /* Muted purple borders + soft shadows */
+  --border-color: #3A2860;
+  --neo-shadow: 0 1px 3px rgba(192,132,252,0.12), 0 1px 2px rgba(0,0,0,0.15);
+  --neo-shadow-hover: 0 4px 12px rgba(192,132,252,0.20);
+  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.12);
 
   /* Header - Softened Purple to Pink */
   --header-from: #C084FC;
@@ -520,11 +520,11 @@
   --primary-500: #38BDF8;       /* Tailwind sky-400 */
   --secondary-500: #FB923C;     /* Tailwind orange-400 */
 
-  /* Muted cyan borders + shadows */
-  --border-color: #3888A0;
-  --neo-shadow: 4px 4px 0 #3888A0;
-  --neo-shadow-hover: 6px 6px 0 #38BDF8;  /* Brightens to primary on hover */
-  --neo-shadow-sm: 3px 3px 0 #3888A0;
+  /* Muted cyan borders + soft shadows */
+  --border-color: #1A3545;
+  --neo-shadow: 0 1px 3px rgba(56,189,248,0.12), 0 1px 2px rgba(0,0,0,0.15);
+  --neo-shadow-hover: 0 4px 12px rgba(56,189,248,0.20);
+  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.12);
 
   /* Header - Softened Cyan to Orange */
   --header-from: #38BDF8;
@@ -659,52 +659,49 @@ body {
    Component Classes
    ============================================ */
 
-/* Card styles - Neobrutalist: thick border + hard shadow */
+/* Card styles - Modern Warm Minimal: soft border + subtle shadow */
 .card {
   background-color: var(--bg-surface);
   border-radius: var(--neo-radius);
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
   box-shadow: var(--neo-shadow);
-  transition: box-shadow var(--transition-fast), transform var(--transition-fast), background-color var(--transition-colors);
+  transition: box-shadow var(--transition-fast), background-color var(--transition-colors);
 }
 .card:hover {
   box-shadow: var(--neo-shadow-hover);
-  transform: translate(-2px, -2px);
 }
 
-/* Status badges - Neobrutalist: thick borders, bold uppercase */
+/* Status badges - Modern Warm Minimal: soft borders, sentence case */
 .badge-pending,
 .badge-claimed,
 .badge-approved,
 .badge-overdue {
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 600;
   font-size: 0.75rem;
   border-radius: var(--neo-radius);
 }
 .badge-pending {
   background-color: var(--status-pending-bg);
-  border: 2px solid var(--status-pending-border);
+  border: 1px solid var(--status-pending-border);
   color: var(--status-pending-text);
 }
 .badge-claimed {
   background-color: var(--status-claimed-bg);
-  border: 2px solid var(--status-claimed-border);
+  border: 1px solid var(--status-claimed-border);
   color: var(--status-claimed-text);
 }
 .badge-approved {
   background-color: var(--status-approved-bg);
-  border: 2px solid var(--status-approved-border);
+  border: 1px solid var(--status-approved-border);
   color: var(--status-approved-text);
 }
 .badge-overdue {
   background-color: var(--status-overdue-bg);
-  border: 2px solid var(--status-overdue-border);
+  border: 1px solid var(--status-overdue-border);
   color: var(--status-overdue-text);
 }
 
-/* Button base - Neobrutalist: thick border + hard shadow + uppercase */
+/* Button base - Modern Warm Minimal: soft border + subtle shadow */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -712,21 +709,18 @@ body {
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
   border-radius: var(--neo-radius);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
   transition: all var(--transition-fast);
   box-shadow: var(--neo-shadow-sm);
 }
 .btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 var(--border-color);
+  box-shadow: var(--neo-shadow-hover);
 }
 .btn:active {
-  transform: translate(0, 0);
-  box-shadow: 0 0 0 var(--border-color);
+  transform: scale(0.98);
+  box-shadow: var(--neo-shadow-sm);
 }
 .btn-primary {
   background-color: var(--primary-500);
@@ -738,7 +732,7 @@ body {
 .btn-secondary {
   background-color: var(--bg-surface);
   color: var(--primary-500);
-  border: 2px solid var(--primary-500);
+  border: 1px solid var(--primary-500);
 }
 .btn-secondary:hover {
   background-color: var(--primary-50);
@@ -752,52 +746,48 @@ body {
 }
 
 /* ============================================
-   Neobrutalist Utility Classes
+   Modern Warm Minimal Utility Classes
    ============================================ */
 
 /* Neo card - standalone utility for any element needing card treatment */
 .neo-card {
   background-color: var(--bg-surface);
   border-radius: var(--neo-radius);
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
   box-shadow: var(--neo-shadow);
-  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  transition: box-shadow var(--transition-fast);
 }
 .neo-card:hover {
   box-shadow: var(--neo-shadow-hover);
-  transform: translate(-2px, -2px);
 }
 
 /* Neo button - for inline elements needing button treatment */
 .neo-btn {
   border-radius: var(--neo-radius);
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
   box-shadow: var(--neo-shadow-sm);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 600;
   transition: all var(--transition-fast);
 }
 .neo-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 var(--border-color);
+  box-shadow: var(--neo-shadow-hover);
 }
 .neo-btn:active {
-  transform: translate(0, 0);
-  box-shadow: 0 0 0 var(--border-color);
+  transform: scale(0.98);
+  box-shadow: var(--neo-shadow-sm);
 }
 
 /* Neo input - for form fields */
 .neo-input {
   border-radius: var(--neo-radius);
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
   background-color: var(--bg-base);
   transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 .neo-input:focus {
   outline: none;
   border-color: var(--primary-500);
-  box-shadow: var(--neo-shadow-sm);
+  box-shadow: 0 0 0 3px var(--primary-50);
 }
 
 /* ============================================
@@ -805,7 +795,7 @@ body {
    All meet WCAG AA for white text on colored bg
    ============================================ */
 
-/* Light mode: deeply saturated, bold neobrutalist gradients */
+/* Light mode: deeply saturated, vibrant gradients */
 .kid-lime { background: linear-gradient(135deg, #2ECC0E, #45B80C); }
 .kid-ocean { background: linear-gradient(135deg, #0088DD, #00AAEE); }
 .kid-sunset { background: linear-gradient(135deg, #E65100, #FF6B00); }
