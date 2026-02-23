@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.9] - 2026-02-23
+
+### Changed
+- **Modern Warm Minimal UI redesign**: Complete visual overhaul from neobrutalist to refined modern style
+  - New color system: Iris Violet primary (hsl 252), Sand warm grays, deep navy dark mode
+  - Plus Jakarta Sans font (replacing Inter)
+  - Soft 1px borders, subtle box shadows, rounded-lg corners throughout
+  - 5 seasonal themes refined (Default, Halloween, Christmas, Easter, Summer) with HSL palette
+  - Reduced ambient glow opacity and softer kid color gradients
+  - Modernized all component classes (cards, badges, buttons, inputs)
+  - Sentence case labels (removed uppercase/tracking-wide)
+  - Smoother micro-interactions (translateY hover, scale active, spring focus rings)
+  - Softer Chorbie mascot animations (reduced bounce, slower timing)
+- **Theme toggle on login screen**: ThemeToggle component added to login page for pre-auth theme preview
+
 ## [0.7.8] - 2026-02-20
 
 ### Added

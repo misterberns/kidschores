@@ -63,7 +63,7 @@ export function ThemeToggle() {
           >
             {/* Mode Selection */}
             <div className="mb-4">
-              <p className="text-xs font-semibold uppercase tracking-wide mb-2 text-text-muted">
+              <p className="text-xs font-semibold mb-2 text-text-muted">
                 Appearance
               </p>
               <div className="flex gap-1 p-1 rounded-xl bg-bg-accent">
@@ -95,7 +95,7 @@ export function ThemeToggle() {
 
             {/* Season Selection */}
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-2 text-text-muted">
+              <p className="text-xs font-semibold mb-2 text-text-muted">
                 Season
               </p>
               <div className="grid grid-cols-1 gap-1">

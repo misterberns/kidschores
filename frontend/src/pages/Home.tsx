@@ -44,7 +44,7 @@ function KidCard({ kid, index }: { kid: Kid; index: number }) {
   return (
     <motion.div
       data-testid={`kid-card-${kid.id}`}
-      className={`bg-gradient-to-br ${kidColor.gradient} rounded-md border-2 border-[var(--border-color)] p-6 text-white shadow-[var(--neo-shadow)]`}
+      className={`bg-gradient-to-br ${kidColor.gradient} rounded-md border border-[var(--border-color)] p-6 text-white shadow-card`}
       {...cardMotionProps}
     >
       <div className="flex items-center justify-between mb-4">
@@ -194,7 +194,7 @@ export function Home() {
         <div className="mx-auto mb-4">
           <ChorbiePresets.EmptyState season={seasonal} />
         </div>
-        <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary">No kids yet!</h2>
+        <h2 className="text-2xl font-bold text-text-primary">No kids yet!</h2>
         <p className="mt-2 text-text-secondary">
           Ask a parent to set things up.
         </p>
@@ -211,7 +211,7 @@ export function Home() {
         transition={{ duration: 0.3 }}
       >
         <ChorbiePresets.Welcome size={48} season={seasonal} />
-        <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary">
+        <h2 className="text-2xl font-bold text-text-primary">
           {seasonalGreetings[seasonal] || 'Welcome back!'}
         </h2>
       </motion.div>

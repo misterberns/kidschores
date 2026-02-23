@@ -42,7 +42,7 @@ function RewardCard({
       transition={{ delay: index * 0.05 }}
     >
       <div className="flex items-start gap-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-accent-500 to-accent-400 rounded-md border-2 border-[var(--border-color)] flex items-center justify-center flex-shrink-0 shadow-[var(--neo-shadow-sm)]">
+        <div className="w-16 h-16 bg-gradient-to-br from-accent-500 to-accent-400 rounded-lg border border-[var(--border-color)] flex items-center justify-center flex-shrink-0 shadow-sm">
           <DynamicIcon icon={reward.icon || 'mdi:gift'} size={32} className="text-white" />
         </div>
         <div className="flex-1 min-w-0">

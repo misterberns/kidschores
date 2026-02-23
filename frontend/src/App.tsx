@@ -258,7 +258,7 @@ function AppContent() {
             </span>
           </Link>
 
-          <h1 className="text-2xl font-black text-center flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-center flex items-center gap-2">
             <Logo variant="horizontal" size={180} alt="KidsChores" />
             <SeasonIcon
               size={28}

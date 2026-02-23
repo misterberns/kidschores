@@ -52,7 +52,7 @@ function WelcomeStep() {
       <div className="mx-auto mb-6">
         <ChorbiePresets.Welcome size={120} season={seasonal} />
       </div>
-      <h2 className="text-3xl font-black uppercase tracking-tight text-text-primary mb-3">
+      <h2 className="text-3xl font-bold text-text-primary mb-3">
         Welcome to KidsChores!
       </h2>
       <p className="text-text-secondary text-lg max-w-md mx-auto">
@@ -82,7 +82,7 @@ function AddKidsStep({ kidNames, setKidNames }: {
       <div className="flex items-center gap-3 mb-4">
         <ChorbiePresets.Encourage size={48} season={seasonal} />
         <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary">Add Your Kids</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Add Your Kids</h2>
           <p className="text-text-secondary text-sm">Who will be doing chores?</p>
         </div>
       </div>
@@ -137,7 +137,7 @@ function CategoriesStep({ categories, seeded, onSeed, selectedCategories, onTogg
       <div className="flex items-center gap-3 mb-4">
         <ChorbiePresets.Excited size={48} season={seasonal} />
         <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary">Chore Categories</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Chore Categories</h2>
           <p className="text-text-secondary text-sm">Organize chores by room or type</p>
         </div>
       </div>
@@ -159,7 +159,7 @@ function CategoriesStep({ categories, seeded, onSeed, selectedCategories, onTogg
                 <button
                   key={cat.id}
                   onClick={() => onToggleCategory(cat.id)}
-                  className="card p-3 flex items-center gap-3 border-2 text-left transition-all"
+                  className="card p-3 flex items-center gap-3 border text-left transition-all"
                   style={{
                     borderColor: isSelected ? cat.color : 'var(--border-primary)',
                     backgroundColor: isSelected ? `${cat.color}15` : undefined,
@@ -255,7 +255,7 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
       <div className="flex items-center gap-3 mb-4">
         <ChorbiePresets.Encourage size={48} season={seasonal} />
         <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary">Add Chores</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Add Chores</h2>
           <p className="text-text-secondary text-sm">Expand a category to add chores</p>
         </div>
       </div>
@@ -271,7 +271,7 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
           return (
             <div
               key={cat.id}
-              className="card overflow-hidden border-2 transition-colors"
+              className="card overflow-hidden border transition-colors"
               style={{ borderColor: isExpanded ? cat.color : 'var(--border-primary)' }}
             >
               {/* Accordion header */}
@@ -320,7 +320,7 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
                                   key={s.name}
                                   onClick={() => addSuggestion(s, cat.id)}
                                   disabled={isAdded}
-                                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all border-2 ${
+                                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all border ${
                                     isAdded
                                       ? 'bg-primary-50 border-primary-300 text-primary-600'
                                       : 'bg-bg-surface border-bg-accent text-text-primary hover:border-primary-400'
@@ -391,7 +391,7 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
           <Plus size={16} /> Create Custom Chore
         </button>
       ) : (
-        <div className="card p-4 mb-4 border-2 border-primary-200">
+        <div className="card p-4 mb-4 border border-primary-200">
           <div className="grid grid-cols-2 gap-3">
             <FormInput label="Name" value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="Chore name" />
             <FormInput label="Icon" value={customIcon} onChange={(e) => setCustomIcon(e.target.value)} placeholder="Emoji" />
@@ -472,7 +472,7 @@ function AddRewardsStep({ addedRewards, setAddedRewards }: {
       <div className="flex items-center gap-3 mb-4">
         <ChorbiePresets.Excited size={48} season={seasonal} />
         <div>
-          <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary">Add Rewards</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Add Rewards</h2>
           <p className="text-text-secondary text-sm">What can kids spend their points on?</p>
         </div>
       </div>
@@ -486,7 +486,7 @@ function AddRewardsStep({ addedRewards, setAddedRewards }: {
               key={s.name}
               onClick={() => addSuggestion(s)}
               disabled={isAdded}
-              className={`flex items-center gap-2 p-3 rounded-xl text-left text-sm font-medium transition-all border-2 ${
+              className={`flex items-center gap-2 p-3 rounded-xl text-left text-sm font-medium transition-all border ${
                 isAdded
                   ? 'bg-primary-50 border-primary-300 text-primary-600'
                   : 'bg-bg-surface border-bg-accent text-text-primary hover:border-primary-400'
@@ -512,7 +512,7 @@ function AddRewardsStep({ addedRewards, setAddedRewards }: {
           <Plus size={16} /> Create custom reward
         </button>
       ) : (
-        <div className="card p-4 mb-4 border-2 border-primary-200">
+        <div className="card p-4 mb-4 border border-primary-200">
           <div className="grid grid-cols-2 gap-3">
             <FormInput label="Name" value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="Reward name" />
             <FormInput label="Icon" value={customIcon} onChange={(e) => setCustomIcon(e.target.value)} placeholder="Emoji" />
@@ -532,7 +532,7 @@ function AddRewardsStep({ addedRewards, setAddedRewards }: {
       {/* Added rewards list */}
       {addedRewards.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-text-muted mb-2 uppercase tracking-wider">
+          <p className="text-xs font-medium text-text-muted mb-2">
             Added ({addedRewards.length})
           </p>
           <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -563,20 +563,20 @@ function DoneStep({ summary }: { summary: { kids: number; chores: number; reward
       <div className="mx-auto mb-6">
         <ChorbiePresets.Success size={120} season={seasonal} />
       </div>
-      <h2 className="text-3xl font-black uppercase tracking-tight text-text-primary mb-3">
+      <h2 className="text-3xl font-bold text-text-primary mb-3">
         You're All Set!
       </h2>
       <div className="flex justify-center gap-6 my-6">
         <div className="text-center">
-          <div className="text-3xl font-black text-primary-500">{summary.kids}</div>
+          <div className="text-3xl font-bold text-primary-500">{summary.kids}</div>
           <div className="text-sm text-text-muted">Kids</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-black text-primary-500">{summary.chores}</div>
+          <div className="text-3xl font-bold text-primary-500">{summary.chores}</div>
           <div className="text-sm text-text-muted">Chores</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-black text-primary-500">{summary.rewards}</div>
+          <div className="text-3xl font-bold text-primary-500">{summary.rewards}</div>
           <div className="text-sm text-text-muted">Rewards</div>
         </div>
       </div>

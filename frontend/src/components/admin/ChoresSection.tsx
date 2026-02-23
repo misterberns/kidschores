@@ -59,7 +59,7 @@ function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent
                     : [...prev, kid.id]
                 );
               }}
-              className="px-3 py-1.5 rounded-full border-2 font-medium transition-colors"
+              className="px-3 py-1.5 rounded-full border font-medium transition-colors"
               style={{
                 backgroundColor: selectedKids.includes(kid.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
                 borderColor: selectedKids.includes(kid.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
@@ -85,7 +85,7 @@ function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent
                         : [...prev, parent.id]
                     );
                   }}
-                  className="px-3 py-1.5 rounded-full border-2 font-medium transition-colors"
+                  className="px-3 py-1.5 rounded-full border font-medium transition-colors"
                   style={{
                     backgroundColor: selectedKids.includes(parent.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
                     borderColor: selectedKids.includes(parent.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
@@ -216,7 +216,7 @@ function EditChoreForm({ chore, kids, parents, onClose }: { chore: Chore; kids: 
                     : [...prev, kid.id]
                 );
               }}
-              className="px-3 py-1.5 rounded-full border-2 font-medium transition-colors"
+              className="px-3 py-1.5 rounded-full border font-medium transition-colors"
               style={{
                 backgroundColor: selectedKids.includes(kid.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
                 borderColor: selectedKids.includes(kid.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
@@ -242,7 +242,7 @@ function EditChoreForm({ chore, kids, parents, onClose }: { chore: Chore; kids: 
                         : [...prev, parent.id]
                     );
                   }}
-                  className="px-3 py-1.5 rounded-full border-2 font-medium transition-colors"
+                  className="px-3 py-1.5 rounded-full border font-medium transition-colors"
                   style={{
                     backgroundColor: selectedKids.includes(parent.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
                     borderColor: selectedKids.includes(parent.id) ? 'var(--primary-500)' : 'var(--bg-accent)',
@@ -366,7 +366,7 @@ export function ChoresSection() {
         <button
           data-testid="add-chore-btn"
           onClick={() => { setShowAddForm(true); setEditingChore(null); }}
-          className="w-full border-2 border-dashed border-status-claimed-border text-status-claimed-text py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-status-claimed-bg transition-colors"
+          className="w-full border border-dashed border-status-claimed-border text-status-claimed-text py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-status-claimed-bg transition-colors"
         >
           <Plus size={20} /> Add Chore
         </button>
@@ -382,7 +382,7 @@ export function ChoresSection() {
             testId={`entity-chore-${chore.id}`}
             onEdit={() => { setEditingChore(chore); setShowAddForm(false); }}
             onDelete={() => setDeleteConfirm({ id: chore.id, name: chore.name })}
-            icon={<div className="w-10 h-10 bg-bg-accent rounded-md border-2 border-[var(--border-color)] flex items-center justify-center"><DynamicIcon icon={chore.icon || '🧹'} size={20} /></div>}
+            icon={<div className="w-10 h-10 bg-bg-accent rounded-md border border-[var(--border-color)] flex items-center justify-center"><DynamicIcon icon={chore.icon || '🧹'} size={20} /></div>}
           >
             <p className="font-bold text-text-primary" data-testid={`chore-name-admin-${chore.id}`}>{chore.name}</p>
             <p className="text-sm text-text-muted" data-testid={`chore-points-admin-${chore.id}`}>

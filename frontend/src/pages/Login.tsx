@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { Logo } from '../components/Logo';
+import { ThemeToggle } from '../theme/ThemeToggle';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -34,7 +35,10 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 bg-bg-base overflow-y-auto">
+    <div className="relative min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 bg-bg-base overflow-y-auto">
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -54,7 +58,7 @@ export function Login() {
       >
         <form
           onSubmit={handleSubmit}
-          className="bg-bg-surface rounded-md border-2 border-[var(--border-color)] shadow-[var(--neo-shadow)] p-6 space-y-4"
+          className="bg-bg-surface rounded-lg border border-[var(--border-color)] shadow-card p-6 space-y-4"
         >
           {/* Error Message */}
           {error && (
@@ -85,7 +89,7 @@ export function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full pl-10 pr-4 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
+                className="w-full pl-10 pr-4 py-3 rounded-lg border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
                 placeholder="you@example.com"
               />
             </div>
@@ -117,7 +121,7 @@ export function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full pl-10 pr-4 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
+                className="w-full pl-10 pr-4 py-3 rounded-lg border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
                 placeholder="••••••••"
               />
             </div>
@@ -130,7 +134,7 @@ export function Login() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             style={{ backgroundColor: 'var(--primary-500)' }}
-            className="w-full py-3 px-4 rounded-md border-2 border-[var(--border-color)] text-white font-bold uppercase tracking-wide text-sm flex items-center justify-center gap-2 shadow-[var(--neo-shadow-sm)] hover:shadow-[5px_5px_0_var(--border-color)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full py-3 px-4 rounded-lg border border-[var(--border-color)] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -166,7 +170,7 @@ export function Login() {
               const scope = encodeURIComponent('openid email profile');
               window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
             }}
-            className="w-full py-3 px-4 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-secondary font-bold uppercase tracking-wide text-sm flex items-center justify-center gap-2 shadow-[var(--neo-shadow-sm)] hover:shadow-[5px_5px_0_var(--border-color)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none focus:outline-none transition-all"
+            className="w-full py-3 px-4 rounded-lg border border-[var(--border-color)] bg-bg-base text-text-secondary font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus:outline-none transition-all"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path

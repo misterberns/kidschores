@@ -85,7 +85,7 @@ function AddParentForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) 
                     : [...prev, kid.id]
                 );
               }}
-              className={`px-3 py-1.5 rounded-full border-2 font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-full border font-medium transition-colors ${
                 selectedKids.includes(kid.id)
                   ? 'bg-status-approved-border text-white border-status-approved-border'
                   : 'border-bg-accent text-text-secondary hover:border-status-approved-border'
@@ -179,7 +179,7 @@ function EditParentForm({ parent, kids, onClose }: { parent: Parent; kids: Kid[]
                     : [...prev, kid.id]
                 );
               }}
-              className={`px-3 py-1.5 rounded-full border-2 font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-full border font-medium transition-colors ${
                 selectedKids.includes(kid.id)
                   ? 'bg-status-approved-border text-white border-status-approved-border'
                   : 'border-bg-accent text-text-secondary hover:border-status-approved-border'
@@ -261,7 +261,7 @@ export function ParentsSection() {
         <button
           data-testid="add-parent-btn"
           onClick={() => { setShowAddForm(true); setEditingParent(null); }}
-          className="w-full border-2 border-dashed border-status-approved-border text-status-approved-text py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-status-approved-bg transition-colors"
+          className="w-full border border-dashed border-status-approved-border text-status-approved-text py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-status-approved-bg transition-colors"
         >
           <Plus size={20} /> Add Parent
         </button>

@@ -73,7 +73,7 @@ export function Register() {
       >
         <form
           onSubmit={handleSubmit}
-          className="bg-bg-surface rounded-md border-2 border-[var(--border-color)] shadow-[var(--neo-shadow)] p-6 space-y-4"
+          className="bg-bg-surface rounded-md border border-[var(--border-color)] shadow-card p-6 space-y-4"
         >
           {/* Error Message */}
           {error && (
@@ -104,7 +104,7 @@ export function Register() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 required
                 autoComplete="name"
-                className="w-full pl-10 pr-4 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
+                className="w-full pl-10 pr-4 py-3 rounded-md border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
                 placeholder="Mom, Dad, etc."
               />
             </div>
@@ -127,7 +127,7 @@ export function Register() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full pl-10 pr-4 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
+                className="w-full pl-10 pr-4 py-3 rounded-md border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
                 placeholder="you@example.com"
               />
             </div>
@@ -150,7 +150,7 @@ export function Register() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full pl-10 pr-4 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
+                className="w-full pl-10 pr-4 py-3 rounded-md border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
                 placeholder="••••••••"
               />
             </div>
@@ -173,7 +173,7 @@ export function Register() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full pl-10 pr-4 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
+                className="w-full pl-10 pr-4 py-3 rounded-md border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
                 placeholder="••••••••"
               />
             </div>
@@ -207,7 +207,7 @@ export function Register() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             style={{ backgroundColor: 'var(--primary-500)' }}
-            className="w-full py-3 px-4 rounded-md border-2 border-[var(--border-color)] text-white font-bold uppercase tracking-wide text-sm flex items-center justify-center gap-2 shadow-[var(--neo-shadow-sm)] hover:shadow-[5px_5px_0_var(--border-color)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full py-3 px-4 rounded-md border border-[var(--border-color)] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -243,7 +243,7 @@ export function Register() {
               const scope = encodeURIComponent('openid email profile');
               window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
             }}
-            className="w-full py-3 px-4 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-secondary font-bold uppercase tracking-wide text-sm flex items-center justify-center gap-2 shadow-[var(--neo-shadow-sm)] hover:shadow-[5px_5px_0_var(--border-color)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none focus:outline-none transition-all"
+            className="w-full py-3 px-4 rounded-md border border-[var(--border-color)] bg-bg-base text-text-secondary font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus:outline-none transition-all"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path

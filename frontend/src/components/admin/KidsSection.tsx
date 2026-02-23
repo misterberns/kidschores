@@ -209,7 +209,7 @@ export function KidsSection() {
         <button
           data-testid="add-kid-btn"
           onClick={() => { setShowAddForm(true); setEditingKid(null); }}
-          className="w-full border-2 border-dashed border-primary-500 text-primary-500 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-50 transition-colors"
+          className="w-full border border-dashed border-primary-500 text-primary-500 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-50 transition-colors"
         >
           <Plus size={20} /> Add Kid
         </button>

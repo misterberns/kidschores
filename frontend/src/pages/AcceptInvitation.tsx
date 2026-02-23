@@ -126,7 +126,7 @@ export function AcceptInvitation() {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md"
         >
-          <div className="bg-bg-surface rounded-md border-2 border-[var(--border-color)] shadow-[var(--neo-shadow)] p-8 text-center">
+          <div className="bg-bg-surface rounded-md border border-[var(--border-color)] shadow-card p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-error-100 dark:bg-error-900/30 flex items-center justify-center">
               <AlertCircle size={32} className="text-error-500" />
             </div>
@@ -157,7 +157,7 @@ export function AcceptInvitation() {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md"
         >
-          <div className="bg-bg-surface rounded-md border-2 border-[var(--border-color)] shadow-[var(--neo-shadow)] p-8 text-center">
+          <div className="bg-bg-surface rounded-md border border-[var(--border-color)] shadow-card p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success-100 dark:bg-success-900/30 flex items-center justify-center">
               <CheckCircle size={32} className="text-success-500" />
             </div>
@@ -206,7 +206,7 @@ export function AcceptInvitation() {
       >
         <form
           onSubmit={handleSubmit}
-          className="bg-bg-surface rounded-md border-2 border-[var(--border-color)] shadow-[var(--neo-shadow)] p-6 space-y-4"
+          className="bg-bg-surface rounded-md border border-[var(--border-color)] shadow-card p-6 space-y-4"
         >
           {/* Info Box */}
           <div className="flex items-start gap-3 p-3 rounded-lg bg-primary-100 dark:bg-primary-900/20 text-primary-800 dark:text-primary-200">
@@ -245,7 +245,7 @@ export function AcceptInvitation() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 autoComplete="name"
-                className="w-full pl-10 pr-4 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
+                className="w-full pl-10 pr-4 py-3 rounded-md border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
                 placeholder={parentName || 'Your name'}
               />
             </div>
@@ -268,7 +268,7 @@ export function AcceptInvitation() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full pl-10 pr-12 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
+                className="w-full pl-10 pr-12 py-3 rounded-md border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
                 placeholder="Create a password"
               />
               <button
@@ -298,7 +298,7 @@ export function AcceptInvitation() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full pl-10 pr-12 py-3 rounded-md border-2 border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[var(--neo-shadow-sm)]"
+                className="w-full pl-10 pr-12 py-3 rounded-md border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
                 placeholder="Confirm your password"
               />
               <button

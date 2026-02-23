@@ -68,7 +68,7 @@ export function SelectKid() {
                 onClick={() => handleSelectKid(kid.id)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex flex-col items-center p-6 rounded-md border-2 border-[var(--border-color)] bg-bg-surface shadow-[var(--neo-shadow)] hover:shadow-xl transition-shadow"
+                className="flex flex-col items-center p-6 rounded-lg border border-[var(--border-color)] bg-bg-surface shadow-card hover:shadow-xl transition-shadow"
               >
                 <div
                   style={{ backgroundColor: avatarColors[index % avatarColors.length] }}
@@ -84,7 +84,7 @@ export function SelectKid() {
             ))}
           </div>
         ) : (
-          <div className="text-center p-6 rounded-md border-2 border-[var(--border-color)] bg-bg-surface shadow-[var(--neo-shadow)] mb-6">
+          <div className="text-center p-6 rounded-lg border border-[var(--border-color)] bg-bg-surface shadow-card mb-6">
             <p className="text-text-muted">
               No kids added yet. Go to the Parent section to add kids.
             </p>
@@ -98,7 +98,7 @@ export function SelectKid() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             style={{ borderColor: 'var(--primary-500)', color: 'var(--primary-500)' }}
-            className="w-full py-4 px-4 rounded-xl bg-bg-surface border-2 font-semibold flex items-center justify-center gap-2 hover:opacity-80 transition-colors"
+            className="w-full py-4 px-4 rounded-xl bg-bg-surface border font-semibold flex items-center justify-center gap-2 hover:opacity-80 transition-colors"
           >
             <User size={20} />
             Continue as Parent

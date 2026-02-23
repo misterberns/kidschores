@@ -69,48 +69,43 @@ export default {
             text: 'var(--status-overdue-text)',
           },
         },
-        // Kid color palette - Duolingo-Style Vibrant Colors
+        // Kid color palette - Refined Vibrant Colors
         kid: {
-          lime: { from: '#58CC02', to: '#89E219' },      // Feather Green
-          ocean: { from: '#1CB0F6', to: '#00D4FF' },     // Sky Blue
-          sunset: { from: '#FF9600', to: '#FFBE00' },    // Warm Orange
-          berry: { from: '#FF4B4B', to: '#FF7676' },     // Berry Red
-          grape: { from: '#CE82FF', to: '#A855F7' },     // Grape Purple
-          teal: { from: '#2DD4BF', to: '#14B8A6' },      // Fresh Teal
-          coral: { from: '#FF6B6B', to: '#FF8E8E' },     // Soft Coral
-          gold: { from: '#FFD93D', to: '#FFC107' },      // Golden Yellow
+          lime: { from: '#34B233', to: '#4CC552' },
+          ocean: { from: '#1A8FD6', to: '#3BA6E0' },
+          sunset: { from: '#E86A10', to: '#F58D3D' },
+          berry: { from: '#D93654', to: '#E85A74' },
+          grape: { from: '#8A4FBF', to: '#A36DD5' },
+          teal: { from: '#0D9E8A', to: '#2DB8A6' },
+          coral: { from: '#D44590', to: '#E066A8' },
+          gold: { from: '#E6A800', to: '#F0C030' },
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       fontWeight: {
         medium: '500',
         semibold: '600',
         bold: '700',
-        extrabold: '800',
-        black: '900',
       },
       borderRadius: {
-        'sm': '0.25rem',
-        'md': '0.375rem',
-        'lg': '0.375rem',
-        'xl': '0.375rem',
-        '2xl': '0.375rem',
-        '3xl': '0.5rem',
-      },
-      borderWidth: {
-        'neo': '2px',
+        'sm': '6px',
+        'md': '8px',
+        'lg': '12px',
+        'xl': '16px',
+        '2xl': '20px',
+        '3xl': '24px',
       },
       transitionDuration: {
         'theme': '200ms',
       },
       boxShadow: {
-        'card': 'var(--neo-shadow)',
-        'card-hover': 'var(--neo-shadow-hover)',
-        'neo-sm': 'var(--neo-shadow-sm)',
-        'neo': 'var(--neo-shadow)',
-        'neo-hover': 'var(--neo-shadow-hover)',
+        'card': 'var(--shadow-sm)',
+        'card-hover': 'var(--shadow-md)',
+        'sm': 'var(--shadow-sm)',
+        'md': 'var(--shadow-md)',
+        'lg': 'var(--shadow-lg)',
         'seasonal': 'var(--seasonal-glow)',
       },
     },
