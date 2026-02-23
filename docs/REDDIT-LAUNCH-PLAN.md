@@ -1,4 +1,4 @@
-# Reddit Launch Plan — KidsChores v0.7.8
+# Reddit Launch Plan — KidsChores v0.7.9
 
 ## Subreddit Strategy
 
@@ -34,7 +34,8 @@ Hey r/selfhosted! I've been building a chore management app for my family and ju
 - Parents and kids can both be assigned to chores
 - Google SSO for parents and kids (optional)
 - Email notifications when kids claim chores or redeem rewards
-- Seasonal themes (Halloween, Christmas, Easter, Summer) with light/dark mode
+- Seasonal themes (Halloween, Christmas, Easter, Summer) with light/dark mode and theme toggle on login
+- Modern Warm Minimal design — soft borders, subtle shadows, clean typography
 - Mobile-responsive — works great on phones
 
 **Self-hosting highlights:**
@@ -43,7 +44,7 @@ Hey r/selfhosted! I've been building a chore management app for my family and ju
 - ~50MB total (frontend: nginx-alpine, backend: python-slim)
 - Data stays in a local `./data/` directory
 
-**Tech stack:** React 19, TypeScript, Tailwind CSS v4, FastAPI, SQLAlchemy, SQLite, Docker
+**Tech stack:** React 19, TypeScript, Tailwind CSS v4, FastAPI, SQLAlchemy, SQLite, Docker, Vitest
 
 **Screenshots:** [Light mode](https://raw.githubusercontent.com/misterberns/kidschores/main/screenshots/home-light.png) | [Dark mode](https://raw.githubusercontent.com/misterberns/kidschores/main/screenshots/home-dark.png)
 
@@ -55,7 +56,7 @@ cp .env.example .env   # set JWT_SECRET_KEY
 docker compose up -d   # access at localhost:3103
 ```
 
-**Background:** This started as a fork of [KidsChores-HA](https://github.com/ad-ha/kidschores-ha) by [ad-ha](https://github.com/ad-ha), an excellent Home Assistant chore management integration. I rebuilt it as a standalone React + FastAPI web app over the past few months, and it's been running in production for my family the whole time. Just hit v0.7.8 with a full security audit, 100+ E2E tests, and error boundaries. Full credit to ad-ha for the original concept and gamification design.
+**Background:** This started as a fork of [KidsChores-HA](https://github.com/ad-ha/kidschores-ha) by [ad-ha](https://github.com/ad-ha), an excellent Home Assistant chore management integration. I rebuilt it as a standalone React + FastAPI web app over the past few months, and it's been running in production for my family the whole time. Just hit v0.7.9 with a full security audit, 200+ tests (E2E + unit), and error boundaries. Full credit to ad-ha for the original concept and gamification design.
 
 **GitHub:** https://github.com/misterberns/kidschores
 
@@ -80,7 +81,7 @@ My kids needed a chore system, and I didn't want to hand our family data to anot
 - SQLite database — no Postgres/MySQL to manage
 - Total footprint: ~50MB, minimal CPU
 
-**What it does:** Kids claim chores, earn points, and redeem rewards. Parents approve everything. There's an onboarding wizard that walks you through setup, an allowance system that converts points to dollars, and category-based chore organization. Seasonal themes keep the kids engaged (they love switching to the Halloween theme).
+**What it does:** Kids claim chores, earn points, and redeem rewards. Parents approve everything. There's an onboarding wizard that walks you through setup, an allowance system that converts points to dollars, and category-based chore organization. Seasonal themes keep the kids engaged (they love switching to the Halloween theme). Recently redesigned with a Modern Warm Minimal aesthetic — soft borders, subtle shadows, clean typography.
 
 **Screenshots:** [Light](https://raw.githubusercontent.com/misterberns/kidschores/main/screenshots/home-light.png) | [Dark](https://raw.githubusercontent.com/misterberns/kidschores/main/screenshots/home-dark.png) | [Admin](https://raw.githubusercontent.com/misterberns/kidschores/main/screenshots/admin-light.png)
 
@@ -90,7 +91,7 @@ git clone https://github.com/misterberns/kidschores.git && cd kidschores
 cp .env.example .env && docker compose up -d
 ```
 
-Started as a fork of [KidsChores-HA](https://github.com/ad-ha/kidschores-ha) by [ad-ha](https://github.com/ad-ha) — originally a Home Assistant chore management integration. I rebuilt it as a standalone web app. v0.7.8 with JWT auth, rate limiting, bcrypt, and 100+ E2E tests.
+Started as a fork of [KidsChores-HA](https://github.com/ad-ha/kidschores-ha) by [ad-ha](https://github.com/ad-ha) — originally a Home Assistant chore management integration. I rebuilt it as a standalone web app. v0.7.9 with JWT auth, rate limiting, bcrypt, and 200+ tests.
 
 **GitHub:** https://github.com/misterberns/kidschores
 
@@ -128,7 +129,7 @@ Reddit (especially r/selfhosted, r/homelab) has strong anti-"vibe coding" sentim
 > "Yeah, I used Claude Code as an AI coding assistant throughout development — mostly for scaffolding, refactoring, and catching security issues. But I architected the system, made all the design decisions, debugged the deployment on my Synology NAS, and have been running it in production for my family. Every line went through my review. It's AI-assisted, not AI-generated."
 
 **Why this framing works:**
-1. KidsChores is NOT a vibe-coded throwaway — you understand the full stack, run it in production, did a security audit, wrote 100+ E2E tests
+1. KidsChores is NOT a vibe-coded throwaway — you understand the full stack, run it in production, did a security audit, wrote 200+ tests
 2. Leading with "built with AI" shifts the conversation from product to tools, inviting skepticism
 3. The commit trailers already have `Co-Authored-By: Claude` — anyone who checks the repo can see it. Transparent without being self-sabotaging.
 4. r/selfhosted rewards authentic stories about solving real problems — that's what the posts deliver
