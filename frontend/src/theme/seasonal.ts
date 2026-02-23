@@ -24,7 +24,7 @@ export const seasonalThemes: Record<SeasonalTheme, SeasonalOverride> = {
     iconColor: '#58CC02',
     primaryColor: '#58CC02',
     accentColor: '#FF9600',
-    description: 'Neobrutalist green with neon energy',
+    description: 'Clean green with warm energy',
   },
 
   halloween: {

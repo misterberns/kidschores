@@ -1,5 +1,5 @@
 // Theme color definitions for KidsChores app
-// Neobrutalist Design System
+// Modern Warm Minimal Design System
 // Primary: Feather Green (#58CC02)
 // Secondary: Sky Blue (#1CB0F6)
 // Accent: Warm Orange (#FF9600)
@@ -69,7 +69,7 @@ export interface ThemeColors {
   shadow: string;
 }
 
-// Kid color palette - 8 Bold Neobrutalist Colors
+// Kid color palette - 8 Bold Colors
 // High-saturation, edgy gradients — neon in dark mode
 // Light: >=3:1 contrast for white large text (WCAG AA)
 // Dark: electric/neon matching #39FF14 border energy
@@ -190,9 +190,9 @@ export function getKidColorFromId(kidId: string): KidColor {
   return kidColorPalette[index];
 }
 
-// Light theme colors - Neobrutalist (Bold, Sharp, High-Contrast)
+// Light theme colors - Modern Warm Minimal
 export const lightTheme: ThemeColors = {
-  background: '#F0EDE8',     // Warm cream (neobrutalist signature)
+  background: '#F0EDE8',     // Warm cream
   surface: '#FFFFFF',        // White cards pop on cream
   surfaceHover: '#F5F3EF',
 
@@ -236,7 +236,7 @@ export const lightTheme: ThemeColors = {
   blue: '#1CB0F6',           // Sky Blue
   celebration: '#FF4B4B',    // Berry Pink
 
-  border: '#1A1A1A',         // Black borders (neobrutalist core)
+  border: '#1A1A1A',         // Black borders
   borderStrong: '#1A1A1A',
 
   shadow: '4px 4px 0 #1A1A1A',

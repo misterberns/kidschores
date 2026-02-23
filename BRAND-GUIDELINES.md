@@ -48,7 +48,7 @@ Maintain padding equal to the icon height on all sides. Do not place other eleme
 
 | Name | Hex | CSS Variable |
 |------|-----|-------------|
-| Warm Cream | `#F0EDE8` | `--bg-base` (neobrutalist base) |
+| Warm Cream | `#F0EDE8` | `--bg-base` |
 | White | `#FFFFFF` | `--bg-surface` (card backgrounds) |
 | Near Black | `#1A1A1A` | `--text-primary`, `--border-color` |
 | Feather Green | `#58CC02` | `--primary-500` |
@@ -98,31 +98,31 @@ In dark mode, brand colors shift to electric neon for maximum contrast:
 | H1 | 2rem | Black (900) | Uppercase, tracking-tight | Page titles |
 | H2 | 1.5rem | Bold (700) | | Section headers |
 | Body | 1rem | Medium (500) | | Content text |
-| Button | 0.875rem | Bold (700) | Uppercase, tracking-wide | Action labels |
-| Badge | 0.75rem | Bold (700) | Uppercase, tracking-wider | Status labels |
+| Button | 0.875rem | Bold (700) | Sentence case | Action labels |
+| Badge | 0.75rem | SemiBold (600) | Sentence case | Status labels |
 | Caption | 0.875rem | Medium (500) | | Labels, hints |
 
-## Shape Language (Neobrutalist)
+## Shape Language (Modern Warm Minimal)
 
 | Property | Value | CSS |
 |----------|-------|-----|
-| Border radius | 6px | `border-radius: var(--neo-radius)` / `rounded-md` |
-| Border width | 2px solid | `border: 2px solid var(--border-color)` |
-| Card shadow | 4px 4px 0 (no blur) | `box-shadow: var(--neo-shadow)` |
-| Card hover shadow | 6px 6px 0 | `box-shadow: var(--neo-shadow-hover)` |
-| Button shadow | 3px 3px 0 | `box-shadow: var(--neo-shadow-sm)` |
-| Hover effect | translate(-2px, -2px) | Lift up-left + bigger shadow |
-| Press effect | translate(0, 0) | Push flat + no shadow |
+| Border radius | 8px (0.5rem) | `border-radius: var(--neo-radius)` / `rounded-lg` |
+| Border width | 1px solid | `border: 1px solid var(--border-color)` |
+| Card shadow | Soft rgba blur | `box-shadow: var(--neo-shadow)` |
+| Card hover shadow | Elevated rgba blur | `box-shadow: var(--neo-shadow-hover)` |
+| Button shadow | Subtle rgba blur | `box-shadow: var(--neo-shadow-sm)` |
+| Hover effect | Shadow elevation | Subtle shadow lift on hover |
+| Press effect | scale(0.98) | Gentle press feedback |
 
 ### Utility Classes
 
 | Class | Usage |
 |-------|-------|
 | `.neo-card` | Card with border + shadow + hover lift |
-| `.neo-btn` | Button with border + shadow + uppercase |
-| `.neo-input` | Input with border + focus shadow |
-| `.card` | Base card (automatically neobrutalist) |
-| `.btn` | Base button (automatically neobrutalist) |
+| `.neo-btn` | Button with border + shadow |
+| `.neo-input` | Input with border + focus ring |
+| `.card` | Base card (automatically styled) |
+| `.btn` | Base button (automatically styled) |
 
 ## Chorbie Mascot
 

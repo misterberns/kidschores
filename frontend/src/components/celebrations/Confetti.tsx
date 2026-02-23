@@ -19,7 +19,7 @@ interface ConfettiProps {
   colors?: string[];
 }
 
-// Neobrutalist celebration colors - bold, saturated
+// Celebration colors - bold, saturated
 const defaultColors = [
   '#39FF14', // Neon Lime
   '#00D4FF', // Electric Blue

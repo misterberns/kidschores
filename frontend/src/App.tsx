@@ -239,7 +239,7 @@ function AppContent() {
         }}
       />
 
-      {/* Header - Neobrutalist with thick bottom border */}
+      {/* Header */}
       <header className="p-4 transition-colors duration-200 bg-bg-surface border-b-2 border-[var(--border-color)]">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           {/* User indicator */}
