@@ -31,8 +31,14 @@ test.describe('History Page', () => {
     await expect(page.getByText('History')).toBeVisible();
   });
 
-  test('should show kid selector', async ({ authenticatedPage: page }) => {
-    await expect(page.getByRole('combobox')).toBeVisible();
+  test('should show kid selector when there are multiple kids', async ({ authenticatedPage: page, apiContext }) => {
+    // The kid selector (a "Select kid" tablist) only renders with 2+ kids.
+    await apiContext.post('/api/kids', { data: TestData.kid.jack() });
+    await page.reload();
+
+    await expect(page.getByRole('tablist', { name: /select kid/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Emma' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Jack' })).toBeVisible();
   });
 
   test('should show view mode tabs', async ({ authenticatedPage: page }) => {
@@ -41,24 +47,18 @@ test.describe('History Page', () => {
     await expect(page.getByRole('tab', { name: /List/i })).toBeVisible();
   });
 
-  test('should display stats when kid is selected', async ({ authenticatedPage: page }) => {
-    // Select kid
-    await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Emma' }).click();
-
-    // Should show stats
-    await expect(page.getByText('Total Chores')).toBeVisible();
+  test('should display stats for the active kid', async ({ authenticatedPage: page }) => {
+    // Single kid (Emma) is auto-selected; stats is the default view.
+    await expect(page.getByText('Total Completed')).toBeVisible();
     await expect(page.getByText('Total Points')).toBeVisible();
   });
 
   test('should switch between view modes', async ({ authenticatedPage: page }) => {
-    // Select kid
-    await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Emma' }).click();
-
     // Switch to calendar view
     await page.getByRole('tab', { name: /Calendar/i }).click();
-    await expect(page.getByText(/January|February|March|April|May|June|July|August|September|October|November|December/)).toBeVisible();
+    await expect(
+      page.getByText(/January|February|March|April|May|June|July|August|September|October|November|December/)
+    ).toBeVisible();
 
     // Switch to list view
     await page.getByRole('tab', { name: /List/i }).click();
@@ -66,25 +66,15 @@ test.describe('History Page', () => {
   });
 
   test('should show completed chore in list view', async ({ authenticatedPage: page }) => {
-    // Select kid
-    await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Emma' }).click();
-
-    // Go to list view
     await page.getByRole('tab', { name: /List/i }).click();
 
-    // Should show the completed chore
     await expect(page.getByText('Clean Room')).toBeVisible();
     await expect(page.getByText('approved')).toBeVisible();
     await expect(page.getByText('+25')).toBeVisible();
   });
 
   test('should have export button', async ({ authenticatedPage: page }) => {
-    // Select kid
-    await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Emma' }).click();
-
-    await expect(page.getByRole('button', { name: /Export CSV/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Export/i })).toBeVisible();
   });
 
   test('should navigate to history from bottom nav', async ({ authenticatedPage: page }) => {
@@ -94,20 +84,17 @@ test.describe('History Page', () => {
   });
 
   test('should show total chores count correctly', async ({ authenticatedPage: page }) => {
-    // Select kid
-    await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Emma' }).click();
-
-    // In stats view, should show 1 completed chore
-    await expect(page.getByText('1')).toBeVisible();
+    // The StatCard renders the value in a <p> immediately before the title <p>.
+    const totalCompletedValue = page
+      .getByText('Total Completed', { exact: true })
+      .locator('xpath=preceding-sibling::p[1]');
+    await expect(totalCompletedValue).toHaveText('1');
   });
 
   test('should show points earned correctly', async ({ authenticatedPage: page }) => {
-    // Select kid
-    await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Emma' }).click();
-
-    // Should show 25 points earned from the chore
-    await expect(page.getByText('25')).toBeVisible();
+    const totalPointsValue = page
+      .getByText('Total Points', { exact: true })
+      .locator('xpath=preceding-sibling::p[1]');
+    await expect(totalPointsValue).toHaveText('25');
   });
 });

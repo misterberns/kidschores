@@ -14,7 +14,7 @@ import { HomePage } from '../pages/HomePage';
  */
 test.describe('Chore Lifecycle Workflow', () => {
   test('complete chore lifecycle: create -> claim -> approve -> points', async ({
-    page,
+    authenticatedPage: page,
     resetDatabase,
   }) => {
     await resetDatabase();
@@ -193,7 +193,7 @@ test.describe('Chore Lifecycle Workflow', () => {
   });
 
   test('shared chore can be claimed by any assigned kid', async ({
-    page,
+    authenticatedPage: page,
     resetDatabase,
     apiContext,
   }) => {
