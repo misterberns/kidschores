@@ -21,5 +21,9 @@ COPY --from=builder /build/dist /usr/share/nginx/html
 
 EXPOSE 80
 
+# Use 127.0.0.1 (IPv4) — busybox wget resolves `localhost` to IPv6 [::1] first, but
+# nginx listens on IPv4 only (`listen 80;`), so `localhost` false-fails and the container
+# reads unhealthy → Traefik's Docker provider drops the router (→ 404). This is the
+# baked-in image healthcheck that applies on a `docker save`→Portainer-load deploy.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD wget --spider -q http://localhost:80 || exit 1
+    CMD wget --spider -q http://127.0.0.1:80 || exit 1

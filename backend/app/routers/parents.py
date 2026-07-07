@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..deps import require_auth, require_admin
+from ..deps import require_parent
 from ..models import Parent, ParentInvitation, User
 from ..security import verify_pin, hash_pin
 from ..schemas import (
@@ -44,7 +44,7 @@ APP_BASE_URL = settings.app_base_url
 
 @router.get("", response_model=List[ParentResponse])
 @router.get("/", response_model=List[ParentResponse], include_in_schema=False)
-def list_parents(db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def list_parents(db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """List all parents."""
     return db.query(Parent).all()
 
@@ -93,7 +93,7 @@ async def create_parent(
     parent: ParentCreateWithInvite,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    _admin: User = Depends(require_admin),
+    _admin: User = Depends(require_parent),
 ):
     """Create a new parent, optionally sending an email invitation."""
     # Extract invitation fields before creating parent
@@ -126,7 +126,7 @@ async def create_parent(
 
 
 @router.get("/{parent_id}", response_model=ParentResponse)
-def get_parent(parent_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def get_parent(parent_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Get parent by ID."""
     parent = db.query(Parent).filter(Parent.id == parent_id).first()
     if not parent:
@@ -135,7 +135,7 @@ def get_parent(parent_id: str, db: Session = Depends(get_db), _admin: User = Dep
 
 
 @router.put("/{parent_id}", response_model=ParentResponse)
-def update_parent(parent_id: str, parent_update: ParentCreate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def update_parent(parent_id: str, parent_update: ParentCreate, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Update parent."""
     parent = db.query(Parent).filter(Parent.id == parent_id).first()
     if not parent:
@@ -151,7 +151,7 @@ def update_parent(parent_id: str, parent_update: ParentCreate, db: Session = Dep
 
 
 @router.delete("/{parent_id}")
-def delete_parent(parent_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def delete_parent(parent_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Delete parent."""
     parent = db.query(Parent).filter(Parent.id == parent_id).first()
     if not parent:
@@ -163,7 +163,7 @@ def delete_parent(parent_id: str, db: Session = Depends(get_db), _admin: User = 
 
 
 @router.post("/{parent_id}/verify-pin")
-def verify_pin_endpoint(parent_id: str, request: VerifyPinRequest, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def verify_pin_endpoint(parent_id: str, request: VerifyPinRequest, db: Session = Depends(get_db), _user: User = Depends(require_parent)):
     """Verify parent PIN for approval actions."""
     # Rate limiting
     now = time.time()
@@ -203,7 +203,7 @@ async def send_parent_invitation(
     invitation: ParentInvitationCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    _admin: User = Depends(require_admin),
+    _admin: User = Depends(require_parent),
 ):
     """Send an email invitation to an existing parent."""
     # Verify parent exists

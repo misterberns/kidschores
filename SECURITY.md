@@ -4,8 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.7.x   | Yes       |
-| < 0.7   | No        |
+| 0.8.x   | Yes       |
+| < 0.8   | No        |
 
 ## Reporting a Vulnerability
 
@@ -29,14 +29,18 @@ If you discover a security vulnerability, please report it responsibly:
 
 KidsChores implements the following security practices:
 
-- **Authentication**: JWT tokens with configurable expiry, bcrypt password hashing (12 rounds)
-- **Rate limiting**: Login attempts rate-limited per IP
-- **CORS**: Configurable allowed origins (no wildcard in production)
-- **Non-root containers**: Backend runs as unprivileged user
-- **Security headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
-- **Input validation**: Pydantic schemas for all API inputs
-- **SQL injection prevention**: SQLAlchemy ORM with parameterized queries
-- **No secrets in code**: All credentials loaded from environment variables
+- **Authentication**: JWT tokens with configurable expiry, bcrypt password hashing (12 rounds). The app **refuses to start** with a missing/placeholder/too-short `JWT_SECRET_KEY`.
+- **Authorization**: parent/kid role model — management actions require a parent account; kid accounts can only act on and read their own data (object-level ownership checks).
+- **API tokens**: hashed at rest, prefix-narrowed lookup, and **expiry is enforced** at authentication time.
+- **Rate limiting**: login attempts rate-limited **per account (email) and per IP**.
+- **CORS**: configurable allowed origins (no wildcard in production).
+- **Test endpoints**: the destructive `/api/test/*` reset endpoints are **fail-closed** — mounted only in explicit `development`/`test` environments and additionally require an authenticated admin.
+- **Non-root containers**: backend runs as an unprivileged user.
+- **Security headers + CSP**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, and a Content-Security-Policy.
+- **Push-notification ownership**: subscriptions are bound server-side to the caller (a kid cannot register as a parent subscription).
+- **Input validation**: Pydantic schemas for all API inputs; HTML-escaped email templates.
+- **SQL injection prevention**: SQLAlchemy ORM with parameterized queries.
+- **No secrets in code**: all credentials loaded from environment variables.
 
 ## Scope
 

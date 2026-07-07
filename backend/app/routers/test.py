@@ -7,29 +7,34 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..deps import require_admin
 from ..models import (
     ChoreClaim, RewardClaim, Chore, Reward, Kid, Parent,
     ChoreCategory, AllowancePayout, AllowanceSettings,
     Badge, Bonus, Penalty, DailyMultiplier, ScheduledJobLog,
-    PushSubscription, NotificationPreference,
+    PushSubscription, NotificationPreference, User,
 )
 
 router = APIRouter()
 
+# Environments in which the destructive test endpoints are permitted (fail-closed).
+_ALLOWED_TEST_ENVS = {"development", "dev", "test", "e2e"}
+
 
 @router.post("/reset")
-def reset_database(db: Session = Depends(get_db)):
+def reset_database(db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """
     Reset database for testing - clears all entity data.
 
     Preserves User accounts so the test user can still login.
-    Only available when ENVIRONMENT != 'production'.
+    Requires an authenticated admin AND an explicit non-production ENVIRONMENT
+    (defense in depth on top of the fail-closed router mount in main.py).
     """
-    env = os.environ.get("ENVIRONMENT", "development")
-    if env == "production":
+    env = os.environ.get("ENVIRONMENT", "").strip().lower()
+    if env not in _ALLOWED_TEST_ENVS:
         raise HTTPException(
             status_code=403,
-            detail="Database reset not allowed in production"
+            detail="Database reset not allowed in this environment"
         )
 
     try:
@@ -75,7 +80,7 @@ def reset_database(db: Session = Depends(get_db)):
 
 
 @router.get("/status")
-def test_status(db: Session = Depends(get_db)):
+def test_status(db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Get current database entity counts - useful for test debugging."""
     return {
         "kids": db.query(Kid).count(),

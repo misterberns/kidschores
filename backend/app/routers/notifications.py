@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from ..database import get_db
-from ..deps import require_auth
+from ..deps import require_auth, get_user_kid
 from ..models import PushSubscription, NotificationPreference, Kid, Parent, User
 from ..services.push_service import push_service
 
@@ -53,28 +53,39 @@ def get_vapid_key(_user: User = Depends(require_auth)):
 @router.post("/subscribe")
 def subscribe(
     subscription: PushSubscriptionCreate,
-    user_id: Optional[str] = None,
-    kid_id: Optional[str] = None,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    user: User = Depends(require_auth),
 ):
-    """Subscribe to push notifications."""
-    # Check if subscription already exists
+    """Subscribe the current device to push notifications.
+
+    Ownership is derived server-side from the caller (client-supplied user_id/kid_id
+    are ignored): a kid-linked account registers a kid subscription for its own
+    kid_id; a parent registers a parent subscription (kid_id=NULL). This prevents a
+    kid from registering a parent (kid_id=NULL) subscription and hijacking the
+    family-wide parent push stream.
+    """
+    caller_kid = get_user_kid(db, user)
+    sub_user_id = None if caller_kid else user.id
+    sub_kid_id = caller_kid.id if caller_kid else None
+
+    # Check if subscription already exists (same device endpoint)
     existing = db.query(PushSubscription).filter(
         PushSubscription.endpoint == subscription.endpoint
     ).first()
 
     if existing:
-        # Update existing subscription
+        # Update existing subscription and (re)bind ownership to the caller
         existing.p256dh_key = subscription.keys.get("p256dh", "")
         existing.auth_key = subscription.keys.get("auth", "")
+        existing.user_id = sub_user_id
+        existing.kid_id = sub_kid_id
         db.commit()
         return {"status": "updated", "id": existing.id}
 
     # Create new subscription
     new_sub = PushSubscription(
-        user_id=user_id,
-        kid_id=kid_id,
+        user_id=sub_user_id,
+        kid_id=sub_kid_id,
         endpoint=subscription.endpoint,
         p256dh_key=subscription.keys.get("p256dh", ""),
         auth_key=subscription.keys.get("auth", ""),
@@ -86,11 +97,19 @@ def subscribe(
     return {"status": "subscribed", "id": new_sub.id}
 
 
+def _owns_subscription(db: Session, user: User, subscription: PushSubscription) -> bool:
+    """True if the push subscription belongs to the calling user (parent or own kid)."""
+    if subscription.user_id and subscription.user_id == user.id:
+        return True
+    caller_kid = get_user_kid(db, user)
+    return caller_kid is not None and subscription.kid_id == caller_kid.id
+
+
 @router.delete("/unsubscribe")
 def unsubscribe(
     endpoint: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    user: User = Depends(require_auth),
 ):
     """Unsubscribe from push notifications."""
     subscription = db.query(PushSubscription).filter(
@@ -99,6 +118,9 @@ def unsubscribe(
 
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
+
+    if not _owns_subscription(db, user, subscription):
+        raise HTTPException(status_code=403, detail="Not your subscription")
 
     db.delete(subscription)
     db.commit()
@@ -110,7 +132,7 @@ def unsubscribe(
 def send_test_notification(
     endpoint: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    user: User = Depends(require_auth),
 ):
     """Send a test push notification."""
     subscription = db.query(PushSubscription).filter(
@@ -119,6 +141,9 @@ def send_test_notification(
 
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
+
+    if not _owns_subscription(db, user, subscription):
+        raise HTTPException(status_code=403, detail="Not your subscription")
 
     subscription_info = {
         "endpoint": subscription.endpoint,
@@ -146,9 +171,11 @@ def send_test_notification(
 def get_preferences(
     user_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    user: User = Depends(require_auth),
 ):
     """Get notification preferences for a user."""
+    if user_id != user.id:
+        raise HTTPException(status_code=403, detail="You can only access your own preferences")
     prefs = db.query(NotificationPreference).filter(
         NotificationPreference.user_id == user_id
     ).first()
@@ -179,9 +206,11 @@ def update_preferences(
     user_id: str,
     updates: NotificationPreferenceUpdate,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    user: User = Depends(require_auth),
 ):
     """Update notification preferences for a user."""
+    if user_id != user.id:
+        raise HTTPException(status_code=403, detail="You can only modify your own preferences")
     prefs = db.query(NotificationPreference).filter(
         NotificationPreference.user_id == user_id
     ).first()

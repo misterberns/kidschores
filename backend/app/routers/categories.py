@@ -9,7 +9,7 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 from ..database import get_db
-from ..deps import require_auth, require_admin
+from ..deps import require_auth, require_parent
 from ..models import ChoreCategory, Chore, User
 
 router = APIRouter()
@@ -82,7 +82,7 @@ def list_categories(db: Session = Depends(get_db), _user: User = Depends(require
 
 @router.post("", response_model=CategoryResponse)
 @router.post("/", response_model=CategoryResponse, include_in_schema=False)
-def create_category(category: CategoryCreate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def create_category(category: CategoryCreate, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Create a new category."""
     # If sort_order not provided, put at end
     if category.sort_order is None:
@@ -120,7 +120,7 @@ def get_predefined_categories(_user: User = Depends(require_auth)):
 
 
 @router.post("/seed-defaults")
-def seed_default_categories(db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def seed_default_categories(db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Seed the database with predefined categories."""
     created = []
     for i, cat_data in enumerate(PREDEFINED_CATEGORIES):
@@ -166,7 +166,7 @@ def update_category(
     category_id: str,
     category_update: CategoryUpdate,
     db: Session = Depends(get_db),
-    _admin: User = Depends(require_admin),
+    _admin: User = Depends(require_parent),
 ):
     """Update a category."""
     category = db.query(ChoreCategory).filter(ChoreCategory.id == category_id).first()
@@ -193,7 +193,7 @@ def update_category(
 
 
 @router.delete("/{category_id}")
-def delete_category(category_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def delete_category(category_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Delete a category. Chores will have their category set to null."""
     category = db.query(ChoreCategory).filter(ChoreCategory.id == category_id).first()
     if not category:
@@ -215,7 +215,7 @@ def reorder_category(
     category_id: str,
     new_order: int,
     db: Session = Depends(get_db),
-    _admin: User = Depends(require_admin),
+    _admin: User = Depends(require_parent),
 ):
     """Reorder a category."""
     category = db.query(ChoreCategory).filter(ChoreCategory.id == category_id).first()

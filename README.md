@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.7.9-green?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.8.0-green?style=flat-square" alt="Version"></a>
   <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square" alt="License">
 </p>
@@ -168,7 +168,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development setup instructio
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `JWT_SECRET_KEY` | Yes | auto-generated | JWT signing key (set a stable value for production) |
+| `JWT_SECRET_KEY` | **Yes** | _none_ | JWT signing key. The app **refuses to start** without a stable, ≥16-char, non-placeholder value. Generate with `python -c "import secrets; print(secrets.token_urlsafe(32))"` |
+| `ENVIRONMENT` | No | `production` | Keep `production` (the default) for real deployments. Only `development`/`test` mount the destructive `/api/test/*` reset endpoints — never use them in production. |
 | `DATABASE_PATH` | No | `./data/kidschores.db` | SQLite database file path |
 | `CORS_ORIGINS` | No | `http://localhost:3103` | Comma-separated allowed origins |
 | `APP_BASE_URL` | No | `http://localhost:3103` | Base URL for email links (password reset, invitations) |
@@ -242,7 +243,7 @@ Once running, access the interactive API docs at:
 ```
 kidschores/
 ├── backend/                 # FastAPI application
-│   ├── Dockerfile           # Multi-stage: python:3.14-slim
+│   ├── Dockerfile           # Multi-stage: python:3.13-slim
 │   ├── .dockerignore
 │   ├── requirements.txt
 │   └── app/
@@ -310,4 +311,4 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ## Version
 
-Current version: **0.7.9** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.8.0** (see [CHANGELOG.md](CHANGELOG.md) for history)

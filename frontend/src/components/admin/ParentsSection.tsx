@@ -39,7 +39,7 @@ function AddParentForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) 
       />
       <FormInput
         label="PIN (optional, 4 digits)"
-        type="text"
+        type="password"
         value={pin}
         onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
         placeholder="1234"
@@ -132,7 +132,7 @@ function AddParentForm({ kids, onClose }: { kids: Kid[]; onClose: () => void }) 
 
 function EditParentForm({ parent, kids, onClose }: { parent: Parent; kids: Kid[]; onClose: () => void }) {
   const [name, setName] = useState(parent.name);
-  const [pin, setPin] = useState(parent.pin || '');
+  const [pin, setPin] = useState('');  // PIN is write-only; the API never returns it
   const [selectedKids, setSelectedKids] = useState<string[]>(parent.associated_kids || []);
   const [enableNotifications, setEnableNotifications] = useState(parent.enable_notifications);
   const queryClient = useQueryClient();
@@ -159,7 +159,7 @@ function EditParentForm({ parent, kids, onClose }: { parent: Parent; kids: Kid[]
       />
       <FormInput
         label="PIN (optional, 4 digits)"
-        type="text"
+        type="password"
         value={pin}
         onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
         placeholder="1234"

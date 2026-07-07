@@ -4,7 +4,7 @@ import { TestData } from '../fixtures/test-data';
 test.describe('Allowance Page', () => {
   let kidId: string;
 
-  test.beforeEach(async ({ page, apiContext, resetDatabase }) => {
+  test.beforeEach(async ({ authenticatedPage: page, apiContext, resetDatabase }) => {
     await resetDatabase();
 
     // Create a test kid with points
@@ -19,15 +19,15 @@ test.describe('Allowance Page', () => {
     await page.goto('/allowance');
   });
 
-  test('should display allowance page', async ({ page }) => {
+  test('should display allowance page', async ({ authenticatedPage: page }) => {
     await expect(page.getByText('Allowance')).toBeVisible();
   });
 
-  test('should show kid selector', async ({ page }) => {
+  test('should show kid selector', async ({ authenticatedPage: page }) => {
     await expect(page.getByRole('combobox')).toBeVisible();
   });
 
-  test('should display balance card when kid is selected', async ({ page }) => {
+  test('should display balance card when kid is selected', async ({ authenticatedPage: page }) => {
     // Select kid
     await page.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Emma' }).click();
@@ -37,7 +37,7 @@ test.describe('Allowance Page', () => {
     await expect(page.getByText('$5.00')).toBeVisible();
   });
 
-  test('should allow requesting a payout', async ({ page }) => {
+  test('should allow requesting a payout', async ({ authenticatedPage: page }) => {
     // Select kid
     await page.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Emma' }).click();
@@ -51,7 +51,7 @@ test.describe('Allowance Page', () => {
     await expect(page.getByText('pending')).toBeVisible();
   });
 
-  test('should show payout method options', async ({ page }) => {
+  test('should show payout method options', async ({ authenticatedPage: page }) => {
     // Select kid
     await page.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Emma' }).click();
@@ -60,7 +60,7 @@ test.describe('Allowance Page', () => {
     await expect(page.getByText('Cash')).toBeVisible();
   });
 
-  test('should navigate to allowance from bottom nav', async ({ page }) => {
+  test('should navigate to allowance from bottom nav', async ({ authenticatedPage: page }) => {
     await page.goto('/');
     await page.getByTestId('nav-allowance').click();
     await expect(page).toHaveURL('/allowance');

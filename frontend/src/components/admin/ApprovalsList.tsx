@@ -25,7 +25,7 @@ export function ApprovalsList() {
   });
 
   const approveChoreMutation = useMutation({
-    mutationFn: (choreId: string) => choresApi.approve(choreId, 'Parent'),
+    mutationFn: (choreId: string) => choresApi.approve(choreId, ''),
     onSuccess: (_data, choreId) => {
       const chore = chores.find(c => c.id === choreId);
       if (chore) {
@@ -38,7 +38,7 @@ export function ApprovalsList() {
   });
 
   const disapproveChoreMutation = useMutation({
-    mutationFn: (choreId: string) => choresApi.disapprove(choreId, 'Parent'),
+    mutationFn: (choreId: string) => choresApi.disapprove(choreId, ''),
     onSuccess: (_data, choreId) => {
       const chore = chores.find(c => c.id === choreId);
       if (chore) {
@@ -50,11 +50,19 @@ export function ApprovalsList() {
   });
 
   const approveRewardMutation = useMutation({
-    mutationFn: (rewardId: string) => rewardsApi.approve(rewardId, 'Parent'),
+    mutationFn: (rewardId: string) => rewardsApi.approve(rewardId, ''),
     onSuccess: () => {
       toast.success('Reward approved!');
       queryClient.invalidateQueries({ queryKey: ['approvals'] });
       queryClient.invalidateQueries({ queryKey: ['kids'] });
+    },
+  });
+
+  const disapproveRewardMutation = useMutation({
+    mutationFn: (rewardId: string) => rewardsApi.disapprove(rewardId, ''),
+    onSuccess: () => {
+      toast.success('Reward denied');
+      queryClient.invalidateQueries({ queryKey: ['approvals'] });
     },
   });
 
@@ -133,7 +141,11 @@ export function ApprovalsList() {
               >
                 <Check size={18} /> Approve
               </button>
-              <button data-testid={`deny-reward-btn-${claim.reward_id}`} className="flex-1 bg-status-overdue-bg text-status-overdue-text py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-status-overdue-border hover:text-white transition-colors">
+              <button
+                data-testid={`deny-reward-btn-${claim.reward_id}`}
+                onClick={() => disapproveRewardMutation.mutate(claim.reward_id)}
+                className="flex-1 bg-status-overdue-bg text-status-overdue-text py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-status-overdue-border hover:text-white transition-colors"
+              >
                 <X size={18} /> Deny
               </button>
             </div>

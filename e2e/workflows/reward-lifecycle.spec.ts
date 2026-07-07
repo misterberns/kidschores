@@ -62,7 +62,7 @@ test.describe('Reward Lifecycle Workflow', () => {
     expect(await homePage.getKidPoints('Emma')).toBe(50); // 100 - 50
   });
 
-  test('insufficient points prevents redemption', async ({ page, resetDatabase, apiContext }) => {
+  test('insufficient points prevents redemption', async ({ authenticatedPage: page, resetDatabase, apiContext }) => {
     await resetDatabase();
 
     const adminPage = new AdminPage(page);

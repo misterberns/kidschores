@@ -4,12 +4,12 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
 from ..database import get_db
-from ..deps import require_auth, require_admin
+from ..deps import require_parent, require_kid_access
 from ..models import Kid, AllowanceSettings, AllowancePayout, User
 
 router = APIRouter()
@@ -42,7 +42,7 @@ class AllowanceSettingsResponse(BaseModel):
 
 class PayoutRequest(BaseModel):
     """Request a payout."""
-    points_to_convert: int
+    points_to_convert: int = Field(gt=0)  # must be positive — a negative value would ADD points
     payout_method: str = "cash"  # cash, bank, gift_card
     notes: Optional[str] = None
 
@@ -78,7 +78,7 @@ class AllowanceSummary(BaseModel):
 
 
 @router.get("/settings/{kid_id}", response_model=AllowanceSettingsResponse)
-def get_allowance_settings(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def get_allowance_settings(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_kid_access)):
     """Get allowance settings for a kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -112,7 +112,7 @@ def update_allowance_settings(
     kid_id: str,
     update: AllowanceSettingsUpdate,
     db: Session = Depends(get_db),
-    _admin: User = Depends(require_admin),
+    _admin: User = Depends(require_parent),
 ):
     """Update allowance settings for a kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
@@ -152,7 +152,7 @@ def request_payout(
     kid_id: str,
     request: PayoutRequest,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    _user: User = Depends(require_kid_access),
 ):
     """Request a payout (convert points to money)."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
@@ -222,7 +222,7 @@ def get_payouts(
     status: Optional[str] = None,
     limit: int = 50,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    _user: User = Depends(require_kid_access),
 ):
     """Get payout history for a kid."""
     query = db.query(AllowancePayout).filter(AllowancePayout.kid_id == kid_id)
@@ -250,7 +250,7 @@ def get_payouts(
 
 
 @router.get("/pending", response_model=List[PayoutResponse])
-def get_all_pending_payouts(db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def get_all_pending_payouts(db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Get all pending payouts across all kids."""
     payouts = db.query(AllowancePayout).filter(
         AllowancePayout.status == "pending"
@@ -284,7 +284,7 @@ def mark_payout_paid(
     payout_id: str,
     request: MarkPaidRequest,
     db: Session = Depends(get_db),
-    _admin: User = Depends(require_admin),
+    _admin: User = Depends(require_parent),
 ):
     """Mark a payout as paid."""
     payout = db.query(AllowancePayout).filter(
@@ -324,7 +324,7 @@ def mark_payout_paid(
 
 
 @router.post("/payouts/{payout_id}/cancel", response_model=PayoutResponse)
-def cancel_payout(payout_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def cancel_payout(payout_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Cancel a pending payout and refund points."""
     payout = db.query(AllowancePayout).filter(
         AllowancePayout.id == payout_id
@@ -363,7 +363,7 @@ def cancel_payout(payout_id: str, db: Session = Depends(get_db), _admin: User = 
 
 
 @router.get("/summary/{kid_id}", response_model=AllowanceSummary)
-def get_allowance_summary(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def get_allowance_summary(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_kid_access)):
     """Get allowance summary for a kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:

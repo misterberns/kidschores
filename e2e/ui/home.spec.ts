@@ -18,12 +18,11 @@ test.describe('Home Page', () => {
   });
 
   test.describe('Empty State', () => {
-    test('should show empty state when no kids exist', async ({ authenticatedPage }) => {
-      const homePage = new HomePage(authenticatedPage);
-      await homePage.goto();
-
-      await homePage.waitForKidsToLoad();
-      expect(await homePage.hasNoKids()).toBe(true);
+    test('parent with no kids is redirected to onboarding', async ({ authenticatedPage }) => {
+      // A parent with no kids is taken to the onboarding wizard, not an empty dashboard.
+      await authenticatedPage.goto('/');
+      await authenticatedPage.waitForURL('**/onboarding', { timeout: 10000 });
+      await expect(authenticatedPage.getByText(/welcome to kidschores/i)).toBeVisible();
     });
   });
 

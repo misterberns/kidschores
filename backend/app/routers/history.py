@@ -11,7 +11,7 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 from ..database import get_db
-from ..deps import require_auth
+from ..deps import require_kid_access
 from ..models import Kid, Chore, ChoreClaim, ChoreCategory, User
 
 router = APIRouter()
@@ -98,7 +98,7 @@ def get_history(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    _user: User = Depends(require_kid_access),
 ):
     """Get paginated chore history for a kid."""
     # Base query with joins to avoid N+1
@@ -158,7 +158,7 @@ def get_analytics(
     kid_id: str,
     days: int = Query(30, ge=7, le=365),
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    _user: User = Depends(require_kid_access),
 ):
     """Get analytics summary for a kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
@@ -310,7 +310,7 @@ def export_history_csv(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    _user: User = Depends(require_kid_access),
 ):
     """Export history as CSV."""
     from fastapi.responses import StreamingResponse
