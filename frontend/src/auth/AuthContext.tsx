@@ -39,6 +39,7 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
+  applyTokens: (accessToken: string, refreshToken: string) => Promise<void>;
   loginWithGoogle: (code: string) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<boolean>;
@@ -98,9 +99,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
+        const url: string = originalRequest?.url || '';
 
-        // If 401 and we haven't tried refreshing yet
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Retry on 401 by refreshing — but NEVER for the auth endpoints themselves.
+        // A 401 from /auth/refresh (expired refresh token) must NOT trigger another
+        // refresh, or the interceptor recurses indefinitely instead of logging out.
+        const isAuthEndpoint = url.includes('/auth/refresh') || url.includes('/auth/login');
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          !isAuthEndpoint
+        ) {
           originalRequest._retry = true;
 
           const refreshed = await refreshToken();
@@ -228,6 +237,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await checkAuth();
   };
 
+  // Establish a session directly from tokens (e.g. after accepting an invitation,
+  // where the backend returns access/refresh tokens rather than email+password).
+  const applyTokens = useCallback(async (accessToken: string, refreshToken: string) => {
+    storeTokens(accessToken, refreshToken);
+    await checkAuth();
+  }, [checkAuth]);
+
   const loginWithGoogle = useCallback(async (code: string) => {
     const response = await api.post('/auth/google', { code });
     const { access_token, refresh_token } = response.data;
@@ -278,6 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...state,
         login,
         register,
+        applyTokens,
         loginWithGoogle,
         logout,
         refreshToken,

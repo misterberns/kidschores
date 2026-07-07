@@ -5,7 +5,7 @@ Thanks for your interest in contributing! This guide will help you get started.
 ## Prerequisites
 
 - Node.js 22+
-- Python 3.14+
+- Python 3.13+
 - Docker and Docker Compose
 - Git
 
@@ -59,12 +59,19 @@ API_URL=http://localhost:3103 npx playwright test
 API_URL=http://localhost:3103 npx playwright test --ui
 ```
 
-### Frontend Component Tests
+The main E2E suite lives in `e2e/` and runs against a running stack. It resets the
+database between tests via `/api/test/reset`, so the target instance must be started
+with `ENVIRONMENT=development` (or `test`) — never point it at a production instance.
+
+### Frontend Unit Tests (Vitest)
 
 ```bash
 cd frontend
-npx playwright test
+npm test          # vitest run
 ```
+
+(Note: `cd frontend && npx playwright test` runs a small separate Playwright e2e config
+under `frontend/e2e/`, not component/unit tests.)
 
 ## Code Style
 

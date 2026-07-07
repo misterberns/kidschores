@@ -5,8 +5,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 
-from ..database import get_db
-from ..deps import require_auth, require_admin
+from ..database import get_db, SessionLocal
+from ..deps import require_auth, require_parent, require_kid_access, assert_kid_access
 from ..models import Chore, ChoreClaim, Kid, DailyMultiplier, PushSubscription, User, Parent
 from ..schemas import (
     ChoreCreate, ChoreUpdate, ChoreResponse, ChoreWithStatus,
@@ -25,8 +25,13 @@ DAILY_COMPLETION_BONUS = 10
 router = APIRouter()
 
 
-def notify_parents_chore_claimed(db: Session, kid_name: str, chore_name: str):
-    """Send push notification to all parent devices when a chore is claimed."""
+def notify_parents_chore_claimed(kid_name: str, chore_name: str):
+    """Send push notification to all parent devices when a chore is claimed.
+
+    Opens its OWN DB session — a background task runs AFTER the request's session
+    is closed, so it must not reuse the request-scoped session.
+    """
+    db = SessionLocal()
     try:
         subscriptions = db.query(PushSubscription).filter(
             PushSubscription.kid_id.is_(None)
@@ -46,10 +51,13 @@ def notify_parents_chore_claimed(db: Session, kid_name: str, chore_name: str):
                 logger.error(f"Failed to send push notification: {e}")
     except Exception as e:
         logger.error(f"Background task notify_parents_chore_claimed failed: {e}")
+    finally:
+        db.close()
 
 
-def notify_kid_chore_approved(db: Session, kid_id: str, chore_name: str, points: int):
+def notify_kid_chore_approved(kid_id: str, chore_name: str, points: int):
     """Send push notification to kid's devices when a chore is approved."""
+    db = SessionLocal()
     try:
         subscriptions = db.query(PushSubscription).filter(
             PushSubscription.kid_id == kid_id
@@ -69,10 +77,13 @@ def notify_kid_chore_approved(db: Session, kid_id: str, chore_name: str, points:
                 logger.error(f"Failed to send push notification: {e}")
     except Exception as e:
         logger.error(f"Background task notify_kid_chore_approved failed: {e}")
+    finally:
+        db.close()
 
 
-async def email_notify_parents_chore_claimed(db: Session, kid_id: str, kid_name: str, chore_name: str):
+async def email_notify_parents_chore_claimed(kid_id: str, kid_name: str, chore_name: str):
     """Email all parents associated with this kid when a chore is claimed."""
+    db = SessionLocal()
     try:
         if not email_service.is_configured():
             return
@@ -90,6 +101,8 @@ async def email_notify_parents_chore_claimed(db: Session, kid_id: str, kid_name:
                         )
     except Exception as e:
         logger.error(f"Background task email_notify_parents_chore_claimed failed: {e}")
+    finally:
+        db.close()
 
 
 @router.get("", response_model=List[ChoreResponse])
@@ -101,7 +114,7 @@ def list_chores(db: Session = Depends(get_db), _user: User = Depends(require_aut
 
 @router.post("", response_model=ChoreResponse)
 @router.post("/", response_model=ChoreResponse, include_in_schema=False)
-def create_chore(chore: ChoreCreate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def create_chore(chore: ChoreCreate, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Create a new chore."""
     db_chore = Chore(**chore.model_dump())
     db.add(db_chore)
@@ -120,7 +133,7 @@ def get_chore(chore_id: str, db: Session = Depends(get_db), _user: User = Depend
 
 
 @router.put("/{chore_id}", response_model=ChoreResponse)
-def update_chore(chore_id: str, chore_update: ChoreUpdate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def update_chore(chore_id: str, chore_update: ChoreUpdate, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Update chore."""
     chore = db.query(Chore).filter(Chore.id == chore_id).first()
     if not chore:
@@ -136,7 +149,7 @@ def update_chore(chore_id: str, chore_update: ChoreUpdate, db: Session = Depends
 
 
 @router.delete("/{chore_id}")
-def delete_chore(chore_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def delete_chore(chore_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Delete chore."""
     chore = db.query(Chore).filter(Chore.id == chore_id).first()
     if not chore:
@@ -148,7 +161,7 @@ def delete_chore(chore_id: str, db: Session = Depends(get_db), _admin: User = De
 
 
 @router.get("/today/{kid_id}", response_model=List[TodaysChoreResponse])
-def get_todays_chores(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def get_todays_chores(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_kid_access)):
     """Get chores applicable for today for a specific kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -224,7 +237,7 @@ def get_todays_chores(kid_id: str, db: Session = Depends(get_db), _user: User = 
 
 
 @router.get("/kid/{kid_id}", response_model=List[ChoreWithStatus])
-def get_chores_for_kid(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def get_chores_for_kid(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_kid_access)):
     """Get all chores assigned to a kid with their status."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -268,9 +281,12 @@ def claim_chore(
     request: ChoreClaimRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    user: User = Depends(require_auth),
 ):
     """Kid claims a chore."""
+    # A kid-linked account may only claim chores for its own kid_id.
+    assert_kid_access(db, user, request.kid_id)
+
     chore = db.query(Chore).filter(Chore.id == chore_id).first()
     if not chore:
         raise HTTPException(status_code=404, detail="Chore not found")
@@ -307,11 +323,11 @@ def claim_chore(
     db.commit()
     db.refresh(claim)
 
-    # Send push notification to parents (in background)
-    background_tasks.add_task(notify_parents_chore_claimed, db, kid.name, chore.name)
+    # Send push notification to parents (in background — task opens its own session)
+    background_tasks.add_task(notify_parents_chore_claimed, kid.name, chore.name)
 
-    # Send email notification to parents (in background)
-    background_tasks.add_task(email_notify_parents_chore_claimed, db, kid.id, kid.name, chore.name)
+    # Send email notification to parents (in background — task opens its own session)
+    background_tasks.add_task(email_notify_parents_chore_claimed, kid.id, kid.name, chore.name)
 
     return claim
 
@@ -322,7 +338,7 @@ def approve_chore(
     request: ChoreApproveRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    admin: User = Depends(require_admin),
+    admin: User = Depends(require_parent),
 ):
     """Parent approves a claimed chore."""
     # Find the pending claim
@@ -337,9 +353,10 @@ def approve_chore(
     chore = db.query(Chore).filter(Chore.id == chore_id).first()
     kid = db.query(Kid).filter(Kid.id == claim.kid_id).first()
 
-    # Calculate points
-    points = request.points_awarded if request.points_awarded else chore.default_points
-    points_with_multiplier = int(points * kid.points_multiplier)
+    # Calculate points. Use `is not None` so an intentional 0-point award is honored
+    # (a falsy 0 was previously replaced by default_points); round rather than truncate.
+    points = request.points_awarded if request.points_awarded is not None else chore.default_points
+    points_with_multiplier = round(points * kid.points_multiplier)
 
     # Derive parent_name from JWT if not provided
     parent_name = request.parent_name
@@ -370,16 +387,16 @@ def approve_chore(
     db.commit()
     db.refresh(claim)
 
-    # Send push notification to kid (in background)
+    # Send push notification to kid (in background — task opens its own session)
     background_tasks.add_task(
-        notify_kid_chore_approved, db, kid.id, chore.name, points_with_multiplier
+        notify_kid_chore_approved, kid.id, chore.name, points_with_multiplier
     )
 
     return claim
 
 
 @router.post("/{chore_id}/disapprove", response_model=MessageResponse)
-def disapprove_chore(chore_id: str, request: ChoreApproveRequest, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+def disapprove_chore(chore_id: str, request: ChoreApproveRequest, db: Session = Depends(get_db), admin: User = Depends(require_parent)):
     """Parent disapproves a claimed chore."""
     claim = db.query(ChoreClaim).filter(
         ChoreClaim.chore_id == chore_id,

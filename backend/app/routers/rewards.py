@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
-from ..database import get_db
-from ..deps import require_auth, require_admin
+from ..database import get_db, SessionLocal
+from ..deps import require_auth, require_parent, assert_kid_access
 from ..models import Reward, RewardClaim, Kid, User, Parent
 from ..schemas import (
     RewardCreate, RewardUpdate, RewardResponse,
@@ -20,23 +20,32 @@ from ..services.email_service import email_service
 router = APIRouter()
 
 
-async def email_notify_parents_reward_redeemed(db: Session, kid_id: str, kid_name: str, reward_name: str, points_spent: int):
-    """Email all parents associated with this kid when a reward is redeemed."""
-    if not email_service.is_configured():
-        return
-    parents = db.query(Parent).all()
-    for parent in parents:
-        if kid_id in (parent.associated_kids or []):
-            if parent.user_id:
-                user = db.query(User).filter(User.id == parent.user_id).first()
-                if user and user.email:
-                    await email_service.send_reward_redeemed_email(
-                        to_email=user.email,
-                        parent_name=parent.name,
-                        kid_name=kid_name,
-                        reward_name=reward_name,
-                        points_spent=points_spent,
-                    )
+async def email_notify_parents_reward_redeemed(kid_id: str, kid_name: str, reward_name: str, points_spent: int):
+    """Email all parents associated with this kid when a reward is redeemed.
+
+    Opens its OWN DB session — runs after the request session is closed.
+    """
+    db = SessionLocal()
+    try:
+        if not email_service.is_configured():
+            return
+        parents = db.query(Parent).all()
+        for parent in parents:
+            if kid_id in (parent.associated_kids or []):
+                if parent.user_id:
+                    user = db.query(User).filter(User.id == parent.user_id).first()
+                    if user and user.email:
+                        await email_service.send_reward_redeemed_email(
+                            to_email=user.email,
+                            parent_name=parent.name,
+                            kid_name=kid_name,
+                            reward_name=reward_name,
+                            points_spent=points_spent,
+                        )
+    except Exception as e:
+        logger.error(f"Background task email_notify_parents_reward_redeemed failed: {e}")
+    finally:
+        db.close()
 
 
 @router.get("", response_model=List[RewardResponse])
@@ -48,7 +57,7 @@ def list_rewards(db: Session = Depends(get_db), _user: User = Depends(require_au
 
 @router.post("", response_model=RewardResponse)
 @router.post("/", response_model=RewardResponse, include_in_schema=False)
-def create_reward(reward: RewardCreate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def create_reward(reward: RewardCreate, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Create a new reward."""
     db_reward = Reward(**reward.model_dump())
     db.add(db_reward)
@@ -67,7 +76,7 @@ def get_reward(reward_id: str, db: Session = Depends(get_db), _user: User = Depe
 
 
 @router.put("/{reward_id}", response_model=RewardResponse)
-def update_reward(reward_id: str, reward_update: RewardUpdate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def update_reward(reward_id: str, reward_update: RewardUpdate, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Update reward."""
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     if not reward:
@@ -83,7 +92,7 @@ def update_reward(reward_id: str, reward_update: RewardUpdate, db: Session = Dep
 
 
 @router.delete("/{reward_id}")
-def delete_reward(reward_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def delete_reward(reward_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Delete reward."""
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     if not reward:
@@ -95,8 +104,11 @@ def delete_reward(reward_id: str, db: Session = Depends(get_db), _admin: User = 
 
 
 @router.post("/{reward_id}/redeem", response_model=RewardClaimResponse)
-def redeem_reward(reward_id: str, request: RewardRedeemRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def redeem_reward(reward_id: str, request: RewardRedeemRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db), user: User = Depends(require_auth)):
     """Kid requests to redeem a reward."""
+    # A kid-linked account may only redeem for its own kid_id.
+    assert_kid_access(db, user, request.kid_id)
+
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     if not reward:
         raise HTTPException(status_code=404, detail="Reward not found")
@@ -134,14 +146,14 @@ def redeem_reward(reward_id: str, request: RewardRedeemRequest, background_tasks
     db.commit()
     db.refresh(claim)
 
-    # Send email notification to parents (in background)
-    background_tasks.add_task(email_notify_parents_reward_redeemed, db, kid.id, kid.name, reward.name, reward.cost)
+    # Send email notification to parents (in background — task opens its own session)
+    background_tasks.add_task(email_notify_parents_reward_redeemed, kid.id, kid.name, reward.name, reward.cost)
 
     return claim
 
 
 @router.post("/{reward_id}/approve", response_model=RewardClaimResponse)
-def approve_reward(reward_id: str, request: RewardApproveRequest, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+def approve_reward(reward_id: str, request: RewardApproveRequest, db: Session = Depends(get_db), admin: User = Depends(require_parent)):
     """Parent approves a reward redemption."""
     # Find pending claim
     claim = db.query(RewardClaim).filter(
@@ -154,6 +166,8 @@ def approve_reward(reward_id: str, request: RewardApproveRequest, db: Session = 
 
     reward = db.query(Reward).filter(Reward.id == reward_id).first()
     kid = db.query(Kid).filter(Kid.id == claim.kid_id).first()
+    if not kid:
+        raise HTTPException(status_code=404, detail="Kid for this claim no longer exists")
 
     # Derive parent_name from JWT if not provided
     parent_name = request.parent_name
@@ -161,8 +175,17 @@ def approve_reward(reward_id: str, request: RewardApproveRequest, db: Session = 
         parent = db.query(Parent).filter(Parent.user_id == admin.id).first()
         parent_name = parent.name if parent else (admin.display_name or admin.email)
 
-    # Deduct points
-    kid.points -= reward.cost
+    # Deduct the points recorded AT REDEMPTION TIME (claim.points_spent), not the live
+    # reward.cost which may have been edited since. Re-check the balance and floor at 0.
+    cost = claim.points_spent if claim.points_spent is not None else (reward.cost if reward else 0)
+    if kid.points < cost:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Not enough points to approve. Needs {cost}, has {int(kid.points)}."
+        )
+    kid.points -= cost
+    if kid.points < 0:
+        kid.points = 0
 
     # Update claim
     claim.status = "approved"
@@ -175,7 +198,7 @@ def approve_reward(reward_id: str, request: RewardApproveRequest, db: Session = 
 
 
 @router.post("/{reward_id}/disapprove", response_model=MessageResponse)
-def disapprove_reward(reward_id: str, request: RewardApproveRequest, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+def disapprove_reward(reward_id: str, request: RewardApproveRequest, db: Session = Depends(get_db), admin: User = Depends(require_parent)):
     """Parent disapproves a reward redemption."""
     claim = db.query(RewardClaim).filter(
         RewardClaim.reward_id == reward_id,

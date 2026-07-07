@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { ChorbiePresets } from '../components/mascot';
 import { api } from '../api/client';
+import { getApiErrorMessage } from '../utils/errorMessage';
 
 export function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -77,10 +78,7 @@ export function ResetPassword() {
       });
       setIsSuccess(true);
     } catch (err: any) {
-      setError(
-        err.response?.data?.detail ||
-          'Failed to reset password. The link may have expired.'
-      );
+      setError(getApiErrorMessage(err, 'Failed to reset password. The link may have expired.'));
     } finally {
       setIsLoading(false);
     }

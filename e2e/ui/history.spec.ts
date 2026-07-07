@@ -5,7 +5,7 @@ test.describe('History Page', () => {
   let kidId: string;
   let choreId: string;
 
-  test.beforeEach(async ({ page, apiContext, resetDatabase }) => {
+  test.beforeEach(async ({ authenticatedPage: page, apiContext, resetDatabase }) => {
     await resetDatabase();
 
     // Create a test kid
@@ -27,21 +27,21 @@ test.describe('History Page', () => {
     await page.goto('/history');
   });
 
-  test('should display history page', async ({ page }) => {
+  test('should display history page', async ({ authenticatedPage: page }) => {
     await expect(page.getByText('History')).toBeVisible();
   });
 
-  test('should show kid selector', async ({ page }) => {
+  test('should show kid selector', async ({ authenticatedPage: page }) => {
     await expect(page.getByRole('combobox')).toBeVisible();
   });
 
-  test('should show view mode tabs', async ({ page }) => {
+  test('should show view mode tabs', async ({ authenticatedPage: page }) => {
     await expect(page.getByRole('tab', { name: /Stats/i })).toBeVisible();
     await expect(page.getByRole('tab', { name: /Calendar/i })).toBeVisible();
     await expect(page.getByRole('tab', { name: /List/i })).toBeVisible();
   });
 
-  test('should display stats when kid is selected', async ({ page }) => {
+  test('should display stats when kid is selected', async ({ authenticatedPage: page }) => {
     // Select kid
     await page.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Emma' }).click();
@@ -51,7 +51,7 @@ test.describe('History Page', () => {
     await expect(page.getByText('Total Points')).toBeVisible();
   });
 
-  test('should switch between view modes', async ({ page }) => {
+  test('should switch between view modes', async ({ authenticatedPage: page }) => {
     // Select kid
     await page.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Emma' }).click();
@@ -65,7 +65,7 @@ test.describe('History Page', () => {
     await expect(page.getByText('Clean Room')).toBeVisible();
   });
 
-  test('should show completed chore in list view', async ({ page }) => {
+  test('should show completed chore in list view', async ({ authenticatedPage: page }) => {
     // Select kid
     await page.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Emma' }).click();
@@ -79,7 +79,7 @@ test.describe('History Page', () => {
     await expect(page.getByText('+25')).toBeVisible();
   });
 
-  test('should have export button', async ({ page }) => {
+  test('should have export button', async ({ authenticatedPage: page }) => {
     // Select kid
     await page.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Emma' }).click();
@@ -87,13 +87,13 @@ test.describe('History Page', () => {
     await expect(page.getByRole('button', { name: /Export CSV/i })).toBeVisible();
   });
 
-  test('should navigate to history from bottom nav', async ({ page }) => {
+  test('should navigate to history from bottom nav', async ({ authenticatedPage: page }) => {
     await page.goto('/');
     await page.getByTestId('nav-history').click();
     await expect(page).toHaveURL('/history');
   });
 
-  test('should show total chores count correctly', async ({ page }) => {
+  test('should show total chores count correctly', async ({ authenticatedPage: page }) => {
     // Select kid
     await page.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Emma' }).click();
@@ -102,7 +102,7 @@ test.describe('History Page', () => {
     await expect(page.getByText('1')).toBeVisible();
   });
 
-  test('should show points earned correctly', async ({ page }) => {
+  test('should show points earned correctly', async ({ authenticatedPage: page }) => {
     // Select kid
     await page.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Emma' }).click();

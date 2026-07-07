@@ -46,6 +46,13 @@ _login_attempts: dict[str, list[float]] = defaultdict(list)
 _RATE_LIMIT_MAX = 5  # max attempts
 _RATE_LIMIT_WINDOW = 300  # 5 minutes
 
+# Per-account (email) failed-login limiter. The IP limiter above is defeated when a
+# reverse proxy forwards a spoofable X-Forwarded-For, so this account-scoped limiter is
+# the real protection against brute-forcing a specific account.
+_failed_logins_by_email: dict[str, list[float]] = defaultdict(list)
+_EMAIL_RATE_LIMIT_MAX = 10  # max FAILED attempts per account
+_EMAIL_RATE_LIMIT_WINDOW = 900  # 15 minutes
+
 
 def _check_rate_limit(client_ip: str) -> None:
     """Raise 429 if too many login attempts from this IP."""
@@ -60,6 +67,27 @@ def _check_rate_limit(client_ip: str) -> None:
             detail="Too many login attempts. Please try again in a few minutes."
         )
     _login_attempts[client_ip].append(now)
+
+
+def _check_email_rate_limit(email: str) -> None:
+    """Raise 429 if too many recent FAILED logins for this account."""
+    now = time.time()
+    _failed_logins_by_email[email] = [
+        t for t in _failed_logins_by_email[email] if now - t < _EMAIL_RATE_LIMIT_WINDOW
+    ]
+    if len(_failed_logins_by_email[email]) >= _EMAIL_RATE_LIMIT_MAX:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many failed attempts for this account. Please try again later."
+        )
+
+
+def _record_email_failure(email: str) -> None:
+    _failed_logins_by_email[email].append(time.time())
+
+
+def _clear_email_failures(email: str) -> None:
+    _failed_logins_by_email.pop(email, None)
 
 router = APIRouter()
 
@@ -184,16 +212,20 @@ async def login(request: LoginRequest, req: Request, db: Session = Depends(get_d
     """Login with email and password."""
     client_ip = req.client.host if req.client else "unknown"
     _check_rate_limit(client_ip)
+    email = request.email.lower()
+    _check_email_rate_limit(email)
 
-    user = db.query(User).filter(User.email == request.email.lower()).first()
+    user = db.query(User).filter(User.email == email).first()
 
     if not user or not user.password_hash:
+        _record_email_failure(email)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
 
     if not verify_password(request.password, user.password_hash):
+        _record_email_failure(email)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
@@ -204,6 +236,9 @@ async def login(request: LoginRequest, req: Request, db: Session = Depends(get_d
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is disabled"
         )
+
+    # Successful auth — clear the account's failed-attempt counter.
+    _clear_email_failures(email)
 
     # Transparent rehash: upgrade SHA256 -> bcrypt on successful login
     if needs_rehash(user.password_hash):

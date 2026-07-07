@@ -7,6 +7,7 @@ import { useToast } from '../../hooks/useToast';
 import { FormInput } from './FormElements';
 import { EntityCard } from './EntityCard';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
+import { getApiErrorMessage } from '../../utils/errorMessage';
 
 function AddKidForm({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState('');
@@ -111,7 +112,7 @@ function GoogleLinkButton({ kidId, kidName }: { kidId: string; kidName: string }
       toast.success(`Google linked for ${kidName}`);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.detail || 'Failed to link');
+      toast.error(getApiErrorMessage(err, 'Failed to link'));
     },
   });
 

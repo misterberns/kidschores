@@ -5,11 +5,12 @@ import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft, User, Mail } fr
 import { ChorbiePresets } from '../components/mascot';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { getApiErrorMessage } from '../utils/errorMessage';
 
 export function AcceptInvitation() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { login: authLogin } = useAuth();
+  const { applyTokens } = useAuth();
   const token = searchParams.get('token');
 
   const [password, setPassword] = useState('');
@@ -84,9 +85,9 @@ export function AcceptInvitation() {
         display_name: displayName || undefined,
       });
 
-      // Auto-login with the returned tokens
+      // Auto-login by establishing a session from the returned tokens
       if (response.data.access_token && response.data.refresh_token) {
-        authLogin(response.data.access_token, response.data.refresh_token);
+        await applyTokens(response.data.access_token, response.data.refresh_token);
         setIsSuccess(true);
         // Redirect to dashboard after a short delay
         setTimeout(() => {
@@ -96,10 +97,7 @@ export function AcceptInvitation() {
         setIsSuccess(true);
       }
     } catch (err: any) {
-      setError(
-        err.response?.data?.detail ||
-          'Failed to accept invitation. The link may have expired.'
-      );
+      setError(getApiErrorMessage(err, 'Failed to accept invitation. The link may have expired.'));
     } finally {
       setIsLoading(false);
     }

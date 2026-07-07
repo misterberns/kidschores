@@ -18,8 +18,20 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize database and scheduler on startup."""
-    if not settings.jwt_secret_key or settings.jwt_secret_key == "change-me-to-a-random-string":
-        raise RuntimeError("JWT_SECRET_KEY must be set to a secure random value")
+    _placeholder_secrets = {
+        "change-me-to-a-random-string",
+        "your-secret-key-here-change-in-production",
+        "changeme",
+        "change-me",
+        "secret",
+    }
+    _secret = (settings.jwt_secret_key or "").strip()
+    if not _secret or _secret.lower() in _placeholder_secrets or len(_secret) < 16:
+        raise RuntimeError(
+            "JWT_SECRET_KEY must be set to a secure random value (>=16 chars, not a "
+            "placeholder). Generate one with: "
+            "python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+        )
     init_db()
     ensure_indexes()
     logger.info("Database initialized")
@@ -38,7 +50,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KidsChores",
     description="Family chore management with points and rewards",
-    version="0.7.9",  # Keep in sync with VERSION file
+    version="0.8.0",  # Keep in sync with VERSION file
     lifespan=lifespan,
     redirect_slashes=False,  # Prevent 307 redirects for /api/kids vs /api/kids/
 )
@@ -66,10 +78,14 @@ app.include_router(categories.router, prefix="/api/categories", tags=["Categorie
 app.include_router(allowance.router, prefix="/api/allowance", tags=["Allowance"])
 app.include_router(history.router, prefix="/api/history", tags=["History"])
 
-# Test endpoints - only in non-production environments
-if os.environ.get("ENVIRONMENT") != "production":
+# Test endpoints — mounted ONLY in explicit non-prod environments. Fail-closed:
+# an unset or unrecognized ENVIRONMENT does NOT mount them, so a deploy that forgets
+# to set ENVIRONMENT can never expose the destructive /api/test/reset in production.
+_test_env = os.environ.get("ENVIRONMENT", "").strip().lower()
+if _test_env in {"development", "dev", "test", "e2e"}:
     from .routers import test as test_router
     app.include_router(test_router.router, prefix="/api/test", tags=["Testing"])
+    logger.warning("Test router mounted (ENVIRONMENT=%s) — must NOT be used in production", _test_env)
 
 
 @app.get("/")

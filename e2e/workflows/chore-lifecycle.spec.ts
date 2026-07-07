@@ -60,7 +60,7 @@ test.describe('Chore Lifecycle Workflow', () => {
     expect(await homePage.getKidPoints('Emma')).toBe(25);
   });
 
-  test('chore disapproval: no points awarded', async ({ page, resetDatabase }) => {
+  test('chore disapproval: no points awarded', async ({ authenticatedPage: page, resetDatabase }) => {
     await resetDatabase();
 
     const adminPage = new AdminPage(page);
@@ -87,7 +87,7 @@ test.describe('Chore Lifecycle Workflow', () => {
     expect(await homePage.getKidPoints('Emma')).toBe(0);
   });
 
-  test('multiple chores completion accumulates points', async ({ page, resetDatabase, apiContext }) => {
+  test('multiple chores completion accumulates points', async ({ authenticatedPage: page, resetDatabase, apiContext }) => {
     await resetDatabase();
 
     const adminPage = new AdminPage(page);
@@ -119,7 +119,7 @@ test.describe('Chore Lifecycle Workflow', () => {
     expect(await homePage.getKidPoints('Emma')).toBe(55); // 25 + 30
   });
 
-  test('points multiplier affects chore rewards', async ({ page, resetDatabase, apiContext }) => {
+  test('points multiplier affects chore rewards', async ({ authenticatedPage: page, resetDatabase, apiContext }) => {
     await resetDatabase();
 
     const adminPage = new AdminPage(page);
@@ -151,7 +151,7 @@ test.describe('Chore Lifecycle Workflow', () => {
     expect(await homePage.getKidPoints('Emma')).toBe(30);
   });
 
-  test('multiple kids can claim different chores', async ({ page, resetDatabase, apiContext }) => {
+  test('multiple kids can claim different chores', async ({ authenticatedPage: page, resetDatabase, apiContext }) => {
     await resetDatabase();
 
     const adminPage = new AdminPage(page);

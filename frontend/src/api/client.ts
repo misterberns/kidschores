@@ -139,6 +139,8 @@ export interface PendingApprovals {
 export interface Parent {
   id: string;
   name: string;
+  // Write-only: `pin` is sent on create/update but is NEVER returned by the API
+  // (ParentResponse omits it), so it is always undefined on reads. Do not render it.
   pin?: string;
   associated_kids: string[];
   enable_notifications: boolean;
@@ -189,6 +191,8 @@ export const rewardsApi = {
     api.post(`/rewards/${rewardId}/redeem`, { kid_id: kidId }),
   approve: (rewardId: string, parentName: string) =>
     api.post(`/rewards/${rewardId}/approve`, { parent_name: parentName }),
+  disapprove: (rewardId: string, parentName: string) =>
+    api.post(`/rewards/${rewardId}/disapprove`, { parent_name: parentName }),
 };
 
 export const approvalsApi = {

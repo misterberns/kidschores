@@ -301,13 +301,13 @@ export function Chores() {
   const activeKidId = selectedKid || (kids.length > 0 ? kids[0].id : null);
 
   // Fetch all chores
-  const { data: allChores = [], isLoading: isLoadingAll } = useQuery({
+  const { data: allChores = [], isLoading: isLoadingAll, isError: isErrorAll } = useQuery({
     queryKey: ['chores'],
     queryFn: () => choresApi.list().then(res => res.data),
   });
 
   // Fetch today's chores for selected kid
-  const { data: todaysChores = [], isLoading: isLoadingToday } = useQuery({
+  const { data: todaysChores = [], isLoading: isLoadingToday, isError: isErrorToday } = useQuery({
     queryKey: ['chores', 'today', activeKidId],
     queryFn: () => activeKidId ? choresApi.todayForKid(activeKidId).then(res => res.data) : Promise.resolve([]),
     enabled: !!activeKidId && viewMode === 'today',
@@ -331,6 +331,7 @@ export function Chores() {
     return baseChores.filter(chore => chore.category_id === selectedCategory);
   }, [baseChores, selectedCategory]);
   const isLoading = viewMode === 'today' ? isLoadingToday : isLoadingAll;
+  const isError = viewMode === 'today' ? isErrorToday : isErrorAll;
 
   // Create streak map from today's chores
   const streakMap = new Map<string, number>();
@@ -343,32 +344,36 @@ export function Chores() {
   const claimMutation = useMutation({
     mutationFn: ({ choreId, kidId }: { choreId: string; kidId: string }) =>
       choresApi.claim(choreId, kidId),
-    onSuccess: () => {
+    // Celebrate ONLY after the claim actually succeeds — firing the confetti/points
+    // toast optimistically showed a false "success" when the claim was rejected.
+    onSuccess: (_data, { choreId }) => {
+      const chore = chores.find(c => c.id === choreId);
+      setClaimSuccess(choreId);
+      if (chore) {
+        toast.choreClaimed(chore.name, chore.default_points);
+      }
+      setEarnedPoints(chore?.default_points || 0);
+      setShowPointsEarned(true);
+      setShowConfetti(true);
+      setTimeout(() => {
+        setClaimSuccess(null);
+        setShowPointsEarned(false);
+        setShowConfetti(false);
+      }, 2500);
       queryClient.invalidateQueries({ queryKey: ['chores'] });
       queryClient.invalidateQueries({ queryKey: ['kids'] });
+    },
+    onError: () => {
+      // The global mutation onError shows the error toast; just make sure no
+      // celebration/"Claimed!" state is left showing.
+      setClaimSuccess(null);
+      setShowPointsEarned(false);
+      setShowConfetti(false);
     },
   });
 
   const handleClaim = (choreId: string, kidId: string) => {
-    const chore = chores.find(c => c.id === choreId);
     claimMutation.mutate({ choreId, kidId });
-    setClaimSuccess(choreId);
-
-    // Show toast notification
-    if (chore) {
-      toast.choreClaimed(chore.name, chore.default_points);
-    }
-
-    // Trigger celebrations
-    setEarnedPoints(chore?.default_points || 0);
-    setShowPointsEarned(true);
-    setShowConfetti(true);
-
-    setTimeout(() => {
-      setClaimSuccess(null);
-      setShowPointsEarned(false);
-      setShowConfetti(false);
-    }, 2500);
   };
 
   if (isLoading) {
@@ -543,7 +548,20 @@ export function Chores() {
         initial={prefersReducedMotion ? false : 'hidden'}
         animate="visible"
       >
-        {chores.length === 0 ? (
+        {isError ? (
+          <div className="text-center py-8">
+            <p className="text-text-secondary">
+              Couldn't load chores. Check your connection and{' '}
+              <button
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['chores'] })}
+                className="underline font-medium text-text-primary"
+              >
+                try again
+              </button>
+              .
+            </p>
+          </div>
+        ) : chores.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-text-secondary">
               {viewMode === 'today'

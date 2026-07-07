@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { useAuth } from '../auth/AuthContext';
 import {
   DollarSign,
   Wallet,
@@ -19,6 +20,7 @@ import { kidsApi, allowanceApi } from '../api/client';
 import type { AllowancePayout } from '../api/client';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useToast } from '../hooks/useToast';
+import { getApiErrorMessage } from '../utils/errorMessage';
 
 const PAYOUT_METHODS = [
   { id: 'cash', label: 'Cash', icon: Banknote },
@@ -136,6 +138,8 @@ export function Allowance() {
   const queryClient = useQueryClient();
   const prefersReducedMotion = useReducedMotion();
   const toast = useToast();
+  const { role } = useAuth();
+  const isParent = role === 'parent';
 
   const [selectedKid, setSelectedKid] = useState<string | null>(null);
   const [pointsToConvert, setPointsToConvert] = useState<string>('');
@@ -165,10 +169,11 @@ export function Allowance() {
     enabled: !!activeKidId,
   });
 
-  // Fetch all pending payouts (for parent view)
+  // Fetch all pending payouts (parent-only — the endpoint is parent-gated server-side)
   const { data: allPending = [] } = useQuery({
     queryKey: ['allowance-pending'],
     queryFn: () => allowanceApi.getAllPending().then(res => res.data),
+    enabled: isParent,
   });
 
   // Request payout mutation
@@ -187,7 +192,7 @@ export function Allowance() {
       toast.success(`Requested ${formatCurrency(data.data.dollar_amount)} payout!`);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Failed to request payout');
+      toast.error(getApiErrorMessage(error, 'Failed to request payout'));
     },
   });
 
@@ -411,7 +416,7 @@ export function Allowance() {
       </div>
 
       {/* Pending Payouts (Parent View) */}
-      {allPending.length > 0 && (
+      {isParent && allPending.length > 0 && (
         <div className="card p-4">
           <h3 className="font-bold text-lg text-text-primary flex items-center gap-2 mb-4">
             <Clock size={20} className="text-yellow-500" />

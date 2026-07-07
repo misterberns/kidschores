@@ -151,7 +151,7 @@ export function Rewards() {
     queryFn: () => kidsApi.list().then(res => res.data),
   });
 
-  const { data: rewards = [], isLoading } = useQuery({
+  const { data: rewards = [], isLoading, isError } = useQuery({
     queryKey: ['rewards'],
     queryFn: () => rewardsApi.list().then(res => res.data),
   });
@@ -204,6 +204,32 @@ export function Rewards() {
       <AnimatedPoints value={Math.floor(kid.points)} size="sm" />
     </motion.div>
   ));
+
+  if (isError) {
+    return (
+      <div className="space-y-4">
+        <div className="flex gap-2 overflow-x-auto pb-2">{kidPoints}</div>
+        <div className="text-center py-12">
+          <div className="mx-auto mb-4">
+            <ChorbieAnimated expression="thinking" animation="float" size={100} />
+          </div>
+          <h2 className="text-2xl font-bold text-text-primary">
+            Couldn't load the reward shop
+          </h2>
+          <p className="mt-2 text-text-secondary">
+            Check your connection and{' '}
+            <button
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['rewards'] })}
+              className="underline font-medium text-text-primary"
+            >
+              try again
+            </button>
+            .
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (rewards.length === 0) {
     return (

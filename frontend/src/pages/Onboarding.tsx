@@ -760,8 +760,19 @@ export function Onboarding() {
     }
   };
 
-  const finish = () => {
+  const finish = async () => {
+    // Refresh everything, but AWAIT the kids refetch before navigating: Home redirects
+    // parents to /onboarding when kids.length === 0, so if we navigate while the ['kids']
+    // cache still holds the stale pre-onboarding empty list, Home bounces us right back to
+    // the start of onboarding. Awaiting the refetch guarantees the just-created kids are in
+    // cache first. `type: 'all'` forces the refetch even though no component is observing
+    // the query at this point.
     queryClient.invalidateQueries();
+    try {
+      await queryClient.refetchQueries({ queryKey: ['kids'], type: 'all' });
+    } catch {
+      // Navigate anyway — Home will fetch on mount; worst case it shows its loading state.
+    }
     navigate('/', { replace: true });
   };
 

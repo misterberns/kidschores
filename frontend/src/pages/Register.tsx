@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, User, UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { Logo } from '../components/Logo';
+import { getApiErrorMessage } from '../utils/errorMessage';
 
 export function Register() {
   const [displayName, setDisplayName] = useState('');
@@ -44,9 +45,7 @@ export function Register() {
       await register(email, password, displayName);
       navigate('/', { replace: true });
     } catch (err: any) {
-      setError(
-        err.response?.data?.detail || 'Registration failed. Please try again.'
-      );
+      setError(getApiErrorMessage(err, 'Registration failed. Please try again.'));
     } finally {
       setIsLoading(false);
     }

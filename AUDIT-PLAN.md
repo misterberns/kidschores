@@ -12,6 +12,7 @@
 | 3 | **Code Quality** | DONE | Q1: Split Admin.tsx (1311→80 lines, 9 new files in components/admin/), Q2: Fix N+1 in approvals.py (joinedload), Q3: Add 9 DB indexes + ensure_indexes() startup |
 | 4 | **Design Polish** | DONE | D2a: CategoryBadge theme tokens, D2b: ErrorBoundary theme tokens, D3: Delete dead App.css, D4: DeleteConfirmModal a11y (role/aria-modal/aria-labelledby), D5: GoogleLinkButton aria-label |
 | 5 | **Tech Debt** | DONE | L1: Loggers on all 8 routers, L2: Replace print→logger in services, L3: Response schemas (3 new), L4: Type PendingApprovals, L5: Global mutation onError, L6: Remove console.log, L7: Pin dependencies |
+| 6 | **Security & Authz Audit (v0.8.0)** | DONE | C1: test-router fail-closed + admin-gated + ENVIRONMENT=production; C2: JWT-secret placeholder guard; H1: require_parent role gate (multi-parent); H2/H3: kid-ownership IDOR guards; H4: API-token expiry; H5: notification-hijack; H6: PIN frontend hygiene; D3: bg-task fresh session; D4/D5/D6: balance/negative/zero-point guards; M1: per-account login limit; M2: refresh-loop; U1: invite auto-login; U2: reward Deny; U3: claim celebration; U4: error states; U5: kid allowance UI; U6: modal focus; M3: CSP |
 
 ## Phase 1 Files Modified (17 files)
 - `backend/app/deps.py` — Reject refresh tokens
@@ -83,3 +84,40 @@
 - `frontend/src/App.tsx` — Add default mutation onError to QueryClient
 - `frontend/src/hooks/usePushNotifications.ts` — Remove console.log
 - `AUDIT-PLAN.md` — Update Phase 5 status
+
+## Phase 6 — Security & Authz Audit (v0.8.0, 2026-07-05)
+
+Second full audit (security / data-integrity / performance / UX-a11y). Critical + High findings fixed; the deep data-integrity + performance work is deferred (below).
+
+**Backend:**
+- `app/main.py` — fail-closed test-router mount gate (C1); JWT-secret placeholder+length guard (C2); version 0.8.0
+- `app/routers/test.py` — `require_admin` + fail-closed env check on reset/status (C1)
+- `app/deps.py` — enforce `ApiToken.expires_at` (H4); new `require_parent` / `require_kid_access` / `assert_kid_access` / `get_user_kid` (H1/H2/H3)
+- `app/routers/{chores,kids,rewards,parents,categories,allowance,history,approvals}.py` — `require_admin`→`require_parent` on management; kid-ownership on kid-facing endpoints
+- `app/routers/notifications.py` — server-derived subscription ownership + self-only prefs (H5)
+- `app/routers/chores.py` / `rewards.py` — background tasks open their own session (D3); falsy-0/round (D6); reward-approve balance re-check (D4)
+- `app/routers/allowance.py` — `points_to_convert` `Field(gt=0)` (D5)
+- `app/routers/auth.py` — per-account login rate limiting (M1)
+- Deploy: `docker-compose.yml` (+ homelab `nas-bringup/stacks/kidschores`) set `ENVIRONMENT=production`
+
+**Frontend:**
+- `auth/AuthContext.tsx` — refresh-loop guard (M2) + `applyTokens` (U1)
+- `pages/AcceptInvitation.tsx` — use `applyTokens` (U1)
+- `pages/Chores.tsx` — celebrate on success only + error state (U3/U4)
+- `pages/Rewards.tsx` — error state (U4)
+- `pages/Allowance.tsx` — hide parent-only actions from kids + gate query by role (U5)
+- `components/admin/ApprovalsList.tsx` — wire reward Deny + drop hardcoded "Parent" (U2/U10)
+- `components/admin/ParentsSection.tsx` — don't pre-fill PIN + mask input (H6)
+- `components/admin/DeleteConfirmModal.tsx` — autofocus + Esc (U6)
+- `api/client.ts` — `rewardsApi.disapprove`; PIN documented write-only
+- `nginx.conf` — Content-Security-Policy (M3)
+
+### Deferred to a follow-up (tracked, NOT done in v0.8.0)
+
+- **Data integrity (invasive — needs schema + migration work):** enable SQLite `PRAGMA foreign_keys=ON` **together with** `ondelete` cascade declarations + symmetric delete cleanup of JSON id lists (D1 — enabling the PRAGMA alone would make deletes fail); concurrency locking / atomic `UPDATE` on point + payout mutations (D2/D16); money as integer cents (D7/D15); targeted-claim approval for shared chores (D8); timezone normalization UTC↔local (D9); consolidate the 3 competing schema mechanisms — `create_all` + hand migrations + Alembic — onto Alembic with a real baseline; delete the broken `migrations/{migrate_auth,v2_features}.py` (D10/L2).
+- **Performance:** add missing FK/filter indexes (P1); paginate unbounded list endpoints (P2); fix N+1s in `get_todays_chores` / category counts / the streak + daily-summary jobs + the frontend per-kid polling fan-out (P3); durable job store + idempotent streak increment + real `points_today` in daily-summary (P4).
+- **Lower a11y / quality:** icon-button `aria-label`s (U8); visible focus rings on Login/Register (U9); ErrorBoundary hide raw message (U11); allowance settings gear + DailyProgress error state (U7); `any` cleanup + shared `useKids()` hook; JWT revocation/blocklist + shorter refresh lifetime; constant-time token compares; Google OAuth `email_verified` check; tighten uvicorn `--forwarded-allow-ips`.
+
+### Verification note (must run in the operator's build/local env)
+
+`node_modules` and the backend venv are absent from the canonical tree — full `tsc -b && vite build`, `pytest`, and the Playwright e2e suite must run in the build clone / operator local per the dev-workflow gate. Agent-side checks done: `py_compile` on all backend files + static import-consistency audit (clean). **The nginx CSP (M3) must be validated in the browser console (no CSP violations) at all breakpoints before prod** — relax a specific directive if the built bundle or Google OAuth trips it.

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 from ..database import get_db
-from ..deps import require_auth, require_admin
+from ..deps import require_auth, require_parent, require_kid_access
 from ..models import Kid, Chore, ChoreClaim, DailyMultiplier, User
 from ..schemas import (
     KidCreate, KidUpdate, KidResponse, KidStats, PointsAdjustRequest,
@@ -30,7 +30,7 @@ def list_kids(db: Session = Depends(get_db), _user: User = Depends(require_auth)
 
 @router.post("", response_model=KidResponse)
 @router.post("/", response_model=KidResponse, include_in_schema=False)
-def create_kid(kid: KidCreate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def create_kid(kid: KidCreate, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Create a new kid."""
     db_kid = Kid(**kid.model_dump())
     db.add(db_kid)
@@ -40,7 +40,7 @@ def create_kid(kid: KidCreate, db: Session = Depends(get_db), _admin: User = Dep
 
 
 @router.get("/{kid_id}", response_model=KidResponse)
-def get_kid(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def get_kid(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_kid_access)):
     """Get kid by ID."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -49,7 +49,7 @@ def get_kid(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(re
 
 
 @router.put("/{kid_id}", response_model=KidResponse)
-def update_kid(kid_id: str, kid_update: KidUpdate, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def update_kid(kid_id: str, kid_update: KidUpdate, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Update kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -65,7 +65,7 @@ def update_kid(kid_id: str, kid_update: KidUpdate, db: Session = Depends(get_db)
 
 
 @router.delete("/{kid_id}")
-def delete_kid(kid_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def delete_kid(kid_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Delete kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -77,7 +77,7 @@ def delete_kid(kid_id: str, db: Session = Depends(get_db), _admin: User = Depend
 
 
 @router.get("/{kid_id}/stats", response_model=KidStats)
-def get_kid_stats(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def get_kid_stats(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_kid_access)):
     """Get detailed kid statistics."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -111,7 +111,7 @@ def get_kid_stats(kid_id: str, db: Session = Depends(get_db), _user: User = Depe
 
 
 @router.post("/{kid_id}/points", response_model=KidResponse)
-def adjust_points(kid_id: str, request: PointsAdjustRequest, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def adjust_points(kid_id: str, request: PointsAdjustRequest, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Add or deduct points from kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -133,7 +133,7 @@ def adjust_points(kid_id: str, request: PointsAdjustRequest, db: Session = Depen
 
 
 @router.get("/{kid_id}/streaks", response_model=StreakInfo)
-def get_kid_streaks(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def get_kid_streaks(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_kid_access)):
     """Get detailed streak information for a kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -175,7 +175,7 @@ def get_kid_streaks(kid_id: str, db: Session = Depends(get_db), _user: User = De
 
 
 @router.post("/{kid_id}/streak-freeze", response_model=KidResponse)
-def use_streak_freeze(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def use_streak_freeze(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_kid_access)):
     """Use a streak freeze to protect the streak for one day."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -192,7 +192,7 @@ def use_streak_freeze(kid_id: str, db: Session = Depends(get_db), _user: User = 
 
 
 @router.get("/{kid_id}/daily-progress", response_model=DailyProgressResponse)
-def get_daily_progress(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def get_daily_progress(kid_id: str, db: Session = Depends(get_db), _user: User = Depends(require_kid_access)):
     """Get daily chore completion progress for a kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -265,7 +265,7 @@ def get_daily_progress(kid_id: str, db: Session = Depends(get_db), _user: User =
 
 
 @router.put("/{kid_id}/link-google")
-def link_google(kid_id: str, body: LinkGoogleRequest, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def link_google(kid_id: str, body: LinkGoogleRequest, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Parent links a Google email to a kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
@@ -282,7 +282,7 @@ def link_google(kid_id: str, body: LinkGoogleRequest, db: Session = Depends(get_
 
 
 @router.delete("/{kid_id}/link-google")
-def unlink_google(kid_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
+def unlink_google(kid_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
     """Parent unlinks Google from a kid."""
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 logger = logging.getLogger(__name__)
 
 from ..database import get_db
-from ..deps import require_auth
+from ..deps import require_parent
 from ..models import ChoreClaim, RewardClaim, Kid, Chore, Reward, User
 from ..schemas import (
     PendingApprovalsResponse, ChoreClaimResponse, RewardClaimResponse,
@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.get("/pending", response_model=PendingApprovalsResponse)
-def get_pending_approvals(db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def get_pending_approvals(db: Session = Depends(get_db), _user: User = Depends(require_parent)):
     """Get all pending approvals for parents to review."""
     # Get pending chore claims
     chore_claims = db.query(ChoreClaim).filter(
@@ -37,7 +37,7 @@ def get_pending_approvals(db: Session = Depends(get_db), _user: User = Depends(r
 
 
 @router.get("/pending/count", response_model=PendingCountResponse)
-def get_pending_count(db: Session = Depends(get_db), _user: User = Depends(require_auth)):
+def get_pending_count(db: Session = Depends(get_db), _user: User = Depends(require_parent)):
     """Get count of pending approvals."""
     chore_count = db.query(ChoreClaim).filter(
         ChoreClaim.status == "claimed"
@@ -58,7 +58,7 @@ def get_pending_count(db: Session = Depends(get_db), _user: User = Depends(requi
 def get_approval_history(
     limit: int = 50,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_auth),
+    _user: User = Depends(require_parent),
 ):
     """Get recent approval history."""
     chore_history = db.query(ChoreClaim).options(

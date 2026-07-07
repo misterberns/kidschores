@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-05
+
+Security & hardening release from a full security / data-integrity / UX audit.
+
+### Security
+- **Blocked the unauthenticated database-wipe endpoint in production.** `/api/test/*` (including the destructive `/api/test/reset`) is now mounted only in explicit `development`/`test` environments (fail-closed — an unset `ENVIRONMENT` no longer exposes it), and the endpoints additionally require an authenticated admin. `ENVIRONMENT=production` is now set in the deploy configs.
+- **Rejected placeholder JWT secrets at startup.** The startup guard now refuses any known placeholder (including the one shipped in `.env.example`) or a secret shorter than 16 characters, so an app can no longer boot with a publicly-known signing key.
+- **Proper parent/kid authorization model.** Management actions (create/edit/delete kids, chores, rewards, parents, categories; approve/deny; adjust points; allowance payouts; invitations) now require a **parent** account instead of only the first-registered admin — so second parents can finally manage the family — while kid accounts are blocked. Kid-facing actions and reads (claim, redeem, streak-freeze, allowance convert, per-kid stats/streaks/history/export) now enforce that a kid can only touch their own data.
+- **Enforced API-token expiry** (previously ignored — "expired" tokens kept working forever).
+- **Fixed a push-notification hijack:** subscription ownership is derived server-side, so a kid can no longer register as a parent subscription and receive the family's parent alerts. Notification preferences are now self-only.
+- **Per-account login rate limiting** (in addition to per-IP) to resist brute-forcing a specific account behind a reverse proxy.
+- **Added a Content-Security-Policy** to the web server (defense-in-depth for the token-in-storage XSS surface).
+
+### Fixed
+- **Chore/reward notifications now actually send** — background tasks were using a database session that had already been closed, so every push/email silently failed.
+- **Accepting a parent invitation now logs you in** (the auto-login was calling the wrong function and silently failing).
+- **Approving a chore worth 0 points no longer silently awards the default;** point math now rounds instead of truncating.
+- **Reward approval re-checks the balance** and uses the amount recorded at redemption, preventing negative balances and cost drift.
+- **The reward "Deny" button now works** (it previously did nothing).
+- **Claiming a chore only celebrates on real success** — the confetti/points animation no longer appears when a claim fails.
+- **Chores and Rewards pages now show a distinct error state** (with a retry) instead of an empty "nothing here" message when the API is unreachable.
+- **Fixed an infinite refresh loop / request storm** when a refresh token expired (now cleanly logs out).
+- Approvals now record the actual approving parent's name instead of a hardcoded "Parent".
+
+### Changed
+- Allowance page hides parent-only payout actions from kid sessions; delete-confirmation dialog now traps initial focus and closes on Escape; parent PIN inputs are masked.
+
 ## [0.7.9] - 2026-02-23
 
 ### Changed

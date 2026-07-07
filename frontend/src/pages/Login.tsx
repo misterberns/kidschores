@@ -5,6 +5,7 @@ import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../theme/ThemeToggle';
+import { getApiErrorMessage } from '../utils/errorMessage';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -26,9 +27,7 @@ export function Login() {
       await login(email, password);
       navigate(from, { replace: true });
     } catch (err: any) {
-      setError(
-        err.response?.data?.detail || 'Login failed. Please check your credentials.'
-      );
+      setError(getApiErrorMessage(err, 'Login failed. Please check your credentials.'));
     } finally {
       setIsLoading(false);
     }
