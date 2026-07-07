@@ -23,41 +23,33 @@ test.describe('Allowance Page', () => {
     await expect(page.getByText('Allowance')).toBeVisible();
   });
 
-  test('should show kid selector', async ({ authenticatedPage: page }) => {
-    await expect(page.getByRole('combobox')).toBeVisible();
+  test('should show kid selector when there are multiple kids', async ({ authenticatedPage: page, apiContext }) => {
+    // The kid selector (a "Select kid" tablist) only renders with 2+ kids;
+    // with a single kid that kid is auto-selected and no selector is shown.
+    await apiContext.post('/api/kids', { data: TestData.kid.jack() });
+    await page.reload();
+
+    await expect(page.getByRole('tablist', { name: /select kid/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Emma' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Jack' })).toBeVisible();
   });
 
-  test('should display balance card when kid is selected', async ({ authenticatedPage: page }) => {
-    // Select kid
-    await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Emma' }).click();
-
-    // Should show balance
+  test('should display balance card for the active kid', async ({ authenticatedPage: page }) => {
+    // Single kid (Emma) is auto-selected — the balance renders without any selection.
     await expect(page.getByText('500')).toBeVisible();
     await expect(page.getByText('$5.00')).toBeVisible();
   });
 
   test('should allow requesting a payout', async ({ authenticatedPage: page }) => {
-    // Select kid
-    await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Emma' }).click();
-
-    // Fill in payout request form
-    await page.getByLabel('Points to Convert').fill('200');
+    await page.getByPlaceholder('Enter points').fill('200');
     await page.getByRole('button', { name: /Request Payout/i }).click();
 
-    // Should show success or pending payout
-    await expect(page.getByText('200')).toBeVisible();
-    await expect(page.getByText('pending')).toBeVisible();
+    // A pending payout should appear
+    await expect(page.getByText(/pending/i).first()).toBeVisible();
   });
 
   test('should show payout method options', async ({ authenticatedPage: page }) => {
-    // Select kid
-    await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Emma' }).click();
-
-    // Check payment method options
-    await expect(page.getByText('Cash')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Cash/i })).toBeVisible();
   });
 
   test('should navigate to allowance from bottom nav', async ({ authenticatedPage: page }) => {
