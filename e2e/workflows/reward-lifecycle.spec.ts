@@ -15,7 +15,7 @@ import { HomePage } from '../pages/HomePage';
  */
 test.describe('Reward Lifecycle Workflow', () => {
   test('complete reward lifecycle: earn points -> redeem -> approve -> deduct', async ({
-    page,
+    authenticatedPage: page,
     resetDatabase,
     apiContext,
   }) => {
@@ -90,7 +90,7 @@ test.describe('Reward Lifecycle Workflow', () => {
   });
 
   test('no-approval reward instantly deducts points', async ({
-    page,
+    authenticatedPage: page,
     resetDatabase,
     apiContext,
   }) => {
@@ -131,7 +131,7 @@ test.describe('Reward Lifecycle Workflow', () => {
   });
 
   test('multiple reward redemptions deplete points', async ({
-    page,
+    authenticatedPage: page,
     resetDatabase,
     apiContext,
   }) => {
@@ -174,7 +174,7 @@ test.describe('Reward Lifecycle Workflow', () => {
   });
 
   test('earn and spend: complete point economy cycle', async ({
-    page,
+    authenticatedPage: page,
     resetDatabase,
     apiContext,
   }) => {
@@ -234,7 +234,7 @@ test.describe('Reward Lifecycle Workflow', () => {
   });
 
   test('points earned equal points available for spending', async ({
-    page,
+    authenticatedPage: page,
     resetDatabase,
     apiContext,
   }) => {
