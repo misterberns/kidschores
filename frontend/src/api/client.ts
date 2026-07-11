@@ -390,3 +390,66 @@ export const historyApi = {
   exportCsv: (kidId: string) =>
     api.get(`/history/export/${kidId}`, { responseType: 'blob' }),
 };
+
+// --- Badges & Challenges (gamification engine) ---
+
+export interface BadgeInfo {
+  id: string;
+  name: string;
+  description: string | null;
+  icon: string;
+  threshold_type: string;
+  threshold_value: number;
+  points_multiplier_bonus: number;
+}
+
+export interface ChallengeProgressEntry {
+  kid_id: string;
+  kid_name: string;
+  progress: number;
+  target: number;
+  completed: boolean;
+}
+
+export interface Challenge {
+  id: string;
+  name: string;
+  description: string | null;
+  icon: string;
+  target_type: 'chore_count' | 'points_earned';
+  target_value: number;
+  start_date: string;
+  end_date: string;
+  kid_ids: string[];
+  badge_id: string | null;
+  bonus_points: number;
+  completed_kids: string[];
+  active: boolean;
+  progress: ChallengeProgressEntry[];
+}
+
+export interface ChallengeTemplate {
+  name: string;
+  description: string;
+  icon: string;
+  target_type: 'chore_count' | 'points_earned';
+  target_value: number;
+  start_date: string;
+  end_date: string;
+  badge_id?: string;
+  bonus_points: number;
+}
+
+export const badgesApi = {
+  list: () => api.get<BadgeInfo[]>('/badges'),
+  award: (badgeId: string, kidId: string) => api.post(`/badges/${badgeId}/award/${kidId}`),
+};
+
+export const challengesApi = {
+  list: (activeOnly = false) =>
+    api.get<Challenge[]>('/challenges', { params: activeOnly ? { active_only: true } : {} }),
+  templates: () => api.get<ChallengeTemplate[]>('/challenges/templates'),
+  create: (data: Omit<ChallengeTemplate, never> & { kid_ids?: string[] }) =>
+    api.post<Challenge>('/challenges', data),
+  delete: (id: string) => api.delete(`/challenges/${id}`),
+};

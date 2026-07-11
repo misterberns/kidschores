@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, User, ClipboardList, Gift, Users, Settings, HelpCircle, Wand2 } from 'lucide-react';
+import { CheckCircle2, User, ClipboardList, Gift, Users, Settings, HelpCircle, Wand2, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { approvalsApi } from '../api/client';
-import { ApprovalsList, KidsSection, ChoresSection, RewardsSection, ParentsSection } from '../components/admin';
+import { ApprovalsList, KidsSection, ChoresSection, RewardsSection, ParentsSection, ChallengesSection } from '../components/admin';
 import { Tab as TabButton, TabList } from '../components/ui';
 
-type Tab = 'approvals' | 'kids' | 'chores' | 'rewards' | 'parents';
+type Tab = 'approvals' | 'kids' | 'chores' | 'rewards' | 'challenges' | 'parents';
 
 export function Admin() {
   const [activeTab, setActiveTab] = useState<Tab>('approvals');
@@ -22,6 +22,7 @@ export function Admin() {
     { id: 'kids', label: 'Kids', Icon: User },
     { id: 'chores', label: 'Chores', Icon: ClipboardList },
     { id: 'rewards', label: 'Rewards', Icon: Gift },
+    { id: 'challenges', label: 'Challenges', Icon: Target },
     { id: 'parents', label: 'Parents', Icon: Users },
   ];
 
@@ -79,6 +80,7 @@ export function Admin() {
       {activeTab === 'kids' && <KidsSection />}
       {activeTab === 'chores' && <ChoresSection />}
       {activeTab === 'rewards' && <RewardsSection />}
+      {activeTab === 'challenges' && <ChallengesSection />}
       {activeTab === 'parents' && <ParentsSection />}
     </div>
   );
