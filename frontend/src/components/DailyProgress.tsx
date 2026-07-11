@@ -20,9 +20,9 @@ export function DailyProgress({ kidId, compact = false }: DailyProgressProps) {
 
   if (isLoading || !progress) {
     return (
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 animate-pulse">
-        <div className="h-4 bg-white/20 rounded w-24 mb-2" />
-        <div className="h-2 bg-white/20 rounded w-full" />
+      <div className="rounded-xl p-3 bg-bg-accent animate-pulse">
+        <div className="h-4 bg-bg-surface rounded w-24 mb-2" />
+        <div className="h-2 bg-bg-surface rounded w-full" />
       </div>
     );
   }
@@ -34,43 +34,54 @@ export function DailyProgress({ kidId, compact = false }: DailyProgressProps) {
   }
 
   if (compact) {
+    // Conic ring progress in the kid's accent (C's ring treatment)
     return (
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium">Today's Progress</span>
-          <span className="text-sm font-bold">{completed_chores}/{total_chores}</span>
+      <div className="flex items-center gap-3">
+        <div
+          className="ring-progress w-11 h-11"
+          style={{
+            '--ring-pct': completion_percentage,
+            '--ring-color': all_completed
+              ? 'var(--status-approved-border)'
+              : 'var(--kid-accent, var(--primary-500))',
+          } as React.CSSProperties}
+          role="img"
+          aria-label={`${completed_chores} of ${total_chores} chores done today`}
+        >
+          <span className="stat-number text-[11px] font-bold text-text-primary">
+            {completed_chores}/{total_chores}
+          </span>
         </div>
-        <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-          <motion.div
-            className={`h-full rounded-full ${all_completed ? 'bg-green-400' : 'bg-white/60'}`}
-            initial={{ width: 0 }}
-            animate={{ width: `${completion_percentage}%` }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-          />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-text-secondary">Today's Progress</p>
+          {bonus_awarded ? (
+            <p className="flex items-center gap-1 text-xs text-status-approved-text">
+              <Gift size={12} />
+              +{bonus_points} bonus!
+            </p>
+          ) : all_completed ? (
+            <p className="text-xs text-status-approved-text">All done — nice.</p>
+          ) : (
+            <p className="text-xs text-text-muted">{total_chores - completed_chores} remaining</p>
+          )}
         </div>
-        {bonus_awarded && (
-          <div className="flex items-center gap-1 mt-2 text-xs text-green-300">
-            <Gift size={12} />
-            <span>+{bonus_points} bonus!</span>
-          </div>
-        )}
       </div>
     );
   }
 
   return (
     <motion.div
-      className="bg-white/15 backdrop-blur-sm rounded-xl p-4"
+      className="card p-4"
       initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Zap size={18} className="text-yellow-300" />
-          <span className="font-semibold">Today's Progress</span>
+          <Zap size={18} className="text-status-pending-border" />
+          <span className="font-semibold text-text-primary">Today's Progress</span>
         </div>
         {multiplier > 1 && (
-          <span className="text-sm bg-yellow-400/20 text-yellow-300 px-2 py-0.5 rounded-full">
+          <span className="text-sm bg-status-pending-bg text-status-pending-text border border-status-pending-border px-2 py-0.5 rounded-full">
             {multiplier}x
           </span>
         )}
@@ -85,23 +96,21 @@ export function DailyProgress({ kidId, compact = false }: DailyProgressProps) {
               cy="18"
               r="15.5"
               fill="none"
-              stroke="currentColor"
+              stroke="var(--ring-track)"
               strokeWidth="3"
-              className="text-white/20"
             />
             <motion.circle
               cx="18"
               cy="18"
               r="15.5"
               fill="none"
-              stroke="currentColor"
+              stroke={all_completed ? 'var(--status-approved-border)' : 'var(--primary-500)'}
               strokeWidth="3"
               strokeLinecap="round"
               strokeDasharray={97.4}
               initial={{ strokeDashoffset: 97.4 }}
               animate={{ strokeDashoffset: 97.4 - (97.4 * completion_percentage) / 100 }}
               transition={{ duration: 1, ease: 'easeOut' }}
-              className={all_completed ? 'text-green-400' : 'text-white'}
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
@@ -111,10 +120,10 @@ export function DailyProgress({ kidId, compact = false }: DailyProgressProps) {
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', delay: 0.5 }}
               >
-                <CheckCircle2 size={24} className="text-green-400" />
+                <CheckCircle2 size={24} className="text-status-approved-border" />
               </motion.div>
             ) : (
-              <span className="text-sm font-bold">{Math.round(completion_percentage)}%</span>
+              <span className="stat-number text-sm font-bold text-text-primary">{Math.round(completion_percentage)}%</span>
             )}
           </div>
         </div>
@@ -129,14 +138,14 @@ export function DailyProgress({ kidId, compact = false }: DailyProgressProps) {
                 transition={{ delay: i * 0.1 }}
               >
                 {i < completed_chores ? (
-                  <CheckCircle2 size={20} className="text-green-400" />
+                  <CheckCircle2 size={20} className="text-status-approved-border" />
                 ) : (
-                  <Circle size={20} className="text-white/30" />
+                  <Circle size={20} className="text-text-muted opacity-50" />
                 )}
               </motion.div>
             ))}
           </div>
-          <p className="text-sm mt-2 opacity-80">
+          <p className="text-sm mt-2 text-text-secondary">
             {completed_chores} of {total_chores} chores done
           </p>
         </div>
@@ -145,23 +154,23 @@ export function DailyProgress({ kidId, compact = false }: DailyProgressProps) {
       {/* Bonus Section */}
       {all_completed && (
         <motion.div
-          className={`mt-3 p-2 rounded-lg ${bonus_awarded ? 'bg-green-400/20' : 'bg-yellow-400/20'}`}
+          className={`mt-3 p-2 rounded-lg border ${bonus_awarded ? 'bg-status-approved-bg border-status-approved-border' : 'bg-status-pending-bg border-status-pending-border'}`}
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           transition={{ delay: 0.5 }}
         >
           <div className="flex items-center gap-2">
-            <Gift size={16} className={bonus_awarded ? 'text-green-300' : 'text-yellow-300'} />
+            <Gift size={16} className={bonus_awarded ? 'text-status-approved-text' : 'text-status-pending-text'} />
             {bonus_awarded ? (
-              <span className="text-sm text-green-300">
+              <span className="text-sm text-status-approved-text">
                 You earned +{bonus_points} bonus points!
               </span>
             ) : bonus_eligible ? (
-              <span className="text-sm text-yellow-300">
+              <span className="text-sm text-status-pending-text">
                 Bonus points awaiting at midnight!
               </span>
             ) : (
-              <span className="text-sm text-yellow-300">
+              <span className="text-sm text-status-pending-text">
                 Great job completing all chores!
               </span>
             )}

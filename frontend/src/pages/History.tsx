@@ -52,7 +52,7 @@ function StatCard({
       <div className="flex items-center gap-3">
         <div
           className="w-10 h-10 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: `${color}20` }}
+          style={{ backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)` }}
         >
           <Icon size={20} style={{ color }} />
         </div>
@@ -70,11 +70,11 @@ function StatCard({
 
 function HistoryItemCard({ item }: { item: HistoryItem }) {
   const statusColors = {
-    approved: 'text-green-500',
-    claimed: 'text-yellow-500',
-    pending: 'text-blue-500',
-    disapproved: 'text-red-500',
-    expired: 'text-gray-400',
+    approved: 'text-status-approved-border',
+    claimed: 'text-status-pending-border',
+    pending: 'text-secondary-500',
+    disapproved: 'text-error-500',
+    expired: 'text-text-muted',
   };
 
   const statusIcons = {
@@ -126,7 +126,7 @@ function HistoryItemCard({ item }: { item: HistoryItem }) {
           )}
           <StatusIcon
             size={18}
-            className={statusColors[item.status as keyof typeof statusColors] || 'text-gray-400'}
+            className={statusColors[item.status as keyof typeof statusColors] || 'text-text-muted'}
           />
         </div>
       </div>
@@ -452,7 +452,7 @@ export function History() {
       )}
       {viewMode === 'stats' && !isLoadingAnalytics && isAnalyticsError && (
         <div className="card p-6 text-center">
-          <XCircle size={48} className="mx-auto text-red-400 mb-3" />
+          <XCircle size={48} className="mx-auto text-error-400 mb-3" />
           <h3 className="font-bold text-text-primary mb-1">Failed to Load Stats</h3>
           <p className="text-sm text-text-muted">Please try again later.</p>
         </div>
@@ -466,28 +466,28 @@ export function History() {
               value={analytics.total_chores_completed}
               subValue="all time"
               icon={CheckCircle2}
-              color="#10b981"
+              color="var(--status-approved-border)"
             />
             <StatCard
               title="Total Points"
               value={Math.floor(analytics.total_points_earned)}
               subValue={`${analytics.average_points_per_chore} avg`}
               icon={Star}
-              color="#f59e0b"
+              color="var(--status-pending-border)"
             />
             <StatCard
               title="Current Streak"
               value={analytics.current_streak}
               subValue={`Best: ${analytics.longest_streak}`}
               icon={Flame}
-              color="#f97316"
+              color="var(--streak-from)"
             />
             <StatCard
               title="This Week"
               value={analytics.chores_this_week}
               subValue={`+${Math.floor(analytics.points_this_week)} pts`}
               icon={Trophy}
-              color="#8b5cf6"
+              color="var(--primary-500)"
             />
           </div>
 
@@ -537,7 +537,7 @@ export function History() {
       )}
       {viewMode === 'calendar' && !isLoadingAnalytics && isAnalyticsError && (
         <div className="card p-6 text-center">
-          <XCircle size={48} className="mx-auto text-red-400 mb-3" />
+          <XCircle size={48} className="mx-auto text-error-400 mb-3" />
           <h3 className="font-bold text-text-primary mb-1">Failed to Load Calendar</h3>
           <p className="text-sm text-text-muted">Please try again later.</p>
         </div>
@@ -569,7 +569,7 @@ export function History() {
             </div>
           ) : isHistoryError ? (
             <div className="card p-6 text-center">
-              <XCircle size={48} className="mx-auto text-red-400 mb-3" />
+              <XCircle size={48} className="mx-auto text-error-400 mb-3" />
               <h3 className="font-bold text-text-primary mb-1">Failed to Load History</h3>
               <p className="text-sm text-text-muted">Please try again later.</p>
             </div>

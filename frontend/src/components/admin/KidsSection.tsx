@@ -8,26 +8,25 @@ import { FormInput } from './FormElements';
 import { EntityCard } from './EntityCard';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { getApiErrorMessage } from '../../utils/errorMessage';
-import { KidAvatar, AVATAR_EMOJIS } from '../KidAvatar';
+import { KidAvatar } from '../KidAvatar';
 import { useTheme } from '../../theme';
 import { kidColorPalette } from '../../theme/colors';
 
 /** Per-device avatar personalization (UX-REVIEW §4.6) — color + emoji stored
     in ThemeContext/localStorage; applies immediately, no save needed. */
 function AvatarPicker({ kid }: { kid: Kid }) {
-  const { getKidColor, setKidColor, getKidEmoji, setKidEmoji } = useTheme();
+  const { getKidColor, setKidColor } = useTheme();
   const currentColor = getKidColor(kid.id, kid.name);
-  const currentEmoji = getKidEmoji(kid.id);
 
   return (
     <div className="mb-3">
       <label className="block text-sm font-medium mb-1 text-text-secondary">
-        Avatar & color <span className="text-text-muted">(saved on this device)</span>
+        Avatar color <span className="text-text-muted">(saved on this device)</span>
       </label>
       <div className="flex items-start gap-3">
         <KidAvatar kidId={kid.id} kidName={kid.name} size="lg" className="mt-1" />
-        <div className="flex-1 space-y-2">
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Avatar color">
+        <div className="flex-1">
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Avatar color">
             {kidColorPalette.map(color => (
               <button
                 key={color.id}
@@ -38,35 +37,8 @@ function AvatarPicker({ kid }: { kid: Kid }) {
                 className={`w-7 h-7 rounded-full transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40 ${
                   currentColor.id === color.id ? 'ring-2 ring-offset-2 ring-text-primary' : ''
                 }`}
-                style={{ backgroundColor: color.primary }}
+                style={{ backgroundColor: color.accent }}
               />
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-1" role="group" aria-label="Avatar emoji">
-            <button
-              type="button"
-              aria-label="Use name initial"
-              aria-pressed={!currentEmoji}
-              onClick={() => setKidEmoji(kid.id, '')}
-              className={`w-8 h-8 rounded-lg text-sm font-bold flex items-center justify-center transition-colors hover:bg-bg-elevated focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40 ${
-                !currentEmoji ? 'bg-bg-accent text-text-primary' : 'text-text-muted'
-              }`}
-            >
-              {kid.name.charAt(0).toUpperCase()}
-            </button>
-            {AVATAR_EMOJIS.map(emoji => (
-              <button
-                key={emoji}
-                type="button"
-                aria-label={`Emoji ${emoji}`}
-                aria-pressed={currentEmoji === emoji}
-                onClick={() => setKidEmoji(kid.id, emoji)}
-                className={`w-8 h-8 rounded-lg text-lg flex items-center justify-center transition-colors hover:bg-bg-elevated focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40 ${
-                  currentEmoji === emoji ? 'bg-bg-accent' : ''
-                }`}
-              >
-                {emoji}
-              </button>
             ))}
           </div>
         </div>

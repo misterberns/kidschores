@@ -39,9 +39,9 @@ export function StreakDisplay({ kidId, compact = false }: StreakDisplayProps) {
 
   if (isLoading || !streakInfo) {
     return (
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 animate-pulse">
-        <div className="h-6 bg-white/20 rounded w-16 mb-2" />
-        <div className="h-3 bg-white/20 rounded w-24" />
+      <div className="bg-bg-accent rounded-xl p-3 animate-pulse">
+        <div className="h-6 bg-bg-surface rounded w-16 mb-2" />
+        <div className="h-3 bg-bg-surface rounded w-24" />
       </div>
     );
   }
@@ -60,12 +60,12 @@ export function StreakDisplay({ kidId, compact = false }: StreakDisplayProps) {
           }
           transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
         >
-          <Flame size={20} className={overall_streak > 0 ? 'text-orange-400' : 'text-white/40'} />
-          <span className="text-xl font-bold">{overall_streak}</span>
+          <Flame size={20} className={overall_streak > 0 ? 'streak-flame-icon' : 'text-text-muted opacity-50'} />
+          <span className={`stat-number text-xl font-bold ${overall_streak > 0 ? 'streak-flame' : 'text-text-muted'}`}>{overall_streak}</span>
         </motion.div>
         {is_streak_at_risk && overall_streak > 0 && (
           <motion.span
-            className="text-yellow-400"
+            className="text-status-pending-border"
             animate={{ opacity: [1, 0.5, 1] }}
             transition={{ duration: 1, repeat: Infinity }}
           >
@@ -73,7 +73,7 @@ export function StreakDisplay({ kidId, compact = false }: StreakDisplayProps) {
           </motion.span>
         )}
         {streak_freeze_count > 0 && (
-          <span className="flex items-center gap-0.5 text-blue-300 text-xs">
+          <span className="flex items-center gap-0.5 text-status-claimed-text text-xs">
             <Snowflake size={12} />
             {streak_freeze_count}
           </span>
@@ -84,7 +84,7 @@ export function StreakDisplay({ kidId, compact = false }: StreakDisplayProps) {
 
   return (
     <motion.div
-      className="bg-white/15 backdrop-blur-sm rounded-xl p-4"
+      className="card p-4 text-text-primary"
       initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
     >
@@ -93,7 +93,7 @@ export function StreakDisplay({ kidId, compact = false }: StreakDisplayProps) {
         <div className="flex items-center gap-3">
           <motion.div
             className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              overall_streak > 0 ? 'bg-orange-500/30' : 'bg-white/10'
+              overall_streak > 0 ? 'bg-status-pending-bg' : 'bg-bg-accent'
             }`}
             animate={
               overall_streak > 0 && !prefersReducedMotion
@@ -102,16 +102,16 @@ export function StreakDisplay({ kidId, compact = false }: StreakDisplayProps) {
             }
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <Flame size={28} className={overall_streak > 0 ? 'text-orange-400' : 'text-white/40'} />
+            <Flame size={28} className={overall_streak > 0 ? 'streak-flame-icon' : 'text-text-muted opacity-50'} />
           </motion.div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-3xl font-bold">{overall_streak}</span>
-              <span className="text-sm opacity-70">day streak</span>
+              <span className="stat-number text-3xl font-bold streak-flame">{overall_streak}</span>
+              <span className="text-sm text-text-secondary">day streak</span>
             </div>
             {is_streak_at_risk && overall_streak > 0 && (
               <motion.p
-                className="text-xs text-yellow-400 flex items-center gap-1"
+                className="text-xs text-status-pending-text flex items-center gap-1"
                 animate={{ opacity: [1, 0.6, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
@@ -125,7 +125,7 @@ export function StreakDisplay({ kidId, compact = false }: StreakDisplayProps) {
         {/* Streak Freeze Badge */}
         {streak_freeze_count > 0 && (
           <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-1 bg-blue-500/20 text-blue-300 px-2 py-1 rounded-lg text-sm">
+            <div className="flex items-center gap-1 bg-status-claimed-bg text-status-claimed-text border border-status-claimed-border px-2 py-1 rounded-lg text-sm">
               <Snowflake size={14} />
               <span>{streak_freeze_count} freeze{streak_freeze_count > 1 ? 's' : ''}</span>
             </div>
@@ -133,7 +133,7 @@ export function StreakDisplay({ kidId, compact = false }: StreakDisplayProps) {
               <button
                 onClick={() => useFreezeMutation.mutate()}
                 disabled={useFreezeMutation.isPending}
-                className="text-xs text-blue-300 hover:text-blue-200 underline"
+                className="text-xs text-status-claimed-text underline"
               >
                 Use freeze
               </button>
@@ -144,20 +144,20 @@ export function StreakDisplay({ kidId, compact = false }: StreakDisplayProps) {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <div className="bg-white/10 rounded-lg p-2 text-center">
+        <div className="bg-bg-accent rounded-lg p-2 text-center">
           <div className="flex items-center justify-center gap-1">
-            <Trophy size={14} className="text-yellow-400" />
+            <Trophy size={14} className="text-status-pending-border" />
             <span className="font-bold">{longest_streak_ever}</span>
           </div>
-          <p className="text-xs opacity-70">Personal Best</p>
+          <p className="text-xs text-text-muted">Personal Best</p>
         </div>
         {next_milestone && (
-          <div className="bg-white/10 rounded-lg p-2 text-center">
+          <div className="bg-bg-accent rounded-lg p-2 text-center">
             <div className="flex items-center justify-center gap-1">
-              <Target size={14} className="text-green-400" />
+              <Target size={14} className="text-status-approved-border" />
               <span className="font-bold">{days_to_next_milestone}</span>
             </div>
-            <p className="text-xs opacity-70">to {next_milestone} days</p>
+            <p className="text-xs text-text-muted">to {next_milestone} days</p>
           </div>
         )}
       </div>
@@ -165,13 +165,14 @@ export function StreakDisplay({ kidId, compact = false }: StreakDisplayProps) {
       {/* Milestone Progress */}
       {next_milestone && (
         <div className="mt-3">
-          <div className="flex justify-between text-xs mb-1">
+          <div className="flex justify-between text-xs mb-1 text-text-secondary">
             <span>Next milestone: {MILESTONE_EMOJIS[next_milestone] || `${next_milestone} days`}</span>
             <span>{overall_streak}/{next_milestone}</span>
           </div>
-          <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+          <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--ring-track)' }}>
             <motion.div
-              className="h-full bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full"
+              className="h-full rounded-full"
+              style={{ background: 'linear-gradient(90deg, var(--streak-from), var(--streak-to))' }}
               initial={{ width: 0 }}
               animate={{ width: `${(overall_streak / next_milestone) * 100}%` }}
               transition={{ duration: 0.5, ease: 'easeOut' }}

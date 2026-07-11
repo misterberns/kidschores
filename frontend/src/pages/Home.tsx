@@ -2,35 +2,24 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Navigate } from 'react-router-dom';
-import { Star, Award, User, AlertCircle } from 'lucide-react';
+import { Award, AlertCircle, Sparkle } from 'lucide-react';
 import { kidsApi } from '../api/client';
 import { useAuth } from '../auth';
 import type { Kid } from '../api/client';
 import { useTheme } from '../theme';
-import type { SeasonalTheme } from '../theme/seasonal';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { staggerContainer, cardVariants, smoothTransition } from '../utils/animations';
 import { AnimatedPoints } from '../components/AnimatedPoints';
 import { SkeletonKidCardList } from '../components/skeletons';
 import { LevelBadge } from '../components/gamification/LevelBadge';
-import { ChorbiePresets } from '../components/mascot';
 import { DailyProgress } from '../components/DailyProgress';
 import { StreakDisplay } from '../components/StreakDisplay';
 import { BadgeDisplay } from '../components/gamification/BadgeDisplay';
 import { BadgeCelebration } from '../components/celebrations/BadgeCelebration';
 
-const seasonalGreetings: Record<SeasonalTheme, string> = {
-  default: 'Welcome back!',
-  halloween: 'Trick or Treat!',
-  christmas: 'Merry Christmas!',
-  easter: 'Happy Easter!',
-  summer: 'Summer Vibes!',
-};
-
 function KidCard({ kid, index }: { kid: Kid; index: number }) {
-  const { getKidColor, getKidEmoji } = useTheme();
+  const { getKidColor } = useTheme();
   const kidColor = getKidColor(kid.id, kid.name);
-  const kidEmoji = getKidEmoji(kid.id);
   const prefersReducedMotion = useReducedMotion();
 
   const cardMotionProps = prefersReducedMotion
@@ -42,114 +31,66 @@ function KidCard({ kid, index }: { kid: Kid; index: number }) {
         whileHover: 'hover',
         whileTap: 'tap',
         custom: index,
-        transition: { delay: index * 0.1, ...smoothTransition },
+        transition: { delay: index * 0.06, ...smoothTransition },
       };
 
   return (
     <motion.div
       data-testid={`kid-card-${kid.id}`}
-      className={`relative isolate overflow-hidden bg-gradient-to-br ${kidColor.gradient} rounded-2xl border border-black/10 p-6 text-white shadow-card hover:shadow-card-hover transition-shadow`}
+      className={`kid-card ${kidColor.className} p-5`}
       {...cardMotionProps}
     >
-      {/* Layered depth: soft radial highlight top-left, gentle darkening bottom.
-          -z-10 + isolate paints it above the gradient but below all content. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 rounded-2xl"
-        style={{
-          background:
-            'radial-gradient(120% 80% at 15% 0%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 55%), linear-gradient(to bottom, rgba(0,0,0,0) 55%, rgba(0,0,0,0.10) 100%)',
-        }}
-      />
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <motion.h2
-            className="text-2xl font-bold"
-            data-testid={`kid-name-${kid.id}`}
-            initial={prefersReducedMotion ? false : { opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 + 0.1 }}
-          >
-            {kid.name}
-          </motion.h2>
-          <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 + 0.15, type: 'spring', stiffness: 400 }}
-          >
-            <LevelBadge
-              points={Math.floor(kid.points)}
-              size="sm"
-              showProgress={false}
-              showName={false}
-            />
-          </motion.div>
-        </div>
-        <motion.div
-          className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl"
-          initial={prefersReducedMotion ? false : { scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: index * 0.1 + 0.2, type: 'spring', stiffness: 400 }}
+      {/* Header: avatar ring + name + level, streak on the right */}
+      <div className="flex items-center gap-3 mb-4">
+        <div
+          aria-hidden="true"
+          className="kid-avatar-ring w-10 h-10 rounded-xl flex items-center justify-center font-display font-bold text-lg"
         >
-          {kidEmoji ? <span aria-hidden="true">{kidEmoji}</span> : <User size={24} />}
-        </motion.div>
+          {kid.name.charAt(0).toUpperCase()}
+        </div>
+        <h2
+          className="text-xl font-bold text-text-primary"
+          data-testid={`kid-name-${kid.id}`}
+        >
+          {kid.name}
+        </h2>
+        <LevelBadge
+          points={Math.floor(kid.points)}
+          size="sm"
+          showProgress={false}
+          showName={false}
+        />
+        <div className="ml-auto">
+          <StreakDisplay kidId={kid.id} compact />
+        </div>
       </div>
 
-      {/* Points Display — black/15 (not white/20) so the white text keeps
-          contrast on the lighter kid gradients (gold/teal) */}
-      <motion.div
-        className="bg-black/15 backdrop-blur-sm rounded-xl p-4 mb-4"
-        initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.1 + 0.15 }}
-      >
-        <div className="text-center">
-          <span className="text-5xl font-bold text-white" data-testid={`kid-points-${kid.id}`}>
-            <AnimatedPoints value={Math.floor(kid.points)} size="xl" showIcon={false} className="justify-center text-white" />
-          </span>
-          <div className="flex items-center justify-center gap-1.5 mt-1">
-            <Star size={18} className="text-yellow-300" fill="currentColor" />
-            <span className="text-lg opacity-90">Points</span>
-          </div>
-          <div className="text-sm mt-1 opacity-75">
-            = ${(kid.points / 100).toFixed(2)} allowance
-          </div>
-        </div>
-      </motion.div>
+      {/* Points — accent-tinted display numerals */}
+      <div className="flex items-baseline gap-2">
+        <span
+          className="stat-number text-5xl font-bold kid-accent-text"
+          data-testid={`kid-points-${kid.id}`}
+        >
+          <AnimatedPoints value={Math.floor(kid.points)} size="xl" showIcon={false} />
+        </span>
+        <span className="text-sm font-medium text-text-muted">pts</span>
+      </div>
+      <p className="text-xs text-text-muted mt-0.5 mb-4">
+        = ${(kid.points / 100).toFixed(2)} allowance
+      </p>
 
-      {/* Daily Progress */}
-      <motion.div
-        initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.1 + 0.2 }}
-      >
-        <DailyProgress kidId={kid.id} compact />
-      </motion.div>
-
-      {/* Streak Display */}
-      <motion.div
-        className="mt-3"
-        initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.1 + 0.25 }}
-      >
-        <StreakDisplay kidId={kid.id} compact />
-      </motion.div>
+      {/* Today's progress ring */}
+      <DailyProgress kidId={kid.id} compact />
 
       {/* Badges */}
       {kid.badges && kid.badges.length > 0 && (
-        <motion.div
-          className="mt-4 pt-4 border-t border-white/20"
-          initial={prefersReducedMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: index * 0.1 + 0.3 }}
-        >
-          <p className="text-sm opacity-90 mb-2 flex items-center gap-1.5">
-            <Award size={14} />
+        <div className="mt-4 pt-4 border-t border-border-primary">
+          <p className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-2 flex items-center gap-1.5">
+            <Award size={13} />
             Badges
           </p>
           <BadgeDisplay badges={kid.badges} size="sm" maxDisplay={6} />
-        </motion.div>
+        </div>
       )}
     </motion.div>
   );
@@ -162,7 +103,6 @@ export function Home() {
   });
   // Must call all hooks before any conditional returns (React Rules of Hooks)
   const prefersReducedMotion = useReducedMotion();
-  const { seasonal } = useTheme();
   const { role, kidId } = useAuth();
 
   // Badge-unlock celebration: on the kid's own device, fire when their badge
@@ -217,9 +157,7 @@ export function Home() {
     }
     return (
       <div className="text-center py-12">
-        <div className="mx-auto mb-4">
-          <ChorbiePresets.EmptyState season={seasonal} />
-        </div>
+        <Sparkle size={40} className="mx-auto mb-4 text-primary-500" aria-hidden="true" />
         <h2 className="text-2xl font-bold text-text-primary">No kids yet!</h2>
         <p className="mt-2 text-text-secondary">
           Ask a parent to set things up.
@@ -236,17 +174,14 @@ export function Home() {
         show={celebrateBadges.length > 0}
         onClose={dismissBadgeCelebration}
       />
-      <motion.div
-        className="flex items-center justify-center gap-3"
-        initial={prefersReducedMotion ? false : { opacity: 0, y: -20 }}
+      <motion.h2
+        className="text-2xl font-bold text-text-primary text-center"
+        initial={prefersReducedMotion ? false : { opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.25 }}
       >
-        <ChorbiePresets.Welcome size={48} season={seasonal} />
-        <h2 className="text-2xl font-bold text-text-primary">
-          {seasonalGreetings[seasonal] || 'Welcome back!'}
-        </h2>
-      </motion.div>
+        Welcome back!
+      </motion.h2>
 
       <motion.div
         className={`grid gap-6 md:items-start ${kids.length > 1 ? 'md:grid-cols-2' : 'md:max-w-xl md:mx-auto'}`}

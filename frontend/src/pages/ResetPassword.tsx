@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
-import { ChorbiePresets } from '../components/mascot';
+import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft, KeyRound } from 'lucide-react';
 import { api } from '../api/client';
 import { getApiErrorMessage } from '../utils/errorMessage';
 
@@ -170,8 +169,8 @@ export function ResetPassword() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center mb-8"
       >
-        <div className="w-20 h-20 mb-4">
-          <ChorbiePresets.Excited size={80} />
+        <div className="w-16 h-16 mb-4 rounded-2xl bg-primary-50 flex items-center justify-center">
+          <KeyRound size={32} className="text-primary-500" />
         </div>
         <h1 style={{ color: 'var(--primary-500)' }} className="text-3xl font-bold">
           Create New Password

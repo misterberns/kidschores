@@ -19,26 +19,15 @@ interface ConfettiProps {
   colors?: string[];
 }
 
-// Celebration colors - brand + kid palette (BRAND-GUIDELINES.md; the old
-// neon set was a leftover of the retired "Electric Neon" dark theme)
+// Celebration colors — restrained "Midnight + Electric" brand set
+// (cyan hero / volt / violet / magenta / amber). No neon rainbow.
 const defaultColors = [
-  '#58CC02', // Feather Green (brand primary)
-  '#1CB0F6', // Sky Blue (brand secondary)
-  '#FF9600', // Warm Orange (brand accent)
-  '#FF4B4B', // Berry (celebration)
-  '#A36DD5', // Grape (kid palette)
-  '#2DB8A6', // Teal (kid palette)
-  '#E066A8', // Coral (kid palette)
-  '#F0C030', // Gold (kid palette)
+  '#38E1FF', // electric cyan (hero)
+  '#B6F400', // volt (points)
+  '#A78BFA', // violet
+  '#FB6FB1', // magenta
+  '#FBBF24', // amber
 ];
-
-// Seasonal confetti color palettes
-export const seasonalConfettiColors: Record<string, string[]> = {
-  halloween: ['#FF6600', '#BF00FF', '#FFD700', '#FF3300', '#9B30FF'],
-  christmas: ['#FF0033', '#00FF66', '#FFD700', '#FFFFFF', '#FF6666'],
-  easter:    ['#BF5FFF', '#FF00AA', '#FFD700', '#00E5CC', '#FF69B4'],
-  summer:    ['#00D4FF', '#FF6B35', '#FFD700', '#39FF14', '#FF1493'],
-};
 
 /**
  * Confetti explosion effect for celebrations
@@ -47,7 +36,7 @@ export const seasonalConfettiColors: Record<string, string[]> = {
 export function Confetti({
   show,
   onComplete,
-  pieceCount = 50,
+  pieceCount = 28,
   duration = 2500,
   colors = defaultColors,
 }: ConfettiProps) {

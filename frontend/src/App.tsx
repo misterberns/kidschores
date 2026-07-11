@@ -21,11 +21,10 @@ import { History } from './pages/History';
 import Help from './pages/Help';
 import { Onboarding } from './pages/Onboarding';
 import { AuthProvider, useAuth, ProtectedRoute } from './auth';
-import { ThemeProvider, useTheme, ThemeToggle } from './theme';
+import { ThemeProvider, ThemeToggle } from './theme';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { pageVariants } from './utils/animations';
 import { Logo } from './components/Logo';
-import { SeasonalParticles } from './components/SeasonalParticles';
 import { ToastProvider } from './components/notifications/ToastProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -220,25 +219,15 @@ function AppRoutes() {
 }
 
 function AppContent() {
-  const { seasonalOverride } = useTheme();
   const { user, activeKidId, kids, logout } = useAuth();
-  const SeasonIcon = seasonalOverride.icon;
 
   // Find active kid name if selected
   const activeKid = kids.find((k) => k.id === activeKidId);
 
   return (
     <div className="min-h-[100dvh] pb-20 transition-colors duration-200 bg-bg-base">
-      {/* Seasonal floating particles overlay */}
-      <SeasonalParticles />
-
-      {/* Primary accent line at top — seasonal gradient */}
-      <div
-        className="h-1.5"
-        style={{
-          background: `linear-gradient(to right, ${seasonalOverride.primaryColor}, ${seasonalOverride.accentColor})`,
-        }}
-      />
+      {/* Electric accent hairline at top */}
+      <div className="h-1.5 bg-primary-500" />
 
       {/* Header */}
       <header className="p-4 transition-colors duration-200 bg-bg-surface border-b-2 border-[var(--border-color)]">
@@ -261,10 +250,6 @@ function AppContent() {
 
           <h1 className="text-2xl font-bold text-center flex items-center gap-2">
             <Logo variant="horizontal" size={180} alt="KidsChores" />
-            <SeasonIcon
-              size={28}
-              style={{ color: seasonalOverride.iconColor }}
-            />
           </h1>
 
           <div className="flex items-center gap-2">

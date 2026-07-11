@@ -211,7 +211,7 @@ export function Register() {
                 <div
                   key={index}
                   className={`flex items-center gap-2 text-sm ${
-                    check.valid ? 'text-success-600' : 'text-text-muted'
+                    check.valid ? 'text-status-approved-text' : 'text-text-muted'
                   }`}
                 >
                   <CheckCircle size={16} className={check.valid ? 'opacity-100' : 'opacity-30'} />

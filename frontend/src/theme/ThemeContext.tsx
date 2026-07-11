@@ -1,12 +1,15 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { lightTheme, darkTheme, type ThemeColors, kidColorPalette, getKidColor as getKidColorById } from './colors';
-import { seasonalThemes, getCurrentSeason, applySeasonalTheme, type SeasonalTheme, type SeasonalOverride } from './seasonal';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
 interface KidColorValue {
   id: string;
-  gradient: string;
+  /** CSS class ('kid-cyan') that sets --kid-accent for the subtree */
+  className: string;
+  /** Accent hex for the CURRENT mode (dark flagship / deepened light) */
+  accent: string;
+  /** Back-compat alias of accent */
   primary: string;
 }
 
@@ -16,11 +19,6 @@ interface ThemeContextValue {
   setMode: (mode: ThemeMode) => void;
   isDark: boolean;
 
-  // Seasonal theme
-  seasonal: SeasonalTheme;
-  setSeasonal: (theme: SeasonalTheme) => void;
-  seasonalOverride: SeasonalOverride;
-
   // Colors
   colors: ThemeColors;
 
@@ -28,22 +26,17 @@ interface ThemeContextValue {
   kidColors: Record<string, KidColorValue>;
   setKidColor: (kidId: string, colorId: string) => void;
   getKidColor: (kidId: string, kidName: string) => KidColorValue;
-
-  // Kid emoji avatars (per-kid, per-device — same persistence model as colors)
-  setKidEmoji: (kidId: string, emoji: string) => void;
-  getKidEmoji: (kidId: string) => string | undefined;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 // Storage keys
 const THEME_MODE_KEY = 'kidschores-theme-mode';
-const SEASONAL_KEY = 'kidschores-seasonal-theme';
 const KID_COLORS_KEY = 'kidschores-kid-colors';
-const KID_EMOJIS_KEY = 'kidschores-kid-emojis';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Initialize from localStorage or defaults
+  // Initialize from localStorage; the app is DARK-FIRST — dark is the
+  // flagship theme and the default for new devices.
   const [mode, setModeState] = useState<ThemeMode>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(THEME_MODE_KEY);
@@ -51,36 +44,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         return stored;
       }
     }
-    return 'system';
-  });
-
-  const [seasonal, setSeasonalState] = useState<SeasonalTheme>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(SEASONAL_KEY);
-      if (stored && stored in seasonalThemes) {
-        return stored as SeasonalTheme;
-      }
-    }
-    return getCurrentSeason();
+    return 'dark';
   });
 
   const [kidColorMap, setKidColorMap] = useState<Record<string, string>>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(KID_COLORS_KEY);
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch {
-          return {};
-        }
-      }
-    }
-    return {};
-  });
-
-  const [kidEmojiMap, setKidEmojiMap] = useState<Record<string, string>>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(KID_EMOJIS_KEY);
       if (stored) {
         try {
           return JSON.parse(stored);
@@ -119,20 +88,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [isDark]);
 
-  // Apply seasonal theme CSS class
-  useEffect(() => {
-    applySeasonalTheme(seasonal);
-  }, [seasonal]);
-
   // Persist to localStorage
   const setMode = (newMode: ThemeMode) => {
     setModeState(newMode);
     localStorage.setItem(THEME_MODE_KEY, newMode);
-  };
-
-  const setSeasonal = (newSeasonal: SeasonalTheme) => {
-    setSeasonalState(newSeasonal);
-    localStorage.setItem(SEASONAL_KEY, newSeasonal);
   };
 
   const setKidColor = (kidId: string, colorId: string) => {
@@ -141,71 +100,42 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(KID_COLORS_KEY, JSON.stringify(newColors));
   };
 
-  const setKidEmoji = (kidId: string, emoji: string) => {
-    const newEmojis = { ...kidEmojiMap };
-    if (emoji) {
-      newEmojis[kidId] = emoji;
-    } else {
-      delete newEmojis[kidId];
-    }
-    setKidEmojiMap(newEmojis);
-    localStorage.setItem(KID_EMOJIS_KEY, JSON.stringify(newEmojis));
+  const toValue = (colorId: string): KidColorValue => {
+    const colorInfo = getKidColorById(colorId);
+    const accent = isDark ? colorInfo.accent : colorInfo.accentLight;
+    return {
+      id: colorInfo.id,
+      className: colorInfo.className,
+      accent,
+      primary: accent,
+    };
   };
 
-  const getKidEmoji = (kidId: string): string | undefined => kidEmojiMap[kidId];
-
   const getKidColor = (kidId: string, _kidName: string): KidColorValue => {
-    // If kid has a custom color, use it
+    // If kid has a custom color, use it (legacy ids resolve in colors.ts)
     if (kidId in kidColorMap) {
-      const colorInfo = getKidColorById(kidColorMap[kidId]);
-      return {
-        id: colorInfo.id,
-        gradient: isDark ? colorInfo.gradientDark : colorInfo.gradient,
-        primary: colorInfo.primary,
-      };
+      return toValue(kidColorMap[kidId]);
     }
     // Hash the kid ID (not name) to get consistent but unique colors
-    // This ensures each kid gets a different color even if names start with same letter
     const hash = kidId.split('').reduce((acc, char, idx) => {
       return char.charCodeAt(0) + ((acc << 5) - acc) + idx;
     }, 0);
     const index = Math.abs(hash) % kidColorPalette.length;
-    const colorInfo = kidColorPalette[index];
-    return {
-      id: colorInfo.id,
-      gradient: isDark ? colorInfo.gradientDark : colorInfo.gradient,
-      primary: colorInfo.primary,
-    };
+    return toValue(kidColorPalette[index].id);
   };
 
-  const seasonalOverride = seasonalThemes[seasonal];
   const colors = isDark ? darkTheme : lightTheme;
 
   const value: ThemeContextValue = {
     mode,
     setMode,
     isDark,
-    seasonal,
-    setSeasonal,
-    seasonalOverride,
     colors,
     kidColors: Object.fromEntries(
-      Object.entries(kidColorMap).map(([id, colorId]) => {
-        const colorInfo = getKidColorById(colorId);
-        return [
-          id,
-          {
-            id: colorInfo.id,
-            gradient: isDark ? colorInfo.gradientDark : colorInfo.gradient,
-            primary: colorInfo.primary,
-          },
-        ];
-      })
+      Object.entries(kidColorMap).map(([id, colorId]) => [id, toValue(colorId)])
     ),
     setKidColor,
     getKidColor,
-    setKidEmoji,
-    getKidEmoji,
   };
 
   return (

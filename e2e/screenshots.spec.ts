@@ -215,7 +215,12 @@ test.describe('README Screenshots', () => {
     await page.waitForTimeout(500);
 
     // --- Home Dashboard (Light) ---
+    // The app is dark-by-default now — set light explicitly for the first capture
     await page.goto('/');
+    await page.evaluate(() => {
+      localStorage.setItem('kidschores-theme-mode', 'light');
+    });
+    await page.reload();
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000); // Let animations settle
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'home-light.png') });

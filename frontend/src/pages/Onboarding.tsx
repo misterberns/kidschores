@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Plus, Check, Sparkles, X } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Plus, Check, Sparkles, X, Sparkle, UserPlus, LayoutGrid, ClipboardList, Gift, PartyPopper } from 'lucide-react';
 import { kidsApi, choresApi, rewardsApi, categoriesApi } from '../api/client';
 import type { ChoreCategory } from '../api/client';
 import { useToast } from '../hooks/useToast';
-import { useTheme } from '../theme';
-import { ChorbiePresets } from '../components/mascot';
 import { FormInput, FormSelect } from '../components/admin/FormElements';
 import { CHORE_SUGGESTIONS } from '../data/chore-suggestions';
 import type { ChoreSuggestion } from '../data/chore-suggestions';
@@ -46,11 +44,10 @@ function ProgressBar({ step }: { step: number }) {
 
 // Step 1: Welcome
 function WelcomeStep() {
-  const { seasonal } = useTheme();
   return (
     <div className="text-center py-6">
-      <div className="mx-auto mb-6">
-        <ChorbiePresets.Welcome size={120} season={seasonal} />
+      <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary-50 flex items-center justify-center">
+        <Sparkle size={32} className="text-primary-500" />
       </div>
       <h2 className="text-3xl font-bold text-text-primary mb-3">
         Welcome to KidsChores!
@@ -67,8 +64,6 @@ function AddKidsStep({ kidNames, setKidNames }: {
   kidNames: string[];
   setKidNames: (names: string[]) => void;
 }) {
-  const { seasonal } = useTheme();
-
   const addKid = () => setKidNames([...kidNames, '']);
   const removeKid = (index: number) => setKidNames(kidNames.filter((_, i) => i !== index));
   const updateKid = (index: number, name: string) => {
@@ -80,7 +75,9 @@ function AddKidsStep({ kidNames, setKidNames }: {
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <ChorbiePresets.Encourage size={48} season={seasonal} />
+        <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center flex-shrink-0">
+          <UserPlus size={24} className="text-primary-500" />
+        </div>
         <div>
           <h2 className="text-2xl font-bold text-text-primary">Add Your Kids</h2>
           <p className="text-text-secondary text-sm">Who will be doing chores?</p>
@@ -130,12 +127,12 @@ function CategoriesStep({ categories, seeded, onSeed, selectedCategories, onTogg
   selectedCategories: Set<string>;
   onToggleCategory: (id: string) => void;
 }) {
-  const { seasonal } = useTheme();
-
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <ChorbiePresets.Excited size={48} season={seasonal} />
+        <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center flex-shrink-0">
+          <LayoutGrid size={24} className="text-primary-500" />
+        </div>
         <div>
           <h2 className="text-2xl font-bold text-text-primary">Chore Categories</h2>
           <p className="text-text-secondary text-sm">Organize chores by room or type</p>
@@ -187,7 +184,6 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
   addedChores: AddedChore[];
   setAddedChores: (chores: AddedChore[]) => void;
 }) {
-  const { seasonal } = useTheme();
   const [expandedCategory, setExpandedCategory] = useState<string | null>(categories[0]?.name || null);
   const [customName, setCustomName] = useState('');
   const [customIcon, setCustomIcon] = useState('🧹');
@@ -253,7 +249,9 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <ChorbiePresets.Encourage size={48} season={seasonal} />
+        <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center flex-shrink-0">
+          <ClipboardList size={24} className="text-primary-500" />
+        </div>
         <div>
           <h2 className="text-2xl font-bold text-text-primary">Add Chores</h2>
           <p className="text-text-secondary text-sm">Expand a category to add chores</p>
@@ -432,7 +430,6 @@ function AddRewardsStep({ addedRewards, setAddedRewards }: {
   addedRewards: AddedReward[];
   setAddedRewards: (rewards: AddedReward[]) => void;
 }) {
-  const { seasonal } = useTheme();
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customIcon, setCustomIcon] = useState('🎁');
@@ -470,7 +467,9 @@ function AddRewardsStep({ addedRewards, setAddedRewards }: {
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <ChorbiePresets.Excited size={48} season={seasonal} />
+        <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center flex-shrink-0">
+          <Gift size={24} className="text-primary-500" />
+        </div>
         <div>
           <h2 className="text-2xl font-bold text-text-primary">Add Rewards</h2>
           <p className="text-text-secondary text-sm">What can kids spend their points on?</p>
@@ -557,11 +556,10 @@ function AddRewardsStep({ addedRewards, setAddedRewards }: {
 
 // Step 6: Done
 function DoneStep({ summary }: { summary: { kids: number; chores: number; rewards: number } }) {
-  const { seasonal } = useTheme();
   return (
     <div className="text-center py-6">
-      <div className="mx-auto mb-6">
-        <ChorbiePresets.Success size={120} season={seasonal} />
+      <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary-50 flex items-center justify-center">
+        <PartyPopper size={32} className="text-primary-500" />
       </div>
       <h2 className="text-3xl font-bold text-text-primary mb-3">
         You're All Set!

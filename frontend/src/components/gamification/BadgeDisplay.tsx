@@ -138,12 +138,13 @@ const badgeDefinitions: Record<string, BadgeDefinition> = {
   },
 };
 
-// Duolingo-style rarity glow effects
-const rarityGlow = {
-  common: '',
-  rare: 'ring-2 ring-[#1CB0F6]/50',      // Sky Blue
-  epic: 'ring-2 ring-[#CE82FF]/50',       // Grape Purple
-  legendary: 'ring-2 ring-[#FF9600]/50 animate-pulse',  // Warm Orange
+// Metal-tier chip per rarity (replaces cartoon gradient + neon ring;
+// the glow class carries the legendary emphasis, no animate-pulse)
+const rarityTier = {
+  common: 'tier-bronze',
+  rare: 'tier-silver',
+  epic: 'tier-gold',
+  legendary: 'tier-gold tier-gold-glow',
 };
 
 interface SingleBadgeProps {
@@ -183,10 +184,9 @@ export function Badge({
     <div className={`relative inline-block ${className}`}>
       <motion.div
         className={`rounded-full flex items-center justify-center cursor-pointer transition-opacity
-          ${locked ? 'bg-bg-accent opacity-40' : `bg-gradient-to-br ${badge.gradient}`}
-          ${!locked && rarityGlow[badge.rarity]}`}
+          ${locked ? 'bg-bg-accent opacity-40' : rarityTier[badge.rarity]}`}
         style={{ width: config.container, height: config.container }}
-        whileHover={prefersReducedMotion ? {} : { scale: 1.15, rotate: 10 }}
+        whileHover={prefersReducedMotion ? {} : { scale: 1.06 }}
         whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
         onMouseEnter={() => showTooltip && setShowInfo(true)}
         onMouseLeave={() => setShowInfo(false)}
@@ -194,7 +194,7 @@ export function Badge({
       >
         <Icon
           size={config.icon}
-          className={locked ? 'text-text-muted' : 'text-white'}
+          className={locked ? 'text-text-muted' : ''}
         />
       </motion.div>
 
@@ -255,8 +255,8 @@ export function BadgeDisplay({
       {displayedBadges.map((badgeId, index) => (
         <motion.div
           key={badgeId}
-          initial={prefersReducedMotion ? false : { scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.85 }}
+          animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: index * 0.1, type: 'spring' }}
         >
           <Badge badgeId={badgeId} size={size} />

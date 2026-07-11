@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, LogOut } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
-import { ChorbiePresets } from '../components/mascot';
+import { Logo } from '../components/Logo';
 import { KidAvatar } from '../components/KidAvatar';
 
 export function SelectKid() {
@@ -36,8 +36,8 @@ export function SelectKid() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center mb-8"
       >
-        <div className="w-20 h-20 mb-4">
-          <ChorbiePresets.Welcome size={80} />
+        <div className="mb-4">
+          <Logo variant="icon" size={56} />
         </div>
         <h1 className="text-2xl font-bold text-text-primary">Who's using KidsChores?</h1>
         <p className="text-text-muted mt-2">
