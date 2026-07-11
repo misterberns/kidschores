@@ -137,7 +137,7 @@ export const lightTheme: ThemeColors = {
   text: {
     primary: '#101828',
     secondary: '#475467',
-    muted: '#667085',
+    muted: '#576070',
     inverse: '#FFFFFF',
   },
 
@@ -146,10 +146,10 @@ export const lightTheme: ThemeColors = {
     100: '#C9F1FB',
     200: '#93E3F6',
     300: '#4FD0EE',
-    400: '#1FB6D9',
-    500: '#0891B2',
-    600: '#0E7490',
-    700: '#155E75',
+    400: '#0891B2',
+    500: '#0E7490',
+    600: '#155E75',
+    700: '#164E63',
     800: '#164E63',
     900: '#103B4C',
   },
@@ -166,7 +166,7 @@ export const lightTheme: ThemeColors = {
     overdue: { bg: '#FEF3F2', border: '#F04438', text: '#B42318' },
   },
 
-  accent: '#5C8A00',         // volt family (deepened for light)
+  accent: '#4A7000',         // volt family (deepened for light)
   purple: '#7C3AED',
   green: '#12B76A',
   red: '#E11D48',

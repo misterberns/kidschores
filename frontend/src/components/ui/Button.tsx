@@ -11,7 +11,7 @@ import { useReducedMotion } from '../../hooks/useReducedMotion';
  * Variants:
  *  - primary   solid Feather-Green (default CTA)
  *  - secondary surface + green border (secondary CTA)
- *  - accent    orange gradient (kid-facing "Get This!"-class CTAs)
+ *  - accent    solid volt (kid-facing "Get This!"-class CTAs; dark text on volt)
  *  - success   solid approved-green (approve actions)
  *  - danger    soft red → solid on hover (deny/destructive)
  *  - outline   transparent + border (tertiary)
@@ -34,7 +34,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   secondary:
     'bg-bg-surface text-primary-500 border border-primary-500 hover:bg-primary-50 shadow-sm',
   accent:
-    'bg-gradient-to-r from-accent-500 to-accent-400 text-white border border-transparent hover:from-accent-600 hover:to-accent-500 shadow-md',
+    'bg-accent-500 text-text-inverse border border-transparent hover:bg-accent-400 shadow-md font-bold',
   success:
     'bg-status-approved-border text-white border border-transparent hover:opacity-90 shadow-sm',
   danger:

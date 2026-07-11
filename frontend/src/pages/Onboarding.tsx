@@ -270,7 +270,7 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
             <div
               key={cat.id}
               className="card overflow-hidden border transition-colors"
-              style={{ borderColor: isExpanded ? cat.color : 'var(--border-primary)' }}
+              style={{ borderColor: isExpanded ? cat.color : 'var(--border-color)' }}
             >
               {/* Accordion header */}
               <button

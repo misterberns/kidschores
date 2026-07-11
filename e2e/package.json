@@ -13,10 +13,11 @@
     "codegen": "playwright codegen http://localhost:5173"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.1",
+    "@axe-core/playwright": "^4.12.1",
     "@faker-js/faker": "^10.5.0",
+    "@playwright/test": "^1.61.1",
     "@types/node": "^22.0.0",
-    "typescript": "^7.0.2",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "typescript": "^7.0.2"
   }
 }

@@ -27,7 +27,7 @@ function RecurringBadge({ frequency }: { frequency: string }) {
   if (!frequency || frequency === 'none') return null;
 
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-500">
       <RefreshCw size={10} />
       {RECURRING_LABELS[frequency] || frequency}
     </span>
@@ -475,7 +475,7 @@ export function Chores() {
       {/* Daily Progress Summary for Today's view */}
       {viewMode === 'today' && activeKidId && dailyProgress && dailyProgress.total_chores > 0 && (
         <motion.div
-          className="card p-4 bg-gradient-to-r from-primary-500/10 to-accent-500/10 border-primary-200 dark:border-primary-800"
+          className="card p-4"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
