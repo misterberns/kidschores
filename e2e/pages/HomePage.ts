@@ -85,14 +85,28 @@ export class HomePage {
       return match ? parseInt(match[1], 10) : 0;
     };
 
+    // Initial settle: give the React Query refetch time to land and the
+    // spring time to START before sampling (a bare stability poll returns a
+    // stale pre-animation value otherwise).
+    await this.page.waitForTimeout(800);
+
+    // Then require the value to hold across THREE consecutive samples 400ms
+    // apart (1.2s window) — the spring's asymptotic tail can display N-1 for
+    // several hundred ms before rounding over to the final value.
     let prev = await read();
-    for (let i = 0; i < 20; i++) {
-      await this.page.waitForTimeout(300);
+    let stableCount = 0;
+    for (let i = 0; i < 30; i++) {
+      await this.page.waitForTimeout(400);
       const cur = await read();
-      if (cur === prev) return cur; // settled: identical across 300ms
-      prev = cur;
+      if (cur === prev) {
+        stableCount++;
+        if (stableCount >= 2) return cur; // 3 identical reads spanning 1.2s
+      } else {
+        stableCount = 0;
+        prev = cur;
+      }
     }
-    return prev; // 6s ceiling — return the last read rather than hang
+    return prev; // ~13s ceiling — return the last read rather than hang
   }
 
   /**

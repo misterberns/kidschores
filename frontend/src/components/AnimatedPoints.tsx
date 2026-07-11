@@ -43,8 +43,13 @@ export function AnimatedPoints({
     restDelta: 0.01,
   });
 
-  // Transform to integer for display
-  const displayValue = useTransform(springValue, (v) => Math.floor(v));
+  // Transform to integer for display. Math.round, NOT Math.floor: the spring
+  // approaches the target asymptotically and terminates at restDelta, so a
+  // floor shows N-1 through the whole 99.0->99.99 tail (framer-motion 12.42
+  // made that window long enough to be user-visible and to fail e2e reads).
+  // Round crosses to the final value decisively at N-0.5; the spring is
+  // critically damped (no overshoot), so it never flickers past the target.
+  const displayValue = useTransform(springValue, (v) => Math.round(v));
 
   // Update spring when value changes
   useEffect(() => {
