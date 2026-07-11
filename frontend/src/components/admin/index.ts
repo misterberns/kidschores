@@ -6,3 +6,4 @@ export { KidsSection } from './KidsSection';
 export { ChoresSection } from './ChoresSection';
 export { RewardsSection } from './RewardsSection';
 export { ParentsSection } from './ParentsSection';
+export { ChallengesSection } from './ChallengesSection';

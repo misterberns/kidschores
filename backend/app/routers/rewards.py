@@ -15,6 +15,7 @@ from ..schemas import (
     RewardRedeemRequest, RewardApproveRequest, RewardClaimResponse,
     MessageResponse
 )
+from ..services.gamification import evaluate_badges
 from ..services.email_service import email_service
 
 router = APIRouter()
@@ -143,6 +144,10 @@ def redeem_reward(reward_id: str, request: RewardRedeemRequest, background_tasks
         claim.approved_at = datetime.now(timezone.utc)
 
     db.add(claim)
+
+    # Gamification: first-redemption badge ("champion")
+    evaluate_badges(db, kid, context={"redeemed": True})
+
     db.commit()
     db.refresh(claim)
 

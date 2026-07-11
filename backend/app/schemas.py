@@ -162,6 +162,9 @@ class ChoreClaimResponse(BaseModel):
     claimed_at: datetime
     approved_at: Optional[datetime]
     approved_by: Optional[str]
+    # Gamification results (populated on approve; additive for older clients)
+    new_badges: List[str] = []
+    completed_challenges: List[dict] = []
 
     class Config:
         from_attributes = True

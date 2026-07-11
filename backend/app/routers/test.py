@@ -11,7 +11,7 @@ from ..deps import require_admin
 from ..models import (
     ChoreClaim, RewardClaim, Chore, Reward, Kid, Parent,
     ChoreCategory, AllowancePayout, AllowanceSettings,
-    Badge, Bonus, Penalty, DailyMultiplier, ScheduledJobLog,
+    Badge, Bonus, Penalty, Challenge, DailyMultiplier, ScheduledJobLog,
     PushSubscription, NotificationPreference, User,
 )
 
@@ -47,6 +47,7 @@ def reset_database(db: Session = Depends(get_db), _admin: User = Depends(require
 
         # 2. Gamification (reference kids)
         db.query(Badge).delete()
+        db.query(Challenge).delete()
         db.query(Bonus).delete()
         db.query(Penalty).delete()
         db.query(DailyMultiplier).delete()
@@ -69,6 +70,12 @@ def reset_database(db: Session = Depends(get_db), _admin: User = Depends(require
 
         # 7. Scheduler logs
         db.query(ScheduledJobLog).delete()
+
+        # The badge CATALOG is reference data seeded at startup — restore it
+        # after the wipe so gamification keeps working across resets.
+        from ..services.gamification import seed_default_badges
+        db.commit()
+        seed_default_badges(db)
 
         db.commit()
 

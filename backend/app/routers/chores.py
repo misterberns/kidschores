@@ -14,6 +14,7 @@ from ..schemas import (
     TodaysChoreResponse, ApprovalWithStreakResponse, MessageResponse
 )
 from ..services.push_service import push_service
+from ..services.gamification import evaluate_badges, evaluate_challenges
 from ..services.email_service import email_service
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,35 @@ def notify_kid_chore_approved(kid_id: str, chore_name: str, points: int):
                 logger.error(f"Failed to send push notification: {e}")
     except Exception as e:
         logger.error(f"Background task notify_kid_chore_approved failed: {e}")
+    finally:
+        db.close()
+
+
+async def notify_kid_badges_unlocked(kid_id: str, badge_names: list):
+    """Push a badge-unlock celebration to the kid (own DB session — background task)."""
+    db = SessionLocal()
+    try:
+        subscriptions = db.query(PushSubscription).filter(
+            PushSubscription.kid_id == kid_id
+        ).all()
+        names = ", ".join(badge_names)
+        for sub in subscriptions:
+            subscription_info = {
+                "endpoint": sub.endpoint,
+                "keys": {"p256dh": sub.p256dh_key, "auth": sub.auth_key},
+            }
+            try:
+                push_service.send_notification(
+                    subscription_info,
+                    title="New badge unlocked!",
+                    body=f"You earned: {names}",
+                    tag="badge-unlocked",
+                    url="/",
+                )
+            except Exception as e:
+                logger.error(f"Failed to send badge push: {e}")
+    except Exception as e:
+        logger.error(f"Background task notify_kid_badges_unlocked failed: {e}")
     finally:
         db.close()
 
@@ -384,6 +414,10 @@ def approve_chore(
     # Update chore last_completed
     chore.last_completed = datetime.now(timezone.utc)
 
+    # Gamification: badge + challenge evaluation (same transaction as the award)
+    new_badges = evaluate_badges(db, kid, context={"claim": claim})
+    completed_challenges = evaluate_challenges(db, kid)
+
     db.commit()
     db.refresh(claim)
 
@@ -391,8 +425,17 @@ def approve_chore(
     background_tasks.add_task(
         notify_kid_chore_approved, kid.id, chore.name, points_with_multiplier
     )
+    challenge_badges = [c["badge"] for c in completed_challenges if c.get("badge")]
+    all_new_badges = new_badges + [b for b in challenge_badges if b not in new_badges]
+    if all_new_badges:
+        background_tasks.add_task(notify_kid_badges_unlocked, kid.id, all_new_badges)
 
-    return claim
+    response = ChoreClaimResponse.model_validate(claim)
+    response.new_badges = all_new_badges
+    response.completed_challenges = [
+        {"name": c["challenge"], "bonus_points": c["bonus_points"]} for c in completed_challenges
+    ]
+    return response
 
 
 @router.post("/{chore_id}/disapprove", response_model=MessageResponse)

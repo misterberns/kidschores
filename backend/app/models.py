@@ -311,6 +311,29 @@ class Badge(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
+class Challenge(Base):
+    """Time-boxed goal (UX-REVIEW 5a Phase 2). Progress is computed live from
+    approved ChoreClaims inside the window; completion is recorded per-kid in
+    completed_kids (JSON id list) so awards are idempotent."""
+    __tablename__ = "challenges"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    icon = Column(String(50), default="target")
+
+    target_type = Column(String(30), default="chore_count")  # chore_count | points_earned
+    target_value = Column(Integer, default=5)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+
+    kid_ids = Column(JSON, default=list)         # empty = all kids
+    badge_id = Column(String(36), nullable=True)  # optional Badge reward
+    bonus_points = Column(Integer, default=0)     # optional points reward
+
+    completed_kids = Column(JSON, default=list)   # idempotency ledger
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
 class Penalty(Base):
     """Penalty definition."""
     __tablename__ = "penalties"

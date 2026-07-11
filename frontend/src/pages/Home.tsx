@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Navigate } from 'react-router-dom';
@@ -15,6 +16,8 @@ import { LevelBadge } from '../components/gamification/LevelBadge';
 import { ChorbiePresets } from '../components/mascot';
 import { DailyProgress } from '../components/DailyProgress';
 import { StreakDisplay } from '../components/StreakDisplay';
+import { BadgeDisplay } from '../components/gamification/BadgeDisplay';
+import { BadgeCelebration } from '../components/celebrations/BadgeCelebration';
 
 const seasonalGreetings: Record<SeasonalTheme, string> = {
   default: 'Welcome back!',
@@ -145,20 +148,7 @@ function KidCard({ kid, index }: { kid: Kid; index: number }) {
             <Award size={14} />
             Badges
           </p>
-          <div className="flex gap-2">
-            {kid.badges.map((_badge, i) => (
-              <motion.div
-                key={i}
-                className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"
-                initial={prefersReducedMotion ? false : { scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: index * 0.1 + 0.3 + i * 0.1, type: 'spring' }}
-                whileHover={prefersReducedMotion ? {} : { scale: 1.2, rotate: 10 }}
-              >
-                <Award size={18} className="text-yellow-300" />
-              </motion.div>
-            ))}
-          </div>
+          <BadgeDisplay badges={kid.badges} size="sm" maxDisplay={6} />
         </motion.div>
       )}
     </motion.div>
@@ -173,7 +163,31 @@ export function Home() {
   // Must call all hooks before any conditional returns (React Rules of Hooks)
   const prefersReducedMotion = useReducedMotion();
   const { seasonal } = useTheme();
-  const { role } = useAuth();
+  const { role, kidId } = useAuth();
+
+  // Badge-unlock celebration: on the kid's own device, fire when their badge
+  // list grows past the last-seen count (persisted per device).
+  const [celebrateBadges, setCelebrateBadges] = useState<string[]>([]);
+  const ownKid = role === 'kid' && kidId ? kids?.find(k => k.id === kidId) : undefined;
+  useEffect(() => {
+    if (!ownKid) return;
+    const key = `kidschores-badges-seen-${ownKid.id}`;
+    const seen = parseInt(localStorage.getItem(key) || '0', 10);
+    const earned = ownKid.badges || [];
+    if (earned.length > seen) {
+      setCelebrateBadges(earned.slice(seen));
+    } else if (earned.length < seen) {
+      // badges can shrink if a custom badge is deleted — resync silently
+      localStorage.setItem(key, String(earned.length));
+    }
+  }, [ownKid?.id, ownKid?.badges?.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const dismissBadgeCelebration = () => {
+    if (ownKid) {
+      localStorage.setItem(`kidschores-badges-seen-${ownKid.id}`, String((ownKid.badges || []).length));
+    }
+    setCelebrateBadges([]);
+  };
 
   if (isLoading) {
     return (
@@ -216,6 +230,12 @@ export function Home() {
 
   return (
     <div className="space-y-6">
+      <BadgeCelebration
+        badgeIds={celebrateBadges}
+        kidName={ownKid?.name || ''}
+        show={celebrateBadges.length > 0}
+        onClose={dismissBadgeCelebration}
+      />
       <motion.div
         className="flex items-center justify-center gap-3"
         initial={prefersReducedMotion ? false : { opacity: 0, y: -20 }}

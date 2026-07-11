@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from .config import settings
 from .database import init_db, ensure_indexes
 from .observability import RequestIdMiddleware, configure_logging, init_sentry
-from .routers import kids, chores, rewards, parents, approvals, auth, api_tokens, notifications, categories, allowance, history
+from .routers import kids, chores, rewards, parents, approvals, auth, api_tokens, notifications, categories, allowance, history, badges, challenges
 from .scheduler import start_scheduler, shutdown_scheduler
 
 # Configure logging (LOG_FORMAT=json switches to structured lines)
@@ -41,6 +41,15 @@ async def lifespan(app: FastAPI):
     init_db()
     ensure_indexes()
     logger.info("Database initialized")
+
+    # Seed the default badge catalog (idempotent — slugs match the frontend)
+    from .database import SessionLocal
+    from .services.gamification import seed_default_badges
+    _db = SessionLocal()
+    try:
+        seed_default_badges(_db)
+    finally:
+        _db.close()
 
     # Start background scheduler
     await start_scheduler()
@@ -86,6 +95,8 @@ app.include_router(notifications.router, prefix="/api", tags=["Notifications"])
 app.include_router(categories.router, prefix="/api/categories", tags=["Categories"])
 app.include_router(allowance.router, prefix="/api/allowance", tags=["Allowance"])
 app.include_router(history.router, prefix="/api/history", tags=["History"])
+app.include_router(badges.router, prefix="/api/badges", tags=["Badges"])
+app.include_router(challenges.router, prefix="/api/challenges", tags=["Challenges"])
 
 # Test endpoints — mounted ONLY in explicit non-prod environments. Fail-closed:
 # an unset or unrecognized ENVIRONMENT does NOT mount them, so a deploy that forgets

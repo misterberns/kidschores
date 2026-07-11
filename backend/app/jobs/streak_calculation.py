@@ -6,6 +6,7 @@ import time
 from sqlalchemy.orm import Session
 from app.database import get_db_session
 from app.models import Kid, Chore, ChoreClaim, DailyMultiplier, ScheduledJobLog
+from app.services.gamification import evaluate_badges
 
 logger = logging.getLogger(__name__)
 
@@ -139,10 +140,12 @@ async def calculate_daily_streaks():
                     kid.longest_streak_ever = kid.overall_chore_streak
                     logger.info(f"{kid.name} achieved new personal best streak: {kid.longest_streak_ever}")
 
-                # Check for milestone
+                # Check for milestone -> streak badges (streak_3/7/30 etc.)
                 if kid.overall_chore_streak in STREAK_MILESTONES:
                     logger.info(f"{kid.name} reached streak milestone: {kid.overall_chore_streak} days!")
-                    # Future: Trigger celebration notification
+                new_badges = evaluate_badges(db, kid)
+                if new_badges:
+                    logger.info(f"{kid.name} unlocked badges via streak job: {new_badges}")
             else:
                 # Check if they can use a streak freeze
                 if kid.streak_freeze_count > 0 and kid.overall_chore_streak > 0:

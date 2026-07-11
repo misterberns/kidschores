@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Clock, CheckCircle2, Hand, ClipboardList, RefreshCw, Flame, Calendar, List, Zap } from 'lucide-react';
-import { kidsApi, choresApi, categoriesApi } from '../api/client';
+import { Star, Clock, CheckCircle2, Hand, ClipboardList, RefreshCw, Flame, Calendar, List, Zap, Target, Trophy } from 'lucide-react';
+import { kidsApi, choresApi, categoriesApi, challengesApi } from '../api/client';
 import type { Chore, Kid, TodaysChore, ChoreCategory } from '../api/client';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { staggerContainer, listItemVariants } from '../utils/animations';
@@ -315,6 +315,11 @@ export function Chores() {
   });
 
   // Fetch daily progress for multiplier info
+  const { data: activeChallenges = [] } = useQuery({
+    queryKey: ['challenges', 'active'],
+    queryFn: () => challengesApi.list(true).then(res => res.data),
+  });
+
   const { data: dailyProgress } = useQuery({
     queryKey: ['daily-progress', activeKidId],
     queryFn: () => activeKidId ? kidsApi.getDailyProgress(activeKidId).then(res => res.data) : Promise.resolve(null),
@@ -421,6 +426,50 @@ export function Chores() {
             </Tab>
           ))}
         </TabList>
+      )}
+
+      {/* Active challenges for the selected kid */}
+      {viewMode === 'today' && activeKidId && activeChallenges.length > 0 && (
+        <div className="space-y-2">
+          {activeChallenges
+            .filter(ch => ch.progress.some(p => p.kid_id === activeKidId))
+            .map(ch => {
+              const mine = ch.progress.find(p => p.kid_id === activeKidId)!;
+              const pct = Math.min(100, Math.round((mine.progress / Math.max(mine.target, 1)) * 100));
+              return (
+                <motion.div
+                  key={ch.id}
+                  className="card p-3 flex items-center gap-3"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="w-9 h-9 bg-accent-500/15 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Target size={18} className="text-accent-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-bold text-sm text-text-primary truncate">{ch.name}</p>
+                      <span className="text-xs text-text-muted whitespace-nowrap">
+                        {mine.completed ? (
+                          <span className="text-status-approved-text font-medium inline-flex items-center gap-1">
+                            <Trophy size={12} /> Done!
+                          </span>
+                        ) : (
+                          `${mine.progress}/${mine.target}`
+                        )}
+                      </span>
+                    </div>
+                    <div className="h-1.5 mt-1.5 bg-bg-accent rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-accent-500 transition-all"
+                        style={{ width: `${mine.completed ? 100 : pct}%` }}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+        </div>
       )}
 
       {/* Daily Progress Summary for Today's view */}
