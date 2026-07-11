@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-11
+
+### Changed — "Midnight + Electric" redesign
+
+A ground-up visual redesign: modern and sleek, still made for kids — no longer
+a children's game. Dark is now the flagship theme and the default.
+
+- **Dark-first design system**: deep blue-charcoal surfaces, one electric-cyan
+  hero accent, volt green for points; a derived cool-light variant remains for
+  bright rooms (theme toggle unchanged)
+- **Per-kid accent colors** replace the rainbow gradient cards: each kid's hue
+  now lives in the card edge, avatar ring, numerals, and progress ring
+- **Ring progress**: today's progress renders as a conic ring in the kid's
+  accent on Home and Chores
+- **New typography**: Space Grotesk display face for headings and the big
+  point/streak numbers (tabular)
+- **Grown-up gamification art**: badges and levels on bronze/silver/gold
+  metal chips (legendary glows), streaks as a gradient flame, celebrations
+  restrained to a 5-color brand burst
+- **New logo**: a clean geometric spark replaces the Chorbie mascot
+  (favicons updated to match)
+
+### Removed
+- The Chorbie mascot (all screens)
+- Seasonal themes, floating emoji particles, and holiday banners
+- Emoji avatars (kids now get an initial in their accent ring; the per-kid
+  color picker remains)
+
 ## [0.9.0] - 2026-07-11
 
 Gamification release: the badges & challenges engine — plus the security-hardening and full test infrastructure that landed since 0.8.2.

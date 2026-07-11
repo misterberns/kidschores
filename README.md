@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.9.0-green?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.10.0-green?style=flat-square" alt="Version"></a>
   <a href="https://github.com/misterberns/kidschores/actions/workflows/ci.yml"><img src="https://github.com/misterberns/kidschores/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square" alt="License">
@@ -41,7 +41,7 @@
 - **Kid Avatars** - Per-kid emoji + color picker
 - **Google SSO** - Parents and kids sign in with Google (optional)
 - **Email Notifications** - Parents notified on chore claims and reward redemptions
-- **Seasonal Themes** - Halloween, Christmas, Easter, Summer, and default themes
+- **Midnight + Electric design** - Dark-first, sleek theme system with a light variant; per-kid accent colors, ring progress, metal-tier badge art
 - **Mobile-Responsive** - Works on phones, tablets, and desktops
 - **Security** - JWT auth (PyJWT) on all endpoints, rate limiting, bcrypt hashing, CORS restriction, unprivileged nginx, locked-down proxy trust
 - **Error Handling** - React error boundaries, global error handler, auto-toast notifications
@@ -329,4 +329,4 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ## Version
 
-Current version: **0.9.0** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.10.0** (see [CHANGELOG.md](CHANGELOG.md) for history)
