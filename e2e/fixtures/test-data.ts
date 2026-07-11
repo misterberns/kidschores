@@ -38,7 +38,7 @@ export const TestData = {
         'Vacuum Floor',
       ]),
       description: faker.lorem.sentence(),
-      icon: faker.helpers.arrayElement(['🧹', '🛏️', '📚', '🐕', '🍽️', '🗑️', '🪥', '📖', '🧽', '🧺']),
+      icon: faker.helpers.arrayElement(['brush', 'bed', 'book-open', 'dog', 'utensils', 'trash-2', 'brush', 'book', 'sparkles', 'washing-machine']),
       default_points: faker.number.int({ min: 5, max: 50 }),
       assigned_kids: assignedKids,
       shared_chore: false,
@@ -51,7 +51,7 @@ export const TestData = {
     cleanRoom: (assignedKids: string[]): ChoreInput => ({
       name: 'Clean Room',
       description: 'Tidy up your bedroom',
-      icon: '🧹',
+      icon: 'brush',
       default_points: 25,
       assigned_kids: assignedKids,
       shared_chore: false,
@@ -62,7 +62,7 @@ export const TestData = {
     doHomework: (assignedKids: string[]): ChoreInput => ({
       name: 'Do Homework',
       description: 'Complete all homework assignments',
-      icon: '📚',
+      icon: 'book-open',
       default_points: 30,
       assigned_kids: assignedKids,
       shared_chore: false,
@@ -85,7 +85,7 @@ export const TestData = {
         'School',
         'Pet Care',
       ]),
-      icon: faker.helpers.arrayElement(['🛏️', '🍳', '🚿', '🛋️', '🌳', '📚', '🐕']),
+      icon: faker.helpers.arrayElement(['bed', 'cooking-pot', 'shower-head', 'sofa', 'trees', 'book-open', 'dog']),
       color: faker.helpers.arrayElement([
         '#4f46e5',
         '#ef4444',
@@ -100,10 +100,10 @@ export const TestData = {
     }),
 
     /** Common test categories */
-    bedroom: (): CategoryInput => ({ name: 'Bedroom', icon: '🛏️', color: '#4f46e5', sort_order: 1 }),
-    kitchen: (): CategoryInput => ({ name: 'Kitchen', icon: '🍳', color: '#ef4444', sort_order: 2 }),
-    bathroom: (): CategoryInput => ({ name: 'Bathroom', icon: '🚿', color: '#3b82f6', sort_order: 3 }),
-    outdoor: (): CategoryInput => ({ name: 'Outdoor', icon: '🌳', color: '#22c55e', sort_order: 4 }),
+    bedroom: (): CategoryInput => ({ name: 'Bedroom', icon: 'bed', color: '#4f46e5', sort_order: 1 }),
+    kitchen: (): CategoryInput => ({ name: 'Kitchen', icon: 'cooking-pot', color: '#ef4444', sort_order: 2 }),
+    bathroom: (): CategoryInput => ({ name: 'Bathroom', icon: 'shower-head', color: '#3b82f6', sort_order: 3 }),
+    outdoor: (): CategoryInput => ({ name: 'Outdoor', icon: 'trees', color: '#22c55e', sort_order: 4 }),
   },
 
   /**
@@ -122,7 +122,7 @@ export const TestData = {
         'Video Game Time',
       ]),
       description: faker.lorem.sentence(),
-      icon: faker.helpers.arrayElement(['📱', '🍦', '🧸', '🎬', '🌙', '🍕', '🌳', '🎮']),
+      icon: faker.helpers.arrayElement(['smartphone', 'ice-cream-cone', 'toy-brick', 'clapperboard', 'moon', 'pizza', 'trees', 'gamepad-2']),
       cost: faker.number.int({ min: 25, max: 200 }),
       eligible_kids: [],
       requires_approval: true,
@@ -133,7 +133,7 @@ export const TestData = {
     screenTime: (cost = 50): RewardInput => ({
       name: 'Extra Screen Time',
       description: '30 minutes of extra screen time',
-      icon: '📱',
+      icon: 'smartphone',
       cost,
       eligible_kids: [],
       requires_approval: true,
@@ -142,7 +142,7 @@ export const TestData = {
     iceCream: (cost = 75): RewardInput => ({
       name: 'Ice Cream',
       description: 'Choose your favorite ice cream',
-      icon: '🍦',
+      icon: 'ice-cream-cone',
       cost,
       eligible_kids: [],
       requires_approval: false,

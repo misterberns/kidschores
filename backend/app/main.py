@@ -45,9 +45,13 @@ async def lifespan(app: FastAPI):
     # Seed the default badge catalog (idempotent — slugs match the frontend)
     from .database import SessionLocal
     from .services.gamification import seed_default_badges
+    from .migrations.icon_migration import migrate_icons
     _db = SessionLocal()
     try:
         seed_default_badges(_db)
+        # v0.11: rewrite legacy emoji icons / mdi: prefixes / seeded category
+        # colors to the design-system vocabulary (value-scan idempotent)
+        migrate_icons(_db)
     finally:
         _db.close()
 
@@ -65,7 +69,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KidsChores",
     description="Family chore management with points and rewards",
-    version="0.10.1",  # Keep in sync with VERSION file
+    version="0.11.0",  # Keep in sync with VERSION file
     lifespan=lifespan,
     redirect_slashes=False,  # Prevent 307 redirects for /api/kids vs /api/kids/
 )

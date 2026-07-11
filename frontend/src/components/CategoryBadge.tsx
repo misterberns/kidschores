@@ -6,6 +6,7 @@
  * tokens; raw seeded hexes as text color measured 2–2.9:1 on the dark theme.
  */
 import type { ChoreCategory } from '../api/client';
+import { DynamicIcon } from './DynamicIcon';
 
 interface CategoryBadgeProps {
   category: ChoreCategory | null | undefined;
@@ -40,7 +41,9 @@ export function CategoryBadge({
         border: `1px solid ${category.color}55`,
       }}
     >
-      <span className={iconSizes[size]} aria-hidden="true">{category.icon}</span>
+      <span className={iconSizes[size]} aria-hidden="true">
+        <DynamicIcon icon={category.icon} size={size === 'sm' ? 12 : size === 'lg' ? 16 : 14} />
+      </span>
       {showName && <span>{category.name}</span>}
     </span>
   );
@@ -82,7 +85,7 @@ export function CategoryFilter({
             border: `1px solid ${category.color}${selected === category.id ? '' : '55'}`,
           }}
         >
-          <span aria-hidden="true">{category.icon}</span>
+          <span aria-hidden="true"><DynamicIcon icon={category.icon} size={14} /></span>
           <span>{category.name}</span>
           {category.chore_count !== undefined && (
             <span className="opacity-70">({category.chore_count})</span>

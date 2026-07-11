@@ -122,7 +122,7 @@ test.describe('History API', () => {
     test('should filter history by category', async ({ apiContext }) => {
       // Create a category
       const catResp = await apiContext.post('/api/categories', {
-        data: { name: 'Kitchen', icon: '🍳', color: '#ef4444', sort_order: 1 },
+        data: { name: 'Kitchen', icon: 'cooking-pot', color: '#ef4444', sort_order: 1 },
       });
       const category = await catResp.json();
 
@@ -207,7 +207,7 @@ test.describe('History API', () => {
     test('should include category stats', async ({ apiContext }) => {
       // Create category and chore
       const catResp = await apiContext.post('/api/categories', {
-        data: { name: 'Bedroom', icon: '🛏️', color: '#4f46e5', sort_order: 1 },
+        data: { name: 'Bedroom', icon: 'bed', color: '#4f46e5', sort_order: 1 },
       });
       const category = await catResp.json();
 

@@ -9,7 +9,7 @@ test.describe('Categories API', () => {
     test('should create a new category', async ({ apiContext }) => {
       const categoryData = {
         name: 'Bedroom',
-        icon: '🛏️',
+        icon: 'bed',
         color: '#4f46e5',
         sort_order: 1,
       };
@@ -19,7 +19,7 @@ test.describe('Categories API', () => {
       expect(response.ok()).toBeTruthy();
       const category = await response.json();
       expect(category.name).toBe('Bedroom');
-      expect(category.icon).toBe('🛏️');
+      expect(category.icon).toBe('bed');
       expect(category.color).toBe('#4f46e5');
       expect(category.sort_order).toBe(1);
       expect(category.id).toBeDefined();
@@ -27,10 +27,10 @@ test.describe('Categories API', () => {
 
     test('should list all categories', async ({ apiContext }) => {
       await apiContext.post('/api/categories', {
-        data: { name: 'Kitchen', icon: '🍳', color: '#ef4444', sort_order: 1 },
+        data: { name: 'Kitchen', icon: 'cooking-pot', color: '#ef4444', sort_order: 1 },
       });
       await apiContext.post('/api/categories', {
-        data: { name: 'Bathroom', icon: '🚿', color: '#3b82f6', sort_order: 2 },
+        data: { name: 'Bathroom', icon: 'shower-head', color: '#3b82f6', sort_order: 2 },
       });
 
       const response = await apiContext.get('/api/categories');
@@ -42,7 +42,7 @@ test.describe('Categories API', () => {
 
     test('should get a category by ID', async ({ apiContext }) => {
       const createResp = await apiContext.post('/api/categories', {
-        data: { name: 'Outdoor', icon: '🌳', color: '#22c55e', sort_order: 1 },
+        data: { name: 'Outdoor', icon: 'trees', color: '#22c55e', sort_order: 1 },
       });
       const created = await createResp.json();
 
@@ -56,24 +56,24 @@ test.describe('Categories API', () => {
 
     test('should update a category', async ({ apiContext }) => {
       const createResp = await apiContext.post('/api/categories', {
-        data: { name: 'School', icon: '📚', color: '#8b5cf6', sort_order: 1 },
+        data: { name: 'School', icon: 'book-open', color: '#8b5cf6', sort_order: 1 },
       });
       const created = await createResp.json();
 
       const response = await apiContext.put(`/api/categories/${created.id}`, {
-        data: { name: 'Homework', icon: '✏️', color: '#f59e0b' },
+        data: { name: 'Homework', icon: 'pencil', color: '#f59e0b' },
       });
 
       expect(response.ok()).toBeTruthy();
       const updated = await response.json();
       expect(updated.name).toBe('Homework');
-      expect(updated.icon).toBe('✏️');
+      expect(updated.icon).toBe('pencil');
       expect(updated.color).toBe('#f59e0b');
     });
 
     test('should delete a category', async ({ apiContext }) => {
       const createResp = await apiContext.post('/api/categories', {
-        data: { name: 'Pet Care', icon: '🐕', color: '#ec4899', sort_order: 1 },
+        data: { name: 'Pet Care', icon: 'dog', color: '#ec4899', sort_order: 1 },
       });
       const created = await createResp.json();
 
@@ -115,12 +115,12 @@ test.describe('Categories API', () => {
   test.describe('Reordering', () => {
     test('should reorder categories', async ({ apiContext }) => {
       const cat1Resp = await apiContext.post('/api/categories', {
-        data: { name: 'First', icon: '1️⃣', color: '#ef4444', sort_order: 1 },
+        data: { name: 'First', icon: 'star', color: '#ef4444', sort_order: 1 },
       });
       const cat1 = await cat1Resp.json();
 
       const cat2Resp = await apiContext.post('/api/categories', {
-        data: { name: 'Second', icon: '2️⃣', color: '#3b82f6', sort_order: 2 },
+        data: { name: 'Second', icon: 'heart', color: '#3b82f6', sort_order: 2 },
       });
       const cat2 = await cat2Resp.json();
 
@@ -137,7 +137,7 @@ test.describe('Categories API', () => {
     test('should associate category with chore', async ({ apiContext }) => {
       // Create a category
       const catResp = await apiContext.post('/api/categories', {
-        data: { name: 'Living Room', icon: '🛋️', color: '#6366f1', sort_order: 1 },
+        data: { name: 'Living Room', icon: 'sofa', color: '#6366f1', sort_order: 1 },
       });
       const category = await catResp.json();
 

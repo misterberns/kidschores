@@ -12,6 +12,7 @@ import { PointsEarned } from '../components/celebrations/PointsEarned';
 import { ConfettiBurst } from '../components/celebrations/Confetti';
 import { useToast } from '../hooks/useToast';
 import { CategoryBadge, CategoryFilter } from '../components/CategoryBadge';
+import { DynamicIcon } from '../components/DynamicIcon';
 import { Tab, TabList } from '../components/ui';
 
 type ChoreStatusType = 'pending' | 'claimed' | 'approved' | 'overdue' | 'expired';
@@ -101,7 +102,7 @@ function ChoreCard({
             whileHover={prefersReducedMotion ? {} : { rotate: [0, -10, 10, 0] }}
             transition={{ duration: 0.3 }}
           >
-            <span className="text-2xl">{chore.icon || '🧹'}</span>
+            <DynamicIcon icon={chore.icon || 'brush'} size={22} className="text-text-secondary" />
           </motion.div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">

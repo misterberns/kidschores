@@ -5,12 +5,14 @@ import { kidsApi, choresApi, parentsApi } from '../../api/client';
 import type { Kid, Chore, Parent } from '../../api/client';
 import { DynamicIcon } from '../DynamicIcon';
 import { FormInput, FormSelect } from './FormElements';
+import { IconPicker } from '../IconPicker';
 import { EntityCard } from './EntityCard';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 
 function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent[]; onClose: () => void }) {
   const [name, setName] = useState('');
   const [points, setPoints] = useState(10);
+  const [icon, setIcon] = useState('brush');
   const [selectedKids, setSelectedKids] = useState<string[]>([]);
   const [recurringFrequency, setRecurringFrequency] = useState('none');
   const [dueDate, setDueDate] = useState('');
@@ -39,6 +41,9 @@ function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent
         onChange={(e) => setName(e.target.value)}
         placeholder="e.g., Clean room"
       />
+      <div className="mb-3">
+        <IconPicker value={icon} onChange={setIcon} />
+      </div>
       <FormInput
         label="Points"
         type="number"
@@ -146,6 +151,7 @@ function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent
         <button
           onClick={() => mutation.mutate({
             name,
+            icon,
             default_points: points,
             assigned_kids: selectedKids,
             recurring_frequency: recurringFrequency,
@@ -168,6 +174,7 @@ function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent
 function EditChoreForm({ chore, kids, parents, onClose }: { chore: Chore; kids: Kid[]; parents: Parent[]; onClose: () => void }) {
   const [name, setName] = useState(chore.name);
   const [points, setPoints] = useState(chore.default_points);
+  const [icon, setIcon] = useState(chore.icon ?? 'brush');
   const [selectedKids, setSelectedKids] = useState<string[]>(chore.assigned_kids || []);
   const [recurringFrequency, setRecurringFrequency] = useState(chore.recurring_frequency || 'none');
   const [dueDate, setDueDate] = useState(chore.due_date?.split('T')[0] || '');
@@ -196,6 +203,9 @@ function EditChoreForm({ chore, kids, parents, onClose }: { chore: Chore; kids: 
         onChange={(e) => setName(e.target.value)}
         placeholder="Chore name"
       />
+      <div className="mb-3">
+        <IconPicker value={icon} onChange={setIcon} />
+      </div>
       <FormInput
         label="Points"
         type="number"
@@ -303,6 +313,7 @@ function EditChoreForm({ chore, kids, parents, onClose }: { chore: Chore; kids: 
         <button
           onClick={() => mutation.mutate({
             name,
+            icon,
             default_points: points,
             assigned_kids: selectedKids,
             recurring_frequency: recurringFrequency,
@@ -382,7 +393,7 @@ export function ChoresSection() {
             testId={`entity-chore-${chore.id}`}
             onEdit={() => { setEditingChore(chore); setShowAddForm(false); }}
             onDelete={() => setDeleteConfirm({ id: chore.id, name: chore.name })}
-            icon={<div className="w-10 h-10 bg-bg-accent rounded-md border border-[var(--border-color)] flex items-center justify-center"><DynamicIcon icon={chore.icon || '🧹'} size={20} /></div>}
+            icon={<div className="w-10 h-10 bg-bg-accent rounded-md border border-[var(--border-color)] flex items-center justify-center"><DynamicIcon icon={chore.icon || 'brush'} size={20} /></div>}
           >
             <p className="font-bold text-text-primary" data-testid={`chore-name-admin-${chore.id}`}>{chore.name}</p>
             <p className="text-sm text-text-muted" data-testid={`chore-points-admin-${chore.id}`}>

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-07-11
+
+### Changed — line icons everywhere
+
+The last emoji surface is gone: chore, category, and reward icons are now
+crisp line icons matching the Midnight + Electric design.
+
+- **Icon picker**: choose from a curated, searchable set of ~35 icons when
+  creating chores and rewards — in onboarding AND (new) in the parent
+  dashboard edit forms
+- **Your existing data migrates itself**: known emoji icons convert to their
+  matching line icon on first launch; a custom emoji you typed yourself keeps
+  rendering until you edit it
+- Category colors align with the app's accent palette
+- Consistent icon rendering everywhere (history, onboarding, category chips
+  — a few spots previously showed raw text)
+
 ## [0.10.1] - 2026-07-11
 
 ### Fixed

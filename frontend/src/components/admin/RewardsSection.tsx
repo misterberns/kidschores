@@ -5,12 +5,14 @@ import { rewardsApi } from '../../api/client';
 import type { Reward } from '../../api/client';
 import { DynamicIcon } from '../DynamicIcon';
 import { FormInput } from './FormElements';
+import { IconPicker } from '../IconPicker';
 import { EntityCard } from './EntityCard';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 
 function AddRewardForm({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState('');
   const [cost, setCost] = useState(100);
+  const [icon, setIcon] = useState('gift');
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -39,9 +41,12 @@ function AddRewardForm({ onClose }: { onClose: () => void }) {
         value={cost}
         onChange={(e) => setCost(Number(e.target.value))}
       />
+      <div className="mt-3">
+        <IconPicker value={icon} onChange={setIcon} />
+      </div>
       <div className="flex gap-2 mt-4">
         <button
-          onClick={() => mutation.mutate({ name, cost })}
+          onClick={() => mutation.mutate({ name, cost, icon })}
           disabled={!name || mutation.isPending}
           className="flex-1 bg-accent-500 text-white py-2.5 rounded-xl font-bold hover:bg-accent-600 transition-colors disabled:opacity-50"
         >
@@ -58,6 +63,7 @@ function AddRewardForm({ onClose }: { onClose: () => void }) {
 function EditRewardForm({ reward, onClose }: { reward: Reward; onClose: () => void }) {
   const [name, setName] = useState(reward.name);
   const [cost, setCost] = useState(reward.cost);
+  const [icon, setIcon] = useState(reward.icon ?? 'gift');
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -86,9 +92,12 @@ function EditRewardForm({ reward, onClose }: { reward: Reward; onClose: () => vo
         value={cost}
         onChange={(e) => setCost(Number(e.target.value))}
       />
+      <div className="mt-3">
+        <IconPicker value={icon} onChange={setIcon} />
+      </div>
       <div className="flex gap-2 mt-4">
         <button
-          onClick={() => mutation.mutate({ name, cost })}
+          onClick={() => mutation.mutate({ name, cost, icon })}
           disabled={!name || mutation.isPending}
           className="flex-1 bg-accent-500 text-white py-2.5 rounded-xl font-bold hover:bg-accent-600 transition-colors disabled:opacity-50"
         >

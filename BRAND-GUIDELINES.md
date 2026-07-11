@@ -94,8 +94,11 @@ from the hero accent and don't count against it.
 ## Iconography
 
 Lucide line icons at consistent stroke, filled variants for active states.
-**No emoji as UI chrome.** (User-entered chore/category emoji icons from
-existing data still render until the icon-migration follow-up.)
+**No emoji as UI.** Stored icon values are lucide names from the curated
+catalog (`frontend/src/data/icon-catalog.ts`), chosen via `IconPicker` and
+rendered ONLY through `DynamicIcon`. Legacy emoji in old data is migrated at
+startup (`backend/app/migrations/icon_migration.py`); unmapped custom emoji
+still renders as a grandfathered value until edited.
 
 ## Motion
 
