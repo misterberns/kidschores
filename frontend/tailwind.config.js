@@ -47,6 +47,22 @@ export default {
           primary: 'var(--seasonal-primary)',
           accent: 'var(--seasonal-accent)',
         },
+        // Destructive/error scale — static values; components pair light/dark
+        // via `dark:` variants (e.g. bg-error-100 dark:bg-error-900).
+        // Anchored on the brand berry (#FF4B4B) / dark rose-400 (#FB7185).
+        error: {
+          50: '#FFF5F5',
+          100: '#FFE5E5',
+          400: '#FB7185',
+          500: '#FF4B4B',
+          700: '#A02E2E',
+          900: '#3A1015',
+        },
+        // Theme-aware border tokens (Accordion et al: border-border-primary)
+        border: {
+          DEFAULT: 'var(--border-color)',
+          primary: 'var(--border-color)',
+        },
         status: {
           pending: {
             bg: 'var(--status-pending-bg)',
@@ -68,6 +84,9 @@ export default {
             border: 'var(--status-overdue-border)',
             text: 'var(--status-overdue-text)',
           },
+          // Theme-aware error accent (AnimatedPoints/AnimatedBadge):
+          // #FF4B4B light / #FB7185 dark via the celebration token.
+          error: 'var(--celebration)',
         },
         // Kid color palette - Refined Vibrant Colors
         kid: {
@@ -82,7 +101,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        // Inter is the app font per BRAND-GUIDELINES.md (loaded in index.css).
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       fontWeight: {
         medium: '500',
@@ -101,11 +121,14 @@ export default {
         'theme': '200ms',
       },
       boxShadow: {
-        'card': 'var(--shadow-sm)',
-        'card-hover': 'var(--shadow-md)',
-        'sm': 'var(--shadow-sm)',
-        'md': 'var(--shadow-md)',
-        'lg': 'var(--shadow-lg)',
+        // Map to the theme-aware --neo-shadow* tokens defined per theme in
+        // index.css (the previously-referenced --shadow-* vars never existed,
+        // making these utilities silent no-ops — UX-REVIEW-2026-07 P0.1).
+        'card': 'var(--neo-shadow)',
+        'card-hover': 'var(--neo-shadow-hover)',
+        'sm': 'var(--neo-shadow-sm)',
+        'md': 'var(--neo-shadow)',
+        'lg': 'var(--neo-shadow-hover)',
         'seasonal': 'var(--seasonal-glow)',
       },
     },
