@@ -45,6 +45,20 @@ Access at `http://localhost:3103`.
 
 ## Running Tests
 
+All three suites run automatically in CI (`.github/workflows/ci.yml`) on every
+push and PR: frontend checks (lint/typecheck/build/vitest), backend pytest, and
+the full e2e suite against a compose stack built on the runner.
+
+### Backend Tests (pytest)
+
+```bash
+cd backend
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest tests/
+```
+
+Runs against an ephemeral SQLite database — no running stack needed.
+
 ### E2E Tests (Playwright)
 
 ```bash
@@ -69,9 +83,6 @@ with `ENVIRONMENT=development` (or `test`) — never point it at a production in
 cd frontend
 npm test          # vitest run
 ```
-
-(Note: `cd frontend && npx playwright test` runs a small separate Playwright e2e config
-under `frontend/e2e/`, not component/unit tests.)
 
 ## Code Style
 
@@ -98,19 +109,24 @@ under `frontend/e2e/`, not component/unit tests.)
 
 ```
 backend/app/
-  routers/     # API endpoint handlers
-  models.py    # SQLAlchemy database models
-  schemas.py   # Pydantic request/response schemas
-  config.py    # Environment variable configuration
-  services/    # Business logic (email, etc.)
+  routers/         # API endpoint handlers (incl. badges.py, challenges.py)
+  models.py        # SQLAlchemy database models
+  schemas.py       # Pydantic request/response schemas
+  config.py        # Environment variable configuration
+  observability.py # Request-ID middleware, JSON logging, optional Sentry
+  services/        # Business logic (email, gamification, push, etc.)
+backend/tests/     # Backend pytest suite
 
 frontend/src/
   api/         # Axios API client
   auth/        # Authentication context and components
   pages/       # Page-level components
-  components/  # Shared/reusable components
+  components/  # Shared/reusable components (ui/ primitives, gamification/, celebrations/)
   theme/       # Theme system (colors, seasonal themes)
 ```
+
+See [docs/RELEASE.md](docs/RELEASE.md) for the release checklist (version bumps,
+docs to update, screenshots, tagging).
 
 ## Reporting Bugs
 

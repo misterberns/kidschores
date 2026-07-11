@@ -224,6 +224,19 @@ export class ApiHelpers {
 
   // ============== Categories API ==============
 
+  async createChallenge(data: {
+    name: string; description?: string; icon?: string;
+    target_type: 'chore_count' | 'points_earned'; target_value: number;
+    start_date: string; end_date: string; kid_ids?: string[];
+    badge_id?: string; bonus_points?: number;
+  }): Promise<any> {
+    const response = await this.apiContext.post('/api/challenges', { data });
+    if (!response.ok()) {
+      throw new Error(`Failed to create challenge: ${await response.text()}`);
+    }
+    return response.json();
+  }
+
   async createCategory(data: { name: string; icon: string; color: string; sort_order?: number }): Promise<any> {
     const response = await this.apiContext.post('/api/categories', { data });
     if (!response.ok()) {

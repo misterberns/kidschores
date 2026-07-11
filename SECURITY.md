@@ -4,8 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.8.x   | Yes       |
-| < 0.8   | No        |
+| 0.9.x   | Yes       |
+| < 0.9   | No        |
 
 ## Reporting a Vulnerability
 
@@ -29,13 +29,14 @@ If you discover a security vulnerability, please report it responsibly:
 
 KidsChores implements the following security practices:
 
-- **Authentication**: JWT tokens with configurable expiry, bcrypt password hashing (12 rounds). The app **refuses to start** with a missing/placeholder/too-short `JWT_SECRET_KEY`.
+- **Authentication**: JWT tokens (PyJWT) with configurable expiry, bcrypt password hashing (12 rounds). The app **refuses to start** with a missing/placeholder/too-short `JWT_SECRET_KEY`. Google sign-in requires a verified email and a validated token audience.
 - **Authorization**: parent/kid role model — management actions require a parent account; kid accounts can only act on and read their own data (object-level ownership checks).
 - **API tokens**: hashed at rest, prefix-narrowed lookup, and **expiry is enforced** at authentication time.
 - **Rate limiting**: login attempts rate-limited **per account (email) and per IP**.
 - **CORS**: configurable allowed origins (no wildcard in production).
 - **Test endpoints**: the destructive `/api/test/*` reset endpoints are **fail-closed** — mounted only in explicit `development`/`test` environments and additionally require an authenticated admin.
-- **Non-root containers**: backend runs as an unprivileged user.
+- **Non-root containers**: backend runs as an unprivileged user; frontend uses the unprivileged nginx image (listens on 8080).
+- **Proxy trust**: uvicorn only honors `X-Forwarded-*` headers from `FORWARDED_ALLOW_IPS` (fail-closed to `127.0.0.1`).
 - **Security headers + CSP**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, and a Content-Security-Policy.
 - **Push-notification ownership**: subscriptions are bound server-side to the caller (a kid cannot register as a parent subscription).
 - **Input validation**: Pydantic schemas for all API inputs; HTML-escaped email templates.
