@@ -1,9 +1,8 @@
 import { useTheme } from '../theme';
 
 /**
- * Kid avatar circle — emoji if the kid has one picked (per-device, stored
- * alongside the kid color in ThemeContext), else the name initial, on the
- * kid's color. Replaces the scattered initial-in-a-circle implementations.
+ * Kid avatar — the kid's name initial in an accent-tinted ring keyed to their
+ * per-device color. A kid's identity is an ACCENT, never a solid color block.
  */
 export function KidAvatar({
   kidId,
@@ -16,9 +15,8 @@ export function KidAvatar({
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }) {
-  const { getKidColor, getKidEmoji } = useTheme();
+  const { getKidColor } = useTheme();
   const color = getKidColor(kidId, kidName);
-  const emoji = getKidEmoji(kidId);
 
   const sizeClasses = {
     sm: 'w-8 h-8 text-base',
@@ -28,24 +26,12 @@ export function KidAvatar({
 
   return (
     <div
-      className={`${sizeClasses} rounded-full flex items-center justify-center flex-shrink-0 ${className}`}
-      style={{ backgroundColor: color.primary }}
+      className={`${sizeClasses} kid-avatar-ring ${color.className} rounded-xl flex items-center justify-center flex-shrink-0 ${className}`}
       aria-hidden="true"
     >
-      {emoji ? (
-        <span className="leading-none">{emoji}</span>
-      ) : (
-        <span className="font-bold text-white leading-none">
-          {kidName.charAt(0).toUpperCase()}
-        </span>
-      )}
+      <span className="font-display font-bold leading-none">
+        {kidName.charAt(0).toUpperCase()}
+      </span>
     </div>
   );
 }
-
-/** Curated emoji set for the avatar picker — friendly, kid-appropriate. */
-export const AVATAR_EMOJIS = [
-  '🦁', '🐯', '🐼', '🦊', '🐸', '🦄', '🐶', '🐱',
-  '🐵', '🐧', '🦖', '🐙', '🦋', '🐢', '🚀', '⚽',
-  '🎨', '🎸', '🌟', '🌈', '🍕', '🧁', '🤖', '👾',
-];

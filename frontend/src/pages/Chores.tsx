@@ -39,7 +39,7 @@ function StreakBadge({ streak }: { streak: number }) {
 
   return (
     <motion.span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-status-pending-bg streak-flame-icon"
       animate={{ scale: [1, 1.05, 1] }}
       transition={{ duration: 2, repeat: Infinity }}
     >
@@ -125,18 +125,18 @@ function ChoreCard({
         </div>
         <motion.div
           className={`flex items-center gap-1 flex-shrink-0 px-2.5 py-1 rounded-full ${
-            hasMultiplier ? 'bg-yellow-500/20' : 'bg-accent-500/10'
+            hasMultiplier ? 'bg-status-pending-bg' : 'bg-accent-500/10'
           }`}
           animate={isSuccess && !prefersReducedMotion ? { scale: [1, 1.3, 1] } : {}}
           transition={{ duration: 0.3 }}
         >
           {hasMultiplier ? (
             <>
-              <Zap size={16} className="text-yellow-500" fill="currentColor" />
-              <span className="text-lg font-bold text-yellow-500" data-testid={`chore-points-${chore.id}`}>
+              <Zap size={16} className="text-status-pending-border" fill="currentColor" />
+              <span className="text-lg font-bold text-status-pending-border" data-testid={`chore-points-${chore.id}`}>
                 +{boostedPoints}
               </span>
-              <span className="text-xs text-yellow-600 dark:text-yellow-400 ml-1">
+              <span className="text-xs text-status-pending-text ml-1">
                 ({multiplier}x)
               </span>
             </>
@@ -505,12 +505,12 @@ export function Chores() {
                     initial={{ strokeDashoffset: 97.4 }}
                     animate={{ strokeDashoffset: 97.4 - (97.4 * dailyProgress.completion_percentage) / 100 }}
                     transition={{ duration: 1, ease: 'easeOut' }}
-                    className={dailyProgress.all_completed ? 'text-green-500' : 'text-primary-500'}
+                    className={dailyProgress.all_completed ? 'text-status-approved-border' : 'text-primary-500'}
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
                   {dailyProgress.all_completed ? (
-                    <CheckCircle2 size={20} className="text-green-500" />
+                    <CheckCircle2 size={20} className="text-status-approved-border" />
                   ) : (
                     <span className="text-sm font-bold text-text-primary">
                       {Math.round(dailyProgress.completion_percentage)}%
@@ -534,7 +534,7 @@ export function Chores() {
             </div>
             {currentMultiplier > 1 && (
               <motion.div
-                className="flex items-center gap-1 bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 px-3 py-1.5 rounded-full font-bold"
+                className="flex items-center gap-1 bg-status-pending-bg text-status-pending-text px-3 py-1.5 rounded-full font-bold"
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >

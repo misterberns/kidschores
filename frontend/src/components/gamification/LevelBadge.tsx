@@ -62,6 +62,13 @@ const levels: Level[] = [
   },
 ];
 
+// Metal-tier chip mapped from level: bronze (early) -> silver (mid) -> gold (top)
+function levelTierClass(level: number): string {
+  if (level >= 5) return 'tier-gold tier-gold-glow';
+  if (level >= 3) return 'tier-silver';
+  return 'tier-bronze';
+}
+
 /**
  * Get level info for a given point total
  */
@@ -121,22 +128,22 @@ export function LevelBadge({
             color={levelInfo.color}
           >
             <motion.div
-              className={`w-${config.badge / 4} h-${config.badge / 4} rounded-full bg-gradient-to-br ${levelInfo.gradient} flex items-center justify-center shadow-md`}
+              className={`rounded-full ${levelTierClass(levelInfo.level)} flex items-center justify-center shadow-md`}
               style={{ width: config.badge, height: config.badge }}
-              whileHover={prefersReducedMotion ? {} : { scale: 1.1, rotate: 10 }}
+              whileHover={prefersReducedMotion ? {} : { scale: 1.06 }}
               transition={{ type: 'spring', stiffness: 400 }}
             >
-              <Icon size={config.icon} className="text-white" />
+              <Icon size={config.icon} />
             </motion.div>
           </ProgressRing>
         ) : (
           <motion.div
-            className={`rounded-full bg-gradient-to-br ${levelInfo.gradient} flex items-center justify-center shadow-md`}
+            className={`rounded-full ${levelTierClass(levelInfo.level)} flex items-center justify-center shadow-md`}
             style={{ width: config.badge, height: config.badge }}
-            whileHover={prefersReducedMotion ? {} : { scale: 1.1, rotate: 10 }}
+            whileHover={prefersReducedMotion ? {} : { scale: 1.06 }}
             transition={{ type: 'spring', stiffness: 400 }}
           >
-            <Icon size={config.icon} className="text-white" />
+            <Icon size={config.icon} />
           </motion.div>
         )}
       </div>
@@ -178,7 +185,7 @@ export function LevelProgressBar({ points, className = '' }: LevelProgressBarPro
 
       <div className="relative h-3 bg-bg-accent rounded-full overflow-hidden">
         <motion.div
-          className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${levelInfo.gradient}`}
+          className="absolute inset-y-0 left-0 rounded-full bg-primary-500"
           initial={prefersReducedMotion ? { width: `${levelInfo.progress}%` } : { width: 0 }}
           animate={{ width: `${levelInfo.progress}%` }}
           transition={{ duration: 1, ease: 'easeOut' }}

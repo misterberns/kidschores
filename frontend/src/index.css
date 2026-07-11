@@ -1,96 +1,92 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
 @config "../tailwind.config.js";
 
 /* ============================================
-   KidChores Theme System - Modern Warm Minimal
+   KidsChores Theme System — "Midnight + Electric"
    ============================================
-   Primary: Feather Green (#58CC02)
-   Secondary: Sky Blue (#1CB0F6)
-   Accent: Warm Orange (#FF9600)
-   Style: Soft borders, subtle shadows, rounded corners
+   Dark-first. Neutral blue-charcoal shell, ONE electric-cyan hero
+   accent, per-kid identity via accent hues (never gradient blocks),
+   volt for positive points, metal-tier badge art, ring progress.
+   References: Step / PS5 / Spotify. See BRAND-GUIDELINES.md v2.
    ============================================ */
 
 :root {
   /* ═══════════════════════════════════════════════════════
-     LIGHT MODE (Default) - Modern Warm Minimal
+     LIGHT VARIANT (derived) — cool neutral, same accent system
+     Kept for bright rooms / user preference; dark is the flagship.
      ═══════════════════════════════════════════════════════ */
 
-  /* Backgrounds - Warm cream base */
-  --bg-base: #F0EDE8;
+  /* Backgrounds — cool paper */
+  --bg-base: #F2F4F7;
   --bg-surface: #FFFFFF;
   --bg-elevated: #FFFFFF;
-  --bg-accent: #D4CFC7;
+  --bg-accent: #E4E7EC;
 
-  /* Text hierarchy - WCAG AA+ compliant on cream */
-  --text-primary: #1A1A1A;     /* 15:1 on cream */
-  --text-secondary: #4A4A4A;   /* 7.6:1 on cream */
-  --text-muted: #6B6B6B;       /* 4.5:1 on cream - AA minimum */
+  /* Text hierarchy — ink on paper (WCAG AA+) */
+  --text-primary: #101828;
+  --text-secondary: #475467;
+  --text-muted: #667085;
   --text-inverse: #FFFFFF;
 
-  /* Primary brand - Feather Green (Duolingo signature) */
-  --primary-50: #F0FDF4;
-  --primary-100: #DCFCE7;
-  --primary-200: #BBF7D0;
-  --primary-300: #86EFAC;
-  --primary-400: #6ED318;
-  --primary-500: #58CC02;       /* Main brand color */
-  --primary-600: #4CAD02;       /* Hover state */
-  --primary-700: #3E8E01;       /* Active/pressed */
-  --primary-800: #2D6A01;
-  --primary-900: #1A4001;
+  /* Primary — hero electric cyan (deepened for light bg contrast) */
+  --primary-50: #E8F9FD;
+  --primary-100: #C9F1FB;
+  --primary-200: #93E3F6;
+  --primary-300: #4FD0EE;
+  --primary-400: #1FB6D9;
+  --primary-500: #0891B2;      /* CTA on light */
+  --primary-600: #0E7490;      /* hover */
+  --primary-700: #155E75;      /* active */
+  --primary-800: #164E63;
+  --primary-900: #103B4C;
 
-  /* Secondary - Sky Blue (Trust, Clarity) */
-  --secondary-50: #F0F9FF;
-  --secondary-100: #E0F2FE;
-  --secondary-200: #BAE6FD;
-  --secondary-300: #7DD3FC;
-  --secondary-400: #49C0F8;
-  --secondary-500: #1CB0F6;     /* Main secondary */
-  --secondary-600: #0E9FE3;     /* Hover state */
-  --secondary-700: #0284C7;
+  /* Secondary — info blue */
+  --secondary-50: #EFF8FF;
+  --secondary-100: #D1E9FF;
+  --secondary-200: #B2DDFF;
+  --secondary-300: #84CAFF;
+  --secondary-400: #53B1FD;
+  --secondary-500: #2E90FA;
+  --secondary-600: #1570EF;
+  --secondary-700: #175CD3;
 
-  /* Accent - Warm Orange (Energy, Rewards) */
-  --accent-50: #FFFBEB;
-  --accent-100: #FEF3C7;
-  --accent-200: #FDE68A;
-  --accent-300: #FCD34D;
-  --accent-400: #FFAB33;
-  --accent-500: #FF9600;        /* Points, achievements */
-  --accent-600: #E68600;        /* Hover state */
-  --accent-700: #C2410C;
+  /* Accent — volt/lime family (points, rewards); deepened on light */
+  --accent-50: #F5FBE8;
+  --accent-100: #E8F5C8;
+  --accent-200: #D3EC94;
+  --accent-300: #B5DC50;
+  --accent-400: #8AB919;
+  --accent-500: #5C8A00;       /* points + on light */
+  --accent-600: #4A7000;
+  --accent-700: #3A5800;
 
-  /* Celebration - Berry Pink */
-  --celebration: #FF4B4B;
-  --celebration-light: #FF7676;
+  /* Danger / celebration-critical */
+  --celebration: #E11D48;
+  --celebration-light: #FB7185;
 
-  /* Status colors - Friendly, not corporate */
-  --status-pending-bg: #FFF3CD;
-  --status-pending-border: #FFD93D;
-  --status-pending-text: #856404;
+  /* Status colors */
+  --status-pending-bg: #FFFAEB;
+  --status-pending-border: #F79009;
+  --status-pending-text: #93540A;
 
-  --status-claimed-bg: #D1F4FF;
-  --status-claimed-border: #1CB0F6;
-  --status-claimed-text: #0C5A7D;
+  --status-claimed-bg: #EFF8FF;
+  --status-claimed-border: #2E90FA;
+  --status-claimed-text: #175CD3;
 
-  --status-approved-bg: #D4EDDA;
-  --status-approved-border: #58CC02;
-  --status-approved-text: #2E6B12;
+  --status-approved-bg: #ECFDF3;
+  --status-approved-border: #12B76A;
+  --status-approved-text: #067647;
 
-  --status-overdue-bg: #FFE5E5;
-  --status-overdue-border: #FF4B4B;
-  --status-overdue-text: #A02E2E;
+  --status-overdue-bg: #FEF3F2;
+  --status-overdue-border: #F04438;
+  --status-overdue-text: #B42318;
 
-  /* Seasonal accent (overridden by themes) */
-  --seasonal-primary: var(--primary-500);
-  --seasonal-accent: var(--accent-500);
-  --seasonal-glow: none;
-
-  /* Header - Clean with green accent */
+  /* Header */
   --header-bg: #FFFFFF;
   --header-accent: var(--primary-500);
-  --header-from: #58CC02;
-  --header-to: #4CAD02;
+  --header-from: #0891B2;
+  --header-to: #0E7490;
 
   /* Focus & interaction */
   --focus-ring: var(--primary-500);
@@ -102,530 +98,155 @@
   --transition-normal: 250ms;
   --transition-slow: 350ms;
 
-  /* ── Modern Warm Minimal tokens ── */
-  --border-color: #D1CDC4;
-  --neo-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-  --neo-shadow-hover: 0 4px 12px rgba(0,0,0,0.10);
-  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --neo-radius: 0.5rem;
+  /* Surfaces */
+  --border-color: #E4E7EC;
+  --neo-shadow: 0 1px 3px rgba(16,24,40,0.08), 0 1px 2px rgba(16,24,40,0.06);
+  --neo-shadow-hover: 0 4px 12px rgba(16,24,40,0.10);
+  --neo-shadow-sm: 0 1px 2px rgba(16,24,40,0.05);
+  --neo-radius: 0.75rem;
+
+  /* Streak flame gradient (amber -> magenta) */
+  --streak-from: #F59E0B;
+  --streak-to: #DB2777;
+
+  /* Ring progress track */
+  --ring-track: #E4E7EC;
+
+  /* Metal badge tiers */
+  --tier-bronze-from: #8A5A2B; --tier-bronze-to: #C9884A;
+  --tier-silver-from: #8F98A8; --tier-silver-to: #DFE5EE;
+  --tier-gold-from: #A8842E;   --tier-gold-to: #E7C66B;
+
+  /* Typography */
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
 }
 
 /* ═══════════════════════════════════════════════════════
-   DARK MODE - Electric Neon on Deep Dark
+   DARK — Midnight + Electric (the flagship theme)
    ═══════════════════════════════════════════════════════ */
 .dark {
-  --bg-base: #0A0A0F;
-  --bg-surface: #141420;
-  --bg-elevated: #1E1E2E;
-  --bg-accent: #2A2A3A;
+  --bg-base: #0B0E14;
+  --bg-surface: #141922;
+  --bg-elevated: #1B2230;
+  --bg-accent: #232B3A;
 
-  --text-primary: #F5F5F5;      /* 18:1 on dark */
-  --text-secondary: #C8C8D0;   /* 10:1 on dark */
-  --text-muted: #9494AC;       /* ~4.8:1 on bg-accent, WCAG AA pass */
-  --text-inverse: #0A0A0F;
+  --text-primary: #F4F6FB;     /* 16:1 on base */
+  --text-secondary: #A7B0C0;   /* 8:1 */
+  --text-muted: #8A93A6;       /* ≥4.6:1 on elevated */
+  --text-inverse: #06121A;     /* near-black on cyan CTAs */
 
-  /* Primary - softened green for dark mode */
-  --primary-50: #0A1F0A;
-  --primary-100: #153015;
-  --primary-200: #204520;
-  --primary-300: #2B5F2B;
-  --primary-400: #3DBB2E;
-  --primary-500: #4ADE80;       /* Tailwind green-400 — vibrant, no halation */
-  --primary-600: #48B84E;
-  --primary-700: #3D9E42;
+  /* Primary — electric cyan */
+  --primary-50: #0C2530;
+  --primary-100: #0E3240;
+  --primary-200: #10465C;
+  --primary-300: #14607C;
+  --primary-400: #1FB6D9;
+  --primary-500: #38E1FF;      /* hero */
+  --primary-600: #5FE8FF;      /* hover (brighter on dark) */
+  --primary-700: #8FEFFF;
+  --primary-800: #0E7490;
+  --primary-900: #155E75;
 
-  /* Secondary - softened cyan */
-  --secondary-500: #38BDF8;     /* Tailwind sky-400 */
-  --secondary-600: #1CB0F6;
+  /* Secondary — info blue */
+  --secondary-500: #60A5FA;
+  --secondary-600: #84CAFF;
 
-  /* Accent - softened orange */
-  --accent-500: #FB923C;        /* Tailwind orange-400 */
-  --accent-600: #FF9600;
+  /* Accent — volt (points, rewards) */
+  --accent-50: #17200A;
+  --accent-100: #22300E;
+  --accent-400: #CCF63F;
+  --accent-500: #B6F400;
+  --accent-600: #CCF63F;
+  --accent-700: #E0FA79;
 
-  /* Celebration - softened pink */
-  --celebration: #FB7185;        /* Tailwind rose-400 */
+  /* Danger */
+  --celebration: #FB7185;
   --celebration-light: #FDA4AF;
 
-  /* Status - softened accents on deep dark backgrounds */
-  --status-pending-bg: #1A1A0A;
+  /* Status — tinted darks */
+  --status-pending-bg: #201A0A;
   --status-pending-border: #FBBF24;
   --status-pending-text: #FCD34D;
 
-  --status-claimed-bg: #0A1A2A;
-  --status-claimed-border: #38BDF8;
-  --status-claimed-text: #7DD3FC;
+  --status-claimed-bg: #0E1A2E;
+  --status-claimed-border: #60A5FA;
+  --status-claimed-text: #93C5FD;
 
-  --status-approved-bg: #0A1F0A;
-  --status-approved-border: #4ADE80;
-  --status-approved-text: #86EFAC;
+  --status-approved-bg: #0A2018;
+  --status-approved-border: #34D399;
+  --status-approved-text: #6EE7B7;
 
-  --status-overdue-bg: #2A0A0A;
+  --status-overdue-bg: #2A0E14;
   --status-overdue-border: #FB7185;
   --status-overdue-text: #FDA4AF;
 
-  --header-bg: #141420;
-  --header-from: #4ADE80;
-  --header-to: #38BDF8;
+  --header-bg: #10141C;
+  --header-from: #38E1FF;
+  --header-to: #1FB6D9;
 
-  /* ── Modern Warm Minimal tokens (dark) ── */
-  --border-color: #2A2A3A;
-  --neo-shadow: 0 1px 3px rgba(0,0,0,0.20), 0 1px 2px rgba(0,0,0,0.15);
-  --neo-shadow-hover: 0 4px 12px rgba(0,0,0,0.25);
-  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.12);
+  --border-color: #262E3D;
+  --neo-shadow: 0 1px 3px rgba(0,0,0,0.30), 0 1px 2px rgba(0,0,0,0.22);
+  --neo-shadow-hover: 0 4px 14px rgba(0,0,0,0.38);
+  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.20);
+
+  --streak-from: #FDBA74;
+  --streak-to: #F0468B;
+
+  --ring-track: #262E3D;
 }
 
 /* ============================================
-   Seasonal Theme Overrides
-   ============================================ */
+   Per-kid accent system
+   ============================================
+   A kid's identity is an ACCENT HUE consumed via var(--kid-accent),
+   never a gradient block. Classes are applied to the card/scope root.
+   Light mode deepens each hue for contrast on white. */
 
-/* ═══════════════════════════════════════════════════════
-   HALLOWEEN THEME - Fun Spooky (Kid-Friendly)
-   Light: Warm cream/orange harvest feel
-   Dark: Spooky purple with pumpkin orange
-   ═══════════════════════════════════════════════════════ */
-.theme-halloween {
-  /* Backgrounds - Warm harvest cream (light mode) */
-  --bg-base: #FFF8F0;
-  --bg-surface: #FFFFFF;
-  --bg-elevated: #FFFFFF;
-  --bg-accent: #FFE8D6;
+.kid-cyan    { --kid-accent: #0284C7; --kid-accent-soft: rgba(2,132,199,.10); }
+.kid-violet  { --kid-accent: #7C3AED; --kid-accent-soft: rgba(124,58,237,.10); }
+.kid-magenta { --kid-accent: #DB2777; --kid-accent-soft: rgba(219,39,119,.10); }
+.kid-lime    { --kid-accent: #4D7C0F; --kid-accent-soft: rgba(77,124,15,.10); }
+.kid-coral   { --kid-accent: #EA580C; --kid-accent-soft: rgba(234,88,12,.10); }
+.kid-amber   { --kid-accent: #D97706; --kid-accent-soft: rgba(217,119,6,.12); }
 
-  /* Primary - Pumpkin Orange */
-  --primary-50: #FFF7ED;
-  --primary-100: #FFEDD5;
-  --primary-200: #FED7AA;
-  --primary-300: #FDBA74;
-  --primary-400: #FFB347;
-  --primary-500: #FF9500;
-  --primary-600: #E68600;
-  --primary-700: #CC7700;
+.dark .kid-cyan    { --kid-accent: #38BDF8; --kid-accent-soft: rgba(56,189,248,.13); }
+.dark .kid-violet  { --kid-accent: #A78BFA; --kid-accent-soft: rgba(167,139,250,.13); }
+.dark .kid-magenta { --kid-accent: #FB6FB1; --kid-accent-soft: rgba(251,111,177,.13); }
+.dark .kid-lime    { --kid-accent: #A3E635; --kid-accent-soft: rgba(163,230,53,.12); }
+.dark .kid-coral   { --kid-accent: #FF7A6B; --kid-accent-soft: rgba(255,122,107,.13); }
+.dark .kid-amber   { --kid-accent: #FBBF24; --kid-accent-soft: rgba(251,191,36,.12); }
 
-  /* Secondary - Spooky Purple */
-  --secondary-400: #B794F6;
-  --secondary-500: #9B59B6;
-  --secondary-600: #8E44AD;
+/* Legacy color-id aliases (existing kid.color values in the DB) */
+.kid-ocean, .kid-sapphire, .kid-sky, .kid-teal { --kid-accent: #0284C7; --kid-accent-soft: rgba(2,132,199,.10); }
+.dark .kid-ocean, .dark .kid-sapphire, .dark .kid-sky, .dark .kid-teal { --kid-accent: #38BDF8; --kid-accent-soft: rgba(56,189,248,.13); }
+.kid-grape, .kid-mauve, .kid-royal { --kid-accent: #7C3AED; --kid-accent-soft: rgba(124,58,237,.10); }
+.dark .kid-grape, .dark .kid-mauve, .dark .kid-royal { --kid-accent: #A78BFA; --kid-accent-soft: rgba(167,139,250,.13); }
+.kid-berry, .kid-maroon, .kid-flamingo { --kid-accent: #DB2777; --kid-accent-soft: rgba(219,39,119,.10); }
+.dark .kid-berry, .dark .kid-maroon, .dark .kid-flamingo { --kid-accent: #FB6FB1; --kid-accent-soft: rgba(251,111,177,.13); }
+.kid-forest, .kid-green { --kid-accent: #4D7C0F; --kid-accent-soft: rgba(77,124,15,.10); }
+.dark .kid-forest, .dark .kid-green { --kid-accent: #A3E635; --kid-accent-soft: rgba(163,230,53,.12); }
+.kid-sunset, .kid-peach { --kid-accent: #EA580C; --kid-accent-soft: rgba(234,88,12,.10); }
+.dark .kid-sunset, .dark .kid-peach { --kid-accent: #FF7A6B; --kid-accent-soft: rgba(255,122,107,.13); }
+.kid-gold { --kid-accent: #D97706; --kid-accent-soft: rgba(217,119,6,.12); }
+.dark .kid-gold { --kid-accent: #FBBF24; --kid-accent-soft: rgba(251,191,36,.12); }
 
-  /* Accent - Slime Green */
-  --accent-500: #7AC70C;
-  --accent-600: #6BB00A;
-
-  /* Text - Dark for light background */
-  --text-primary: #2D1B4E;
-  --text-secondary: #5A4A6E;
-  --text-muted: #8E7AA8;
-  --text-inverse: #FFFFFF;
-
-  /* Header Gradient - Orange to Purple */
-  --header-from: #FF9500;
-  --header-to: #9B59B6;
-
-  /* Seasonal effects */
-  --seasonal-primary: #FF9500;
-  --seasonal-accent: #9B59B6;
-  --seasonal-glow: 0 0 15px rgba(255, 149, 0, 0.3);
-
-  /* Status colors for light bg */
-  --status-pending-bg: #FFF3CD;
-  --status-pending-border: #E6A000;
-  --status-pending-text: #856404;
-  --status-claimed-bg: #F3E8FF;
-  --status-claimed-border: #9B59B6;
-  --status-claimed-text: #6B3FA0;
-  --status-approved-bg: #D4EDDA;
-  --status-approved-border: #5CB85C;
-  --status-approved-text: #155724;
-  --status-overdue-bg: #F8D7DA;
-  --status-overdue-border: #DC3545;
-  --status-overdue-text: #721C24;
+/* Kid card — dark surface + accent edge (never a color block) */
+.kid-card {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  box-shadow: inset 3px 0 0 var(--kid-accent, var(--primary-500)), var(--neo-shadow);
+  transition: box-shadow var(--transition-fast), background-color var(--transition-colors);
 }
-.theme-halloween.dark {
-  /* OLED dark base with purple tint */
-  --bg-base: #0A0A0F;
-  --bg-surface: #1A0F2E;
-  --bg-elevated: #2D1B4E;
-  --bg-accent: #3D2A5F;
-
-  /* Text - Light for dark background */
-  --text-primary: #F5F0FF;
-  --text-secondary: #D4C4E8;
-  --text-muted: #A890C0;
-  --text-inverse: #0A0A0F;
-
-  /* Softened orange primary + softened purple secondary */
-  --primary-500: #FB923C;       /* Tailwind orange-400 */
-  --secondary-500: #A78BFA;     /* Tailwind violet-400 */
-
-  /* Muted orange borders + soft shadows */
-  --border-color: #5A3820;
-  --neo-shadow: 0 1px 3px rgba(251,146,60,0.12), 0 1px 2px rgba(0,0,0,0.15);
-  --neo-shadow-hover: 0 4px 12px rgba(251,146,60,0.20);
-  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.12);
-
-  /* Header - Softened Orange to Purple */
-  --header-from: #FB923C;
-  --header-to: #A78BFA;
-
-  /* Enhanced glow for dark mode */
-  --seasonal-glow: 0 0 30px rgba(251, 146, 60, 0.4);
-
-  /* Status colors for dark bg */
-  --status-pending-bg: #1A1A0A;
-  --status-pending-border: #FBBF24;
-  --status-pending-text: #FCD34D;
-  --status-claimed-bg: #1A0F2E;
-  --status-claimed-border: #A78BFA;
-  --status-claimed-text: #C4B5FD;
-  --status-approved-bg: #0A1F0A;
-  --status-approved-border: #4ADE80;
-  --status-approved-text: #86EFAC;
-  --status-overdue-bg: #2A0A0A;
-  --status-overdue-border: #FB7185;
-  --status-overdue-text: #FDA4AF;
+.kid-card:hover {
+  box-shadow: inset 3px 0 0 var(--kid-accent, var(--primary-500)), var(--neo-shadow-hover);
 }
-
-/* ═══════════════════════════════════════════════════════
-   CHRISTMAS THEME - Festive & Cozy
-   Cream/white base, festive red, evergreen, gold
-   ═══════════════════════════════════════════════════════ */
-.theme-christmas {
-  /* Backgrounds - Snowy cream (light mode) */
-  --bg-base: #FDF8F3;
-  --bg-surface: #FFFFFF;
-  --bg-elevated: #FFFFFF;
-  --bg-accent: #E8E0D8;
-
-  /* Primary - Festive Red */
-  --primary-50: #FEF2F2;
-  --primary-100: #FEE2E2;
-  --primary-200: #FECACA;
-  --primary-300: #FCA5A5;
-  --primary-400: #E74C4C;
-  --primary-500: #D32F2F;
-  --primary-600: #B71C1C;
-  --primary-700: #8B0000;
-
-  /* Secondary - Evergreen */
-  --secondary-400: #4CAF50;
-  --secondary-500: #2E7D32;
-  --secondary-600: #1B5E20;
-
-  /* Accent - Gold */
-  --accent-500: #FFD700;
-  --accent-600: #FFC107;
-
-  /* Text - Dark for light background */
-  --text-primary: #2D2D2D;
-  --text-secondary: #5A5A5A;
-  --text-muted: #767676;
-  --text-inverse: #FFFFFF;
-
-  /* Header Gradient - Red to Green */
-  --header-from: #D32F2F;
-  --header-to: #2E7D32;
-
-  /* Seasonal effects */
-  --seasonal-primary: #D32F2F;
-  --seasonal-accent: #2E7D32;
-  --seasonal-glow: 0 0 15px rgba(255, 215, 0, 0.3);
-}
-.theme-christmas.dark {
-  /* OLED dark base */
-  --bg-base: #0A0A0F;
-  --bg-surface: #1A0A0A;
-  --bg-elevated: #2D1515;
-  --bg-accent: #3D2020;
-
-  --text-primary: #F5F5F5;
-  --text-secondary: #D0C0C0;
-  --text-muted: #A09090;
-  --text-inverse: #0A0A0F;
-
-  /* Softened red primary + softened green secondary */
-  --primary-500: #F87171;       /* Tailwind red-400 */
-  --secondary-500: #4ADE80;     /* Tailwind green-400 */
-
-  /* Muted red borders + soft shadows */
-  --border-color: #4A2030;
-  --neo-shadow: 0 1px 3px rgba(248,113,113,0.12), 0 1px 2px rgba(0,0,0,0.15);
-  --neo-shadow-hover: 0 4px 12px rgba(248,113,113,0.20);
-  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.12);
-
-  /* Header - Softened Red to Green */
-  --header-from: #F87171;
-  --header-to: #4ADE80;
-
-  --seasonal-glow: 0 0 25px rgba(248, 113, 113, 0.35);
-
-  /* Status colors for dark bg */
-  --status-pending-bg: #1A1A0A;
-  --status-pending-border: #FBBF24;
-  --status-pending-text: #FCD34D;
-  --status-claimed-bg: #0A1A15;
-  --status-claimed-border: #4ADE80;
-  --status-claimed-text: #86EFAC;
-  --status-approved-bg: #0A1F0A;
-  --status-approved-border: #4ADE80;
-  --status-approved-text: #86EFAC;
-  --status-overdue-bg: #2A0A0A;
-  --status-overdue-border: #FB7185;
-  --status-overdue-text: #FDA4AF;
-}
-
-/* ═══════════════════════════════════════════════════════
-   EASTER THEME - Spring Renewal
-   Soft mint base, pastel purple, pastel pink
-   ═══════════════════════════════════════════════════════ */
-.theme-easter {
-  /* Backgrounds - Soft mint */
-  --bg-base: #F0FFF4;
-  --bg-surface: #FFFFFF;
-  --bg-elevated: #FFFFFF;
-  --bg-accent: #E0F2E8;
-
-  /* Primary - Pastel Purple */
-  --primary-50: #FAF5FF;
-  --primary-100: #F3E8FF;
-  --primary-200: #E9D5FF;
-  --primary-300: #D8B4FE;
-  --primary-400: #C084FC;
-  --primary-500: #A855F7;
-  --primary-600: #9333EA;
-  --primary-700: #7E22CE;
-
-  /* Secondary - Pastel Pink */
-  --secondary-400: #FBCFE8;
-  --secondary-500: #EC4899;
-  --secondary-600: #DB2777;
-
-  /* Accent - Spring Yellow */
-  --accent-500: #FBBF24;
-  --accent-600: #F59E0B;
-
-  /* Text - Dark for light background */
-  --text-primary: #374151;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
-  --text-inverse: #FFFFFF;
-
-  /* Header Gradient - Purple to Pink */
-  --header-from: #A855F7;
-  --header-to: #EC4899;
-
-  /* Seasonal effects */
-  --seasonal-primary: #A855F7;
-  --seasonal-accent: #EC4899;
-  --seasonal-glow: 0 0 15px rgba(168, 85, 247, 0.2);
-}
-.theme-easter.dark {
-  /* OLED dark base with purple tint */
-  --bg-base: #0A0A0F;
-  --bg-surface: #150F25;
-  --bg-elevated: #2D2040;
-  --bg-accent: #3D3055;
-
-  --text-primary: #F5F0FF;
-  --text-secondary: #D4C4E8;
-  --text-muted: #A890C0;
-  --text-inverse: #0A0A0F;
-
-  /* Softened purple primary + softened pink secondary */
-  --primary-500: #C084FC;       /* Tailwind purple-400 */
-  --secondary-500: #F472B6;     /* Tailwind pink-400 */
-
-  /* Muted purple borders + soft shadows */
-  --border-color: #3A2860;
-  --neo-shadow: 0 1px 3px rgba(192,132,252,0.12), 0 1px 2px rgba(0,0,0,0.15);
-  --neo-shadow-hover: 0 4px 12px rgba(192,132,252,0.20);
-  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.12);
-
-  /* Header - Softened Purple to Pink */
-  --header-from: #C084FC;
-  --header-to: #F472B6;
-
-  --seasonal-glow: 0 0 20px rgba(192, 132, 252, 0.35);
-
-  /* Status colors for dark bg */
-  --status-pending-bg: #1A1A0A;
-  --status-pending-border: #FBBF24;
-  --status-pending-text: #FCD34D;
-  --status-claimed-bg: #150F25;
-  --status-claimed-border: #C084FC;
-  --status-claimed-text: #D8B4FE;
-  --status-approved-bg: #0A1F0A;
-  --status-approved-border: #4ADE80;
-  --status-approved-text: #86EFAC;
-  --status-overdue-bg: #2A0A0A;
-  --status-overdue-border: #FB7185;
-  --status-overdue-text: #FDA4AF;
-}
-
-/* ═══════════════════════════════════════════════════════
-   SUMMER THEME - Beach Vibes
-   Sandy white base, ocean blue, coral orange
-   ═══════════════════════════════════════════════════════ */
-.theme-summer {
-  /* Backgrounds - Sandy warm white */
-  --bg-base: #FFFBF0;
-  --bg-surface: #FFFFFF;
-  --bg-elevated: #FFFFFF;
-  --bg-accent: #FFF3E0;
-
-  /* Primary - Ocean Blue */
-  --primary-50: #F0F9FF;
-  --primary-100: #E0F2FE;
-  --primary-200: #BAE6FD;
-  --primary-300: #7DD3FC;
-  --primary-400: #38BDF8;
-  --primary-500: #0EA5E9;
-  --primary-600: #0284C7;
-  --primary-700: #0369A1;
-
-  /* Secondary - Coral/Tangerine */
-  --secondary-400: #FB923C;
-  --secondary-500: #F97316;
-  --secondary-600: #EA580C;
-
-  /* Accent - Sunflower Yellow */
-  --accent-500: #FACC15;
-  --accent-600: #EAB308;
-
-  /* Text - Navy for light background */
-  --text-primary: #1E3A5F;
-  --text-secondary: #3D5A80;
-  --text-muted: #6B8AB0;
-  --text-inverse: #FFFFFF;
-
-  /* Header Gradient - Blue to Orange (sunset) */
-  --header-from: #0EA5E9;
-  --header-to: #F97316;
-
-  /* Seasonal effects */
-  --seasonal-primary: #0EA5E9;
-  --seasonal-accent: #F97316;
-  --seasonal-glow: 0 0 15px rgba(14, 165, 233, 0.2);
-}
-.theme-summer.dark {
-  /* OLED dark base with ocean tint */
-  --bg-base: #0A0A0F;
-  --bg-surface: #0A1520;
-  --bg-elevated: #152535;
-  --bg-accent: #203545;
-
-  --text-primary: #F1F5F9;
-  --text-secondary: #CBD5E1;
-  --text-muted: #94A3B8;
-  --text-inverse: #0A0A0F;
-
-  /* Softened cyan primary + softened orange secondary */
-  --primary-500: #38BDF8;       /* Tailwind sky-400 */
-  --secondary-500: #FB923C;     /* Tailwind orange-400 */
-
-  /* Muted cyan borders + soft shadows */
-  --border-color: #1A3545;
-  --neo-shadow: 0 1px 3px rgba(56,189,248,0.12), 0 1px 2px rgba(0,0,0,0.15);
-  --neo-shadow-hover: 0 4px 12px rgba(56,189,248,0.20);
-  --neo-shadow-sm: 0 1px 2px rgba(0,0,0,0.12);
-
-  /* Header - Softened Cyan to Orange */
-  --header-from: #38BDF8;
-  --header-to: #FB923C;
-
-  --seasonal-glow: 0 0 25px rgba(56, 189, 248, 0.35);
-
-  /* Status colors for dark bg */
-  --status-pending-bg: #1A1A0A;
-  --status-pending-border: #FBBF24;
-  --status-pending-text: #FCD34D;
-  --status-claimed-bg: #0A1520;
-  --status-claimed-border: #38BDF8;
-  --status-claimed-text: #7DD3FC;
-  --status-approved-bg: #0A1F0A;
-  --status-approved-border: #4ADE80;
-  --status-approved-text: #86EFAC;
-  --status-overdue-bg: #2A0A0A;
-  --status-overdue-border: #FB7185;
-  --status-overdue-text: #FDA4AF;
-}
-
-/* ═══════════════════════════════════════════════════════
-   Seasonal CSS Background Decorations
-   Subtle ambient glow effects per theme
-   ═══════════════════════════════════════════════════════ */
-
-/* Halloween - Spooky orange/purple corner glow */
-.theme-halloween::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(ellipse at 10% 0%, rgba(255, 102, 0, 0.12) 0%, transparent 55%),
-    radial-gradient(ellipse at 90% 100%, rgba(191, 0, 255, 0.12) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 50%, rgba(255, 149, 0, 0.04) 0%, transparent 70%);
-}
-.theme-halloween.dark::before {
-  background:
-    radial-gradient(ellipse at 10% 0%, rgba(251, 146, 60, 0.22) 0%, transparent 55%),
-    radial-gradient(ellipse at 90% 100%, rgba(167, 139, 250, 0.22) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 50%, rgba(251, 146, 60, 0.06) 0%, transparent 70%);
-}
-
-/* Christmas - Warm red/gold corner glow */
-.theme-christmas::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(ellipse at 0% 0%, rgba(211, 47, 47, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, rgba(255, 215, 0, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(46, 125, 50, 0.05) 0%, transparent 60%);
-}
-.theme-christmas.dark::before {
-  background:
-    radial-gradient(ellipse at 0% 0%, rgba(248, 113, 113, 0.22) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, rgba(255, 215, 0, 0.18) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(74, 222, 128, 0.06) 0%, transparent 60%);
-}
-
-/* Easter - Soft purple/pink pastel wash */
-.theme-easter::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(ellipse at 20% 10%, rgba(168, 85, 247, 0.1) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 90%, rgba(236, 72, 153, 0.1) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 50%, rgba(251, 191, 36, 0.04) 0%, transparent 60%);
-}
-.theme-easter.dark::before {
-  background:
-    radial-gradient(ellipse at 20% 10%, rgba(192, 132, 252, 0.2) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 90%, rgba(244, 114, 182, 0.18) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 50%, rgba(192, 132, 252, 0.05) 0%, transparent 60%);
-}
-
-/* Summer - Warm sun glow from top */
-.theme-summer::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(14, 165, 233, 0.12) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 100%, rgba(249, 115, 22, 0.08) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 50%, rgba(250, 204, 21, 0.04) 0%, transparent 60%);
-}
-.theme-summer.dark::before {
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.22) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 100%, rgba(251, 146, 60, 0.15) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.05) 0%, transparent 60%);
+.kid-accent-text { color: var(--kid-accent, var(--primary-500)); }
+.kid-accent-bg { background-color: var(--kid-accent-soft, var(--primary-50)); }
+.kid-avatar-ring {
+  background-color: var(--kid-accent-soft, var(--primary-50));
+  color: var(--kid-accent, var(--primary-500));
+  border: 1px solid color-mix(in srgb, var(--kid-accent, var(--primary-500)) 45%, transparent);
 }
 
 /* ============================================
@@ -662,22 +283,32 @@ body {
   outline-offset: 2px;
 }
 
-/* Typography hierarchy per BRAND-GUIDELINES.md — page/section headings
-   get the brand shape without needing per-page utility soup. */
+/* Typography hierarchy — display face for headings, confident and tight */
 h1 {
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 h2 {
+  font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+.font-display {
+  font-family: var(--font-display);
+}
+/* Big numerals (points, streaks) — display face, tabular */
+.stat-number {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 /* ============================================
    Component Classes
    ============================================ */
 
-/* Card styles - Modern Warm Minimal: soft border + subtle shadow */
+/* Card — neutral surface, hairline border, soft single-source shadow */
 .card {
   background-color: var(--bg-surface);
   border-radius: var(--neo-radius);
@@ -689,7 +320,7 @@ h2 {
   box-shadow: var(--neo-shadow-hover);
 }
 
-/* Status badges - Modern Warm Minimal: soft borders, sentence case */
+/* Status badges */
 .badge-pending,
 .badge-claimed,
 .badge-approved,
@@ -719,7 +350,7 @@ h2 {
   color: var(--status-overdue-text);
 }
 
-/* Button base - Modern Warm Minimal: soft border + subtle shadow */
+/* Button base */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -743,6 +374,7 @@ h2 {
 .btn-primary {
   background-color: var(--primary-500);
   color: var(--text-inverse);
+  border-color: transparent;
 }
 .btn-primary:hover {
   background-color: var(--primary-600);
@@ -760,7 +392,7 @@ h2 {
   color: white;
 }
 .btn-danger:hover {
-  background-color: #E53E3E;
+  filter: brightness(1.08);
 }
 /* Outline button - composes with .btn (border/padding/shadow come from .btn) */
 .btn-outline {
@@ -772,10 +404,9 @@ h2 {
 }
 
 /* ============================================
-   Modern Warm Minimal Utility Classes
+   Utility surfaces
    ============================================ */
 
-/* Neo card - standalone utility for any element needing card treatment */
 .neo-card {
   background-color: var(--bg-surface);
   border-radius: var(--neo-radius);
@@ -787,7 +418,6 @@ h2 {
   box-shadow: var(--neo-shadow-hover);
 }
 
-/* Neo button - for inline elements needing button treatment */
 .neo-btn {
   border-radius: var(--neo-radius);
   border: 1px solid var(--border-color);
@@ -803,7 +433,6 @@ h2 {
   box-shadow: var(--neo-shadow-sm);
 }
 
-/* Neo input - for form fields */
 .neo-input {
   border-radius: var(--neo-radius);
   border: 1px solid var(--border-color);
@@ -816,9 +445,6 @@ h2 {
   box-shadow: 0 0 0 3px var(--primary-50);
 }
 
-/* Standalone themed form control (className="input" on
-   Allowance/NotificationSettings - previously undefined, rendered
-   browser-default; UX-REVIEW-2026-07 P0.3) */
 .input {
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
@@ -838,41 +464,46 @@ h2 {
 }
 
 /* ============================================
-   Kid Color Gradients - 8 Vibrant Colors
-   All meet WCAG AA for white text on colored bg
+   Gamification art
    ============================================ */
 
-/* Light mode: deeply saturated, vibrant gradients */
-.kid-lime { background: linear-gradient(135deg, #2ECC0E, #45B80C); }
-.kid-ocean { background: linear-gradient(135deg, #0088DD, #00AAEE); }
-.kid-sunset { background: linear-gradient(135deg, #E65100, #FF6B00); }
-.kid-berry { background: linear-gradient(135deg, #CC0033, #FF003C); }
-.kid-grape { background: linear-gradient(135deg, #8B00CC, #A200FF); }
-.kid-teal { background: linear-gradient(135deg, #009980, #00C9A7); }
-.kid-coral { background: linear-gradient(135deg, #CC0066, #FF1493); }
-.kid-gold { background: linear-gradient(135deg, #E6A800, #FFD700); }
+/* Streak flame — gradient text treatment */
+.streak-flame {
+  background: linear-gradient(135deg, var(--streak-from), var(--streak-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.streak-flame-icon { color: var(--streak-from); }
 
-/* Dark mode: softened vibrant kid gradients */
-.dark .kid-lime { background: linear-gradient(135deg, #4ADE80, #34D399); }
-.dark .kid-ocean { background: linear-gradient(135deg, #38BDF8, #7DD3FC); }
-.dark .kid-sunset { background: linear-gradient(135deg, #FB923C, #F97316); }
-.dark .kid-berry { background: linear-gradient(135deg, #FB7185, #F43F5E); }
-.dark .kid-grape { background: linear-gradient(135deg, #C084FC, #A855F7); }
-.dark .kid-teal { background: linear-gradient(135deg, #2DD4BF, #14B8A6); }
-.dark .kid-coral { background: linear-gradient(135deg, #F472B6, #EC4899); }
-.dark .kid-gold { background: linear-gradient(135deg, #FCD34D, #FBBF24); }
+/* Metal badge tiers (replaces cartoon gradient circles) */
+.tier-bronze { background: linear-gradient(135deg, var(--tier-bronze-from), var(--tier-bronze-to)); color: var(--bg-base); }
+.tier-silver { background: linear-gradient(135deg, var(--tier-silver-from), var(--tier-silver-to)); color: var(--bg-base); }
+.tier-gold   { background: linear-gradient(135deg, var(--tier-gold-from), var(--tier-gold-to)); color: var(--bg-base); }
+.tier-gold-glow { box-shadow: 0 0 12px color-mix(in srgb, var(--tier-gold-to) 45%, transparent); }
 
-/* Legacy aliases for backwards compatibility */
-.kid-sapphire { background: linear-gradient(135deg, #0088DD, #00AAEE); }
-.kid-forest { background: linear-gradient(135deg, #2ECC0E, #45B80C); }
-.kid-mauve { background: linear-gradient(135deg, #8B00CC, #A200FF); }
-.kid-peach { background: linear-gradient(135deg, #E65100, #FF6B00); }
-.kid-green { background: linear-gradient(135deg, #2ECC0E, #45B80C); }
-.kid-flamingo { background: linear-gradient(135deg, #CC0066, #FF1493); }
-.kid-sky { background: linear-gradient(135deg, #0088DD, #00AAEE); }
-.kid-maroon { background: linear-gradient(135deg, #CC0033, #FF003C); }
-.kid-royal { background: linear-gradient(135deg, #8B00CC, #A200FF); }
-.kid-amber { background: linear-gradient(135deg, #E6A800, #FFD700); }
+/* Conic ring progress (C's ring treatment). Set --ring-pct (0-100) and
+   optionally --ring-color; inner cutout inherits the surface via --ring-hole. */
+.ring-progress {
+  border-radius: 50%;
+  background: conic-gradient(var(--ring-color, var(--primary-500)) calc(var(--ring-pct, 0) * 1%), var(--ring-track) 0);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex: none;
+}
+.ring-progress::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--ring-hole, var(--bg-elevated));
+}
+.ring-progress > * {
+  position: relative;
+  z-index: 1;
+}
 
 /* ============================================
    Animations
@@ -880,22 +511,21 @@ h2 {
 
 @keyframes pointsPop {
   0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+  50% { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
 .points-animate {
-  animation: pointsPop 0.3s ease-out;
+  animation: pointsPop 0.25s ease-out;
 }
 
+/* Celebrate — a brief glow, not a cartoon wiggle */
 @keyframes celebrate {
-  0% { transform: scale(1) rotate(0deg); }
-  25% { transform: scale(1.1) rotate(-5deg); }
-  50% { transform: scale(1.2) rotate(5deg); }
-  75% { transform: scale(1.1) rotate(-5deg); }
-  100% { transform: scale(1) rotate(0deg); }
+  0% { transform: scale(1); }
+  40% { transform: scale(1.04); }
+  100% { transform: scale(1); }
 }
 .celebrate {
-  animation: celebrate 0.5s ease-out;
+  animation: celebrate 0.3s ease-out;
 }
 
 @keyframes fadeIn {
@@ -905,15 +535,6 @@ h2 {
 .fade-in {
   animation: fadeIn 0.2s ease-out;
 }
-
-/* Seasonal glow effect */
-.seasonal-glow {
-  box-shadow: var(--seasonal-glow);
-}
-
-/* ============================================
-   Enhanced Animation Keyframes
-   ============================================ */
 
 /* Shimmer effect for skeleton loaders */
 @keyframes shimmer {
@@ -928,14 +549,14 @@ h2 {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
   animation: shimmer 1.5s infinite;
 }
 
-/* Pulse glow for interactive elements - updated for green */
+/* Pulse glow — hero cyan */
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(88, 204, 2, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(88, 204, 2, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(56, 225, 255, 0.35); }
+  50% { box-shadow: 0 0 0 8px rgba(56, 225, 255, 0); }
 }
 .pulse-glow {
   animation: pulseGlow 2s infinite;
@@ -1021,10 +642,7 @@ h2 {
 @keyframes popIn {
   0% {
     opacity: 0;
-    transform: scale(0.8);
-  }
-  50% {
-    transform: scale(1.05);
+    transform: scale(0.92);
   }
   100% {
     opacity: 1;
@@ -1032,31 +650,7 @@ h2 {
   }
 }
 .pop-in {
-  animation: popIn 0.3s ease-out;
-}
-
-/* Chorbie bounce animation */
-@keyframes chorbieBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-.chorbie-bounce {
-  animation: chorbieBounce 0.6s ease-in-out infinite;
-}
-
-/* Chorbie wave animation */
-@keyframes chorbieWave {
-  0% { transform: rotate(0deg); }
-  10% { transform: rotate(14deg); }
-  20% { transform: rotate(-8deg); }
-  30% { transform: rotate(14deg); }
-  40% { transform: rotate(-4deg); }
-  50% { transform: rotate(10deg); }
-  60% { transform: rotate(0deg); }
-  100% { transform: rotate(0deg); }
-}
-.chorbie-wave {
-  animation: chorbieWave 2s ease-in-out;
+  animation: popIn 0.2s ease-out;
 }
 
 /* ============================================
@@ -1080,9 +674,7 @@ h2 {
   .pulse-glow,
   .float,
   .spin-ease,
-  .scale-pulse,
-  .chorbie-bounce,
-  .chorbie-wave {
+  .scale-pulse {
     animation: none;
   }
 }

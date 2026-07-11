@@ -115,7 +115,8 @@ export function StreakCelebration({
 
               {/* Animated icon */}
               <motion.div
-                className={`w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br ${milestone.gradient} flex items-center justify-center shadow-lg`}
+                className="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center shadow-lg"
+                style={{ background: 'linear-gradient(135deg, var(--streak-from), var(--streak-to))' }}
                 animate={
                   prefersReducedMotion
                     ? {}
@@ -131,7 +132,7 @@ export function StreakCelebration({
 
               {/* Title */}
               <motion.h2
-                className={`text-3xl font-bold mb-2 bg-gradient-to-r ${milestone.gradient} bg-clip-text text-transparent`}
+                className="text-3xl font-bold mb-2 streak-flame stat-number"
                 initial={prefersReducedMotion ? false : { y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
@@ -166,7 +167,7 @@ export function StreakCelebration({
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.5, type: 'spring' }}
               >
-                <Flame size={24} className="text-orange-500" />
+                <Flame size={24} className="streak-flame-icon" />
                 <span className="text-2xl font-bold text-text-primary">
                   {streakDays} Day Streak!
                 </span>
@@ -175,7 +176,7 @@ export function StreakCelebration({
               {/* Dismiss button */}
               <motion.button
                 onClick={onClose}
-                className={`w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r ${milestone.gradient} shadow-lg`}
+                className="btn btn-primary w-full"
                 whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
                 whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                 initial={prefersReducedMotion ? false : { y: 20, opacity: 0 }}

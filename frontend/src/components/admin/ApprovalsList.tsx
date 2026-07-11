@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ClipboardList, Gift, Check, X } from 'lucide-react';
+import { ClipboardList, Gift, Check, X, ClipboardCheck } from 'lucide-react';
 import { kidsApi, choresApi, rewardsApi, approvalsApi } from '../../api/client';
 import type { PendingChoreClaim, PendingRewardClaim } from '../../api/client';
-import { ChorbieAnimated } from '../mascot';
 import { Button } from '../ui';
 import { useToast } from '../../hooks/useToast';
 
@@ -74,8 +73,8 @@ export function ApprovalsList() {
   if (totalPending === 0) {
     return (
       <div className="text-center py-12">
-        <div className="mx-auto mb-4">
-          <ChorbieAnimated expression="celebrating" animation="dance" size={100} />
+        <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary-50 flex items-center justify-center">
+          <ClipboardCheck size={28} className="text-primary-500" />
         </div>
         <p className="text-lg font-bold text-text-primary">All caught up!</p>
         <p className="text-text-secondary">Great job keeping up with approvals!</p>

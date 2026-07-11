@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ShoppingBag, Lock } from 'lucide-react';
+import { Star, ShoppingBag, Lock, Gift } from 'lucide-react';
 import { DynamicIcon } from '../components/DynamicIcon';
 import { kidsApi, rewardsApi } from '../api/client';
 import type { Reward, Kid } from '../api/client';
@@ -10,7 +10,6 @@ import { staggerContainer, listItemVariants } from '../utils/animations';
 import { AnimatedPoints } from '../components/AnimatedPoints';
 import { ConfettiBurst } from '../components/celebrations/Confetti';
 import { SkeletonChoreCardList } from '../components/skeletons';
-import { ChorbieAnimated } from '../components/mascot';
 import { Button } from '../components/ui';
 import { useToast } from '../hooks/useToast';
 
@@ -209,8 +208,8 @@ export function Rewards() {
       <div className="space-y-4">
         <div className="flex gap-2 overflow-x-auto pb-2">{kidPoints}</div>
         <div className="text-center py-12">
-          <div className="mx-auto mb-4">
-            <ChorbieAnimated expression="thinking" animation="float" size={100} />
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary-50 flex items-center justify-center">
+            <Gift size={28} className="text-primary-500" />
           </div>
           <h2 className="text-2xl font-bold text-text-primary">
             Couldn't load the reward shop
@@ -235,8 +234,8 @@ export function Rewards() {
       <div className="space-y-4">
         <div className="flex gap-2 overflow-x-auto pb-2">{kidPoints}</div>
         <div className="text-center py-12">
-          <div className="mx-auto mb-4">
-            <ChorbieAnimated expression="thinking" animation="float" size={100} />
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary-50 flex items-center justify-center">
+            <Gift size={28} className="text-primary-500" />
           </div>
           <h2 className="text-2xl font-bold text-text-primary">
             Reward shop is empty!

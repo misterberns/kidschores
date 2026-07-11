@@ -43,19 +43,15 @@ export default {
           500: 'var(--accent-500)',
           600: 'var(--accent-600)',
         },
-        seasonal: {
-          primary: 'var(--seasonal-primary)',
-          accent: 'var(--seasonal-accent)',
-        },
         // Destructive/error scale — static values; components pair light/dark
         // via `dark:` variants (e.g. bg-error-100 dark:bg-error-900).
-        // Anchored on the brand berry (#FF4B4B) / dark rose-400 (#FB7185).
+        // Midnight+Electric danger family (rose).
         error: {
-          50: '#FFF5F5',
-          100: '#FFE5E5',
+          50: '#FEF3F2',
+          100: '#FEE4E2',
           400: '#FB7185',
-          500: '#FF4B4B',
-          700: '#A02E2E',
+          500: '#E11D48',
+          700: '#B42318',
           900: '#3A1015',
         },
         // Theme-aware border tokens (Accordion et al: border-border-primary)
@@ -88,21 +84,16 @@ export default {
           // #FF4B4B light / #FB7185 dark via the celebration token.
           error: 'var(--celebration)',
         },
-        // Kid color palette - Refined Vibrant Colors
+        // Kid accent utility (canonical definitions live in index.css as
+        // .kid-<id> { --kid-accent } — consume via var(--kid-accent))
         kid: {
-          lime: { from: '#34B233', to: '#4CC552' },
-          ocean: { from: '#1A8FD6', to: '#3BA6E0' },
-          sunset: { from: '#E86A10', to: '#F58D3D' },
-          berry: { from: '#D93654', to: '#E85A74' },
-          grape: { from: '#8A4FBF', to: '#A36DD5' },
-          teal: { from: '#0D9E8A', to: '#2DB8A6' },
-          coral: { from: '#D44590', to: '#E066A8' },
-          gold: { from: '#E6A800', to: '#F0C030' },
+          accent: 'var(--kid-accent)',
         },
       },
       fontFamily: {
-        // Inter is the app font per BRAND-GUIDELINES.md (loaded in index.css).
+        // Inter body + Space Grotesk display (both loaded in index.css).
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
       },
       fontWeight: {
         medium: '500',
@@ -129,7 +120,6 @@ export default {
         'sm': 'var(--neo-shadow-sm)',
         'md': 'var(--neo-shadow)',
         'lg': 'var(--neo-shadow-hover)',
-        'seasonal': 'var(--seasonal-glow)',
       },
     },
   },

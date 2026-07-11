@@ -53,9 +53,9 @@ interface PayoutCardProps {
 
 function PayoutCard({ payout, kidName, onMarkPaid, onCancel, showActions = false }: PayoutCardProps) {
   const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-    paid: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    pending: 'bg-status-pending-bg text-status-pending-text',
+    paid: 'bg-status-approved-bg text-status-approved-text',
+    cancelled: 'bg-status-overdue-bg text-status-overdue-text',
   };
 
   const statusIcons = {
@@ -76,8 +76,8 @@ function PayoutCard({ payout, kidName, onMarkPaid, onCancel, showActions = false
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-            <DollarSign size={20} className="text-green-600 dark:text-green-400" />
+          <div className="w-10 h-10 bg-status-approved-bg rounded-full flex items-center justify-center">
+            <DollarSign size={20} className="text-status-approved-border" />
           </div>
           <div>
             <p className="font-bold text-lg text-text-primary">
@@ -242,7 +242,7 @@ export function Allowance() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold flex items-center gap-2 text-text-primary">
-          <Wallet size={24} className="text-green-500" />
+          <Wallet size={24} className="text-status-approved-border" />
           Allowance
         </h2>
         <IconButton
@@ -269,7 +269,7 @@ export function Allowance() {
       {/* Balance Card */}
       {summary && (
         <motion.div
-          className="card p-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white"
+          className="card p-6 bg-primary-800 text-white"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -295,7 +295,7 @@ export function Allowance() {
           </div>
 
           {summary.pending_payouts > 0 && (
-            <div className="mt-4 bg-yellow-500/20 rounded-lg p-3 flex items-center gap-2">
+            <div className="mt-4 bg-white/15 rounded-lg p-3 flex items-center gap-2">
               <Clock size={18} />
               <span className="text-sm">
                 {summary.pending_payouts} pending payout{summary.pending_payouts > 1 ? 's' : ''}: {formatCurrency(summary.pending_amount)}
@@ -312,7 +312,7 @@ export function Allowance() {
       {/* Request Payout */}
       <div className="card p-4">
         <h3 className="font-bold text-lg text-text-primary flex items-center gap-2 mb-4">
-          <Send size={20} className="text-green-500" />
+          <Send size={20} className="text-status-approved-border" />
           Request Payout
         </h3>
 
@@ -348,7 +348,7 @@ export function Allowance() {
                 ))}
                 <button
                   onClick={() => setPointsToConvert(String(Math.floor(summary.current_points)))}
-                  className="px-2 py-1 text-xs rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 hover:opacity-80"
+                  className="px-2 py-1 text-xs rounded bg-status-approved-bg text-status-approved-text hover:opacity-80"
                 >
                   Max
                 </button>
@@ -369,12 +369,12 @@ export function Allowance() {
                     onClick={() => setPayoutMethod(method.id)}
                     className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors ${
                       payoutMethod === method.id
-                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                        ? 'border-status-approved-border bg-status-approved-bg'
                         : 'border-bg-accent bg-bg-surface hover:border-bg-elevated'
                     }`}
                   >
-                    <Icon size={20} className={payoutMethod === method.id ? 'text-green-500' : 'text-text-muted'} />
-                    <span className={`text-xs font-medium ${payoutMethod === method.id ? 'text-green-700 dark:text-green-300' : 'text-text-secondary'}`}>
+                    <Icon size={20} className={payoutMethod === method.id ? 'text-status-approved-border' : 'text-text-muted'} />
+                    <span className={`text-xs font-medium ${payoutMethod === method.id ? 'text-status-approved-text' : 'text-text-secondary'}`}>
                       {method.label}
                     </span>
                   </button>
@@ -403,9 +403,9 @@ export function Allowance() {
       {isParent && allPending.length > 0 && (
         <div className="card p-4">
           <h3 className="font-bold text-lg text-text-primary flex items-center gap-2 mb-4">
-            <Clock size={20} className="text-yellow-500" />
+            <Clock size={20} className="text-status-pending-border" />
             Pending Approvals
-            <span className="ml-auto bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 px-2 py-0.5 rounded-full text-sm">
+            <span className="ml-auto bg-status-pending-bg text-status-pending-text px-2 py-0.5 rounded-full text-sm">
               {allPending.length}
             </span>
           </h3>

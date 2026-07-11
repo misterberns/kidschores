@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
-import { ChorbiePresets } from '../components/mascot';
+import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft, KeyRound } from 'lucide-react';
 import { api } from '../api/client';
 import { getApiErrorMessage } from '../utils/errorMessage';
 
@@ -141,8 +140,8 @@ export function ResetPassword() {
           className="w-full max-w-md"
         >
           <div className="bg-bg-surface rounded-md border border-[var(--border-color)] shadow-card p-8 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success-100 dark:bg-success-900/30 flex items-center justify-center">
-              <CheckCircle size={32} className="text-success-500" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-status-approved-bg flex items-center justify-center">
+              <CheckCircle size={32} className="text-status-approved-border" />
             </div>
             <h2 className="text-xl font-bold text-text-primary mb-2">Password Reset!</h2>
             <p className="text-text-muted mb-6">
@@ -170,8 +169,8 @@ export function ResetPassword() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center mb-8"
       >
-        <div className="w-20 h-20 mb-4">
-          <ChorbiePresets.Excited size={80} />
+        <div className="w-16 h-16 mb-4 rounded-2xl bg-primary-50 flex items-center justify-center">
+          <KeyRound size={32} className="text-primary-500" />
         </div>
         <h1 style={{ color: 'var(--primary-500)' }} className="text-3xl font-bold">
           Create New Password
@@ -272,7 +271,7 @@ export function ResetPassword() {
               <div
                 key={index}
                 className={`flex items-center gap-2 text-sm ${
-                  req.met ? 'text-success-600 dark:text-success-400' : 'text-text-muted'
+                  req.met ? 'text-status-approved-text' : 'text-text-muted'
                 }`}
               >
                 <CheckCircle size={16} className={req.met ? 'opacity-100' : 'opacity-30'} />

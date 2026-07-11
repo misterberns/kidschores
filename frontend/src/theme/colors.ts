@@ -1,8 +1,7 @@
 // Theme color definitions for KidsChores app
-// Modern Warm Minimal Design System
-// Primary: Feather Green (#58CC02)
-// Secondary: Sky Blue (#1CB0F6)
-// Accent: Warm Orange (#FF9600)
+// "Midnight + Electric" design system (BRAND-GUIDELINES.md v2)
+// Dark-first: blue-charcoal surfaces, electric-cyan hero accent,
+// volt for points, per-kid identity via accent hues.
 
 export interface StatusColors {
   bg: string;
@@ -24,7 +23,7 @@ export interface ThemeColors {
     inverse: string;
   };
 
-  // Brand/Primary colors - Feather Green
+  // Brand/Primary colors — electric cyan
   primary: {
     50: string;
     100: string;
@@ -38,7 +37,7 @@ export interface ThemeColors {
     900: string;
   };
 
-  // Secondary colors - Sky Blue
+  // Secondary colors — info blue
   secondary: {
     500: string;
     600: string;
@@ -69,111 +68,50 @@ export interface ThemeColors {
   shadow: string;
 }
 
-// Kid color palette - 8 Bold Colors
-// High-saturation, edgy gradients — neon in dark mode
-// Light: >=3:1 contrast for white large text (WCAG AA)
-// Dark: electric/neon matching #39FF14 border energy
+// Per-kid accent palette — 6 mid-chroma hues that stay sophisticated on the
+// dark shell (and deepen automatically in light mode via the .kid-<id> CSS
+// classes in index.css, which define --kid-accent / --kid-accent-soft).
+// A kid's identity is an ACCENT, never a gradient block.
 export interface KidColor {
   id: string;
   name: string;
-  gradient: string;
-  gradientDark: string;
-  primary: string;
-  secondary: string;
-  lightBg: string;
+  /** CSS class that sets --kid-accent / --kid-accent-soft for the subtree */
+  className: string;
+  /** Dark-mode (flagship) accent hex */
+  accent: string;
+  /** Light-mode deepened accent hex */
+  accentLight: string;
 }
 
 export const kidColorPalette: KidColor[] = [
-  {
-    id: 'lime',
-    name: 'Neon Lime',
-    gradient: 'from-[#2ECC0E] to-[#45B80C]',
-    gradientDark: 'from-[#4ADE80] to-[#34D399]',
-    primary: '#4ADE80',
-    secondary: '#2ECC0E',
-    lightBg: '#0A1F0A',
-  },
-  {
-    id: 'ocean',
-    name: 'Electric Blue',
-    gradient: 'from-[#0088DD] to-[#00AAEE]',
-    gradientDark: 'from-[#38BDF8] to-[#7DD3FC]',
-    primary: '#38BDF8',
-    secondary: '#0088DD',
-    lightBg: '#0A1A2A',
-  },
-  {
-    id: 'sunset',
-    name: 'Hot Orange',
-    gradient: 'from-[#E65100] to-[#FF6B00]',
-    gradientDark: 'from-[#FB923C] to-[#F97316]',
-    primary: '#FB923C',
-    secondary: '#E65100',
-    lightBg: '#1A1208',
-  },
-  {
-    id: 'berry',
-    name: 'Neon Red',
-    gradient: 'from-[#CC0033] to-[#FF003C]',
-    gradientDark: 'from-[#FB7185] to-[#F43F5E]',
-    primary: '#FB7185',
-    secondary: '#CC0033',
-    lightBg: '#2A0A0A',
-  },
-  {
-    id: 'grape',
-    name: 'UV Purple',
-    gradient: 'from-[#8B00CC] to-[#A200FF]',
-    gradientDark: 'from-[#C084FC] to-[#A855F7]',
-    primary: '#C084FC',
-    secondary: '#8B00CC',
-    lightBg: '#1A0A2A',
-  },
-  {
-    id: 'teal',
-    name: 'Toxic Teal',
-    gradient: 'from-[#009980] to-[#00C9A7]',
-    gradientDark: 'from-[#2DD4BF] to-[#14B8A6]',
-    primary: '#2DD4BF',
-    secondary: '#009980',
-    lightBg: '#0A1F1A',
-  },
-  {
-    id: 'coral',
-    name: 'Hot Pink',
-    gradient: 'from-[#CC0066] to-[#FF1493]',
-    gradientDark: 'from-[#F472B6] to-[#EC4899]',
-    primary: '#F472B6',
-    secondary: '#CC0066',
-    lightBg: '#2A0A1A',
-  },
-  {
-    id: 'gold',
-    name: 'Electric Gold',
-    gradient: 'from-[#E6A800] to-[#FFD700]',
-    gradientDark: 'from-[#FCD34D] to-[#FBBF24]',
-    primary: '#FCD34D',
-    secondary: '#E6A800',
-    lightBg: '#1A1A08',
-  },
+  { id: 'cyan',    name: 'Cyan',    className: 'kid-cyan',    accent: '#38BDF8', accentLight: '#0284C7' },
+  { id: 'violet',  name: 'Violet',  className: 'kid-violet',  accent: '#A78BFA', accentLight: '#7C3AED' },
+  { id: 'magenta', name: 'Magenta', className: 'kid-magenta', accent: '#FB6FB1', accentLight: '#DB2777' },
+  { id: 'lime',    name: 'Lime',    className: 'kid-lime',    accent: '#A3E635', accentLight: '#4D7C0F' },
+  { id: 'coral',   name: 'Coral',   className: 'kid-coral',   accent: '#FF7A6B', accentLight: '#EA580C' },
+  { id: 'amber',   name: 'Amber',   className: 'kid-amber',   accent: '#FBBF24', accentLight: '#D97706' },
 ];
+
+// Pre-redesign color ids stored in localStorage map onto the new palette.
+const LEGACY_KID_COLOR_IDS: Record<string, string> = {
+  ocean: 'cyan', sapphire: 'cyan', sky: 'cyan', teal: 'cyan',
+  grape: 'violet', mauve: 'violet', royal: 'violet',
+  berry: 'magenta', maroon: 'magenta', flamingo: 'magenta',
+  forest: 'lime', green: 'lime',
+  sunset: 'coral', peach: 'coral',
+  gold: 'amber',
+};
 
 // Legacy support - map to old format
 export const defaultKidColors = kidColorPalette.map((c) => ({
   name: c.name,
-  gradient: c.gradient,
-  hex: c.primary,
+  hex: c.accent,
 }));
 
-// Get kid color by ID
+// Get kid color by ID (accepts legacy ids)
 export function getKidColor(id: string): KidColor {
-  return kidColorPalette.find((c) => c.id === id) || kidColorPalette[0];
-}
-
-// Get gradient class for a kid color
-export function getKidGradient(id: string, isDark: boolean): string {
-  const color = getKidColor(id);
-  return isDark ? color.gradientDark : color.gradient;
+  const resolved = LEGACY_KID_COLOR_IDS[id] ?? id;
+  return kidColorPalette.find((c) => c.id === resolved) || kidColorPalette[0];
 }
 
 // Get kid color by index (for consistent assignment)
@@ -190,108 +128,108 @@ export function getKidColorFromId(kidId: string): KidColor {
   return kidColorPalette[index];
 }
 
-// Light theme colors - Modern Warm Minimal
+// Light variant — cool neutral, same accent system (derived from dark)
 export const lightTheme: ThemeColors = {
-  background: '#F0EDE8',     // Warm cream
-  surface: '#FFFFFF',        // White cards pop on cream
-  surfaceHover: '#F5F3EF',
+  background: '#F2F4F7',
+  surface: '#FFFFFF',
+  surfaceHover: '#F9FAFB',
 
   text: {
-    primary: '#1A1A1A',      // Near black (15:1 on cream)
-    secondary: '#4A4A4A',    // Dark gray (7.6:1 on cream)
-    muted: '#6B6B6B',        // Medium gray (4.5:1 on cream - AA minimum)
+    primary: '#101828',
+    secondary: '#475467',
+    muted: '#667085',
     inverse: '#FFFFFF',
   },
 
   primary: {
-    50: '#F0FDF4',
-    100: '#DCFCE7',
-    200: '#BBF7D0',
-    300: '#86EFAC',
-    400: '#6ED318',
-    500: '#58CC02',          // Feather Green - Main brand
-    600: '#4CAD02',          // Hover
-    700: '#3E8E01',          // Active
-    800: '#2D6A01',
-    900: '#1A4001',
+    50: '#E8F9FD',
+    100: '#C9F1FB',
+    200: '#93E3F6',
+    300: '#4FD0EE',
+    400: '#1FB6D9',
+    500: '#0891B2',
+    600: '#0E7490',
+    700: '#155E75',
+    800: '#164E63',
+    900: '#103B4C',
   },
 
   secondary: {
-    500: '#1CB0F6',          // Sky Blue
-    600: '#0E9FE3',
+    500: '#2E90FA',
+    600: '#1570EF',
   },
 
   status: {
-    pending: { bg: '#FFF3CD', border: '#FFD93D', text: '#856404' },
-    claimed: { bg: '#D1F4FF', border: '#1CB0F6', text: '#0C5A7D' },
-    approved: { bg: '#D4EDDA', border: '#58CC02', text: '#2E6B12' },
-    overdue: { bg: '#FFE5E5', border: '#FF4B4B', text: '#A02E2E' },
+    pending: { bg: '#FFFAEB', border: '#F79009', text: '#93540A' },
+    claimed: { bg: '#EFF8FF', border: '#2E90FA', text: '#175CD3' },
+    approved: { bg: '#ECFDF3', border: '#12B76A', text: '#067647' },
+    overdue: { bg: '#FEF3F2', border: '#F04438', text: '#B42318' },
   },
 
-  accent: '#FF9600',         // Warm Orange - Points, achievements
-  purple: '#CE82FF',
-  green: '#58CC02',          // Feather Green
-  red: '#FF4B4B',            // Berry Red
-  yellow: '#FFD93D',         // Gold
-  blue: '#1CB0F6',           // Sky Blue
-  celebration: '#FF4B4B',    // Berry Pink
+  accent: '#5C8A00',         // volt family (deepened for light)
+  purple: '#7C3AED',
+  green: '#12B76A',
+  red: '#E11D48',
+  yellow: '#F79009',
+  blue: '#2E90FA',
+  celebration: '#E11D48',
 
-  border: '#1A1A1A',         // Black borders
-  borderStrong: '#1A1A1A',
+  border: '#E4E7EC',
+  borderStrong: '#98A2B3',
 
-  shadow: '4px 4px 0 #1A1A1A',
+  shadow: '0 1px 3px rgba(16,24,40,0.08)',
 };
 
-// Dark theme colors - Electric Neon on Deep Dark
+// Dark — Midnight + Electric (the flagship theme)
 export const darkTheme: ThemeColors = {
-  background: '#0A0A0F',     // Deep OLED black
-  surface: '#141420',        // Cool-tinted dark surface
-  surfaceHover: '#1E1E2E',
+  background: '#0B0E14',
+  surface: '#141922',
+  surfaceHover: '#1B2230',
 
   text: {
-    primary: '#F5F5F5',      // High contrast (18:1)
-    secondary: '#C8C8D0',    // Muted (10:1)
-    muted: '#9494AC',        // Hints (~4.8:1 on bg-accent, WCAG AA)
-    inverse: '#0A0A0F',
+    primary: '#F4F6FB',
+    secondary: '#A7B0C0',
+    muted: '#8A93A6',
+    inverse: '#06121A',
   },
 
   primary: {
-    50: '#0A1F0A',
-    100: '#153015',
-    200: '#204520',
-    300: '#2B5F2B',
-    400: '#3DBB2E',
-    500: '#4ADE80',          // Tailwind green-400 — vibrant, no halation
-    600: '#48B84E',
-    700: '#3D9E42',
-    800: '#3E8E01',
-    900: '#2D6A01',
+    50: '#0C2530',
+    100: '#0E3240',
+    200: '#10465C',
+    300: '#14607C',
+    400: '#1FB6D9',
+    500: '#38E1FF',          // hero electric cyan
+    600: '#5FE8FF',
+    700: '#8FEFFF',
+    800: '#0E7490',
+    900: '#155E75',
   },
 
   secondary: {
-    500: '#38BDF8',          // Tailwind sky-400
-    600: '#1CB0F6',
+    500: '#60A5FA',
+    600: '#84CAFF',
   },
 
   status: {
-    pending: { bg: '#1A1A0A', border: '#FBBF24', text: '#FCD34D' },
-    claimed: { bg: '#0A1A2A', border: '#38BDF8', text: '#7DD3FC' },
-    approved: { bg: '#0A1F0A', border: '#4ADE80', text: '#86EFAC' },
-    overdue: { bg: '#2A0A0A', border: '#FB7185', text: '#FDA4AF' },
+    pending: { bg: '#201A0A', border: '#FBBF24', text: '#FCD34D' },
+    claimed: { bg: '#0E1A2E', border: '#60A5FA', text: '#93C5FD' },
+    approved: { bg: '#0A2018', border: '#34D399', text: '#6EE7B7' },
+    overdue: { bg: '#2A0E14', border: '#FB7185', text: '#FDA4AF' },
   },
 
-  accent: '#FB923C',         // Tailwind orange-400
-  purple: '#D8A8FF',
-  green: '#4ADE80',          // Tailwind green-400
-  red: '#FB7185',            // Tailwind rose-400
-  yellow: '#FFE066',
-  blue: '#38BDF8',           // Tailwind sky-400
-  celebration: '#FB7185',    // Tailwind rose-400
+  accent: '#B6F400',         // volt — points, rewards
+  purple: '#A78BFA',
+  green: '#34D399',
+  red: '#FB7185',
+  yellow: '#FBBF24',
+  blue: '#60A5FA',
+  celebration: '#FB7185',
 
-  border: '#3A8F5A',         // Muted forest green borders
-  borderStrong: '#F5F5F5',   // White for max visibility
+  border: '#262E3D',
+  borderStrong: '#A7B0C0',
 
-  shadow: '4px 4px 0 #3A8F5A',
+  shadow: '0 1px 3px rgba(0,0,0,0.30)',
 };
 
 // Color utility functions
