@@ -1,5 +1,9 @@
 /**
- * CategoryBadge - Display a chore category with icon and color
+ * CategoryBadge - Display a chore category with icon and color.
+ *
+ * Contrast rule (v0.10.1, axe-gated): the stored category color is decorative
+ * only — a tinted background and a color dot/border. TEXT always uses theme
+ * tokens; raw seeded hexes as text color measured 2–2.9:1 on the dark theme.
  */
 import type { ChoreCategory } from '../api/client';
 
@@ -30,13 +34,13 @@ export function CategoryBadge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full font-medium ${sizeClasses[size]}`}
+      className={`inline-flex items-center gap-1 rounded-full font-medium text-text-primary ${sizeClasses[size]}`}
       style={{
         backgroundColor: `${category.color}20`, // 20 = 12% opacity in hex
-        color: category.color,
+        border: `1px solid ${category.color}55`,
       }}
     >
-      <span className={iconSizes[size]}>{category.icon}</span>
+      <span className={iconSizes[size]} aria-hidden="true">{category.icon}</span>
       {showName && <span>{category.name}</span>}
     </span>
   );
@@ -70,17 +74,15 @@ export function CategoryFilter({
         <button
           key={category.id}
           onClick={() => onSelect(category.id)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1 ${
-            selected === category.id
-              ? ''
-              : 'hover:opacity-80'
+          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1 text-text-primary ${
+            selected === category.id ? '' : 'hover:opacity-80'
           }`}
           style={{
-            backgroundColor: selected === category.id ? category.color : `${category.color}20`,
-            color: selected === category.id ? 'var(--text-inverse)' : category.color,
+            backgroundColor: `${category.color}${selected === category.id ? '40' : '20'}`,
+            border: `1px solid ${category.color}${selected === category.id ? '' : '55'}`,
           }}
         >
-          <span>{category.icon}</span>
+          <span aria-hidden="true">{category.icon}</span>
           <span>{category.name}</span>
           {category.chore_count !== undefined && (
             <span className="opacity-70">({category.chore_count})</span>

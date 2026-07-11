@@ -108,6 +108,17 @@ everything non-essential (global kill-switch in index.css).
 Confident and warm, not babyish: "All done — nice." over "Yay!!! 🎉".
 Controls say exactly what happens ("Claim chore").
 
+## CSS architecture note — cascade layers
+
+Custom component classes (`.card`, `.btn*`, `.kid-card`, inputs, badges) are
+defined inside `@layer components` in `index.css` so Tailwind utilities (a
+later layer) can override them. **Never define a reusable component class
+outside a layer** — unlayered CSS silently beats every utility (`bg-*`,
+`text-*`) applied next to it; that's how v0.10.0 shipped an invisible
+white-on-white card. Text color must never come from stored/user data —
+category/kid colors are decorative (backgrounds, borders, dots); text uses
+theme tokens (axe `color-contrast` gates this in CI via `e2e/ui/contrast.spec.ts`).
+
 ## Accessibility
 
 - Text ramps annotated WCAG AA+ in index.css; verify any new pairing with

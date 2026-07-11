@@ -42,8 +42,8 @@ function RewardCard({
       transition={{ delay: index * 0.05 }}
     >
       <div className="flex items-start gap-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-accent-500 to-accent-400 rounded-lg border border-[var(--border-color)] flex items-center justify-center flex-shrink-0 shadow-sm">
-          <DynamicIcon icon={reward.icon || 'mdi:gift'} size={32} className="text-white" />
+        <div className="w-16 h-16 bg-bg-accent rounded-xl border border-border-primary flex items-center justify-center flex-shrink-0">
+          <DynamicIcon icon={reward.icon || 'mdi:gift'} size={32} className="text-accent-500" />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-lg text-text-primary" data-testid={`reward-name-${reward.id}`}>
@@ -111,7 +111,7 @@ function RewardCard({
                       >
                         <span>{kid.name}</span>
                         <div className="flex items-center gap-1 text-sm text-text-muted">
-                          <Star size={14} className="text-yellow-500" fill="currentColor" />
+                          <Star size={14} className="text-accent-500" fill="currentColor" />
                           {Math.floor(kid.points)}
                         </div>
                       </motion.button>

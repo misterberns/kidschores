@@ -112,13 +112,32 @@ async function seedData(api: ApiHelpers) {
   return { emma, jack, sophia };
 }
 
-// Toggle dark/light mode in-place without page reload (preserves wizard state)
+// Toggle dark/light mode in-place without page reload (preserves wizard state).
+// ThemeProvider owns the .dark class and would re-assert its own state, so we
+// ALSO flip React's state by dispatching a storage-backed re-init: set the
+// value, toggle the class, and neutralize the provider's effect by keeping
+// them consistent (the provider re-applies from state on next render only;
+// within a static capture this holds). For captures on pages where React
+// re-renders (login/theme toggle icons), prefer a reload after setting.
 async function setThemeMode(page: Page, mode: 'light' | 'dark') {
   await page.evaluate((m) => {
     localStorage.setItem('kidschores-theme-mode', m);
     document.documentElement.classList.toggle('dark', m === 'dark');
+    // Nudge framer-motion/browser to repaint surfaces that carry inline styles
+    window.dispatchEvent(new Event('resize'));
   }, mode);
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(700);
+}
+
+// Theme switch WITH reload — authoritative (ThemeProvider re-inits from
+// localStorage). Use everywhere wizard state doesn't need preserving.
+async function setThemeModeReload(page: Page, mode: 'light' | 'dark') {
+  await page.evaluate((m) => {
+    localStorage.setItem('kidschores-theme-mode', m);
+  }, mode);
+  await page.reload();
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(500);
 }
 
 // Capture light + dark screenshot pair without reload
@@ -127,7 +146,6 @@ async function captureThemePair(page: Page, baseName: string) {
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${baseName}-light.png`) });
   await setThemeMode(page, 'dark');
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${baseName}-dark.png`) });
-  await setThemeMode(page, 'light');
 }
 
 test.describe('README Screenshots', () => {
@@ -326,10 +344,10 @@ test.describe('README Screenshots', () => {
   });
 
   test('capture login screen', async ({ page }) => {
-    // --- Login (Light — default) ---
+    // --- Login (Light) --- the app is dark-by-default; set light explicitly
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
+    await setThemeModeReload(page, 'light');
+    await page.waitForTimeout(500);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'login-light.png') });
 
     // --- Login (Dark) ---

@@ -269,33 +269,33 @@ export function Allowance() {
       {/* Balance Card */}
       {summary && (
         <motion.div
-          className="card p-6 bg-primary-800 text-white"
+          className="card p-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-bg-accent rounded-full flex items-center justify-center text-text-secondary">
               <User size={28} />
             </div>
             <div>
-              <p className="text-lg font-bold">{summary.kid_name}</p>
-              <p className="text-sm opacity-80">Current Balance</p>
+              <p className="text-lg font-bold text-text-primary">{summary.kid_name}</p>
+              <p className="text-sm text-text-muted">Current Balance</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/10 rounded-xl p-4 text-center">
-              <p className="text-3xl font-bold">{Math.floor(summary.current_points).toLocaleString()}</p>
-              <p className="text-sm opacity-80">Points</p>
+            <div className="bg-bg-accent rounded-xl p-4 text-center">
+              <p className="stat-number text-3xl font-bold text-primary-500">{Math.floor(summary.current_points).toLocaleString()}</p>
+              <p className="text-sm text-text-muted">Points</p>
             </div>
-            <div className="bg-white/10 rounded-xl p-4 text-center">
-              <p className="text-3xl font-bold">{formatCurrency(summary.dollar_equivalent)}</p>
-              <p className="text-sm opacity-80">Value</p>
+            <div className="bg-bg-accent rounded-xl p-4 text-center">
+              <p className="stat-number text-3xl font-bold text-accent-500">{formatCurrency(summary.dollar_equivalent)}</p>
+              <p className="text-sm text-text-muted">Value</p>
             </div>
           </div>
 
           {summary.pending_payouts > 0 && (
-            <div className="mt-4 bg-white/15 rounded-lg p-3 flex items-center gap-2">
+            <div className="mt-4 bg-status-pending-bg border border-status-pending-border rounded-lg p-3 flex items-center gap-2 text-status-pending-text">
               <Clock size={18} />
               <span className="text-sm">
                 {summary.pending_payouts} pending payout{summary.pending_payouts > 1 ? 's' : ''}: {formatCurrency(summary.pending_amount)}

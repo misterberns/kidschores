@@ -34,6 +34,11 @@ PR that forgets one of them fails CI.
       (Run against the freshly-bumped test instance. The onboarding/login sets have
       their own test: `-g "capture onboarding screenshots"`. `screenshots/` must
       keep exactly 26 files — see CLAUDE.md.)
+      **Then EYEBALL EVERY recaptured image, both themes — never a sample.**
+      The v0.10.0 invisible-Allowance-card bug was IN allowance-light.png and
+      shipped because only 5 of 26 captures were reviewed. The axe
+      `ui/contrast.spec.ts` gate catches text-contrast programmatically, but
+      layout/visual regressions still need human eyes on all of them.
 
 ## 3. Ship
 

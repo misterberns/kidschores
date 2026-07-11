@@ -26,7 +26,7 @@
   /* Text hierarchy — ink on paper (WCAG AA+) */
   --text-primary: #101828;
   --text-secondary: #475467;
-  --text-muted: #667085;
+  --text-muted: #576070;
   --text-inverse: #FFFFFF;
 
   /* Primary — hero electric cyan (deepened for light bg contrast) */
@@ -34,10 +34,10 @@
   --primary-100: #C9F1FB;
   --primary-200: #93E3F6;
   --primary-300: #4FD0EE;
-  --primary-400: #1FB6D9;
-  --primary-500: #0891B2;      /* CTA on light */
-  --primary-600: #0E7490;      /* hover */
-  --primary-700: #155E75;      /* active */
+  --primary-400: #0891B2;
+  --primary-500: #0E7490;      /* CTA on light (AA for small text on white) */
+  --primary-600: #155E75;      /* hover */
+  --primary-700: #164E63;      /* active */
   --primary-800: #164E63;
   --primary-900: #103B4C;
 
@@ -56,10 +56,10 @@
   --accent-100: #E8F5C8;
   --accent-200: #D3EC94;
   --accent-300: #B5DC50;
-  --accent-400: #8AB919;
-  --accent-500: #5C8A00;       /* points + on light */
-  --accent-600: #4A7000;
-  --accent-700: #3A5800;
+  --accent-400: #5C8A00;
+  --accent-500: #4A7000;       /* points + on light (AA small text on white + tints) */
+  --accent-600: #3A5800;
+  --accent-700: #2E4600;
 
   /* Danger / celebration-critical */
   --celebration: #E11D48;
@@ -231,6 +231,7 @@
 .dark .kid-gold { --kid-accent: #FBBF24; --kid-accent-soft: rgba(251,191,36,.12); }
 
 /* Kid card — dark surface + accent edge (never a color block) */
+@layer components {
 .kid-card {
   background-color: var(--bg-elevated);
   border: 1px solid var(--border-color);
@@ -247,6 +248,7 @@
   background-color: var(--kid-accent-soft, var(--primary-50));
   color: var(--kid-accent, var(--primary-500));
   border: 1px solid color-mix(in srgb, var(--kid-accent, var(--primary-500)) 45%, transparent);
+}
 }
 
 /* ============================================
@@ -307,6 +309,11 @@ h2 {
 /* ============================================
    Component Classes
    ============================================ */
+
+/* Wrapped in @layer components so Tailwind utilities (a later layer)
+   can override them — unlayered CSS beats @layer utilities and caused the
+   invisible white-on-white Allowance card (v0.10.1). */
+@layer components {
 
 /* Card — neutral surface, hairline border, soft single-source shadow */
 .card {
@@ -461,6 +468,8 @@ h2 {
   outline: none;
   border-color: var(--primary-500);
   box-shadow: 0 0 0 3px var(--primary-50);
+}
+
 }
 
 /* ============================================

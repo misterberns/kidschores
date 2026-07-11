@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-07-11
+
+### Fixed
+- **Allowance balance card was invisible in light theme** (white text on a
+  white card). Root cause: custom component classes were unlayered CSS and
+  silently beat Tailwind utility overrides — all component classes now live
+  in `@layer components`, and the balance card uses the neutral design-system
+  treatment (accent numerals on a plain card)
+- Reward Shop restyled to the design system (flat volt CTAs with dark text,
+  neutral icon tiles) — it had kept the old green-gradient treatment
+- Light theme contrast tightened to WCAG AA: hero cyan and volt deepened for
+  small text, muted text darkened, category chips now use theme-token text
+  (stored category colors are decorative backgrounds/borders only)
+- Onboarding category cards had an undefined border variable (white borders
+  in dark mode)
+
+### Added
+- Automated color-contrast CI gate: axe-core scans Home/Allowance/Chores/
+  Rewards in both themes on every push (`e2e/ui/contrast.spec.ts`)
+
 ## [0.10.0] - 2026-07-11
 
 ### Changed — "Midnight + Electric" redesign
