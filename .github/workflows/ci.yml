@@ -63,6 +63,10 @@ jobs:
             backend/requirements.txt
             backend/requirements-dev.txt
 
+      - name: Version-surface consistency (docs/RELEASE.md section 1)
+        working-directory: .
+        run: bash scripts/check-version-consistency.sh
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt

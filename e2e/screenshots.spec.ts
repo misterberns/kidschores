@@ -68,6 +68,11 @@ async function seedData(api: ApiHelpers) {
     shared_chore: false, recurring_frequency: 'weekly', category_id: outdoor.id,
   });
 
+  // Approve one chore for Emma so gamification renders in screenshots
+  // (first_chore badge on her Home card; possibly early_bird too)
+  await api.claimChore(makeBed.id, emma.id);
+  await api.approveChore(makeBed.id, 'Mom');
+
   // Create some claims for approval queue
   await api.claimChore(cleanRoom.id, emma.id);
   await api.claimChore(doHomework.id, jack.id);
@@ -89,6 +94,16 @@ async function seedData(api: ApiHelpers) {
   await api.createReward({
     name: 'New Toy', description: 'Pick a small toy (up to $10)',
     icon: '\u{1F9F8}', cost: 200, eligible_kids: [], requires_approval: true,
+  });
+
+  // Active challenge — renders progress bars on the Chores page screenshots
+  const now = new Date();
+  const weekOut = new Date(now.getTime() + 7 * 24 * 3600 * 1000);
+  await api.createChallenge({
+    name: 'Point Sprint', description: 'Earn 100 points this week', icon: 'target',
+    target_type: 'points_earned', target_value: 100,
+    start_date: now.toISOString(), end_date: weekOut.toISOString(),
+    bonus_points: 50,
   });
 
   // Create parent

@@ -6,7 +6,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.8.0-green?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.9.0-green?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/misterberns/kidschores/actions/workflows/ci.yml"><img src="https://github.com/misterberns/kidschores/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square" alt="License">
 </p>
@@ -35,13 +36,16 @@
 - **Rewards** - Define rewards with point costs for kids to redeem
 - **Parent Approval** - Parents approve chore completions and reward redemptions
 - **Points System** - Flexible points with multipliers and adjustments
+- **Badges & Achievements** - Automatic awards (streaks, milestones, early bird, first reward) with full-screen unlock celebrations, push notifications, and rarity-ringed badge art; parents can create custom badges
+- **Challenges** - Time-boxed goals (chore count or points earned) with live progress bars, bonus-point and badge rewards
+- **Kid Avatars** - Per-kid emoji + color picker
 - **Google SSO** - Parents and kids sign in with Google (optional)
 - **Email Notifications** - Parents notified on chore claims and reward redemptions
 - **Seasonal Themes** - Halloween, Christmas, Easter, Summer, and default themes
 - **Mobile-Responsive** - Works on phones, tablets, and desktops
-- **Security** - JWT auth on all endpoints, rate limiting, bcrypt hashing, CORS restriction
+- **Security** - JWT auth (PyJWT) on all endpoints, rate limiting, bcrypt hashing, CORS restriction, unprivileged nginx, locked-down proxy trust
 - **Error Handling** - React error boundaries, global error handler, auto-toast notifications
-- **E2E Testing** - Playwright test suite (100+ tests: API, UI, accessibility, workflows)
+- **CI-Gated Testing** - 34 backend pytest tests + ~220 Playwright e2e tests (API, UI, accessibility, workflows) run on every push; Dependabot keeps dependencies fresh
 
 ## Screenshots
 
@@ -86,7 +90,7 @@
 
 - **Backend**: FastAPI + SQLAlchemy + SQLite
 - **Frontend**: React 19 + Vite + Tailwind CSS v4
-- **Deployment**: Docker multi-stage builds (backend: python:3.14-slim, frontend: nginx:1.27-alpine)
+- **Deployment**: Docker multi-stage builds (backend: `python:3.13-slim`, frontend: `nginxinc/nginx-unprivileged:1.31-alpine` — both containers run as non-root)
 
 ## Quick Start
 
@@ -107,7 +111,7 @@
 
 3. Access at `http://localhost:3103`
 
-The frontend (nginx) automatically proxies `/api` requests to the backend. The backend runs as a non-root `kidschores` user. Data is persisted in `./data/` (SQLite database).
+The frontend (unprivileged nginx, listening on container port 8080) automatically proxies `/api` requests to the backend. Both containers run as non-root users. Data is persisted in `./data/` (SQLite database).
 
 ```bash
 docker compose down          # Stop (data persists in ./data/)
@@ -123,7 +127,7 @@ services:
     build: ./frontend
     container_name: kidschores-ui
     ports:
-      - "3103:80"
+      - "3103:8080"   # unprivileged nginx listens on 8080 inside the container
     depends_on:
       - backend
     restart: unless-stopped
@@ -175,7 +179,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development setup instructio
 | `APP_BASE_URL` | No | `http://localhost:3103` | Base URL for email links (password reset, invitations) |
 | `TZ` | No | `America/Chicago` | Timezone |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | `1440` | JWT access token TTL (24h) |
-| `REFRESH_TOKEN_EXPIRE_DAYS` | No | `30` | JWT refresh token TTL |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | No | `14` | JWT refresh token TTL |
+| `FORWARDED_ALLOW_IPS` | No | `127.0.0.1` | IPs/CIDRs uvicorn trusts for `X-Forwarded-*` headers (set to your Docker network ranges when behind a proxy; fail-closed by default) |
+| `SENTRY_DSN` | No | — | Enables Sentry error reporting (dormant when unset) |
+| `LOG_FORMAT` | No | — | Set to `json` for structured log lines |
 | `GOOGLE_CLIENT_ID` | No | — | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | No | — | Google OAuth client secret |
 | `GOOGLE_REDIRECT_URI` | No | `http://localhost:3103/auth/google/callback` | OAuth redirect URI |
@@ -193,6 +200,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development setup instructio
 |----------|----------|------|-------------|
 | `VITE_GOOGLE_CLIENT_ID` | No | `frontend/.env.production` | Google OAuth client ID (must match backend `GOOGLE_CLIENT_ID`) |
 | `VITE_GOOGLE_REDIRECT_ORIGIN` | No | `frontend/.env.production` | Base URL for OAuth redirect (e.g., `http://localhost:3103`) |
+| `VITE_SENTRY_DSN` | No | `frontend/.env.production` | Enables frontend Sentry error reporting (the SDK is only loaded when set) |
 
 > **Important:** Frontend vars are baked into the image at build time by Vite. They must be set in `frontend/.env.production` before building — they are NOT read from the root `.env` file.
 
@@ -234,28 +242,33 @@ docker compose up -d --build
 
 ## API Documentation
 
-Once running, access the interactive API docs at:
-- Swagger UI: `http://localhost:3103/api/docs`
-- ReDoc: `http://localhost:3103/api/redoc`
+Interactive API docs are served by the backend directly (they are not proxied
+through the Docker frontend). With the backend running locally
+(`uvicorn app.main:app --reload --port 8000`):
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
 
 ## Architecture
 
 ```
 kidschores/
 ├── backend/                 # FastAPI application
-│   ├── Dockerfile           # Multi-stage: python:3.13-slim
+│   ├── Dockerfile           # Multi-stage: python:3.13-slim (non-root)
 │   ├── .dockerignore
 │   ├── requirements.txt
+│   ├── requirements-dev.txt # pytest + dev tooling
+│   ├── tests/               # Backend pytest suite (authz, tokens, points, gamification)
 │   └── app/
 │       ├── main.py          # FastAPI entry point
 │       ├── config.py        # Settings (env vars via pydantic-settings)
 │       ├── database.py      # SQLAlchemy setup
 │       ├── models.py        # Database models
 │       ├── schemas.py       # Pydantic schemas
-│       ├── routers/         # API endpoints (auth, kids, chores, rewards)
-│       └── services/        # Business logic (email, etc.)
+│       ├── observability.py # Request-ID middleware, JSON logging, optional Sentry
+│       ├── routers/         # API endpoints (auth, kids, chores, rewards, badges, challenges, ...)
+│       └── services/        # Business logic (email, gamification, push, etc.)
 ├── frontend/                # React application
-│   ├── Dockerfile           # Multi-stage: node:22-alpine → nginx:1.27-alpine
+│   ├── Dockerfile           # Multi-stage: node:26-alpine → nginx-unprivileged:1.31-alpine (:8080)
 │   ├── .dockerignore
 │   ├── nginx.conf           # Nginx config (serves static + proxies /api)
 │   ├── package.json
@@ -263,7 +276,7 @@ kidschores/
 │       ├── api/             # API client (axios)
 │       ├── auth/            # Auth context + Google callback
 │       ├── pages/           # Page components
-│       ├── components/      # Shared components
+│       ├── components/      # Shared components (ui/ primitives, gamification/, celebrations/)
 │       └── theme/           # Colors, seasonal themes
 ├── e2e/                     # Playwright end-to-end tests
 │   ├── api/                 # API tests (CRUD, security)
@@ -271,7 +284,11 @@ kidschores/
 │   ├── fixtures/            # Shared test fixtures and auth helpers
 │   └── pages/               # Page Object Models
 ├── scripts/
-│   └── kc-build.sh          # Build + push to container registry
+│   ├── kc-build.sh          # Build + push to container registry
+│   └── check-version-consistency.sh  # CI gate: all version surfaces must match
+├── .github/
+│   ├── workflows/ci.yml     # CI: frontend checks, backend pytest, full e2e stack
+│   └── dependabot.yml       # Weekly dependency updates (npm, pip, actions, docker)
 ├── docker-compose.yml       # Standalone deployment (builds locally)
 ├── .env.example             # Environment variable template
 ├── CHANGELOG.md             # Version history
@@ -295,8 +312,9 @@ The original KidsChores-HA is an excellent Home Assistant integration with:
 - Calendar integration and custom scheduling
 - Built-in user access control
 
-This standalone fork extracts the core chore/reward functionality into a
-self-contained web app that runs independently of Home Assistant.
+This standalone fork reimplements the core chore/reward functionality — and,
+as of v0.9.0, its own badges & challenges engine — as a self-contained web app
+that runs independently of Home Assistant.
 
 ## License
 
@@ -311,4 +329,4 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ## Version
 
-Current version: **0.8.0** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.9.0** (see [CHANGELOG.md](CHANGELOG.md) for history)
