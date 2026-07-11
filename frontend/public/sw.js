@@ -26,8 +26,8 @@ sw.addEventListener('push', (event) => {
   let data = {
     title: 'KidsChores',
     body: 'You have a new notification!',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     tag: 'default',
     data: {},
     url: '/',

@@ -55,16 +55,20 @@ Maintain padding equal to the icon height on all sides. Do not place other eleme
 | Sky Blue | `#1CB0F6` | `--secondary-500` |
 | Warm Orange | `#FF9600` | `--accent-500` |
 
-### Dark Mode Palette (Electric Neon)
+### Dark Mode Palette (Softened Vibrant)
+
+*(Supersedes the retired "Electric Neon" dark theme — the shipped dark mode
+uses softened Tailwind-400 values: vibrant, no halation.)*
 
 | Name | Hex | CSS Variable |
 |------|-----|-------------|
 | OLED Black | `#0A0A0F` | `--bg-base` |
 | Cool Surface | `#141420` | `--bg-surface` |
-| Neon Green | `#39FF14` | `--primary-500`, `--border-color` |
-| Electric Cyan | `#00D4FF` | `--secondary-500` |
-| Neon Orange | `#FF6B35` | `--accent-500` |
-| Electric Pink | `#FF2D55` | `--celebration` |
+| Cool Border | `#2A2A3A` | `--border-color` |
+| Soft Green | `#4ADE80` | `--primary-500` |
+| Soft Sky | `#38BDF8` | `--secondary-500` |
+| Soft Orange | `#FB923C` | `--accent-500` |
+| Soft Rose | `#FB7185` | `--celebration` |
 
 ### Kid Colors (8 Vibrant Gradients)
 
@@ -79,10 +83,12 @@ Maintain padding equal to the icon height on all sides. Do not place other eleme
 
 ### Dark Mode Adjustments
 
-In dark mode, brand colors shift to electric neon for maximum contrast:
-- Feather Green: `#58CC02` -> `#39FF14` (neon green)
-- Sky Blue: `#1CB0F6` -> `#00D4FF` (electric cyan)
-- Orange: `#FF9600` -> `#FF6B35` (neon orange)
+In dark mode, brand colors soften to Tailwind-400 values — still vibrant,
+but without halation on OLED black:
+- Feather Green: `#58CC02` -> `#4ADE80` (soft green)
+- Sky Blue: `#1CB0F6` -> `#38BDF8` (soft sky)
+- Orange: `#FF9600` -> `#FB923C` (soft orange)
+- Berry: `#FF4B4B` -> `#FB7185` (soft rose)
 
 ## Typography
 

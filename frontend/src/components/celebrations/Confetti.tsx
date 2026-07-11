@@ -19,16 +19,17 @@ interface ConfettiProps {
   colors?: string[];
 }
 
-// Celebration colors - bold, saturated
+// Celebration colors - brand + kid palette (BRAND-GUIDELINES.md; the old
+// neon set was a leftover of the retired "Electric Neon" dark theme)
 const defaultColors = [
-  '#39FF14', // Neon Lime
-  '#00D4FF', // Electric Blue
-  '#FF6B35', // Hot Orange
-  '#FF2D55', // Neon Red
-  '#BF5FFF', // UV Purple
-  '#00FFD5', // Toxic Teal
-  '#FF1493', // Hot Pink
-  '#FFD700', // Electric Gold
+  '#58CC02', // Feather Green (brand primary)
+  '#1CB0F6', // Sky Blue (brand secondary)
+  '#FF9600', // Warm Orange (brand accent)
+  '#FF4B4B', // Berry (celebration)
+  '#A36DD5', // Grape (kid palette)
+  '#2DB8A6', // Teal (kid palette)
+  '#E066A8', // Coral (kid palette)
+  '#F0C030', // Gold (kid palette)
 ];
 
 // Seasonal confetti color palettes
