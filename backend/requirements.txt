@@ -16,7 +16,7 @@ bcrypt~=4.2.0  # used directly; passlib removed (was an unused leftover)
 # Observability (dormant unless SENTRY_DSN is set)
 sentry-sdk[fastapi]~=2.20
 httpx~=0.28.0
-python-dotenv~=1.0.1
+python-dotenv~=1.2.2
 
 # Background Jobs
 apscheduler~=3.10.4
