@@ -63,26 +63,36 @@ export class HomePage {
 
   /**
    * Get the points displayed for a kid
-   * Note: AnimatedPoints uses spring animation, so we need to wait for it to settle
+   * Note: AnimatedPoints uses a spring count-up animation. A fixed sleep races
+   * the animation duration (framer-motion timing shifts between versions made
+   * an 800ms sleep read 99-of-100), so poll until the displayed value is
+   * stable across two consecutive reads instead.
    */
   async getKidPoints(name: string): Promise<number> {
     const card = this.getKidCard(name);
     await expect(card).toBeVisible();
 
-    // Wait for spring animation to settle (restDelta: 0.01 means ~500ms for most values)
-    await this.page.waitForTimeout(800);
+    const read = async (): Promise<number> => {
+      // Look for the points element using data-testid first
+      const pointsElement = card.locator('[data-testid^="kid-points-"], span.text-5xl.font-bold, span.text-4xl.font-bold').first();
+      if (await pointsElement.count() > 0) {
+        const pointsText = await pointsElement.textContent();
+        return parseInt(pointsText || '0', 10);
+      }
+      // Fallback: look for any number followed by "points"
+      const cardText = await card.textContent();
+      const match = cardText?.match(/(\d+)\s*points/i);
+      return match ? parseInt(match[1], 10) : 0;
+    };
 
-    // Look for the points element using data-testid first
-    const pointsElement = card.locator('[data-testid^="kid-points-"], span.text-5xl.font-bold, span.text-4xl.font-bold').first();
-    if (await pointsElement.count() > 0) {
-      const pointsText = await pointsElement.textContent();
-      return parseInt(pointsText || '0', 10);
+    let prev = await read();
+    for (let i = 0; i < 20; i++) {
+      await this.page.waitForTimeout(300);
+      const cur = await read();
+      if (cur === prev) return cur; // settled: identical across 300ms
+      prev = cur;
     }
-
-    // Fallback: look for any number followed by "points"
-    const cardText = await card.textContent();
-    const match = cardText?.match(/(\d+)\s*points/i);
-    return match ? parseInt(match[1], 10) : 0;
+    return prev; // 6s ceiling — return the last read rather than hang
   }
 
   /**
