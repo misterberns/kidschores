@@ -11,7 +11,7 @@ python-multipart~=0.0.19
 
 # Authentication
 pyjwt~=2.10  # replaced unmaintained python-jose (CVE-2024-33663/33664)
-bcrypt~=4.2.0  # used directly; passlib removed (was an unused leftover)
+bcrypt~=5.0.0  # used directly; passlib removed (was an unused leftover)
 
 # Observability (dormant unless SENTRY_DSN is set)
 sentry-sdk[fastapi]~=2.20
