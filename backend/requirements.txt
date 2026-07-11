@@ -2,7 +2,7 @@
 # Pinned with compatible-release (~=) for reproducible builds
 # that still resolve pre-built wheels for Python 3.14
 fastapi~=0.115.0
-uvicorn[standard]~=0.30.0
+uvicorn[standard]~=0.35.0  # >=0.33 for IP-network FORWARDED_ALLOW_IPS
 sqlalchemy~=2.0.36
 pydantic~=2.11.0
 pydantic[email]~=2.11.0
@@ -10,9 +10,11 @@ pydantic-settings~=2.7.0
 python-multipart~=0.0.19
 
 # Authentication
-python-jose[cryptography]~=3.3.0
-passlib[bcrypt]~=1.7.4
-bcrypt~=4.2.0
+pyjwt~=2.10  # replaced unmaintained python-jose (CVE-2024-33663/33664)
+bcrypt~=4.2.0  # used directly; passlib removed (was an unused leftover)
+
+# Observability (dormant unless SENTRY_DSN is set)
+sentry-sdk[fastapi]~=2.20
 httpx~=0.28.0
 python-dotenv~=1.0.1
 

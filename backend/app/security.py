@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 
 import bcrypt
-from jose import JWTError, jwt
+import jwt  # PyJWT (replaced unmaintained python-jose - CVE-2024-33663/33664)
 
 from .config import settings
 
@@ -86,7 +86,7 @@ def decode_token(token: str) -> Optional[dict]:
             algorithms=[settings.jwt_algorithm]
         )
         return payload
-    except JWTError:
+    except jwt.PyJWTError:
         return None
 
 
@@ -126,5 +126,5 @@ def generate_reset_token() -> Tuple[str, str]:
 
 
 def verify_reset_token(plain_token: str, token_hash: str) -> bool:
-    """Verify a password reset token against its stored hash."""
-    return hashlib.sha256(plain_token.encode()).hexdigest() == token_hash
+    """Verify a password reset token against its stored hash (constant-time)."""
+    return secrets.compare_digest(hashlib.sha256(plain_token.encode()).hexdigest(), token_hash)

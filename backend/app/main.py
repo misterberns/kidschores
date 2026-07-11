@@ -7,12 +7,18 @@ from contextlib import asynccontextmanager
 
 from .config import settings
 from .database import init_db, ensure_indexes
+from .observability import RequestIdMiddleware, configure_logging, init_sentry
 from .routers import kids, chores, rewards, parents, approvals, auth, api_tokens, notifications, categories, allowance, history
 from .scheduler import start_scheduler, shutdown_scheduler
 
-# Configure logging
+# Configure logging (LOG_FORMAT=json switches to structured lines)
 logging.basicConfig(level=logging.INFO)
+configure_logging()
 logger = logging.getLogger(__name__)
+
+# Sentry ships dormant — activates only when SENTRY_DSN is set
+if init_sentry():
+    logger.info("Sentry error reporting enabled")
 
 
 @asynccontextmanager
@@ -54,6 +60,9 @@ app = FastAPI(
     lifespan=lifespan,
     redirect_slashes=False,  # Prevent 307 redirects for /api/kids vs /api/kids/
 )
+
+# Request-ID middleware (accepts/echoes X-Request-ID, one access line per request)
+app.add_middleware(RequestIdMiddleware)
 
 # CORS middleware for frontend
 _cors_origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
