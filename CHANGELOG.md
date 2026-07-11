@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-07-11
+
+Design-system repair release from the July 2026 UX review (`docs/UX-REVIEW-2026-07.md`), plus the project's first CI pipeline.
+
+### Fixed
+- **Card shadows render again.** The `shadow-card`/`shadow-sm/md/lg` utilities pointed at CSS variables that never existed, so cards across ~20 screens (Home kid cards, kid picker, rewards, level badges) silently rendered flat. They now use the real theme-aware shadow tokens.
+- **Allowance and Notification Settings inputs are styled again.** The `.input` and `.btn-outline` classes used by those pages were never defined, leaving browser-default form controls; both are now proper themed components.
+- **Error/destructive states show their color again.** The `error-*` color scale referenced across 12 files (login error banner, destructive hovers, negative point changes) was missing from the Tailwind config.
+- **Help-page accordion dividers are visible again** (undefined border token).
+- **Push-notification icons display correctly** (the service worker referenced icon paths that never existed).
+- **Confetti uses the brand palette** instead of leftover colors from the retired neon dark theme.
+
+### Added
+- **Continuous integration**: every push and pull request now runs frontend lint, typecheck, build, and unit tests plus a backend startup check (GitHub Actions).
+
+### Internal
+- Unit tests run again on Node 25+ (Web Storage API conflict with the jsdom test environment; the theme test suite was silently failing).
+- Brand guidelines reconciled with the shipped dark-mode palette; dropped a declared-but-never-loaded font.
+
 ## [0.8.0] - 2026-07-05
 
 Security & hardening release from a full security / data-integrity / UX audit.
