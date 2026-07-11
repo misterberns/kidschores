@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-11
+
+Gamification release: the badges & challenges engine — plus the security-hardening and full test infrastructure that landed since 0.8.2.
+
+### Added
+- **Badges!** Kids now earn achievement badges automatically: First Steps, streak badges (3/7/30 days), Early Bird (chore before 8 AM), Team Player (10 shared chores), Goal Crusher (1000 points), Champion (first reward), Legend (2500 points) — with a full-screen confetti celebration on the kid's device when a new badge unlocks, badge push notifications, and real badge art (with rarity rings) on the Home cards. Parents can also create custom badges and grant any badge manually.
+- **Challenges!** Parents start time-boxed goals from templates (Weekend Warrior, Point Sprint, Perfect Week) in the new Parent → Challenges tab; kids see live progress bars on their Chores page; finishing awards bonus points and sometimes a badge — exactly once.
+- **Continuous integration got teeth**: every change now runs a 34-test backend suite and the full ~220-test end-to-end suite against a real stack before it can merge; dependency updates arrive automatically via Dependabot.
+
+### Security & infrastructure
+- Replaced an unmaintained JWT library (python-jose, 2 CVEs) with PyJWT; removed an unused password-hashing dependency.
+- Google sign-in now requires a verified email and validates the token audience.
+- The web server runs unprivileged (non-root nginx); proxy-header trust is locked down (no more trust-everything); refresh tokens live 14 days instead of 30.
+- Error monitoring hooks (Sentry) ship ready to activate; every API response carries a request ID for troubleshooting.
+
 ## [0.8.2] - 2026-07-11
 
 UI polish release from the July 2026 UX review (P1 pass, `docs/UX-REVIEW-2026-07.md` §4). Same features, noticeably more consistent and accessible.
