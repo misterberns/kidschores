@@ -17,6 +17,6 @@
     "@faker-js/faker": "^9.0.0",
     "@types/node": "^22.0.0",
     "typescript": "^5.9.0",
-    "dotenv": "^16.4.0"
+    "dotenv": "^17.4.2"
   }
 }
