@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Sun, Moon, Monitor, ChevronDown } from 'lucide-react';
 import { useTheme, type ThemeMode } from './ThemeContext';
 import { seasonalThemes, type SeasonalTheme } from './seasonal';
@@ -6,6 +6,20 @@ import { seasonalThemes, type SeasonalTheme } from './seasonal';
 export function ThemeToggle() {
   const { mode, setMode, isDark, seasonal, setSeasonal } = useTheme();
   const [showMenu, setShowMenu] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  // Escape closes the menu and returns focus to the toggle
+  useEffect(() => {
+    if (!showMenu) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowMenu(false);
+        toggleRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [showMenu]);
 
   const modeOptions: { value: ThemeMode; label: string; Icon: typeof Sun }[] = [
     { value: 'light', label: 'Light', Icon: Sun },
@@ -29,13 +43,18 @@ export function ThemeToggle() {
     <div className="relative">
       {/* Toggle Button */}
       <button
+        ref={toggleRef}
         data-testid="theme-toggle-btn"
         onClick={() => setShowMenu(!showMenu)}
+        aria-label="Theme settings"
+        aria-haspopup="menu"
+        aria-expanded={showMenu}
         className={`
           flex items-center gap-1.5 px-3 py-2 rounded-xl
           transition-all duration-200
           bg-bg-elevated hover:bg-bg-accent text-text-primary
           border border-bg-accent shadow-sm
+          focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40
         `}
         title="Theme settings"
       >
@@ -58,6 +77,8 @@ export function ThemeToggle() {
           {/* Menu */}
           <div
             data-testid="theme-menu"
+            role="menu"
+            aria-label="Theme settings"
             className="absolute right-0 top-full mt-2 z-50 rounded-2xl shadow-xl p-4 min-w-[240px] border fade-in border-bg-accent text-text-primary"
             style={{ backgroundColor: 'var(--bg-surface)' }}
           >

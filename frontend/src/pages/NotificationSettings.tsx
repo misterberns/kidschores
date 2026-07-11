@@ -3,10 +3,11 @@
  */
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bell, BellOff, Send, Loader2, Check, AlertCircle, Smartphone } from 'lucide-react';
+import { Bell, BellOff, Send, Check, AlertCircle, Smartphone } from 'lucide-react';
 import { kidsApi } from '../api/client';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { useToast } from '../hooks/useToast';
+import { Button } from '../components/ui';
 
 export default function NotificationSettings() {
   const toast = useToast();
@@ -75,7 +76,7 @@ export default function NotificationSettings() {
 
     if (permission === 'denied') {
       return (
-        <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+        <div className="flex items-center gap-2 text-error-500 dark:text-error-400">
           <BellOff size={20} />
           <span>Notifications blocked. Please enable them in your browser settings.</span>
         </div>
@@ -92,7 +93,7 @@ export default function NotificationSettings() {
     }
 
     return (
-      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+      <div className="flex items-center gap-2 text-text-secondary">
         <Bell size={20} />
         <span>Push notifications are not enabled</span>
       </div>
@@ -113,12 +114,12 @@ export default function NotificationSettings() {
           Push Notifications
         </h2>
 
-        <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <div className="p-4 bg-bg-accent/40 rounded-lg">
           {renderPermissionStatus()}
         </div>
 
         {pushError && (
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
+          <div className="p-4 bg-error-100 dark:bg-error-900 text-error-700 dark:text-error-400 rounded-lg">
             {pushError}
           </div>
         )}
@@ -126,7 +127,7 @@ export default function NotificationSettings() {
         {/* Kid Selection for Kid-specific notifications */}
         {isSupported && !isSubscribed && (
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="block text-sm font-medium text-text-secondary">
               Subscribe as (optional):
             </label>
             <select
@@ -147,53 +148,34 @@ export default function NotificationSettings() {
         {/* Action Buttons */}
         <div className="flex gap-3">
           {isSupported && !isSubscribed && permission !== 'denied' && (
-            <button
-              onClick={handleSubscribe}
-              disabled={pushLoading}
-              className="btn btn-primary flex items-center gap-2"
-            >
-              {pushLoading ? (
-                <Loader2 className="animate-spin" size={18} />
-              ) : (
-                <Bell size={18} />
-              )}
+            <Button onClick={handleSubscribe} disabled={pushLoading} loading={pushLoading}>
+              {!pushLoading && <Bell size={18} />}
               Enable Push Notifications
-            </button>
+            </Button>
           )}
 
           {isSubscribed && (
             <>
-              <button
-                onClick={handleUnsubscribe}
-                disabled={pushLoading}
-                className="btn btn-secondary flex items-center gap-2"
-              >
-                {pushLoading ? (
-                  <Loader2 className="animate-spin" size={18} />
-                ) : (
-                  <BellOff size={18} />
-                )}
+              <Button variant="secondary" onClick={handleUnsubscribe} disabled={pushLoading} loading={pushLoading}>
+                {!pushLoading && <BellOff size={18} />}
                 Disable
-              </button>
+              </Button>
 
-              <button
-                onClick={handleSendTest}
-                className="btn btn-outline flex items-center gap-2"
-              >
+              <Button variant="outline" onClick={handleSendTest}>
                 <Send size={18} />
                 Send Test
-              </button>
+              </Button>
             </>
           )}
         </div>
       </div>
 
       {/* Information Card */}
-      <div className="card p-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-        <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+      <div className="card p-6 bg-secondary-500/10 border-secondary-500/30">
+        <h3 className="font-semibold text-secondary-600 dark:text-secondary-400 mb-2">
           About Push Notifications
         </h3>
-        <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
+        <ul className="text-sm text-text-secondary space-y-1 list-disc list-inside">
           <li>Parents receive notifications when kids claim chores</li>
           <li>Kids receive notifications when their chores are approved</li>
           <li>Streak milestone celebrations are sent as notifications</li>
@@ -205,21 +187,21 @@ export default function NotificationSettings() {
       <div className="card p-6">
         <h3 className="font-semibold mb-3">How it works</h3>
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <div className="text-center p-4 bg-bg-accent/40 rounded-lg">
             <div className="text-3xl mb-2">1</div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-text-secondary">
               Click "Enable" to subscribe to notifications
             </p>
           </div>
-          <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <div className="text-center p-4 bg-bg-accent/40 rounded-lg">
             <div className="text-3xl mb-2">2</div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-text-secondary">
               Allow notifications when your browser asks
             </p>
           </div>
-          <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <div className="text-center p-4 bg-bg-accent/40 rounded-lg">
             <div className="text-3xl mb-2">3</div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-text-secondary">
               Receive instant updates about chores
             </p>
           </div>

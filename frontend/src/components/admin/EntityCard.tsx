@@ -21,14 +21,16 @@ export function EntityCard({
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
             onClick={onEdit}
-            className="p-2 rounded-lg text-primary-500 hover:bg-bg-accent transition-colors"
+            aria-label="Edit"
+            className="p-2 rounded-lg text-primary-500 hover:bg-bg-accent transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40"
             title="Edit"
           >
             <Pencil size={18} />
           </button>
           <button
             onClick={onDelete}
-            className="p-2 rounded-lg text-status-overdue-text hover:bg-status-overdue-bg transition-colors"
+            aria-label="Delete"
+            className="p-2 rounded-lg text-status-overdue-text hover:bg-status-overdue-bg transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40"
             title="Delete"
           >
             <Trash2 size={18} />

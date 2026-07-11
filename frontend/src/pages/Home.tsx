@@ -25,8 +25,9 @@ const seasonalGreetings: Record<SeasonalTheme, string> = {
 };
 
 function KidCard({ kid, index }: { kid: Kid; index: number }) {
-  const { getKidColor } = useTheme();
+  const { getKidColor, getKidEmoji } = useTheme();
   const kidColor = getKidColor(kid.id, kid.name);
+  const kidEmoji = getKidEmoji(kid.id);
   const prefersReducedMotion = useReducedMotion();
 
   const cardMotionProps = prefersReducedMotion
@@ -44,9 +45,19 @@ function KidCard({ kid, index }: { kid: Kid; index: number }) {
   return (
     <motion.div
       data-testid={`kid-card-${kid.id}`}
-      className={`bg-gradient-to-br ${kidColor.gradient} rounded-md border border-[var(--border-color)] p-6 text-white shadow-card`}
+      className={`relative isolate overflow-hidden bg-gradient-to-br ${kidColor.gradient} rounded-2xl border border-black/10 p-6 text-white shadow-card hover:shadow-card-hover transition-shadow`}
       {...cardMotionProps}
     >
+      {/* Layered depth: soft radial highlight top-left, gentle darkening bottom.
+          -z-10 + isolate paints it above the gradient but below all content. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 rounded-2xl"
+        style={{
+          background:
+            'radial-gradient(120% 80% at 15% 0%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 55%), linear-gradient(to bottom, rgba(0,0,0,0) 55%, rgba(0,0,0,0.10) 100%)',
+        }}
+      />
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <motion.h2
@@ -72,18 +83,19 @@ function KidCard({ kid, index }: { kid: Kid; index: number }) {
           </motion.div>
         </div>
         <motion.div
-          className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"
+          className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl"
           initial={prefersReducedMotion ? false : { scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: index * 0.1 + 0.2, type: 'spring', stiffness: 400 }}
         >
-          <User size={24} />
+          {kidEmoji ? <span aria-hidden="true">{kidEmoji}</span> : <User size={24} />}
         </motion.div>
       </div>
 
-      {/* Points Display */}
+      {/* Points Display — black/15 (not white/20) so the white text keeps
+          contrast on the lighter kid gradients (gold/teal) */}
       <motion.div
-        className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-4"
+        className="bg-black/15 backdrop-blur-sm rounded-xl p-4 mb-4"
         initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.1 + 0.15 }}
@@ -217,7 +229,7 @@ export function Home() {
       </motion.div>
 
       <motion.div
-        className="grid gap-6"
+        className={`grid gap-6 md:items-start ${kids.length > 1 ? 'md:grid-cols-2' : 'md:max-w-xl md:mx-auto'}`}
         variants={prefersReducedMotion ? undefined : staggerContainer}
         initial={prefersReducedMotion ? false : 'hidden'}
         animate="visible"

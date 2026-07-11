@@ -28,6 +28,10 @@ interface ThemeContextValue {
   kidColors: Record<string, KidColorValue>;
   setKidColor: (kidId: string, colorId: string) => void;
   getKidColor: (kidId: string, kidName: string) => KidColorValue;
+
+  // Kid emoji avatars (per-kid, per-device — same persistence model as colors)
+  setKidEmoji: (kidId: string, emoji: string) => void;
+  getKidEmoji: (kidId: string) => string | undefined;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -36,6 +40,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 const THEME_MODE_KEY = 'kidschores-theme-mode';
 const SEASONAL_KEY = 'kidschores-seasonal-theme';
 const KID_COLORS_KEY = 'kidschores-kid-colors';
+const KID_EMOJIS_KEY = 'kidschores-kid-emojis';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   // Initialize from localStorage or defaults
@@ -62,6 +67,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [kidColorMap, setKidColorMap] = useState<Record<string, string>>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(KID_COLORS_KEY);
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch {
+          return {};
+        }
+      }
+    }
+    return {};
+  });
+
+  const [kidEmojiMap, setKidEmojiMap] = useState<Record<string, string>>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(KID_EMOJIS_KEY);
       if (stored) {
         try {
           return JSON.parse(stored);
@@ -122,6 +141,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(KID_COLORS_KEY, JSON.stringify(newColors));
   };
 
+  const setKidEmoji = (kidId: string, emoji: string) => {
+    const newEmojis = { ...kidEmojiMap };
+    if (emoji) {
+      newEmojis[kidId] = emoji;
+    } else {
+      delete newEmojis[kidId];
+    }
+    setKidEmojiMap(newEmojis);
+    localStorage.setItem(KID_EMOJIS_KEY, JSON.stringify(newEmojis));
+  };
+
+  const getKidEmoji = (kidId: string): string | undefined => kidEmojiMap[kidId];
+
   const getKidColor = (kidId: string, _kidName: string): KidColorValue => {
     // If kid has a custom color, use it
     if (kidId in kidColorMap) {
@@ -172,6 +204,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     ),
     setKidColor,
     getKidColor,
+    setKidEmoji,
+    getKidEmoji,
   };
 
   return (

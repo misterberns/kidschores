@@ -12,6 +12,7 @@ import { PointsEarned } from '../components/celebrations/PointsEarned';
 import { ConfettiBurst } from '../components/celebrations/Confetti';
 import { useToast } from '../hooks/useToast';
 import { CategoryBadge, CategoryFilter } from '../components/CategoryBadge';
+import { Tab, TabList } from '../components/ui';
 
 type ChoreStatusType = 'pending' | 'claimed' | 'approved' | 'overdue' | 'expired';
 
@@ -399,61 +400,27 @@ export function Chores() {
         </h2>
 
         {/* View Toggle */}
-        <div className="flex items-center gap-2" role="tablist" aria-label="View mode">
-          <motion.button
-            role="tab"
-            aria-selected={viewMode === 'today'}
-            onClick={() => setViewMode('today')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border-2 ${
-              viewMode === 'today'
-                ? 'bg-primary-500 border-primary-500 text-text-inverse'
-                : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
-            }`}
-            whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
-            whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
-          >
+        <TabList label="View mode" className="pb-0">
+          <Tab shape="soft" selected={viewMode === 'today'} onClick={() => setViewMode('today')}>
             <Calendar size={16} />
             Today
-          </motion.button>
-          <motion.button
-            role="tab"
-            aria-selected={viewMode === 'all'}
-            onClick={() => setViewMode('all')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border-2 ${
-              viewMode === 'all'
-                ? 'bg-primary-500 border-primary-500 text-text-inverse'
-                : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
-            }`}
-            whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
-            whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
-          >
+          </Tab>
+          <Tab shape="soft" selected={viewMode === 'all'} onClick={() => setViewMode('all')}>
             <List size={16} />
             All
-          </motion.button>
-        </div>
+          </Tab>
+        </TabList>
       </div>
 
       {/* Kid selector for Today's view */}
       {viewMode === 'today' && kids.length > 1 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Select kid">
+        <TabList label="Select kid">
           {kids.map(kid => (
-            <motion.button
-              key={kid.id}
-              role="tab"
-              aria-selected={activeKidId === kid.id}
-              onClick={() => setSelectedKid(kid.id)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors border-2 ${
-                activeKidId === kid.id
-                  ? 'bg-accent-500 text-text-inverse border-accent-500'
-                  : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
-              }`}
-              whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
-              whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
-            >
+            <Tab key={kid.id} tone="accent" selected={activeKidId === kid.id} onClick={() => setSelectedKid(kid.id)}>
               {kid.name}
-            </motion.button>
+            </Tab>
           ))}
-        </div>
+        </TabList>
       )}
 
       {/* Daily Progress Summary for Today's view */}

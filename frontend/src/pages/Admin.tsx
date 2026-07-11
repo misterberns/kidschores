@@ -4,6 +4,7 @@ import { CheckCircle2, User, ClipboardList, Gift, Users, Settings, HelpCircle, W
 import { Link } from 'react-router-dom';
 import { approvalsApi } from '../api/client';
 import { ApprovalsList, KidsSection, ChoresSection, RewardsSection, ParentsSection } from '../components/admin';
+import { Tab as TabButton, TabList } from '../components/ui';
 
 type Tab = 'approvals' | 'kids' | 'chores' | 'rewards' | 'parents';
 
@@ -50,20 +51,16 @@ export function Admin() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <TabList label="Admin sections" className="pb-2">
         {tabs.map((tab) => {
           const IconComponent = tab.Icon;
           return (
-            <button
+            <TabButton
               key={tab.id}
+              shape="card"
+              selected={activeTab === tab.id}
               data-testid={`tab-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium whitespace-nowrap transition-all
-                ${activeTab === tab.id
-                  ? 'shadow-md'
-                  : 'bg-bg-surface text-text-secondary border border-bg-accent hover:border-primary-500'
-                }`}
-              style={activeTab === tab.id ? { backgroundColor: 'var(--primary-600)', color: 'white' } : undefined}
             >
               <IconComponent size={18} />
               <span>{tab.label}</span>
@@ -72,10 +69,10 @@ export function Admin() {
                   {tab.badge}
                 </span>
               )}
-            </button>
+            </TabButton>
           );
         })}
-      </div>
+      </TabList>
 
       {/* Tab Content */}
       {activeTab === 'approvals' && <ApprovalsList />}
