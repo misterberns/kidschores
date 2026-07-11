@@ -8,11 +8,11 @@ Post-`v0.8.0` improvement backlog, from the 2026-07 whole-project audit. `v0.8.0
 
 ## Tier 1 — CI/CD + testing (the foundational gap)
 
-No CI exists (`.github/workflows/` is empty) and the backend has zero tests. This is the highest-leverage work — it makes every later change safe.
+~~No CI exists (`.github/workflows/` is empty) and the backend has zero tests.~~ **Closed 2026-07-11** — CI now gates every push/PR with lint/typecheck/build/vitest + backend pytest + the full e2e suite.
 
-- **Add `ci.yml`** — frontend `npm ci → lint → tsc → build → vitest` on every push/PR. **[M · very high]**
-- **Wire the existing e2e suite into CI** — `e2e/` already has ~20 spec files / ~239 tests and `playwright.config.ts` gates on `CI` with a ready (commented) `webServer` block that spins up backend + frontend. Uncomment + run in CI against an ephemeral stack. **[M · very high]**
-- **Backend `pytest` suite** — cover the v0.8.0 authz helpers (`require_parent`, `require_kid_access`/`assert_kid_access`, `get_user_kid`, `ApiToken.expires_at` expiry) + points/allowance math + the reward-approve balance guard. **[M · high]**
+- ~~**Add `ci.yml`**~~ — ✅ **Done 2026-07-11 (v0.8.1).** Frontend `npm ci → lint(non-blocking) → tsc+build → vitest` + backend job on every push/PR.
+- ~~**Wire the existing e2e suite into CI**~~ — ✅ **Done 2026-07-11.** The `e2e` CI job builds the real compose stack (`ENVIRONMENT=test`, ephemeral DB) via `docker compose up --build` and runs the api+chromium projects (~220 tests, retries=2 in CI, HTML report uploaded on failure). Chose the compose stack over the commented vite-dev `webServer` block: prod-shaped nginx→backend proxying, and the vite dev proxy points at prod.
+- ~~**Backend `pytest` suite**~~ — ✅ **Done 2026-07-11.** `backend/tests/` (22 tests): v0.8.0 authz (`require_parent` blocks kid accounts + multi-parent allowed, `require_kid_access`/`assert_kid_access` IDOR guards path+body), API-token lifecycle incl. `expires_at` enforcement + revocation, chore-approve points math (default/multiplier-rounding/explicit-0), reward redeem/approve balance guards (insufficient, price-edit-after-redemption, drained-balance re-check), allowance payout lifecycle (deduct/refund-on-cancel/pay, `gt=0` schema guard). Runs in CI (`requirements-dev.txt`).
 - ~~**Modernize the ~18 stale-selector e2e specs**~~ — ✅ **Done 2026-07-07.** `AdminPage.ts` rewritten to the app's stable `data-testid`s (+ a `Promise.all` waitForResponse race fix); the 7 workflow tests moved off the unauthenticated `page` fixture; `allowance`/`history` rewritten for the `role="tab"` kid selector + single-kid auto-select. `ChoresPage`/`RewardsPage`/`HomePage` were validated working (no change needed). Full e2e green on the `:3104` test instance: **api 112 passed / 1 skipped, chromium 109 passed / 0 failed**.
 - **Supply-chain + hygiene** — Dependabot/Renovate; `npm audit` + `pip-audit` in CI; a coverage gate; pre-commit hooks (husky/lint-staged); consolidate the two Playwright configs (`e2e/` vs `frontend/e2e/`). **[S–M · med]**
 
