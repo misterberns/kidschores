@@ -212,11 +212,11 @@ export function Badge({
               <p className="font-bold text-text-primary text-sm">{badge.name}</p>
               <p className="text-xs text-text-muted mt-1">{badge.description}</p>
               <span
-                className={`inline-block mt-2 text-xs px-2 py-0.5 rounded-full capitalize
-                  ${badge.rarity === 'legendary' ? 'bg-[#FF9600]/20 text-[#E68600]' : ''}
-                  ${badge.rarity === 'epic' ? 'bg-[#CE82FF]/20 text-[#A855F7]' : ''}
-                  ${badge.rarity === 'rare' ? 'bg-[#1CB0F6]/20 text-[#0E9FE3]' : ''}
-                  ${badge.rarity === 'common' ? 'bg-[#58CC02]/20 text-[#4CAD02]' : ''}`}
+                className={`inline-block mt-2 text-xs px-2 py-0.5 rounded-full capitalize border
+                  ${badge.rarity === 'legendary' ? 'tier-gold tier-gold-glow border-transparent' : ''}
+                  ${badge.rarity === 'epic' ? 'tier-gold border-transparent' : ''}
+                  ${badge.rarity === 'rare' ? 'tier-silver border-transparent' : ''}
+                  ${badge.rarity === 'common' ? 'tier-bronze border-transparent' : ''}`}
               >
                 {badge.rarity}
               </span>

@@ -37,8 +37,8 @@ export function ForgotPassword() {
           className="w-full max-w-md"
         >
           <div className="bg-bg-surface rounded-md border border-[var(--border-color)] shadow-card p-8 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success-100 dark:bg-success-900/30 flex items-center justify-center">
-              <CheckCircle size={32} className="text-success-500" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-status-approved-bg flex items-center justify-center">
+              <CheckCircle size={32} className="text-status-approved-border" />
             </div>
             <h2 className="text-xl font-bold text-text-primary mb-2">Check Your Email</h2>
             <p className="text-text-muted mb-6">
