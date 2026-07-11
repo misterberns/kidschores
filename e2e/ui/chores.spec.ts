@@ -33,7 +33,7 @@ test.describe('Chores Page', () => {
       data: {
         name: choreName,
         description: 'Tidy up your bedroom',
-        icon: '🧹',
+        icon: 'brush',
         default_points: 25,
         assigned_kids: [kidId],
         shared_chore: false,
@@ -87,7 +87,7 @@ test.describe('Chores Page', () => {
         data: {
           name: homeworkChore,
           description: 'Complete all homework assignments',
-          icon: '📚',
+          icon: 'book-open',
           default_points: 30,
           assigned_kids: [kidId],
           shared_chore: false,

@@ -133,7 +133,7 @@ def get_history(
             id=claim.id,
             chore_id=claim.chore_id,
             chore_name=chore.name if chore else "Unknown",
-            chore_icon=chore.icon if chore else "🧹",
+            chore_icon=chore.icon if chore else "brush",
             category_name=category.name if category else None,
             category_color=category.color if category else None,
             status=claim.status,

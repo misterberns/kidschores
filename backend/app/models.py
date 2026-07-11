@@ -174,8 +174,8 @@ class ChoreCategory(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(100), nullable=False, unique=True)
-    icon = Column(String(50), default="📁")
-    color = Column(String(20), default="#6366f1")  # Hex color
+    icon = Column(String(50), default="folder")
+    color = Column(String(20), default="#A78BFA")  # Hex color
     sort_order = Column(Integer, default=0)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -191,7 +191,7 @@ class Chore(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
-    icon = Column(String(50), default="🧹")
+    icon = Column(String(50), default="brush")
     default_points = Column(Integer, default=10)
 
     # Assignment
@@ -262,7 +262,7 @@ class Reward(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
-    icon = Column(String(50), default="mdi:gift")
+    icon = Column(String(50), default="gift")
     cost = Column(Integer, default=100)  # Points required
 
     # Eligibility
@@ -299,7 +299,7 @@ class Badge(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
-    icon = Column(String(50), default="mdi:medal")
+    icon = Column(String(50), default="medal")
 
     # Threshold for earning
     threshold_type = Column(String(30), default="points")  # points, chore_count
@@ -341,7 +341,7 @@ class Penalty(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
-    icon = Column(String(50), default="mdi:alert")
+    icon = Column(String(50), default="alert-triangle")
     points_deduction = Column(Integer, default=10)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -354,7 +354,7 @@ class Bonus(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
-    icon = Column(String(50), default="mdi:star")
+    icon = Column(String(50), default="star")
     points_bonus = Column(Integer, default=10)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

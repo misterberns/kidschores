@@ -20,6 +20,7 @@ import { kidsApi, historyApi } from '../api/client';
 import type { HistoryItem, Analytics } from '../api/client';
 import { useToast } from '../hooks/useToast';
 import { Button, Tab, TabList } from '../components/ui';
+import { DynamicIcon } from '../components/DynamicIcon';
 
 type ViewMode = 'stats' | 'list' | 'calendar';
 
@@ -94,8 +95,8 @@ function HistoryItemCard({ item }: { item: HistoryItem }) {
       animate={{ opacity: 1, x: 0 }}
     >
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-bg-accent rounded-lg flex items-center justify-center text-xl">
-          {item.chore_icon}
+        <div className="w-10 h-10 bg-bg-accent rounded-lg flex items-center justify-center">
+          <DynamicIcon icon={item.chore_icon} size={20} className="text-text-secondary" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -503,7 +504,7 @@ export function History() {
                 {analytics.top_chores.map((chore, i) => (
                   <div key={chore.chore_id} className="flex items-center gap-3">
                     <span className="text-lg font-bold text-text-muted w-6">{i + 1}</span>
-                    <span className="text-xl">{chore.chore_icon}</span>
+                    <DynamicIcon icon={chore.chore_icon} size={20} className="text-text-secondary" />
                     <div className="flex-1">
                       <p className="font-medium text-text-primary">{chore.chore_name}</p>
                       <p className="text-sm text-text-muted">{chore.count} times</p>

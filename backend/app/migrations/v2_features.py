@@ -253,14 +253,16 @@ def migrate(db_path: str = None):
         if cursor.fetchone()[0] == 0:
             print("  Inserting default categories...")
             import uuid
+            # Aligned with routers/categories.py PREDEFINED_CATEGORIES
+            # (v0.11 lucide icons + brand accents) so both seeds agree.
             default_categories = [
-                ("🛏️", "Bedroom", "#8B5CF6", 1),
-                ("🍳", "Kitchen", "#F59E0B", 2),
-                ("🚿", "Bathroom", "#06B6D4", 3),
-                ("🛋️", "Living Room", "#10B981", 4),
-                ("🌳", "Outdoor", "#22C55E", 5),
-                ("📚", "School", "#3B82F6", 6),
-                ("🐾", "Pet Care", "#EC4899", 7),
+                ("bed", "Bedroom", "#A78BFA", 1),
+                ("utensils", "Kitchen", "#FBBF24", 2),
+                ("shower-head", "Bathroom", "#38BDF8", 3),
+                ("sofa", "Living Room", "#A3E635", 4),
+                ("trees", "Outdoor", "#A3E635", 5),
+                ("book-open", "School", "#A78BFA", 6),
+                ("dog", "Pet Care", "#FB6FB1", 7),
             ]
             for icon, name, color, order in default_categories:
                 cat_id = str(uuid.uuid4())

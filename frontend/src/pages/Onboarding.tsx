@@ -7,6 +7,8 @@ import { kidsApi, choresApi, rewardsApi, categoriesApi } from '../api/client';
 import type { ChoreCategory } from '../api/client';
 import { useToast } from '../hooks/useToast';
 import { FormInput, FormSelect } from '../components/admin/FormElements';
+import { DynamicIcon } from '../components/DynamicIcon';
+import { IconPicker } from '../components/IconPicker';
 import { CHORE_SUGGESTIONS } from '../data/chore-suggestions';
 import type { ChoreSuggestion } from '../data/chore-suggestions';
 import { REWARD_SUGGESTIONS } from '../data/reward-suggestions';
@@ -163,7 +165,7 @@ function CategoriesStep({ categories, seeded, onSeed, selectedCategories, onTogg
                     opacity: isSelected ? 1 : 0.5,
                   }}
                 >
-                  <span className="text-2xl">{cat.icon}</span>
+                  <DynamicIcon icon={cat.icon} size={22} className="text-text-secondary" />
                   <span className="font-bold text-text-primary flex-1">{cat.name}</span>
                   {isSelected && <Check size={18} style={{ color: cat.color }} />}
                 </button>
@@ -186,7 +188,7 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
 }) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(categories[0]?.name || null);
   const [customName, setCustomName] = useState('');
-  const [customIcon, setCustomIcon] = useState('🧹');
+  const [customIcon, setCustomIcon] = useState('brush');
   const [customPoints, setCustomPoints] = useState(10);
   const [customFrequency, setCustomFrequency] = useState('daily');
   const [customCategoryId, setCustomCategoryId] = useState('');
@@ -277,7 +279,7 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
                 onClick={() => setExpandedCategory(isExpanded ? null : cat.name)}
                 className="w-full flex items-center gap-3 p-3 text-left hover:bg-bg-accent/50 transition-colors"
               >
-                <span className="text-xl">{cat.icon}</span>
+                <DynamicIcon icon={cat.icon} size={20} className="text-text-secondary" />
                 <span className="font-bold text-text-primary flex-1">{cat.name}</span>
                 {catChores.length > 0 && (
                   <span
@@ -324,7 +326,7 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
                                       : 'bg-bg-surface border-bg-accent text-text-primary hover:border-primary-400'
                                   }`}
                                 >
-                                  <span>{s.icon}</span>
+                                  <DynamicIcon icon={s.icon} size={16} className="text-text-secondary" />
                                   <span>{s.name}</span>
                                   <span className="text-text-muted text-xs">{s.points}pts</span>
                                   {isAdded && <Check size={14} className="text-primary-500" />}
@@ -353,7 +355,8 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
                               <div key={globalIdx} className="flex items-center justify-between bg-bg-surface rounded-lg px-3 py-2">
                                 <div className="flex items-center gap-2">
                                   <Check size={14} className="text-primary-500" />
-                                  <span className="text-sm font-medium text-text-primary">{chore.icon} {chore.name}</span>
+                                  <DynamicIcon icon={chore.icon} size={16} className="text-text-secondary" />
+                                  <span className="text-sm font-medium text-text-primary">{chore.name}</span>
                                   <span className="text-xs text-text-muted">{chore.default_points}pts</span>
                                 </div>
                                 <button onClick={() => removeChore(globalIdx)} className="text-text-muted hover:text-error-500">
@@ -392,7 +395,7 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
         <div className="card p-4 mb-4 border border-primary-200">
           <div className="grid grid-cols-2 gap-3">
             <FormInput label="Name" value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="Chore name" />
-            <FormInput label="Icon" value={customIcon} onChange={(e) => setCustomIcon(e.target.value)} placeholder="Emoji" />
+            <div className="col-span-2"><IconPicker value={customIcon} onChange={setCustomIcon} /></div>
             <FormInput label="Points" type="number" value={customPoints} onChange={(e) => setCustomPoints(Number(e.target.value))} />
             <FormSelect label="Frequency" value={customFrequency} onChange={(e) => setCustomFrequency(e.target.value)}>
               <option value="daily">Daily</option>
@@ -403,7 +406,7 @@ function AddChoresStep({ categories, createdKidIds, addedChores, setAddedChores 
               <FormSelect label="Category" value={customCategoryId} onChange={(e) => setCustomCategoryId(e.target.value)}>
                 <option value="">Select category</option>
                 {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </FormSelect>
             </div>
@@ -432,7 +435,7 @@ function AddRewardsStep({ addedRewards, setAddedRewards }: {
 }) {
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [customName, setCustomName] = useState('');
-  const [customIcon, setCustomIcon] = useState('🎁');
+  const [customIcon, setCustomIcon] = useState('gift');
   const [customCost, setCustomCost] = useState(50);
   const [customApproval, setCustomApproval] = useState(true);
 
@@ -491,7 +494,7 @@ function AddRewardsStep({ addedRewards, setAddedRewards }: {
                   : 'bg-bg-surface border-bg-accent text-text-primary hover:border-primary-400'
               }`}
             >
-              <span className="text-xl">{s.icon}</span>
+              <DynamicIcon icon={s.icon} size={20} className="text-text-secondary" />
               <div className="flex-1 min-w-0">
                 <div className="truncate">{s.name}</div>
                 <div className="text-xs text-text-muted">{s.cost} pts</div>
@@ -514,7 +517,7 @@ function AddRewardsStep({ addedRewards, setAddedRewards }: {
         <div className="card p-4 mb-4 border border-primary-200">
           <div className="grid grid-cols-2 gap-3">
             <FormInput label="Name" value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="Reward name" />
-            <FormInput label="Icon" value={customIcon} onChange={(e) => setCustomIcon(e.target.value)} placeholder="Emoji" />
+            <div className="col-span-2"><IconPicker value={customIcon} onChange={setCustomIcon} /></div>
             <FormInput label="Cost (points)" type="number" value={customCost} onChange={(e) => setCustomCost(Number(e.target.value))} />
             <FormSelect label="Approval" value={customApproval ? 'yes' : 'no'} onChange={(e) => setCustomApproval(e.target.value === 'yes')}>
               <option value="yes">Requires approval</option>
@@ -538,7 +541,7 @@ function AddRewardsStep({ addedRewards, setAddedRewards }: {
             {addedRewards.map((reward, i) => (
               <div key={i} className="flex items-center justify-between bg-bg-surface rounded-xl px-3 py-2 border border-bg-accent">
                 <div className="flex items-center gap-2">
-                  <span>{reward.icon}</span>
+                  <DynamicIcon icon={reward.icon} size={16} className="text-text-secondary" />
                   <span className="font-medium text-text-primary text-sm">{reward.name}</span>
                   <span className="text-xs text-text-muted">{reward.cost}pts</span>
                 </div>

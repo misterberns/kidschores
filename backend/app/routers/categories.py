@@ -19,7 +19,7 @@ router = APIRouter()
 class CategoryCreate(BaseModel):
     """Create a new category."""
     name: str
-    icon: str = "📁"
+    icon: str = "folder"
     color: str = "#6366f1"
     sort_order: Optional[int] = None
 
@@ -46,15 +46,17 @@ class CategoryResponse(BaseModel):
 
 
 # Predefined categories with icons
+# Lucide icon names + brand accent colors (BRAND-GUIDELINES v2; kept in
+# lockstep with app/migrations/icon_migration.py COLOR_TO_BRAND targets)
 PREDEFINED_CATEGORIES = [
-    {"name": "Bedroom", "icon": "🛏️", "color": "#8b5cf6"},
-    {"name": "Kitchen", "icon": "🍽️", "color": "#f59e0b"},
-    {"name": "Bathroom", "icon": "🚿", "color": "#3b82f6"},
-    {"name": "Living Room", "icon": "🛋️", "color": "#10b981"},
-    {"name": "Outdoor", "icon": "🌳", "color": "#22c55e"},
-    {"name": "School", "icon": "📚", "color": "#6366f1"},
-    {"name": "Pet Care", "icon": "🐕", "color": "#ec4899"},
-    {"name": "Laundry", "icon": "👕", "color": "#14b8a6"},
+    {"name": "Bedroom", "icon": "bed", "color": "#A78BFA"},
+    {"name": "Kitchen", "icon": "utensils", "color": "#FBBF24"},
+    {"name": "Bathroom", "icon": "shower-head", "color": "#38BDF8"},
+    {"name": "Living Room", "icon": "sofa", "color": "#A3E635"},
+    {"name": "Outdoor", "icon": "trees", "color": "#A3E635"},
+    {"name": "School", "icon": "book-open", "color": "#A78BFA"},
+    {"name": "Pet Care", "icon": "dog", "color": "#FB6FB1"},
+    {"name": "Laundry", "icon": "shirt", "color": "#38BDF8"},
 ]
 
 

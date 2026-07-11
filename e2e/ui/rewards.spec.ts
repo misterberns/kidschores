@@ -37,7 +37,7 @@ test.describe('Rewards Page', () => {
       data: {
         name: rewardName,
         description: '30 minutes of extra screen time',
-        icon: '📱',
+        icon: 'smartphone',
         cost: 50,
         eligible_kids: [],
         requires_approval: true,
@@ -87,7 +87,7 @@ test.describe('Rewards Page', () => {
         data: {
           name: iceCreamReward,
           description: 'Choose your favorite ice cream',
-          icon: '🍦',
+          icon: 'ice-cream-cone',
           cost: 75,
           eligible_kids: [],
           requires_approval: false,

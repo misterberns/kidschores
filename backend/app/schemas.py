@@ -91,7 +91,7 @@ class ParentResponse(BaseModel):
 class ChoreBase(BaseModel):
     name: str
     description: Optional[str] = None
-    icon: str = "🧹"
+    icon: str = "brush"
     default_points: int = 10
     assigned_kids: List[str] = []
     shared_chore: bool = False
@@ -175,7 +175,7 @@ class ChoreClaimResponse(BaseModel):
 class RewardBase(BaseModel):
     name: str
     description: Optional[str] = None
-    icon: str = "mdi:gift"
+    icon: str = "gift"
     cost: int = 100
     eligible_kids: List[str] = []
     requires_approval: bool = True
@@ -229,7 +229,7 @@ class RewardClaimResponse(BaseModel):
 class BadgeBase(BaseModel):
     name: str
     description: Optional[str] = None
-    icon: str = "mdi:medal"
+    icon: str = "medal"
     threshold_type: str = "points"
     threshold_value: int = 100
     points_multiplier_bonus: float = 0.0
@@ -252,7 +252,7 @@ class BadgeResponse(BadgeBase):
 class PenaltyBase(BaseModel):
     name: str
     description: Optional[str] = None
-    icon: str = "mdi:alert"
+    icon: str = "alert-triangle"
     points_deduction: int = 10
 
 
@@ -270,7 +270,7 @@ class PenaltyResponse(PenaltyBase):
 class BonusBase(BaseModel):
     name: str
     description: Optional[str] = None
-    icon: str = "mdi:star"
+    icon: str = "star"
     points_bonus: int = 10
 
 
@@ -364,7 +364,7 @@ class ApprovalWithStreakResponse(ChoreClaimResponse):
 
 class ChoreCategoryBase(BaseModel):
     name: str
-    icon: str = "📁"
+    icon: str = "folder"
     color: str = "#6366f1"
     sort_order: int = 0
 
