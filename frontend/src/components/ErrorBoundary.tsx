@@ -26,12 +26,13 @@ class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen flex items-center justify-center p-4">
           <div className="text-center max-w-md">
             <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
+            {/* Raw error text stays in the console (componentDidCatch) — never user-facing (audit U11) */}
             <p className="text-text-secondary mb-4">
-              {this.state.error?.message}
+              An unexpected error occurred. Reloading the app usually fixes it — your data is safe.
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition"
+              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40"
             >
               Reload App
             </button>

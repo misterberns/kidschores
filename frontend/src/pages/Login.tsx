@@ -11,6 +11,7 @@ export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -18,8 +19,20 @@ export function Login() {
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
 
+  const validateEmail = (value: string): string | undefined => {
+    if (!value) return 'Email is required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid email address';
+    return undefined;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errors = {
+      email: validateEmail(email),
+      password: password ? undefined : 'Password is required',
+    };
+    setFieldErrors(errors);
+    if (errors.email || errors.password) return;
     setError(null);
     setIsLoading(true);
 
@@ -85,13 +98,24 @@ export function Login() {
                 type="email"
                 id="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }));
+                }}
+                onBlur={() => setFieldErrors(prev => ({ ...prev, email: validateEmail(email) }))}
                 required
                 autoComplete="email"
-                className="w-full pl-10 pr-4 py-3 rounded-lg border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
+                aria-invalid={!!fieldErrors.email}
+                aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+                className="w-full pl-10 pr-4 py-3 rounded-lg border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)] aria-[invalid=true]:border-error-500"
                 placeholder="you@example.com"
               />
             </div>
+            {fieldErrors.email && (
+              <p id="email-error" className="mt-1 text-sm text-error-500 dark:text-error-400">
+                {fieldErrors.email}
+              </p>
+            )}
           </div>
 
           {/* Password Input */}
@@ -117,13 +141,23 @@ export function Login() {
                 type="password"
                 id="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: undefined }));
+                }}
                 required
                 autoComplete="current-password"
-                className="w-full pl-10 pr-4 py-3 rounded-lg border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
+                aria-invalid={!!fieldErrors.password}
+                aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+                className="w-full pl-10 pr-4 py-3 rounded-lg border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)] aria-[invalid=true]:border-error-500"
                 placeholder="••••••••"
               />
             </div>
+            {fieldErrors.password && (
+              <p id="password-error" className="mt-1 text-sm text-error-500 dark:text-error-400">
+                {fieldErrors.password}
+              </p>
+            )}
           </div>
 
           {/* Submit Button */}
@@ -133,7 +167,7 @@ export function Login() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             style={{ backgroundColor: 'var(--primary-500)' }}
-            className="w-full py-3 px-4 rounded-lg border border-[var(--border-color)] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full py-3 px-4 rounded-lg border border-[var(--border-color)] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -169,7 +203,7 @@ export function Login() {
               const scope = encodeURIComponent('openid email profile');
               window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
             }}
-            className="w-full py-3 px-4 rounded-lg border border-[var(--border-color)] bg-bg-base text-text-secondary font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus:outline-none transition-all"
+            className="w-full py-3 px-4 rounded-lg border border-[var(--border-color)] bg-bg-base text-text-secondary font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40 transition-all"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path

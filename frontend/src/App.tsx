@@ -92,7 +92,8 @@ function NavBar() {
               key={item.path}
               to={item.path}
               data-testid={item.testId}
-              className="flex flex-col items-center justify-center w-full h-full touch-target transition-colors duration-200"
+              aria-current={isActive ? 'page' : undefined}
+              className="flex flex-col items-center justify-center w-full h-full touch-target transition-colors duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40 rounded-lg"
             >
               <motion.div
                 style={isActive ? { backgroundColor: 'var(--primary-100)' } : undefined}
@@ -241,7 +242,7 @@ function AppContent() {
 
       {/* Header */}
       <header className="p-4 transition-colors duration-200 bg-bg-surface border-b-2 border-[var(--border-color)]">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
+        <div className="flex items-center justify-between max-w-4xl lg:max-w-6xl mx-auto">
           {/* User indicator */}
           <Link
             to="/select-kid"
@@ -269,7 +270,8 @@ function AppContent() {
           <div className="flex items-center gap-2">
             <Link
               to="/notifications"
-              className="p-2 rounded-lg hover:bg-bg-accent text-text-muted hover:text-primary-500 transition-colors"
+              aria-label="Notification settings"
+              className="p-2 rounded-lg hover:bg-bg-accent text-text-muted hover:text-primary-500 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40"
               title="Notification settings"
             >
               <Bell size={18} />
@@ -277,7 +279,8 @@ function AppContent() {
             <ThemeToggle />
             <button
               onClick={logout}
-              className="p-2 rounded-lg hover:bg-bg-accent text-text-muted hover:text-error-500 transition-colors"
+              aria-label="Sign out"
+              className="p-2 rounded-lg hover:bg-bg-accent text-text-muted hover:text-error-500 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40"
               title="Sign out"
             >
               <LogOut size={18} />
@@ -286,8 +289,8 @@ function AppContent() {
         </div>
       </header>
 
-      {/* Main Content with Page Transitions */}
-      <main className="p-4 max-w-4xl mx-auto">
+      {/* Main Content with Page Transitions — wider on desktop (UX-REVIEW §4.5) */}
+      <main className="p-4 md:p-6 max-w-4xl lg:max-w-6xl mx-auto">
         <AnimatedRoutes />
       </main>
 

@@ -18,8 +18,8 @@ import {
 } from 'lucide-react';
 import { kidsApi, historyApi } from '../api/client';
 import type { HistoryItem, Analytics } from '../api/client';
-import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useToast } from '../hooks/useToast';
+import { Button, Tab, TabList } from '../components/ui';
 
 type ViewMode = 'stats' | 'list' | 'calendar';
 
@@ -312,7 +312,6 @@ function CalendarView({ dailyStats, monthOffset, setMonthOffset }: {
 }
 
 export function History() {
-  const prefersReducedMotion = useReducedMotion();
   const toast = useToast();
   const [selectedKid, setSelectedKid] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('stats');
@@ -388,84 +387,46 @@ export function History() {
           <HistoryIcon size={24} className="text-primary-500" />
           History & Stats
         </h2>
-        <button
-          onClick={handleExport}
-          className="btn bg-bg-accent text-text-secondary hover:bg-bg-elevated"
-        >
+        <Button variant="outline" onClick={handleExport} aria-label="Export history as CSV">
           <Download size={18} />
           <span className="hidden sm:inline">Export</span>
-        </button>
+        </Button>
       </div>
 
       {/* Kid selector */}
       {kids.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Select kid">
+        <TabList label="Select kid">
           {kids.map(kid => (
-            <motion.button
+            <Tab
               key={kid.id}
-              role="tab"
-              aria-selected={activeKidId === kid.id}
+              selected={activeKidId === kid.id}
               onClick={() => {
                 setSelectedKid(kid.id);
                 setPage(1);
                 setMonthOffset(0);
               }}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors border-2 ${
-                activeKidId === kid.id
-                  ? 'bg-primary-500 border-primary-500 text-text-inverse'
-                  : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
-              }`}
-              whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
-              whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
             >
               {kid.name}
-            </motion.button>
+            </Tab>
           ))}
-        </div>
+        </TabList>
       )}
 
       {/* View toggle */}
-      <div className="flex items-center gap-2" role="tablist" aria-label="View mode">
-        <button
-          role="tab"
-          aria-selected={viewMode === 'stats'}
-          onClick={() => setViewMode('stats')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border-2 ${
-            viewMode === 'stats'
-              ? 'bg-primary-500 border-primary-500 text-text-inverse'
-              : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
-          }`}
-        >
+      <TabList label="View mode" className="pb-0">
+        <Tab shape="soft" selected={viewMode === 'stats'} onClick={() => setViewMode('stats')}>
           <BarChart3 size={16} />
           Stats
-        </button>
-        <button
-          role="tab"
-          aria-selected={viewMode === 'calendar'}
-          onClick={() => setViewMode('calendar')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border-2 ${
-            viewMode === 'calendar'
-              ? 'bg-primary-500 border-primary-500 text-text-inverse'
-              : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
-          }`}
-        >
+        </Tab>
+        <Tab shape="soft" selected={viewMode === 'calendar'} onClick={() => setViewMode('calendar')}>
           <Calendar size={16} />
           Calendar
-        </button>
-        <button
-          role="tab"
-          aria-selected={viewMode === 'list'}
-          onClick={() => setViewMode('list')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border-2 ${
-            viewMode === 'list'
-              ? 'bg-primary-500 border-primary-500 text-text-inverse'
-              : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
-          }`}
-        >
+        </Tab>
+        <Tab shape="soft" selected={viewMode === 'list'} onClick={() => setViewMode('list')}>
           <List size={16} />
           List
-        </button>
-      </div>
+        </Tab>
+      </TabList>
 
       {/* Stats View */}
       {viewMode === 'stats' && isLoadingAnalytics && (

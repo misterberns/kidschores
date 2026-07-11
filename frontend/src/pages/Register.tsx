@@ -12,7 +12,14 @@ export function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+
+  const validateEmail = (value: string): string | undefined => {
+    if (!value) return 'Email is required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid email address';
+    return undefined;
+  };
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -28,6 +35,10 @@ export function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const emailValidation = validateEmail(email);
+    setEmailError(emailValidation);
+    if (emailValidation) return;
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -123,13 +134,24 @@ export function Register() {
                 type="email"
                 id="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError(undefined);
+                }}
+                onBlur={() => setEmailError(validateEmail(email))}
                 required
                 autoComplete="email"
-                className="w-full pl-10 pr-4 py-3 rounded-md border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)]"
+                aria-invalid={!!emailError}
+                aria-describedby={emailError ? 'register-email-error' : undefined}
+                className="w-full pl-10 pr-4 py-3 rounded-md border border-[var(--border-color)] bg-bg-base text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:shadow-[0_0_0_3px_var(--primary-50)] aria-[invalid=true]:border-error-500"
                 placeholder="you@example.com"
               />
             </div>
+            {emailError && (
+              <p id="register-email-error" className="mt-1 text-sm text-error-500 dark:text-error-400">
+                {emailError}
+              </p>
+            )}
           </div>
 
           {/* Password Input */}
@@ -206,7 +228,7 @@ export function Register() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             style={{ backgroundColor: 'var(--primary-500)' }}
-            className="w-full py-3 px-4 rounded-md border border-[var(--border-color)] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full py-3 px-4 rounded-md border border-[var(--border-color)] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

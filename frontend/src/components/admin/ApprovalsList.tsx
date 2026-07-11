@@ -3,6 +3,7 @@ import { ClipboardList, Gift, Check, X } from 'lucide-react';
 import { kidsApi, choresApi, rewardsApi, approvalsApi } from '../../api/client';
 import type { PendingChoreClaim, PendingRewardClaim } from '../../api/client';
 import { ChorbieAnimated } from '../mascot';
+import { Button } from '../ui';
 import { useToast } from '../../hooks/useToast';
 
 export function ApprovalsList() {
@@ -101,20 +102,22 @@ export function ApprovalsList() {
               </div>
             </div>
             <div className="flex gap-2 mt-3">
-              <button
+              <Button
+                variant="success"
+                className="flex-1"
                 data-testid={`approve-chore-btn-${claim.chore_id}`}
                 onClick={() => approveChoreMutation.mutate(claim.chore_id)}
-                className="flex-1 bg-status-approved-border text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2"
               >
                 <Check size={18} /> Approve
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                className="flex-1"
                 data-testid={`deny-chore-btn-${claim.chore_id}`}
                 onClick={() => disapproveChoreMutation.mutate(claim.chore_id)}
-                className="flex-1 bg-status-overdue-bg text-status-overdue-text py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-status-overdue-border hover:text-white transition-colors"
               >
                 <X size={18} /> Deny
-              </button>
+              </Button>
             </div>
           </div>
         );
@@ -134,20 +137,22 @@ export function ApprovalsList() {
               </div>
             </div>
             <div className="flex gap-2 mt-3">
-              <button
+              <Button
+                variant="success"
+                className="flex-1"
                 data-testid={`approve-reward-btn-${claim.reward_id}`}
                 onClick={() => approveRewardMutation.mutate(claim.reward_id)}
-                className="flex-1 bg-status-approved-border text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2"
               >
                 <Check size={18} /> Approve
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                className="flex-1"
                 data-testid={`deny-reward-btn-${claim.reward_id}`}
                 onClick={() => disapproveRewardMutation.mutate(claim.reward_id)}
-                className="flex-1 bg-status-overdue-bg text-status-overdue-text py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-status-overdue-border hover:text-white transition-colors"
               >
                 <X size={18} /> Deny
-              </button>
+              </Button>
             </div>
           </div>
         );

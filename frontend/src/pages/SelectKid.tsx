@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { User, LogOut } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { ChorbiePresets } from '../components/mascot';
+import { KidAvatar } from '../components/KidAvatar';
 
 export function SelectKid() {
   const { user, kids, setActiveKid, logout, role, kidId } = useAuth();
@@ -26,15 +27,6 @@ export function SelectKid() {
     setActiveKid(null);
     navigate(from, { replace: true });
   };
-
-  // Avatar colors for kids - use CSS variables
-  const avatarColors = [
-    'var(--primary-500)',
-    'var(--secondary-500)',
-    'var(--accent-500)',
-    '#22c55e', // success green
-    '#f59e0b', // warning amber
-  ];
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 bg-bg-base">
@@ -62,7 +54,7 @@ export function SelectKid() {
       >
         {kids.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 mb-6">
-            {kids.map((kid, index) => (
+            {kids.map((kid) => (
               <motion.button
                 key={kid.id}
                 onClick={() => handleSelectKid(kid.id)}
@@ -70,14 +62,7 @@ export function SelectKid() {
                 whileTap={{ scale: 0.95 }}
                 className="flex flex-col items-center p-6 rounded-lg border border-[var(--border-color)] bg-bg-surface shadow-card hover:shadow-xl transition-shadow"
               >
-                <div
-                  style={{ backgroundColor: avatarColors[index % avatarColors.length] }}
-                  className="w-16 h-16 rounded-full flex items-center justify-center mb-3"
-                >
-                  <span className="text-2xl font-bold text-white">
-                    {kid.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                <KidAvatar kidId={kid.id} kidName={kid.name} size="lg" className="mb-3" />
                 <span className="font-semibold text-text-primary">{kid.name}</span>
                 <span className="text-sm text-text-muted">{kid.points} points</span>
               </motion.button>

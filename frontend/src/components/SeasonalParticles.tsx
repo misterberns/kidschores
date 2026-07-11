@@ -9,14 +9,18 @@ interface ParticleConfig {
   count: number;
   drift: 'fall' | 'rise' | 'float';
   speed: number; // seconds per cycle
+  /** Anchor particles to the viewport edges instead of drifting over content
+      (UX-REVIEW-2026-07 §4.3 — everyday decoration should be ambient, not noise). */
+  edgeAnchored?: boolean;
 }
 
 const seasonalParticles: Record<SeasonalTheme, ParticleConfig> = {
   default: {
     emojis: ['✨', '⭐'],
-    count: 8,
+    count: 5,
     drift: 'float',
-    speed: 12,
+    speed: 14,
+    edgeAnchored: true,
   },
   halloween: {
     emojis: ['🎃', '👻', '🦇', '🕸️', '🕷️', '🍬'],
@@ -55,15 +59,21 @@ interface Particle {
 }
 
 function generateParticles(config: ParticleConfig): Particle[] {
-  return Array.from({ length: config.count }, (_, i) => ({
-    id: i,
-    emoji: config.emojis[i % config.emojis.length],
-    x: Math.random() * 95 + 2.5,
-    startY: Math.random() * 90 + 5,
-    size: 0.9 + Math.random() * 1.3,
-    delay: Math.random() * config.speed,
-    opacity: 0.25 + Math.random() * 0.3,
-  }));
+  return Array.from({ length: config.count }, (_, i) => {
+    // Edge-anchored: keep particles in the outer ~10% bands, clear of content
+    const x = config.edgeAnchored
+      ? (i % 2 === 0 ? Math.random() * 8 + 1 : Math.random() * 8 + 90)
+      : Math.random() * 95 + 2.5;
+    return {
+      id: i,
+      emoji: config.emojis[i % config.emojis.length],
+      x,
+      startY: Math.random() * 90 + 5,
+      size: config.edgeAnchored ? 0.8 + Math.random() * 0.8 : 0.9 + Math.random() * 1.3,
+      delay: Math.random() * config.speed,
+      opacity: config.edgeAnchored ? 0.12 + Math.random() * 0.18 : 0.25 + Math.random() * 0.3,
+    };
+  });
 }
 
 function getAnimation(drift: ParticleConfig['drift'], speed: number) {

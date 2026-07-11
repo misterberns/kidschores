@@ -655,6 +655,24 @@ body {
   min-width: 48px;
 }
 
+/* Visible keyboard focus everywhere (audit U9). Components that draw their
+   own focus ring suppress this via focus-visible:outline-none. */
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Typography hierarchy per BRAND-GUIDELINES.md — page/section headings
+   get the brand shape without needing per-page utility soup. */
+h1 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
 /* ============================================
    Component Classes
    ============================================ */

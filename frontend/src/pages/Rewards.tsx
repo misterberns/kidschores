@@ -11,6 +11,7 @@ import { AnimatedPoints } from '../components/AnimatedPoints';
 import { ConfettiBurst } from '../components/celebrations/Confetti';
 import { SkeletonChoreCardList } from '../components/skeletons';
 import { ChorbieAnimated } from '../components/mascot';
+import { Button } from '../components/ui';
 import { useToast } from '../hooks/useToast';
 
 function RewardCard({
@@ -67,18 +68,16 @@ function RewardCard({
       <div className="mt-4 relative">
         {affordableKids.length > 0 ? (
           <>
-            <motion.button
+            <Button
+              variant="accent"
+              size="lg"
+              fullWidth
               data-testid={`redeem-btn-${reward.id}`}
               onClick={() => setShowKidSelect(!showKidSelect)}
-              className="w-full bg-gradient-to-r from-accent-500 to-accent-400 text-white
-                py-3 rounded-xl font-bold touch-target flex items-center justify-center gap-2
-                hover:from-accent-600 hover:to-accent-500 shadow-md"
-              whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
-              whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
             >
               <ShoppingBag size={18} />
               Get This!
-            </motion.button>
+            </Button>
 
             <AnimatePresence>
               {showKidSelect && (

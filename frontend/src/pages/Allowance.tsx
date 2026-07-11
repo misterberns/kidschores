@@ -18,9 +18,9 @@ import {
 } from 'lucide-react';
 import { kidsApi, allowanceApi } from '../api/client';
 import type { AllowancePayout } from '../api/client';
-import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useToast } from '../hooks/useToast';
 import { getApiErrorMessage } from '../utils/errorMessage';
+import { Button, IconButton, Tab, TabList } from '../components/ui';
 
 const PAYOUT_METHODS = [
   { id: 'cash', label: 'Cash', icon: Banknote },
@@ -110,20 +110,14 @@ function PayoutCard({ payout, kidName, onMarkPaid, onCancel, showActions = false
 
       {showActions && payout.status === 'pending' && (
         <div className="mt-3 pt-3 border-t border-bg-accent flex gap-2">
-          <button
-            onClick={() => onMarkPaid?.(payout.id)}
-            className="btn btn-primary flex-1 text-sm"
-          >
+          <Button size="sm" className="flex-1" onClick={() => onMarkPaid?.(payout.id)}>
             <CheckCircle2 size={16} />
             Mark Paid
-          </button>
-          <button
-            onClick={() => onCancel?.(payout.id)}
-            className="btn bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 text-sm"
-          >
+          </Button>
+          <Button size="sm" variant="danger" onClick={() => onCancel?.(payout.id)}>
             <XCircle size={16} />
             Cancel
-          </button>
+          </Button>
         </div>
       )}
 
@@ -136,7 +130,6 @@ function PayoutCard({ payout, kidName, onMarkPaid, onCancel, showActions = false
 
 export function Allowance() {
   const queryClient = useQueryClient();
-  const prefersReducedMotion = useReducedMotion();
   const toast = useToast();
   const { role } = useAuth();
   const isParent = role === 'parent';
@@ -252,35 +245,25 @@ export function Allowance() {
           <Wallet size={24} className="text-green-500" />
           Allowance
         </h2>
-        <button
+        <IconButton
+          label={showSettings ? 'Hide allowance settings' : 'Show allowance settings'}
+          variant="outline"
+          aria-expanded={showSettings}
           onClick={() => setShowSettings(!showSettings)}
-          className="btn bg-bg-accent text-text-secondary hover:bg-bg-elevated"
         >
           <Settings size={18} />
-        </button>
+        </IconButton>
       </div>
 
       {/* Kid selector */}
       {kids.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Select kid">
+        <TabList label="Select kid">
           {kids.map(kid => (
-            <motion.button
-              key={kid.id}
-              role="tab"
-              aria-selected={activeKidId === kid.id}
-              onClick={() => setSelectedKid(kid.id)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors border-2 ${
-                activeKidId === kid.id
-                  ? 'bg-primary-500 border-primary-500 text-text-inverse'
-                  : 'border-[var(--border-color)] text-text-primary hover:bg-bg-elevated'
-              }`}
-              whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
-              whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
-            >
+            <Tab key={kid.id} selected={activeKidId === kid.id} onClick={() => setSelectedKid(kid.id)}>
               {kid.name}
-            </motion.button>
+            </Tab>
           ))}
-        </div>
+        </TabList>
       )}
 
       {/* Balance Card */}
@@ -400,7 +383,9 @@ export function Allowance() {
             </div>
           </div>
 
-          <button
+          <Button
+            fullWidth
+            loading={requestPayoutMutation.isPending}
             onClick={handleRequestPayout}
             disabled={
               !pointsToConvert ||
@@ -408,10 +393,9 @@ export function Allowance() {
               requestPayoutMutation.isPending ||
               !!(summary && parseInt(pointsToConvert, 10) > summary.current_points)
             }
-            className="btn btn-primary w-full"
           >
             {requestPayoutMutation.isPending ? 'Requesting...' : 'Request Payout'}
-          </button>
+          </Button>
         </div>
       </div>
 
