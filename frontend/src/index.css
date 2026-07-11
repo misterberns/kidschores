@@ -744,6 +744,14 @@ body {
 .btn-danger:hover {
   background-color: #E53E3E;
 }
+/* Outline button - composes with .btn (border/padding/shadow come from .btn) */
+.btn-outline {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+.btn-outline:hover {
+  background-color: var(--bg-accent);
+}
 
 /* ============================================
    Modern Warm Minimal Utility Classes
@@ -785,6 +793,27 @@ body {
   transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 .neo-input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px var(--primary-50);
+}
+
+/* Standalone themed form control (className="input" on
+   Allowance/NotificationSettings - previously undefined, rendered
+   browser-default; UX-REVIEW-2026-07 P0.3) */
+.input {
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  border-radius: var(--neo-radius);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+.input::placeholder {
+  color: var(--text-muted);
+}
+.input:focus {
   outline: none;
   border-color: var(--primary-500);
   box-shadow: 0 0 0 3px var(--primary-50);
