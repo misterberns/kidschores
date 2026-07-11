@@ -8,6 +8,7 @@ from typing import List, Optional
 logger = logging.getLogger(__name__)
 
 import httpx
+import jwt  # PyJWT — used for Google id_token audience inspection
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
@@ -340,6 +341,29 @@ async def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db))
         )
 
     google_user = userinfo_response.json()
+
+    # Hardening (2026-07): require a VERIFIED Google email, and when the token
+    # response carries an id_token, enforce its audience. token_data came from
+    # Google's token endpoint over TLS using OUR client_secret, so the id_token
+    # is authentic without a signature check — but an authorization code minted
+    # for a DIFFERENT client must not authenticate here.
+    id_token = token_data.get("id_token")
+    if id_token:
+        try:
+            id_claims = jwt.decode(id_token, options={"verify_signature": False})
+        except jwt.PyJWTError:
+            id_claims = {}
+        if id_claims.get("aud") != settings.google_client_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Google token audience mismatch",
+            )
+    if google_user.get("verified_email") is not True:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Google account email is not verified",
+        )
+
     google_id = google_user.get("id")
     email = google_user.get("email", "").lower()
     name = google_user.get("name", email.split("@")[0])

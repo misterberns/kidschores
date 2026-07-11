@@ -1,5 +1,5 @@
 # Stage 1: Build dependencies in isolated venv
-FROM python:3.13-slim AS builder
+FROM python:3.13-slim@sha256:eb43ff125d8d58d7449dcba7d336c23bcac412f526d861db493b9994d8010280 AS builder
 
 WORKDIR /build
 
@@ -8,7 +8,7 @@ RUN python -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Production image
-FROM python:3.13-slim
+FROM python:3.13-slim@sha256:eb43ff125d8d58d7449dcba7d336c23bcac412f526d861db493b9994d8010280
 
 # Prevent bytecode files and enable unbuffered output
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -39,4 +39,6 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')" || exit 1
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
+# Proxy-header trust is governed by $FORWARDED_ALLOW_IPS (uvicorn reads it natively;
+# defaults to 127.0.0.1 = fail-closed). Compose sets it to the Docker private ranges.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

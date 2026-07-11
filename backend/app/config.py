@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     jwt_secret_key: str  # REQUIRED — app fails to start without it
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440  # 24 hours
-    refresh_token_expire_days: int = 30
+    refresh_token_expire_days: int = 14  # shortened from 30 (2026-07 hardening)
 
     # Google OAuth (optional)
     google_client_id: Optional[str] = None
