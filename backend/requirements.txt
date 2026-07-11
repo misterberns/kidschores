@@ -4,8 +4,8 @@
 fastapi~=0.115.0
 uvicorn[standard]~=0.35.0  # >=0.33 for IP-network FORWARDED_ALLOW_IPS
 sqlalchemy~=2.0.36
-pydantic~=2.11.0
-pydantic[email]~=2.11.0
+pydantic~=2.13.4
+pydantic[email]~=2.13.4
 pydantic-settings~=2.7.0
 python-multipart~=0.0.19
 
