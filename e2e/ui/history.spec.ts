@@ -28,7 +28,9 @@ test.describe('History Page', () => {
   });
 
   test('should display history page', async ({ authenticatedPage: page }) => {
-    await expect(page.getByText('History')).toBeVisible();
+    // getByText('History') is ambiguous (page heading + bottom-nav label) —
+    // strict mode flags it under the updated deps. Pin the heading instead.
+    await expect(page.getByRole('heading', { name: 'History & Stats' })).toBeVisible();
   });
 
   test('should show kid selector when there are multiple kids', async ({ authenticatedPage: page, apiContext }) => {
