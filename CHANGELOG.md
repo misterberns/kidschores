@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-07-11
+
+UI polish release from the July 2026 UX review (P1 pass, `docs/UX-REVIEW-2026-07.md` §4). Same features, noticeably more consistent and accessible.
+
+### Added
+- **Avatar personalization**: pick an emoji and color for each kid (Parent → Kids → Edit) — shows on the kid picker, Home cards, and profile circles. Saved per device.
+- **Tablet & desktop layouts**: kid cards go two-column on wider screens and the app uses more of the window on desktop.
+- **Inline form validation** on sign-in/sign-up: clear field-level messages instead of silent failures.
+
+### Changed
+- **Consistent buttons, tabs, and pills everywhere** — one shared component set replaces the six divergent styles that had accumulated (approve/deny, admin tabs, kid selectors, view toggles, reward buttons).
+- **Kid cards got depth**: soft elevation, a subtle light-play gradient, and better text contrast on the lighter kid colors.
+- **Calmer everyday decoration**: the floating sparkles now sit at the screen edges instead of drifting over content; seasonal themes keep their full personality.
+- Headings follow the brand typography hierarchy consistently.
+
+### Accessibility
+- Every icon-only button now has a proper screen-reader label; keyboard users get a visible focus ring everywhere; the bottom nav announces the current page; the theme menu behaves like a real menu (Escape closes it and returns focus); error screens no longer expose technical details.
+
 ## [0.8.1] - 2026-07-11
 
 Design-system repair release from the July 2026 UX review (`docs/UX-REVIEW-2026-07.md`), plus the project's first CI pipeline.
