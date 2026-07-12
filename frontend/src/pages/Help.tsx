@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { HelpCircle, Rocket, ListChecks, CheckCircle2, Wallet, Gift, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AccordionItem, AccordionSection } from '../components/Accordion';
+import { InstallAppCard } from '../components/InstallAppCard';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { staggerContainer, cardVariants } from '../utils/animations';
 
@@ -36,6 +37,11 @@ export default function Help() {
             <p className="text-text-secondary">How to use KidsChores</p>
           </div>
         </div>
+      </motion.div>
+
+      {/* Install as an app (hidden once running standalone) */}
+      <motion.div variants={prefersReducedMotion ? undefined : cardVariants}>
+        <InstallAppCard />
       </motion.div>
 
       {/* Getting Started */}

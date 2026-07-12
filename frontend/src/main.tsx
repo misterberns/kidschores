@@ -6,6 +6,16 @@ import { initMonitoring } from './utils/monitoring'
 
 initMonitoring()
 
+// Eager service-worker registration (PWA install + push). Idempotent with the
+// push opt-in flow's own register call; non-fatal if unsupported/blocked.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* non-fatal — push simply won't be available */
+    })
+  })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

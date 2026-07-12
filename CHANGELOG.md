@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-07-12
+
+### Added — install KidsChores like an app
+
+KidsChores can now be **installed to your phone's home screen** — it opens
+full-screen with its own icon, just like a native app.
+
+- On Android (Chrome): tap the **Install app** prompt, or use the new
+  "Install the app" card on the Help page
+- On iPhone/iPad: the Help page shows the Add-to-Home-Screen steps
+- Proper app icon on every launcher shape (new maskable icon)
+
+### Changed
+- README documents the install flow
+
 ## [0.12.0] - 2026-07-11
 
 ### Changed — icons get their colors back
