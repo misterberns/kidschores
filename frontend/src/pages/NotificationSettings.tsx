@@ -178,7 +178,8 @@ export default function NotificationSettings() {
         <ul className="text-sm text-text-secondary space-y-1 list-disc list-inside">
           <li>Parents receive notifications when kids claim chores</li>
           <li>Kids receive notifications when their chores are approved</li>
-          <li>Streak milestone celebrations are sent as notifications</li>
+          <li>Badge unlocks trigger a celebration notification</li>
+          <li>Streak milestones (7, 14, 30+ days) notify the whole family</li>
           <li>Daily reminders can be configured (coming soon)</li>
         </ul>
       </div>

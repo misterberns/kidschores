@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-07-12
+
+### Added
+- **Streak freezes are now earnable**: kids earn one at every streak milestone
+  from 7 days up (7, 14, 30, ...), stockpiling up to 3 — a freeze is used
+  automatically to protect the streak on a missed day
+- **Streak milestone notifications**: hitting a milestone now sends a push
+  celebration to the kid and the parents
+- **"Requires approval" toggle** on the reward form — make any reward instant
+  or parent-approved
+- **Chore categories in the chore form** — pick a category when creating or
+  editing a chore, so kids can filter their list by room or type
+- **Allowance settings panel** — set points-per-dollar and the minimum payout
+  right from the Allowance page (gear icon)
+
+### Changed
+- The Help guide was rewritten to match how the app actually works today,
+  including new sections for Badges & Challenges and Notifications
+
 ## [0.13.1] - 2026-07-12
 
 ### Fixed

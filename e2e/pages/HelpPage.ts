@@ -25,7 +25,7 @@ export class HelpPage {
     this.backToAdminLink = page.getByRole('link', { name: /Back to Admin/i });
     this.versionBadge = page.locator('.font-mono').filter({ hasText: 'KidsChores v' });
     // Section titles are h3 elements
-    this.accordionSections = page.locator('h3').filter({ hasText: /Getting Started|Managing Chores|Approvals & Points|Allowance System|Rewards/i });
+    this.accordionSections = page.locator('h3').filter({ hasText: /Getting Started|Managing Chores|Approvals & Points|Badges & Challenges|Allowance System|Rewards|Notifications/i });
     // Accordion items are buttons with aria-expanded
     this.accordionItems = page.locator('button[aria-expanded]');
   }
