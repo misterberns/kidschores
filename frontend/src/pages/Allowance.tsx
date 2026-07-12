@@ -43,6 +43,88 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function AllowanceSettingsPanel({ kidId }: { kidId: string }) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const { data: settings } = useQuery({
+    queryKey: ['allowance-settings', kidId],
+    queryFn: () => allowanceApi.getSettings(kidId).then(res => res.data),
+  });
+  const [pointsPerDollar, setPointsPerDollar] = useState<number | null>(null);
+  const [minimumPayout, setMinimumPayout] = useState<number | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: (data: { points_per_dollar: number; minimum_payout: number }) =>
+      allowanceApi.updateSettings(kidId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allowance-settings', kidId] });
+      queryClient.invalidateQueries({ queryKey: ['allowance-summary'] });
+      setPointsPerDollar(null);
+      setMinimumPayout(null);
+      toast.success('Allowance settings saved');
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, 'Failed to save settings'));
+    },
+  });
+
+  if (!settings) return null;
+  const ppd = pointsPerDollar ?? settings.points_per_dollar;
+  const minPay = minimumPayout ?? settings.minimum_payout;
+
+  return (
+    <motion.div
+      className="card p-4"
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      data-testid="allowance-settings-panel"
+    >
+      <h3 className="font-bold text-lg text-text-primary flex items-center gap-2 mb-4">
+        <Settings size={20} className="text-primary-500" />
+        Allowance Settings
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1 text-text-secondary" htmlFor="allowance-ppd">
+            Points per dollar
+          </label>
+          <input
+            id="allowance-ppd"
+            type="number"
+            min={1}
+            value={ppd}
+            onChange={(e) => setPointsPerDollar(Number(e.target.value))}
+            className="w-full border border-bg-accent bg-bg-surface text-text-primary rounded-xl px-4 py-2.5 focus:border-primary-500 focus:outline-none transition-colors"
+          />
+          <p className="text-xs text-text-muted mt-1">{ppd > 0 ? `${ppd} points = $1.00` : ''}</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1 text-text-secondary" htmlFor="allowance-minpay">
+            Minimum payout ($)
+          </label>
+          <input
+            id="allowance-minpay"
+            type="number"
+            min={0}
+            step={0.5}
+            value={minPay}
+            onChange={(e) => setMinimumPayout(Number(e.target.value))}
+            className="w-full border border-bg-accent bg-bg-surface text-text-primary rounded-xl px-4 py-2.5 focus:border-primary-500 focus:outline-none transition-colors"
+          />
+          <p className="text-xs text-text-muted mt-1">Smallest amount a kid can request</p>
+        </div>
+      </div>
+      <Button
+        className="mt-4"
+        disabled={mutation.isPending || ppd < 1 || minPay < 0}
+        onClick={() => mutation.mutate({ points_per_dollar: ppd, minimum_payout: minPay })}
+      >
+        {mutation.isPending ? 'Saving...' : 'Save Settings'}
+      </Button>
+    </motion.div>
+  );
+}
+
 interface PayoutCardProps {
   payout: AllowancePayout;
   kidName?: string;
@@ -245,15 +327,22 @@ export function Allowance() {
           <Wallet size={24} className="text-status-approved-border" />
           Allowance
         </h2>
-        <IconButton
-          label={showSettings ? 'Hide allowance settings' : 'Show allowance settings'}
-          variant="outline"
-          aria-expanded={showSettings}
-          onClick={() => setShowSettings(!showSettings)}
-        >
-          <Settings size={18} />
-        </IconButton>
+        {isParent && (
+          <IconButton
+            label={showSettings ? 'Hide allowance settings' : 'Show allowance settings'}
+            variant="outline"
+            aria-expanded={showSettings}
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            <Settings size={18} />
+          </IconButton>
+        )}
       </div>
+
+      {/* Allowance settings (parents only) */}
+      {isParent && showSettings && activeKidId && (
+        <AllowanceSettingsPanel kidId={activeKidId} />
+      )}
 
       {/* Kid selector */}
       {kids.length > 1 && (

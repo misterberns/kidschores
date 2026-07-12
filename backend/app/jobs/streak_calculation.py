@@ -5,16 +5,42 @@ import time
 
 from sqlalchemy.orm import Session
 from app.database import get_db_session
-from app.models import Kid, Chore, ChoreClaim, DailyMultiplier, ScheduledJobLog
+from app.models import Kid, Chore, ChoreClaim, DailyMultiplier, PushSubscription, ScheduledJobLog
 from app.services.gamification import evaluate_badges
+from app.services.push_service import push_service
 
 logger = logging.getLogger(__name__)
 
 # Streak milestones that trigger celebrations
 STREAK_MILESTONES = [3, 7, 14, 30, 50, 100, 365]
 
+# Milestones (>= 7 days) that also earn a streak freeze, and the stockpile cap
+STREAK_FREEZE_MILESTONES = [7, 14, 30, 50, 100, 365]
+MAX_STREAK_FREEZES = 3
+
 # Bonus points for completing all daily chores
 DAILY_COMPLETION_BONUS = 10
+
+
+def notify_streak_milestone(db: Session, kid: Kid, streak_days: int) -> None:
+    """Push the milestone celebration to the kid's and the parents' devices.
+
+    Parent subscriptions are the rows with no kid_id (subscribed as
+    "Parent (receive all notifications)"). Push failures must never
+    break the nightly job — every send is individually guarded.
+    """
+    subscriptions = db.query(PushSubscription).filter(
+        (PushSubscription.kid_id == kid.id) | (PushSubscription.kid_id.is_(None))
+    ).all()
+    for sub in subscriptions:
+        subscription_info = {
+            "endpoint": sub.endpoint,
+            "keys": {"p256dh": sub.p256dh_key, "auth": sub.auth_key},
+        }
+        try:
+            push_service.send_streak_milestone(subscription_info, kid.name, streak_days)
+        except Exception as e:
+            logger.error(f"Failed to send streak-milestone push for {kid.name}: {e}")
 
 
 def get_todays_chores_for_kid(db: Session, kid_id: str) -> list:
@@ -143,6 +169,17 @@ async def calculate_daily_streaks():
                 # Check for milestone -> streak badges (streak_3/7/30 etc.)
                 if kid.overall_chore_streak in STREAK_MILESTONES:
                     logger.info(f"{kid.name} reached streak milestone: {kid.overall_chore_streak} days!")
+                    # Milestones >= 7 days earn a streak freeze (stockpile capped)
+                    if (
+                        kid.overall_chore_streak in STREAK_FREEZE_MILESTONES
+                        and kid.streak_freeze_count < MAX_STREAK_FREEZES
+                    ):
+                        kid.streak_freeze_count += 1
+                        logger.info(
+                            f"{kid.name} earned a streak freeze "
+                            f"({kid.streak_freeze_count}/{MAX_STREAK_FREEZES})"
+                        )
+                    notify_streak_milestone(db, kid, kid.overall_chore_streak)
                 new_badges = evaluate_badges(db, kid)
                 if new_badges:
                     logger.info(f"{kid.name} unlocked badges via streak job: {new_badges}")

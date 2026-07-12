@@ -9,10 +9,37 @@ import { IconPicker } from '../IconPicker';
 import { EntityCard } from './EntityCard';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 
+function RequiresApprovalToggle({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="mt-3 flex items-start gap-3 cursor-pointer select-none">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        data-testid="reward-requires-approval"
+        className="mt-1 h-4 w-4 accent-accent-500"
+      />
+      <span>
+        <span className="block text-sm font-medium text-text-secondary">Requires approval</span>
+        <span className="block text-xs text-text-muted">
+          Redemptions wait for a parent in the Approve tab. Untick for instant rewards.
+        </span>
+      </span>
+    </label>
+  );
+}
+
 function AddRewardForm({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState('');
   const [cost, setCost] = useState(100);
   const [icon, setIcon] = useState('gift');
+  const [requiresApproval, setRequiresApproval] = useState(true);
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -44,9 +71,10 @@ function AddRewardForm({ onClose }: { onClose: () => void }) {
       <div className="mt-3">
         <IconPicker value={icon} onChange={setIcon} />
       </div>
+      <RequiresApprovalToggle checked={requiresApproval} onChange={setRequiresApproval} />
       <div className="flex gap-2 mt-4">
         <button
-          onClick={() => mutation.mutate({ name, cost, icon })}
+          onClick={() => mutation.mutate({ name, cost, icon, requires_approval: requiresApproval })}
           disabled={!name || mutation.isPending}
           className="flex-1 bg-accent-500 text-white py-2.5 rounded-xl font-bold hover:bg-accent-600 transition-colors disabled:opacity-50"
         >
@@ -64,6 +92,7 @@ function EditRewardForm({ reward, onClose }: { reward: Reward; onClose: () => vo
   const [name, setName] = useState(reward.name);
   const [cost, setCost] = useState(reward.cost);
   const [icon, setIcon] = useState(reward.icon ?? 'gift');
+  const [requiresApproval, setRequiresApproval] = useState(reward.requires_approval ?? true);
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -95,9 +124,10 @@ function EditRewardForm({ reward, onClose }: { reward: Reward; onClose: () => vo
       <div className="mt-3">
         <IconPicker value={icon} onChange={setIcon} />
       </div>
+      <RequiresApprovalToggle checked={requiresApproval} onChange={setRequiresApproval} />
       <div className="flex gap-2 mt-4">
         <button
-          onClick={() => mutation.mutate({ name, cost, icon })}
+          onClick={() => mutation.mutate({ name, cost, icon, requires_approval: requiresApproval })}
           disabled={!name || mutation.isPending}
           className="flex-1 bg-accent-500 text-white py-2.5 rounded-xl font-bold hover:bg-accent-600 transition-colors disabled:opacity-50"
         >
@@ -164,7 +194,9 @@ export function RewardsSection() {
             icon={<div className="w-10 h-10 bg-accent-500/20 rounded-md border border-[var(--border-color)] flex items-center justify-center"><DynamicIcon icon={reward.icon || 'mdi:gift'} size={20} /></div>}
           >
             <p className="font-bold text-text-primary" data-testid={`reward-name-admin-${reward.id}`}>{reward.name}</p>
-            <p className="text-sm text-text-muted" data-testid={`reward-cost-admin-${reward.id}`}>{reward.cost} points</p>
+            <p className="text-sm text-text-muted" data-testid={`reward-cost-admin-${reward.id}`}>
+              {reward.cost} points{reward.requires_approval ? ' · needs approval' : ' · instant'}
+            </p>
           </EntityCard>
         )
       ))}

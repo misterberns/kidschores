@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil } from 'lucide-react';
-import { kidsApi, choresApi, parentsApi } from '../../api/client';
+import { kidsApi, choresApi, parentsApi, categoriesApi } from '../../api/client';
 import type { Kid, Chore, Parent } from '../../api/client';
 import { DynamicIcon } from '../DynamicIcon';
 import { FormInput, FormSelect } from './FormElements';
@@ -9,10 +9,37 @@ import { IconPicker } from '../IconPicker';
 import { EntityCard } from './EntityCard';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 
+function CategorySelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.list().then(res => res.data),
+  });
+  if (categories.length === 0) return null;
+  return (
+    <FormSelect
+      label="Category (optional)"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      <option value="">No category</option>
+      {categories.map((c) => (
+        <option key={c.id} value={c.id}>{c.name}</option>
+      ))}
+    </FormSelect>
+  );
+}
+
 function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent[]; onClose: () => void }) {
   const [name, setName] = useState('');
   const [points, setPoints] = useState(10);
   const [icon, setIcon] = useState('brush');
+  const [categoryId, setCategoryId] = useState('');
   const [selectedKids, setSelectedKids] = useState<string[]>([]);
   const [recurringFrequency, setRecurringFrequency] = useState('none');
   const [dueDate, setDueDate] = useState('');
@@ -44,6 +71,7 @@ function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent
       <div className="mb-3">
         <IconPicker value={icon} onChange={setIcon} />
       </div>
+      <CategorySelect value={categoryId} onChange={setCategoryId} />
       <FormInput
         label="Points"
         type="number"
@@ -155,6 +183,7 @@ function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent
             default_points: points,
             assigned_kids: selectedKids,
             recurring_frequency: recurringFrequency,
+            category_id: categoryId || undefined,
             due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
             applicable_days: applicableDays.length > 0 ? applicableDays : undefined,
           })}
@@ -175,6 +204,7 @@ function EditChoreForm({ chore, kids, parents, onClose }: { chore: Chore; kids: 
   const [name, setName] = useState(chore.name);
   const [points, setPoints] = useState(chore.default_points);
   const [icon, setIcon] = useState(chore.icon ?? 'brush');
+  const [categoryId, setCategoryId] = useState(chore.category_id ?? '');
   const [selectedKids, setSelectedKids] = useState<string[]>(chore.assigned_kids || []);
   const [recurringFrequency, setRecurringFrequency] = useState(chore.recurring_frequency || 'none');
   const [dueDate, setDueDate] = useState(chore.due_date?.split('T')[0] || '');
@@ -206,6 +236,7 @@ function EditChoreForm({ chore, kids, parents, onClose }: { chore: Chore; kids: 
       <div className="mb-3">
         <IconPicker value={icon} onChange={setIcon} />
       </div>
+      <CategorySelect value={categoryId} onChange={setCategoryId} />
       <FormInput
         label="Points"
         type="number"
@@ -317,6 +348,7 @@ function EditChoreForm({ chore, kids, parents, onClose }: { chore: Chore; kids: 
             default_points: points,
             assigned_kids: selectedKids,
             recurring_frequency: recurringFrequency,
+            category_id: categoryId || undefined,
             due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
             applicable_days: applicableDays.length > 0 ? applicableDays : undefined,
           })}
