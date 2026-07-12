@@ -93,12 +93,26 @@ from the hero accent and don't count against it.
 
 ## Iconography
 
-Lucide line icons at consistent stroke, filled variants for active states.
-**No emoji as UI.** Stored icon values are lucide names from the curated
-catalog (`frontend/src/data/icon-catalog.ts`), chosen via `IconPicker` and
-rendered ONLY through `DynamicIcon`. Legacy emoji in old data is migrated at
-startup (`backend/app/migrations/icon_migration.py`); unmapped custom emoji
-still renders as a grandfathered value until edited.
+Two tiers (since v0.12):
+
+- **Content icons** (chores, categories, rewards, challenge/badge icon values —
+  anything a family picks or the DB stores): **full-color Twemoji artwork**,
+  vendored in `frontend/src/data/twemoji-icons.tsx` (regenerate with
+  `frontend/scripts/fetch-twemoji.mjs`; CC-BY 4.0 attribution lives on the
+  Help page + README). Natural colors are the point — a pizza is red, a dog is
+  brown. Artwork ignores text-color classes; put tint on the CHIP behind it,
+  never expect the glyph to recolor.
+- **UI chrome** (nav, buttons, form affordances, close/edit/check controls):
+  **monochrome lucide** line icons at consistent stroke — the sleek frame stays.
+
+Stored icon values are STILL the stable lucide-kebab names from the curated
+catalog (`frontend/src/data/icon-catalog.ts` — v0.11's vocabulary; only the
+rendered artwork changed), chosen via `IconPicker` and rendered ONLY through
+`DynamicIcon`. Legacy emoji in old data is migrated at startup
+(`backend/app/migrations/icon_migration.py`); unmapped custom emoji still
+renders as a grandfathered value until edited. **No NATIVE emoji as UI** —
+platform emoji fonts render inconsistently; Twemoji artwork is the sanctioned
+way to get emoji warmth.
 
 ## Motion
 
