@@ -232,10 +232,30 @@ export default function Help() {
         </AccordionSection>
       </motion.div>
 
-      {/* App Version */}
+      {/* App Version + attribution */}
       <motion.div variants={prefersReducedMotion ? undefined : cardVariants} className="mt-8 text-center">
         <p className="text-xs text-text-muted font-mono opacity-60">
           KidsChores v{__APP_VERSION__}
+        </p>
+        <p className="text-[11px] text-text-muted opacity-60 mt-1">
+          Emoji artwork:{' '}
+          <a
+            href="https://github.com/jdecked/twemoji"
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            Twemoji
+          </a>{' '}
+          © Twitter, Inc and contributors,{' '}
+          <a
+            href="https://creativecommons.org/licenses/by/4.0/"
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            CC-BY 4.0
+          </a>
         </p>
       </motion.div>
     </motion.div>

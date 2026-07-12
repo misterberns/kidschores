@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.11.0-green?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.12.0-green?style=flat-square" alt="Version"></a>
   <a href="https://github.com/misterberns/kidschores/actions/workflows/ci.yml"><img src="https://github.com/misterberns/kidschores/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square" alt="License">
@@ -316,6 +316,12 @@ This standalone fork reimplements the core chore/reward functionality — and,
 as of v0.9.0, its own badges & challenges engine — as a self-contained web app
 that runs independently of Home Assistant.
 
+**Emoji artwork**: chore/reward/category icons use [Twemoji](https://github.com/jdecked/twemoji)
+graphics, © Twitter, Inc and other contributors, licensed under
+[CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). The SVGs are vendored
+in `frontend/src/data/twemoji-icons.tsx` (regenerate with
+`node frontend/scripts/fetch-twemoji.mjs`).
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 -
@@ -329,4 +335,4 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ## Version
 
-Current version: **0.11.0** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.12.0** (see [CHANGELOG.md](CHANGELOG.md) for history)

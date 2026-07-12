@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-07-11
+
+### Changed — icons get their colors back
+
+Chore, category, and reward icons are now **full-color emoji artwork**
+(Twemoji) — the pizza is red, the dog is brown, the gift has a ribbon — and
+they render identically on every phone, tablet, and computer (native emoji
+used to look different per device; this artwork doesn't).
+
+- The icon picker shows the same colorful artwork
+- Everything you already picked keeps working — stored icons swap artwork
+  automatically, nothing to re-select
+- Navigation and buttons keep the sleek monochrome line style
+
+### Added
+- Twemoji artwork attribution (CC-BY 4.0) on the Help page
+
 ## [0.11.0] - 2026-07-11
 
 ### Changed — line icons everywhere

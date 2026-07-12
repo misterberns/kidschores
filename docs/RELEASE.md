@@ -31,9 +31,17 @@ PR that forgets one of them fails CI.
       cd e2e && API_URL=http://192.168.87.35:3104 FRONTEND_URL=http://192.168.87.35:3104 \
         npx playwright test -g "capture all screenshots" --project=screenshots
       ```
-      (Run against the freshly-bumped test instance. The onboarding/login sets have
+      (Run against the freshly-bumped test instance — or, for pre-merge captures,
+      against the rebuilt LOCAL stack with `API_URL=http://localhost:3103
+      FRONTEND_URL=http://localhost:3103`. The onboarding/login sets have
       their own test: `-g "capture onboarding screenshots"`. `screenshots/` must
       keep exactly 26 files — see CLAUDE.md.)
+      **⚠ e2e/.env pins the NAS test instance (:3104) as the default target for ALL
+      e2e runs.** A pre-merge "full suite green" or screenshot capture without the
+      explicit localhost override validates the OLD deployed version, not your
+      branch (near-miss in the v0.12.0 arc — the first capture showed v0.11
+      rendering). Command-line env vars beat `.env`; always pass them for
+      pre-merge runs.
       **Then EYEBALL EVERY recaptured image, both themes — never a sample.**
       The v0.10.0 invisible-Allowance-card bug was IN allowance-light.png and
       shipped because only 5 of 26 captures were reviewed. The axe
