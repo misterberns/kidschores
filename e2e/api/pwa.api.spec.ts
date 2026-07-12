@@ -27,4 +27,15 @@ test.describe('PWA static files', () => {
     expect(resp.status()).toBe(200);
     expect(resp.headers()['content-type']).toContain('image/png');
   });
+
+  test('notification artwork serves as png, not the SPA fallback (v0.13.1)', async ({ request }) => {
+    // The v0.13.0 push payload pointed at /icons/* paths that don't exist;
+    // nginx's SPA fallback served HTML there and the browser showed ITS OWN
+    // icon on notifications. Assert the real artwork is a genuine PNG.
+    for (const path of ['/icon-192.png', '/badge-72.png']) {
+      const resp = await request.get(path);
+      expect(resp.status(), path).toBe(200);
+      expect(resp.headers()['content-type'], path).toContain('image/png');
+    }
+  });
 });

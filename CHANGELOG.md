@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-07-12
+
+### Fixed
+- Push notifications now show the KidsChores icon instead of the browser's
+  logo (the notification artwork pointed at files that didn't exist)
+- New status-bar badge icon so Android shows the KidsChores spark silhouette
+  in the notification shade
+
 ## [0.13.0] - 2026-07-12
 
 ### Added — install KidsChores like an app

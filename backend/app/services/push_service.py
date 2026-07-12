@@ -15,6 +15,12 @@ VAPID_CLAIMS = {
     "sub": os.getenv("VAPID_CLAIMS_EMAIL", "mailto:admin@kidschores.local")
 }
 
+# Notification artwork. These MUST be real files under frontend/public/ —
+# a wrong path gets the nginx SPA fallback (HTML), which the browser rejects
+# and replaces with the BROWSER's own icon (the v0.13.0 Brave-icon bug).
+DEFAULT_ICON = "/icon-192.png"
+DEFAULT_BADGE = "/badge-72.png"  # monochrome white-on-transparent (Android status bar)
+
 
 class PushNotificationService:
     """Service for sending push notifications."""
@@ -60,8 +66,8 @@ class PushNotificationService:
         payload = {
             "title": title,
             "body": body,
-            "icon": icon or "/icons/icon-192x192.png",
-            "badge": "/icons/badge-72x72.png",
+            "icon": icon or DEFAULT_ICON,
+            "badge": DEFAULT_BADGE,
             "tag": tag,
             "data": data or {},
             "url": url or "/",
