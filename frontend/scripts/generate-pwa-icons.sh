@@ -20,3 +20,16 @@ magick "$SRC" -resize 390x390 \
   -alpha remove -alpha off "$OUT"
 
 magick identify -format "%f %wx%h opaque=%[opaque]\n" "$OUT"
+
+# Notification BADGE (Android status-bar glyph): monochrome WHITE-on-TRANSPARENT.
+# Android renders it as a silhouette — color/opaque images become a gray blob.
+# Recipe: drop the #0B0E14 tile, binarize alpha at full res (kills the rounded-
+# corner AA ghost), paint the spark white, then resize (restores smooth edges).
+BADGE=public/badge-72.png
+
+magick "$SRC" -fuzz 20% -transparent "#0B0E14" \
+  -channel A -threshold 55% +channel \
+  -channel RGB -fill white -colorize 100 +channel \
+  -resize 72x72 -channel A -level 20%,100% +channel "$BADGE"
+
+magick identify -format "%f %wx%h opaque=%[opaque]\n" "$BADGE"   # opaque MUST be False

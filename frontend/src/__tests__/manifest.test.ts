@@ -49,4 +49,16 @@ describe('PWA manifest installability contract', () => {
   it('the service worker file exists in public/', () => {
     expect(existsSync(join(publicDir, 'sw.js'))).toBe(true)
   })
+
+  it('notification artwork exists and sw.js references it (the v0.13.0 Brave-icon bug)', () => {
+    // A wrong path here gets the nginx SPA fallback (HTML) and the browser
+    // swaps in ITS OWN icon. Both files must exist and sw.js must default
+    // to them; the backend payload (push_service.py DEFAULT_ICON/DEFAULT_BADGE)
+    // must reference the same files — guarded by backend/tests/test_push_payload_icons.py.
+    expect(existsSync(join(publicDir, 'icon-192.png'))).toBe(true)
+    expect(existsSync(join(publicDir, 'badge-72.png'))).toBe(true)
+    const sw = readFileSync(join(publicDir, 'sw.js'), 'utf-8')
+    expect(sw).toContain("icon: '/icon-192.png'")
+    expect(sw).toContain("badge: '/badge-72.png'")
+  })
 })
