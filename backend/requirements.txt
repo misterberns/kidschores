@@ -25,7 +25,7 @@ apscheduler~=3.10.4
 pywebpush~=2.0.1
 
 # Email Notifications
-aiosmtplib~=3.0.2
+aiosmtplib~=5.1.2
 
 # Database Migrations
 alembic~=1.14.0
