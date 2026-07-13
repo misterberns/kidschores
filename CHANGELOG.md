@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-07-13
+
+### Fixed
+- Kids signed in on their own devices no longer see repeated "Access denied"
+  errors — their session now shows only their own card, chores, allowance,
+  and history (previously the app tried to load a sibling's data, which is
+  blocked by design)
+- Claiming a chore as a kid is now one tap — no more picker that offered
+  the wrong name
+- Smoother navigation for kid accounts (fixed a redirect flash)
+
 ## [0.14.0] - 2026-07-12
 
 ### Added

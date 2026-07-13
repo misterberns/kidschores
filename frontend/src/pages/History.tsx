@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useAuth } from '../auth';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -320,12 +321,16 @@ export function History() {
   const [monthOffset, setMonthOffset] = useState(0);
 
   // Fetch kids
+  const { role, kidId } = useAuth();
   const { data: kids = [] } = useQuery({
     queryKey: ['kids'],
     queryFn: () => kidsApi.list().then(res => res.data),
   });
 
-  const activeKid = selectedKid ? kids.find(k => k.id === selectedKid) : kids[0];
+  // Kid sessions are pinned to their own kid (require_kid_access 403s siblings).
+  const activeKid = role === 'kid' && kidId
+    ? kids.find(k => k.id === kidId)
+    : (selectedKid ? kids.find(k => k.id === selectedKid) : kids[0]);
   const activeKidId = activeKid?.id;
 
   // Fetch analytics — extend range when calendar navigates to past months

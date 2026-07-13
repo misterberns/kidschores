@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, LogOut } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
@@ -12,10 +12,10 @@ export function SelectKid() {
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
 
-  // Kid sessions skip selection — auto-redirect
+  // Kid sessions skip selection. Rendered <Navigate> (never navigate() in the
+  // render phase — that double-renders and flashes; the v0.14.0 "glitchy nav").
   if (role === 'kid' && kidId) {
-    navigate(from, { replace: true });
-    return null;
+    return <Navigate to={from} replace />;
   }
 
   const handleSelectKid = (kidId: string) => {

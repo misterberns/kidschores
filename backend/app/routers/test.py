@@ -86,6 +86,61 @@ def reset_database(db: Session = Depends(get_db), _admin: User = Depends(require
         raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
 
 
+@router.post("/kid-account")
+def create_kid_account(
+    payload: dict,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Create a kid-linked User account and return a token for it (E2E only).
+
+    The real linkage happens inside the Google OAuth callback, which is not
+    testable offline — this mirrors backend/tests/conftest.py::make_kid_account
+    at the HTTP layer so Playwright can drive a role='kid' session. A plain
+    {"sub": user.id} token suffices: /auth/me derives the role from the DB.
+
+    Body: {"kid_id": "<existing kid id>"}  (or {"name": "..."} to create one)
+    """
+    env = os.environ.get("ENVIRONMENT", "").strip().lower()
+    if env not in _ALLOWED_TEST_ENVS:
+        raise HTTPException(
+            status_code=403,
+            detail="Test kid-account creation not allowed in this environment"
+        )
+
+    import uuid as _uuid
+    from ..security import create_access_token, hash_password
+
+    kid_id = payload.get("kid_id")
+    if kid_id:
+        kid = db.query(Kid).filter(Kid.id == kid_id).first()
+        if not kid:
+            raise HTTPException(status_code=404, detail="Kid not found")
+    else:
+        kid = Kid(name=payload.get("name") or f"E2E Kid {_uuid.uuid4().hex[:6]}")
+        db.add(kid)
+        db.flush()
+
+    if kid.user_id:
+        raise HTTPException(status_code=400, detail="Kid already has a linked account")
+
+    user = User(
+        email=f"e2e-kid-{_uuid.uuid4().hex[:8]}@example.com",
+        password_hash=hash_password(f"e2e-kid-pass-{_uuid.uuid4().hex[:8]}"),
+        display_name=f"{kid.name} (e2e kid account)",
+    )
+    db.add(user)
+    db.flush()
+    kid.user_id = user.id
+    db.commit()
+
+    return {
+        "access_token": create_access_token({"sub": user.id}),
+        "kid_id": kid.id,
+        "user_id": user.id,
+    }
+
+
 @router.get("/status")
 def test_status(db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     """Get current database entity counts - useful for test debugging."""
