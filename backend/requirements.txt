@@ -7,7 +7,7 @@ sqlalchemy~=2.0.51
 pydantic~=2.13.4
 pydantic[email]~=2.13.4
 pydantic-settings~=2.7.0
-python-multipart~=0.0.19
+python-multipart~=0.0.32
 
 # Authentication
 pyjwt~=2.10  # replaced unmaintained python-jose (CVE-2024-33663/33664)
