@@ -30,6 +30,16 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
+    queries: {
+      // Never retry 4xx — a 403/404 won't succeed on retry, and each attempt
+      // re-fires the global "Access denied" toast (the kid-tablet toast storm).
+      retry: (failureCount, error: unknown) => {
+        if (axios.isAxiosError(error) && error.response && error.response.status < 500) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+    },
     mutations: {
       onError: (error: unknown) => {
         if (axios.isAxiosError(error) && error.response) {

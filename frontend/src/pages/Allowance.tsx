@@ -213,7 +213,7 @@ function PayoutCard({ payout, kidName, onMarkPaid, onCancel, showActions = false
 export function Allowance() {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const { role } = useAuth();
+  const { role, kidId } = useAuth();
   const isParent = role === 'parent';
 
   const [selectedKid, setSelectedKid] = useState<string | null>(null);
@@ -227,7 +227,10 @@ export function Allowance() {
     queryFn: () => kidsApi.list().then(res => res.data),
   });
 
-  const activeKid = selectedKid ? kids.find(k => k.id === selectedKid) : kids[0];
+  // Kid sessions are pinned to their own kid (require_kid_access 403s siblings).
+  const activeKid = role === 'kid' && kidId
+    ? kids.find(k => k.id === kidId)
+    : (selectedKid ? kids.find(k => k.id === selectedKid) : kids[0]);
   const activeKidId = activeKid?.id;
 
   // Fetch allowance summary

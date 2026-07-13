@@ -11,6 +11,7 @@ import { SkeletonChoreCardList } from '../components/skeletons';
 import { PointsEarned } from '../components/celebrations/PointsEarned';
 import { ConfettiBurst } from '../components/celebrations/Confetti';
 import { useToast } from '../hooks/useToast';
+import { useAuth } from '../auth';
 import { CategoryBadge, CategoryFilter } from '../components/CategoryBadge';
 import { DynamicIcon } from '../components/DynamicIcon';
 import { Tab, TabList } from '../components/ui';
@@ -59,6 +60,7 @@ function ChoreCard({
   streakCount,
   category,
   multiplier,
+  claimAsKidId,
 }: {
   chore: Chore;
   kids: Kid[];
@@ -68,6 +70,8 @@ function ChoreCard({
   streakCount?: number;
   category?: ChoreCategory | null;
   multiplier?: number;
+  /** Kid sessions always claim as themselves — no "Who's claiming?" picker. */
+  claimAsKidId?: string | null;
 }) {
   const [showKidSelect, setShowKidSelect] = useState(false);
   const prefersReducedMotion = useReducedMotion();
@@ -164,7 +168,13 @@ function ChoreCard({
           <div className="relative">
             <motion.button
               data-testid={`claim-btn-${chore.id}`}
-              onClick={() => setShowKidSelect(!showKidSelect)}
+              onClick={() => {
+                if (claimAsKidId) {
+                  onClaim(chore.id, claimAsKidId);
+                } else {
+                  setShowKidSelect(!showKidSelect);
+                }
+              }}
               className={`btn touch-target font-bold ${
                 isSuccess ? 'bg-primary-500 hover:bg-primary-600' : 'btn-primary'
               }`}
@@ -281,6 +291,7 @@ export function Chores() {
   const prefersReducedMotion = useReducedMotion();
   const toast = useToast();
 
+  const { role, kidId: ownKidId } = useAuth();
   const { data: kids = [] } = useQuery({
     queryKey: ['kids'],
     queryFn: () => kidsApi.list().then(res => res.data),
@@ -299,8 +310,10 @@ export function Chores() {
     return map;
   }, [categories]);
 
-  // Auto-select first kid when kids load
-  const activeKidId = selectedKid || (kids.length > 0 ? kids[0].id : null);
+  // Kid sessions are pinned to their own kid; parents auto-select the first kid.
+  const activeKidId = role === 'kid' && ownKidId
+    ? ownKidId
+    : (selectedKid || (kids.length > 0 ? kids[0].id : null));
 
   // Fetch all chores
   const { data: allChores = [], isLoading: isLoadingAll, isError: isErrorAll } = useQuery({
@@ -598,6 +611,7 @@ export function Chores() {
               streakCount={streakMap.get(chore.id)}
               category={chore.category_id ? categoryMap.get(chore.category_id) : null}
               multiplier={viewMode === 'today' ? currentMultiplier : undefined}
+              claimAsKidId={role === 'kid' ? ownKidId : null}
             />
           ))
         )}

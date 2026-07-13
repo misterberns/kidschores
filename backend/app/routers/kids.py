@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 from ..database import get_db
-from ..deps import require_auth, require_parent, require_kid_access
+from ..deps import require_auth, require_parent, require_kid_access, get_user_kid
 from ..models import Kid, Chore, ChoreClaim, DailyMultiplier, User
 from ..schemas import (
     KidCreate, KidUpdate, KidResponse, KidStats, PointsAdjustRequest,
@@ -23,8 +23,15 @@ router = APIRouter()
 
 @router.get("", response_model=List[KidResponse])
 @router.get("/", response_model=List[KidResponse], include_in_schema=False)
-def list_kids(db: Session = Depends(get_db), _user: User = Depends(require_auth)):
-    """List all kids."""
+def list_kids(db: Session = Depends(get_db), user: User = Depends(require_auth)):
+    """List kids. Parents see the whole family; a kid-linked account sees
+    ONLY its own kid — the per-kid detail endpoints 403 siblings anyway
+    (require_kid_access), so listing them just made kid devices render
+    cards/tabs whose queries could never succeed (the v0.14.0 tablet
+    403-storm). Filtering here fixes every consumer at once."""
+    own = get_user_kid(db, user)
+    if own is not None:
+        return [own]
     return db.query(Kid).all()
 
 

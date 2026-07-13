@@ -104,6 +104,11 @@ export function Home() {
   // Must call all hooks before any conditional returns (React Rules of Hooks)
   const prefersReducedMotion = useReducedMotion();
   const { role, kidId } = useAuth();
+  // Kid sessions see ONLY their own card. The backend now filters /api/kids
+  // for kid-linked accounts too — this is belt-and-braces so a stale cached
+  // list can never fan out sibling queries (require_kid_access 403s them,
+  // which was the v0.14.0 tablet toast storm).
+  const visibleKids = role === 'kid' && kidId ? (kids ?? []).filter(k => k.id === kidId) : (kids ?? []);
 
   // Badge-unlock celebration: on the kid's own device, fire when their badge
   // list grows past the last-seen count (persisted per device).
@@ -184,12 +189,12 @@ export function Home() {
       </motion.h2>
 
       <motion.div
-        className={`grid gap-6 md:items-start ${kids.length > 1 ? 'md:grid-cols-2' : 'md:max-w-xl md:mx-auto'}`}
+        className={`grid gap-6 md:items-start ${visibleKids.length > 1 ? 'md:grid-cols-2' : 'md:max-w-xl md:mx-auto'}`}
         variants={prefersReducedMotion ? undefined : staggerContainer}
         initial={prefersReducedMotion ? false : 'hidden'}
         animate="visible"
       >
-        {kids.map((kid, index) => (
+        {visibleKids.map((kid, index) => (
           <KidCard key={kid.id} kid={kid} index={index} />
         ))}
       </motion.div>
