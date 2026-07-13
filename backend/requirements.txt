@@ -19,7 +19,7 @@ httpx~=0.28.0
 python-dotenv~=1.2.2
 
 # Background Jobs
-apscheduler~=3.10.4
+apscheduler~=3.11.3
 
 # Push Notifications
 pywebpush~=2.0.1
