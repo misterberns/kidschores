@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.3] - 2026-07-14
+
+### Changed
+- Under-the-hood dependency updates, including security fixes in the web
+  framework and token library (7 updates: FastAPI 0.139, PyJWT 2.13,
+  aiosmtplib 5.1, APScheduler 3.11, python-multipart 0.0.32, lucide-react
+  1.24, PostCSS 8.5.18) — no visible changes
+
 ## [0.14.2] - 2026-07-14
 
 ### Added
