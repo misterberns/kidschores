@@ -16,6 +16,7 @@ import { DailyProgress } from '../components/DailyProgress';
 import { StreakDisplay } from '../components/StreakDisplay';
 import { BadgeDisplay } from '../components/gamification/BadgeDisplay';
 import { BadgeCelebration } from '../components/celebrations/BadgeCelebration';
+import { InstallAppBanner } from '../components/InstallAppBanner';
 
 function KidCard({ kid, index }: { kid: Kid; index: number }) {
   const { getKidColor } = useTheme();
@@ -173,6 +174,7 @@ export function Home() {
 
   return (
     <div className="space-y-6">
+      <InstallAppBanner />
       <BadgeCelebration
         badgeIds={celebrateBadges}
         kidName={ownKid?.name || ''}

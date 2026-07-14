@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
+import {
+  consumeDeferredPrompt,
+  getDeferredPrompt,
+  subscribeInstallPrompt,
+  wasAppInstalled,
+} from '../installPromptStore';
 
 /**
  * A2HS (add-to-home-screen) install state. Ported from the Card Atlas
@@ -11,11 +17,6 @@ import { useCallback, useEffect, useState } from 'react';
  *   not already installed.
  */
 
-// Chromium-only event; not in lib.dom. Minimal shape we use.
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
 
 export interface InstallAppState {
   /** Already running as an installed app (standalone display-mode). */
@@ -46,36 +47,23 @@ export function detectIOS(): boolean {
 }
 
 export function useInstallApp(): InstallAppState {
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isStandalone, setIsStandalone] = useState(detectStandalone);
-
-  useEffect(() => {
-    const onBeforeInstall = (e: Event) => {
-      e.preventDefault(); // suppress Chrome's mini-infobar; we prompt on demand
-      setDeferred(e as BeforeInstallPromptEvent);
-    };
-    const onInstalled = () => {
-      setDeferred(null);
-      setIsStandalone(true);
-    };
-    window.addEventListener('beforeinstallprompt', onBeforeInstall);
-    window.addEventListener('appinstalled', onInstalled);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-      window.removeEventListener('appinstalled', onInstalled);
-    };
-  }, []);
+  // Card Atlas v2.2.6 pattern: read the module-scope stash (captured in the
+  // entry chunk) instead of registering a too-late listener here —
+  // beforeinstallprompt is one-shot and fires long before lazy consumers mount.
+  const deferred = useSyncExternalStore(subscribeInstallPrompt, getDeferredPrompt, () => null);
+  const installedThisLoad = useSyncExternalStore(subscribeInstallPrompt, wasAppInstalled, () => false);
 
   const promptInstall = useCallback(async (): Promise<boolean> => {
-    if (!deferred) return false;
-    await deferred.prompt();
-    const { outcome } = await deferred.userChoice;
-    setDeferred(null); // the stashed event is single-use
+    const ev = getDeferredPrompt();
+    if (!ev) return false;
+    await ev.prompt();
+    const { outcome } = await ev.userChoice;
+    consumeDeferredPrompt(); // the stashed event is single-use
     return outcome === 'accepted';
-  }, [deferred]);
+  }, []);
 
   return {
-    isStandalone,
+    isStandalone: detectStandalone() || installedThisLoad,
     isIOS: detectIOS(),
     canPromptInstall: deferred !== null,
     promptInstall,
