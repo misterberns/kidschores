@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-07-14
+
+### Added
+- The **Install app** banner now appears right on the Home screen for
+  everyone (kids included) — one tap to add KidsChores to the home screen,
+  dismissible, and it never shows inside the installed app
+
+### Fixed
+- The native Install button now works reliably — previously the browser's
+  one-time install offer was missed unless you landed directly on the Help
+  page
+
 ## [0.14.1] - 2026-07-13
 
 ### Fixed

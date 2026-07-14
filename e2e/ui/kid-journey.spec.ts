@@ -79,6 +79,25 @@ test.describe('Kid session journey', () => {
     expect(forbidden, `403s during kid nav sweep:\n${forbidden.join('\n')}`).toHaveLength(0);
   });
 
+  test('install banner is discoverable on the kid Home and dismiss persists (v0.14.2)', async ({ page }) => {
+    const forbidden = collect403s(page);
+    await authenticatePageAsKid(page, session);
+
+    // Headless chromium never fires beforeinstallprompt, so the banner renders
+    // its guidance state — presence is the discoverability contract.
+    const banner = page.getByTestId('install-app-banner');
+    await expect(banner).toBeVisible({ timeout: 10000 });
+
+    await page.getByTestId('install-banner-dismiss').click();
+    await expect(banner).toBeHidden();
+
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByTestId('install-app-banner')).toHaveCount(0);
+
+    expect(forbidden, `403s during banner test:\n${forbidden.join('\n')}`).toHaveLength(0);
+  });
+
   test('kid claims their own chore directly — no picker, no 403', async ({ page }) => {
     const forbidden = collect403s(page);
     await authenticatePageAsKid(page, session);
