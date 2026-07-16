@@ -37,3 +37,7 @@ e2e/test-output.txt
 
 # Misc
 _ul
+
+# v0.14.4 email-preview build artifact (regenerate via backend/scripts/preview_emails.py)
+backend/scripts/email-preview.html
+backend/.cache/

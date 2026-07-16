@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 from ..database import get_db
 from ..deps import require_auth, require_parent, require_kid_access, get_user_kid
 from ..models import Kid, Chore, ChoreClaim, DailyMultiplier, User
+from ..timeutil import local_day_bounds_utc
 from ..schemas import (
     KidCreate, KidUpdate, KidResponse, KidStats, PointsAdjustRequest,
     StreakInfo, DailyProgressResponse, LinkGoogleRequest
@@ -157,9 +158,9 @@ def get_kid_streaks(kid_id: str, db: Session = Depends(get_db), _user: User = De
             days_to_next = milestone - current_streak
             break
 
-    # Check if streak is at risk (no chores completed today yet)
-    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    today_end = today + timedelta(days=1)
+    # Check if streak is at risk (no chores completed today yet).
+    # UTC bounds of the local calendar day, to match UTC-stored approved_at.
+    today, today_end = local_day_bounds_utc()
 
     todays_completions = db.query(ChoreClaim).filter(
         ChoreClaim.kid_id == kid_id,
@@ -206,9 +207,11 @@ def get_daily_progress(kid_id: str, db: Session = Depends(get_db), _user: User =
         raise HTTPException(status_code=404, detail="Kid not found")
 
     today = datetime.now()
+    day_of_week = today.weekday()  # local
+    # Day-key marker (naive local midnight) for the DailyMultiplier record + response date.
     today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_end = today_start + timedelta(days=1)
-    day_of_week = today.weekday()
+    # UTC bounds of the local calendar day, to match UTC-stored claimed_at.
+    claim_start, claim_end = local_day_bounds_utc()
 
     # Get all recurring chores assigned to kid for today
     all_chores = db.query(Chore).all()
@@ -240,8 +243,8 @@ def get_daily_progress(kid_id: str, db: Session = Depends(get_db), _user: User =
         ChoreClaim.kid_id == kid_id,
         ChoreClaim.chore_id.in_(todays_chore_ids),
         ChoreClaim.status == "approved",
-        ChoreClaim.claimed_at >= today_start,
-        ChoreClaim.claimed_at < today_end
+        ChoreClaim.claimed_at >= claim_start,
+        ChoreClaim.claimed_at < claim_end
     ).count() if todays_chore_ids else 0
 
     all_completed = completed_count == total_chores and total_chores > 0
