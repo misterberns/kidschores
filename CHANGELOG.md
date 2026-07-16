@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.4] - 2026-07-15
+
+### Changed
+- Transactional emails (password reset, invitations, chore and reward
+  notifications, daily summaries, streak milestones) are now styled to match the
+  app — a dark KidsChores header with the logo, the electric-cyan accent, and
+  clean points callouts, replacing the old generic green template.
+
 ## [0.14.3] - 2026-07-14
 
 ### Changed

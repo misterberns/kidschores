@@ -1,9 +1,22 @@
-"""Email notification service using aiosmtplib."""
+"""Email notification service using aiosmtplib.
+
+All transactional emails share a single branded wrapper (`_branded_wrapper`)
+styled to the KidsChores v2 "Midnight + Electric" system: a dark #0B0E14 header
+carrying the horizontal wordmark (embedded as an inline CID image, since
+kidschores.mrberns.tech resolves to a LAN IP and a hosted <img src> is
+unreachable to Gmail's image proxy / off-LAN recipients), a light card body,
+an electric-cyan CTA, and dark points callouts with volt numerals (volt on
+white fails contrast, so the celebratory numbers sit on a dark chip — the
+flagship pairing). Per BRAND-GUIDELINES the redesign retired emoji-as-UI,
+rainbow gradients and confetti, so the emails use restrained typographic
+treatment instead.
+"""
 import html
 import logging
 import os
 from typing import Optional, List
 from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 import aiosmtplib
 
@@ -17,6 +30,101 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", "noreply@kidschores.local")
 SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "KidsChores")
 SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
+
+# v2 "Midnight + Electric" brand tokens (mirrors frontend/src/index.css)
+BRAND_BASE = "#0B0E14"        # header / dark chips
+BRAND_INK = "#F4F6FB"         # light text (on dark)
+BRAND_MUTED_DARK = "#A7B0C0"  # secondary text on dark
+BRAND_HERO = "#38E1FF"        # electric cyan — CTA, accents
+BRAND_VOLT = "#B6F400"        # volt — positive points (on dark only)
+BRAND_STREAK = "#FDBA74"      # streak flame amber (on dark)
+BRAND_DANGER = "#FB7185"      # destructive / security
+BODY_TEXT = "#334155"         # body copy on the white card
+BODY_HEADING = "#0B0E14"      # headings on the white card
+BODY_MUTED = "#8A93A6"        # captions / fine print
+CARD_BG = "#FFFFFF"
+PAGE_BG = "#EEF1F6"
+FOOTER_BG = "#F5F7FA"
+HAIRLINE = "#E2E8F0"
+
+APP_TAGLINE = "Chores, points &amp; rewards for the whole family"
+
+DISPLAY_FONT = "'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+BODY_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+
+# Logo embedded inline (multipart/related) so it renders without a public host.
+_LOGO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "email-logo.png"))
+_LOGO_CID = "kclogo"
+
+
+def _load_logo_bytes() -> Optional[bytes]:
+    """Return the email header logo bytes, or None if unavailable (never raises)."""
+    try:
+        with open(_LOGO_PATH, "rb") as fh:
+            return fh.read()
+    except OSError as exc:  # pragma: no cover - defensive
+        logger.warning("email-logo.png unavailable (%s); sending without header logo", exc)
+        return None
+
+
+# --- body-content helpers (all inline styles — email clients strip <style>) ---
+
+def _h2(text: str) -> str:
+    return (
+        f'<h2 style="margin:0 0 16px 0; font-family:{DISPLAY_FONT}; font-weight:700; '
+        f'font-size:22px; line-height:1.25; color:{BODY_HEADING}; letter-spacing:-0.01em;">{text}</h2>'
+    )
+
+
+def _p(text: str, muted: bool = False) -> str:
+    color = BODY_MUTED if muted else BODY_TEXT
+    size = "14px" if muted else "15px"
+    return f'<p style="margin:0 0 14px 0; color:{color}; font-size:{size}; line-height:1.6;">{text}</p>'
+
+
+def _cta(url: str, label: str) -> str:
+    """Electric-cyan CTA button (dark text on cyan), Outlook-safe table wrap."""
+    return (
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+        'style="margin:24px auto;"><tr>'
+        f'<td align="center" style="border-radius:10px; background:{BRAND_HERO};">'
+        f'<a href="{url}" style="display:inline-block; padding:13px 30px; font-family:{DISPLAY_FONT}; '
+        f'font-weight:700; font-size:15px; color:{BRAND_BASE}; text-decoration:none; border-radius:10px;">{label}</a>'
+        '</td></tr></table>'
+    )
+
+
+def _callout(number: str, label: str, number_color: str) -> str:
+    """Dark chip with a big display number (volt/amber/cyan) + uppercase label."""
+    return (
+        f'<div style="background:{BRAND_BASE}; border-radius:14px; padding:24px; text-align:center; margin:20px 0;">'
+        f'<div style="font-family:{DISPLAY_FONT}; font-weight:700; font-size:44px; line-height:1; color:{number_color};">{number}</div>'
+        f'<div style="color:{BRAND_MUTED_DARK}; font-size:12px; letter-spacing:0.06em; text-transform:uppercase; margin-top:10px;">{label}</div>'
+        '</div>'
+    )
+
+
+def _link_fallback(url: str) -> str:
+    return (
+        f'<p style="word-break:break-all; font-size:12px; color:{BODY_MUTED}; margin:4px 0 0 0; line-height:1.5;">'
+        f'If the button doesn\'t work, copy and paste this link into your browser:<br>{url}</p>'
+    )
+
+
+def _note_box(title: str, inner_html: str, accent: str) -> str:
+    """Left-accent-bordered info/warning box on a subtle tint."""
+    return (
+        f'<div style="background:#F1F5F9; border-left:3px solid {accent}; border-radius:8px; '
+        f'padding:14px 16px; margin-top:20px;">'
+        f'<div style="font-family:{DISPLAY_FONT}; font-weight:700; font-size:14px; color:{BODY_HEADING}; margin-bottom:6px;">{title}</div>'
+        f'<div style="font-size:14px; color:{BODY_TEXT}; line-height:1.6;">{inner_html}</div>'
+        '</div>'
+    )
+
+
+def _bullets(items: List[str]) -> str:
+    lis = "".join(f'<li style="margin:2px 0;">{it}</li>' for it in items)
+    return f'<ul style="margin:0; padding-left:20px;">{lis}</ul>'
 
 
 class EmailService:
@@ -35,6 +143,41 @@ class EmailService:
     def is_configured(self) -> bool:
         """Check if email service is properly configured."""
         return self._is_configured
+
+    def _branded_wrapper(self, body_html: str, preheader: str = "") -> str:
+        """Wrap body HTML in the KidsChores v2 branded shell (dark header + CID logo)."""
+        preheader_block = (
+            f'<div style="display:none; max-height:0; overflow:hidden; opacity:0; '
+            f'mso-hide:all;">{preheader}</div>'
+            if preheader else ""
+        )
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <meta name="color-scheme" content="light">
+</head>
+<body style="margin:0; padding:0; background:{PAGE_BG}; font-family:{BODY_FONT};">
+    {preheader_block}
+    <div style="background:{PAGE_BG}; padding:24px 12px;">
+        <div style="max-width:560px; margin:0 auto; background:{CARD_BG}; border-radius:16px; overflow:hidden; box-shadow:0 1px 3px rgba(11,14,20,0.10);">
+            <div style="background:{BRAND_BASE}; padding:28px 32px; text-align:center;">
+                <img src="cid:{_LOGO_CID}" alt="KidsChores" width="196" style="width:196px; max-width:62%; height:auto; display:inline-block; border:0; outline:none; text-decoration:none;">
+                <div style="color:{BRAND_MUTED_DARK}; font-size:13px; margin-top:10px; letter-spacing:0.01em;">{APP_TAGLINE}</div>
+            </div>
+            <div style="padding:32px;">
+                {body_html}
+            </div>
+            <div style="background:{FOOTER_BG}; padding:20px 32px; text-align:center; color:{BODY_MUTED}; font-size:12px; line-height:1.5;">
+                <p style="margin:0 0 4px 0;">This is an automated message from KidsChores.</p>
+                <p style="margin:0;">Manage notifications anytime in the app settings.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
 
     async def send_email(
         self,
@@ -62,18 +205,25 @@ class EmailService:
 
         logger.info(f"Sending email to {to_email} via {self.host}:{self.port}")
         try:
-            # Create message
-            message = MIMEMultipart("alternative")
+            # multipart/related wraps the text+html alternative AND the inline logo
+            message = MIMEMultipart("related")
             message["Subject"] = subject
             message["From"] = f"{self.from_name} <{self.from_email}>"
             message["To"] = to_email
 
-            # Add plain text version
+            alternative = MIMEMultipart("alternative")
             if text_content:
-                message.attach(MIMEText(text_content, "plain"))
+                alternative.attach(MIMEText(text_content, "plain"))
+            alternative.attach(MIMEText(html_content, "html"))
+            message.attach(alternative)
 
-            # Add HTML version
-            message.attach(MIMEText(html_content, "html"))
+            # Inline logo (CID). Missing file → send without it (never crash).
+            logo_bytes = _load_logo_bytes()
+            if logo_bytes is not None:
+                logo_part = MIMEImage(logo_bytes, _subtype="png")
+                logo_part.add_header("Content-ID", f"<{_LOGO_CID}>")
+                logo_part.add_header("Content-Disposition", "inline", filename="kidschores.png")
+                message.attach(logo_part)
 
             # Send email
             logger.debug(f"Connecting to SMTP: {self.host}:{self.port} TLS={self.use_tls}")
@@ -101,58 +251,30 @@ class EmailService:
         chore_name: str,
     ) -> bool:
         """Send email when a chore is claimed."""
-        # Escape user-supplied values for HTML safety
         parent_name = html.escape(parent_name)
         kid_name = html.escape(kid_name)
         chore_name = html.escape(chore_name)
         subject = f"[KidsChores] {kid_name} claimed '{chore_name}'"
 
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #10b981, #3b82f6); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
-                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
-                .highlight {{ background: #10b981; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold; display: inline-block; }}
-                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
-                .btn {{ display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Chore Claimed!</h1>
-                </div>
-                <div class="content">
-                    <p>Hi {parent_name},</p>
-                    <p><span class="highlight">{kid_name}</span> has claimed the chore:</p>
-                    <h2 style="color: #10b981;">"{chore_name}"</h2>
-                    <p>The chore is now awaiting your approval. Once you verify it's complete, you can approve it to award points.</p>
-                    <a href="#" class="btn">Review Now</a>
-                </div>
-                <div class="footer">
-                    <p>This is an automated message from KidsChores.</p>
-                    <p>To change your notification preferences, visit the app settings.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body = (
+            _h2("Chore claimed")
+            + _p(f"Hi {parent_name},")
+            + _p(f'<strong style="color:{BODY_HEADING};">{kid_name}</strong> just claimed '
+                 f'<strong style="color:{BODY_HEADING};">&ldquo;{chore_name}&rdquo;</strong> '
+                 "&mdash; it's now waiting for your approval.")
+            + _p("Open KidsChores to verify it's done and award the points.", muted=True)
+        )
+        html_content = self._branded_wrapper(body, preheader=f"{kid_name} claimed {chore_name}")
 
-        text_content = f"""
-        Hi {parent_name},
+        text_content = f"""Hi {parent_name},
 
-        {kid_name} has claimed the chore: "{chore_name}"
+{kid_name} has claimed the chore: "{chore_name}"
 
-        The chore is now awaiting your approval. Once you verify it's complete, you can approve it to award points.
+The chore is now awaiting your approval. Once you verify it's complete, you can approve it to award points.
 
-        --
-        KidsChores
-        """
-
+--
+KidsChores
+"""
         return await self.send_email(to_email, subject, html_content, text_content)
 
     async def send_chore_approved_email(
@@ -167,54 +289,25 @@ class EmailService:
         chore_name = html.escape(chore_name)
         subject = f"[KidsChores] Great job, {kid_name}! '{chore_name}' approved!"
 
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
-                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; text-align: center; }}
-                .points {{ font-size: 48px; font-weight: bold; color: #f59e0b; }}
-                .star {{ font-size: 24px; }}
-                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Awesome Job!</h1>
-                </div>
-                <div class="content">
-                    <p class="star">&#11088;&#11088;&#11088;</p>
-                    <p>Great work, <strong>{kid_name}</strong>!</p>
-                    <p>Your chore <strong>"{chore_name}"</strong> has been approved!</p>
-                    <p class="points">+{points_awarded}</p>
-                    <p>points earned!</p>
-                    <p style="margin-top: 20px; color: #6b7280;">Keep up the great work!</p>
-                </div>
-                <div class="footer">
-                    <p>This is an automated message from KidsChores.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body = (
+            _h2(f"Nice work, {kid_name}!")
+            + _p(f'Your chore <strong style="color:{BODY_HEADING};">&ldquo;{chore_name}&rdquo;</strong> was approved.')
+            + _callout(f"+{points_awarded}", "points earned", BRAND_VOLT)
+            + _p("Keep the streak going.", muted=True)
+        )
+        html_content = self._branded_wrapper(body, preheader=f"{chore_name} approved: +{points_awarded} points")
 
-        text_content = f"""
-        Great work, {kid_name}!
+        text_content = f"""Great work, {kid_name}!
 
-        Your chore "{chore_name}" has been approved!
+Your chore "{chore_name}" has been approved!
 
-        +{points_awarded} points earned!
++{points_awarded} points earned!
 
-        Keep up the great work!
+Keep up the great work!
 
-        --
-        KidsChores
-        """
-
+--
+KidsChores
+"""
         return await self.send_email(to_email, subject, html_content, text_content)
 
     async def send_daily_summary_email(
@@ -227,62 +320,44 @@ class EmailService:
         parent_name = html.escape(parent_name)
         subject = "[KidsChores] Daily Summary"
 
-        # Build summary HTML (escape kid names)
+        def _stat(label: str, value: str, accent: bool = False) -> str:
+            vcolor = "#5C8A00" if accent else BODY_HEADING  # deepened volt reads AA on white
+            return (
+                '<tr>'
+                f'<td style="padding:3px 0; color:{BODY_MUTED}; font-size:13px;">{label}</td>'
+                f'<td align="right" style="padding:3px 0; color:{vcolor}; font-size:14px; font-weight:700;">{value}</td>'
+                '</tr>'
+            )
+
         kids_html = ""
         for kid in kids_summary:
-            kid['name'] = html.escape(str(kid.get('name', '')))
-            kids_html += f"""
-            <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #e5e7eb;">
-                <h3 style="margin: 0 0 10px 0; color: #10b981;">{kid['name']}</h3>
-                <p style="margin: 5px 0;">Chores completed: <strong>{kid['chores_completed']}</strong></p>
-                <p style="margin: 5px 0;">Points earned today: <strong>{kid['points_today']}</strong></p>
-                <p style="margin: 5px 0;">Current streak: <strong>{kid['streak']} days</strong></p>
-                <p style="margin: 5px 0;">Total points: <strong>{kid['total_points']}</strong></p>
-            </div>
-            """
+            name = html.escape(str(kid.get('name', '')))
+            kids_html += (
+                f'<div style="border:1px solid {HAIRLINE}; border-radius:12px; padding:16px; margin:12px 0;">'
+                f'<div style="font-family:{DISPLAY_FONT}; font-weight:700; font-size:17px; color:{BODY_HEADING}; margin-bottom:8px;">{name}</div>'
+                '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
+                + _stat("Chores completed", str(kid['chores_completed']))
+                + _stat("Points earned today", f"+{kid['points_today']}", accent=True)
+                + _stat("Current streak", f"{kid['streak']} days")
+                + _stat("Total points", str(kid['total_points']))
+                + '</table></div>'
+            )
 
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #8b5cf6, #3b82f6); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
-                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
-                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Daily Summary</h1>
-                </div>
-                <div class="content">
-                    <p>Hi {parent_name},</p>
-                    <p>Here's how your kids did today:</p>
-                    {kids_html}
-                </div>
-                <div class="footer">
-                    <p>This is an automated message from KidsChores.</p>
-                    <p>To change your notification preferences, visit the app settings.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body = (
+            _h2("Daily summary")
+            + _p(f"Hi {parent_name}, here's how today went:")
+            + kids_html
+        )
+        html_content = self._branded_wrapper(body, preheader="Your family's daily chore summary")
 
-        text_content = f"""
-        Hi {parent_name},
+        text_content = f"""Hi {parent_name},
 
-        Here's how your kids did today:
+Here's how your kids did today:
 
-        {"".join([f"{k['name']}: {k['chores_completed']} chores, {k['points_today']} points, {k['streak']} day streak" for k in kids_summary])}
-
-        --
-        KidsChores
-        """
-
+{"".join([f"{html.escape(str(k.get('name','')))}: {k['chores_completed']} chores, {k['points_today']} points, {k['streak']} day streak" + chr(10) for k in kids_summary])}
+--
+KidsChores
+"""
         return await self.send_email(to_email, subject, html_content, text_content)
 
     async def send_streak_milestone_email(
@@ -299,58 +374,30 @@ class EmailService:
             14: "Two weeks strong! You're unstoppable!",
             30: "A whole month! Incredible commitment!",
             50: "50 days! You're a chore champion!",
-            100: "100 DAYS! LEGENDARY!",
-            365: "ONE YEAR! ULTIMATE CHAMPION!",
+            100: "100 days! Legendary!",
+            365: "One year! Ultimate champion!",
         }
-        message = milestone_messages.get(streak_days, f"{streak_days} days! Amazing!")
+        message = html.escape(milestone_messages.get(streak_days, f"{streak_days} days! Amazing!"))
 
         subject = f"[KidsChores] {kid_name} hit a {streak_days}-day streak!"
 
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }}
-                .streak {{ font-size: 64px; font-weight: bold; }}
-                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; text-align: center; }}
-                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <p class="streak">{streak_days}</p>
-                    <h1>Day Streak!</h1>
-                </div>
-                <div class="content">
-                    <h2>Congratulations, {kid_name}!</h2>
-                    <p style="font-size: 18px; color: #f59e0b;">{message}</p>
-                    <p style="font-size: 36px;">&#127942; &#11088; &#127881;</p>
-                </div>
-                <div class="footer">
-                    <p>This is an automated message from KidsChores.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body = (
+            _h2(f"Congratulations, {kid_name}!")
+            + _callout(str(streak_days), "day streak", BRAND_STREAK)
+            + _p(f'<span style="color:{BODY_HEADING}; font-weight:600;">{message}</span>')
+        )
+        html_content = self._branded_wrapper(body, preheader=f"{kid_name} reached a {streak_days}-day streak")
 
-        text_content = f"""
-        Congratulations, {kid_name}!
+        text_content = f"""Congratulations, {kid_name}!
 
-        You hit a {streak_days}-day streak!
+You hit a {streak_days}-day streak!
 
-        {message}
+{milestone_messages.get(streak_days, f"{streak_days} days! Amazing!")}
 
-        --
-        KidsChores
-        """
-
+--
+KidsChores
+"""
         return await self.send_email(to_email, subject, html_content, text_content)
-
 
     async def send_parent_invitation_email(
         self,
@@ -363,63 +410,29 @@ class EmailService:
         invite_link = html.escape(invite_link)
         subject = "[KidsChores] You're Invited!"
 
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name="referrer" content="no-referrer">
-            <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #10b981, #3b82f6); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }}
-                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
-                .btn {{ display: inline-block; background: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }}
-                .highlight {{ background: #10b981; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold; display: inline-block; }}
-                .info {{ background: #e0f2fe; border: 1px solid #0284c7; border-radius: 6px; padding: 12px; margin-top: 20px; font-size: 14px; }}
-                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
-                .link-fallback {{ word-break: break-all; font-size: 12px; color: #6b7280; margin-top: 10px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Welcome to KidsChores!</h1>
-                </div>
-                <div class="content">
-                    <p>Hi there!</p>
-                    <p>You've been added as a parent <span class="highlight">{parent_name}</span> to help manage chores for your family.</p>
-                    <p>Click the button below to set up your account:</p>
-                    <p style="text-align: center;">
-                        <a href="{invite_link}" class="btn">Accept Invitation</a>
-                    </p>
-                    <p class="link-fallback">
-                        If the button doesn't work, copy and paste this link into your browser:<br>
-                        {invite_link}
-                    </p>
-                    <div class="info">
-                        <strong>What you'll be able to do:</strong>
-                        <ul style="margin: 5px 0; padding-left: 20px;">
-                            <li>Approve chores completed by kids</li>
-                            <li>Award points and bonuses</li>
-                            <li>Manage rewards and allowances</li>
-                            <li>Track progress and streaks</li>
-                        </ul>
-                    </div>
-                    <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">
-                        <strong>Note:</strong> This invitation expires in 24 hours.
-                    </p>
-                </div>
-                <div class="footer">
-                    <p>This is an automated message from KidsChores.</p>
-                    <p>If you didn't expect this invitation, you can safely ignore this email.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body = (
+            _h2("Welcome to KidsChores!")
+            + _p("Hi there!")
+            + _p(f'You\'ve been added as a parent (<strong style="color:{BODY_HEADING};">{parent_name}</strong>) '
+                 "to help manage chores for your family.")
+            + _p("Set up your account to get started:")
+            + _cta(invite_link, "Accept invitation")
+            + _link_fallback(invite_link)
+            + _note_box(
+                "What you'll be able to do",
+                _bullets([
+                    "Approve chores completed by kids",
+                    "Award points and bonuses",
+                    "Manage rewards and allowances",
+                    "Track progress and streaks",
+                ]),
+                BRAND_HERO,
+            )
+            + _p("This invitation expires in 24 hours.", muted=True)
+        )
+        html_content = self._branded_wrapper(body, preheader="You've been invited to KidsChores")
 
-        text_content = f"""
-Hi there!
+        text_content = f"""Hi there!
 
 You've been added as a parent ({parent_name}) to help manage chores for your family in KidsChores.
 
@@ -438,8 +451,7 @@ Note: This invitation expires in 24 hours.
 KidsChores
 
 If you didn't expect this invitation, you can safely ignore this email.
-        """
-
+"""
         return await self.send_email(to_email, subject, html_content, text_content)
 
     async def send_password_reset_email(
@@ -453,58 +465,26 @@ If you didn't expect this invitation, you can safely ignore this email.
         reset_link = html.escape(reset_link)
         subject = "[KidsChores] Reset Your Password"
 
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name="referrer" content="no-referrer">
-            <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #ef4444, #f97316); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
-                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
-                .btn {{ display: inline-block; background: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }}
-                .warning {{ background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 12px; margin-top: 20px; font-size: 14px; }}
-                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
-                .link-fallback {{ word-break: break-all; font-size: 12px; color: #6b7280; margin-top: 10px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Password Reset</h1>
-                </div>
-                <div class="content">
-                    <p>Hi {display_name},</p>
-                    <p>We received a request to reset your password for your KidsChores account.</p>
-                    <p>Click the button below to create a new password:</p>
-                    <p style="text-align: center;">
-                        <a href="{reset_link}" class="btn">Reset Password</a>
-                    </p>
-                    <p class="link-fallback">
-                        If the button doesn't work, copy and paste this link into your browser:<br>
-                        {reset_link}
-                    </p>
-                    <div class="warning">
-                        <strong>Important:</strong>
-                        <ul style="margin: 5px 0; padding-left: 20px;">
-                            <li>This link expires in 1 hour</li>
-                            <li>If you didn't request this reset, you can safely ignore this email</li>
-                            <li>Your password won't change until you create a new one</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="footer">
-                    <p>This is an automated message from KidsChores.</p>
-                    <p>If you didn't request a password reset, please ignore this email.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body = (
+            _h2("Reset your password")
+            + _p(f"Hi {display_name},")
+            + _p("We received a request to reset the password for your KidsChores account. "
+                 "Click below to create a new one:")
+            + _cta(reset_link, "Reset password")
+            + _link_fallback(reset_link)
+            + _note_box(
+                "Good to know",
+                _bullets([
+                    "This link expires in 1 hour",
+                    "If you didn't request this, you can safely ignore this email",
+                    "Your password won't change until you create a new one",
+                ]),
+                BRAND_HERO,
+            )
+        )
+        html_content = self._branded_wrapper(body, preheader="Reset your KidsChores password")
 
-        text_content = f"""
-Hi {display_name},
+        text_content = f"""Hi {display_name},
 
 We received a request to reset your password for your KidsChores account.
 
@@ -518,8 +498,7 @@ Important:
 
 --
 KidsChores
-        """
-
+"""
         return await self.send_email(to_email, subject, html_content, text_content)
 
     async def send_password_changed_email(
@@ -531,45 +510,21 @@ KidsChores
         display_name = html.escape(display_name)
         subject = "[KidsChores] Your Password Has Been Changed"
 
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #10b981, #3b82f6); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
-                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
-                .success-icon {{ font-size: 48px; text-align: center; }}
-                .warning {{ background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 12px; margin-top: 20px; font-size: 14px; }}
-                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Password Changed</h1>
-                </div>
-                <div class="content">
-                    <p class="success-icon">&#9989;</p>
-                    <p>Hi {display_name},</p>
-                    <p>Your KidsChores password has been successfully changed.</p>
-                    <p>You can now log in with your new password.</p>
-                    <div class="warning">
-                        <strong>Wasn't you?</strong><br>
-                        If you didn't make this change, please contact support immediately as your account may have been compromised.
-                    </div>
-                </div>
-                <div class="footer">
-                    <p>This is an automated message from KidsChores.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body = (
+            _h2("Password changed")
+            + _p(f"Hi {display_name},")
+            + _p("Your KidsChores password has been successfully changed. "
+                 "You can now log in with your new password.")
+            + _note_box(
+                "Wasn't you?",
+                "If you didn't make this change, please contact support immediately &mdash; "
+                "your account may have been compromised.",
+                BRAND_DANGER,
+            )
+        )
+        html_content = self._branded_wrapper(body, preheader="Your KidsChores password was changed")
 
-        text_content = f"""
-Hi {display_name},
+        text_content = f"""Hi {display_name},
 
 Your KidsChores password has been successfully changed.
 
@@ -580,8 +535,7 @@ If you didn't make this change, please contact support immediately as your accou
 
 --
 KidsChores
-        """
-
+"""
         return await self.send_email(to_email, subject, html_content, text_content)
 
     async def send_reward_redeemed_email(
@@ -598,56 +552,28 @@ KidsChores
         reward_name = html.escape(reward_name)
         subject = f"[KidsChores] {kid_name} redeemed '{reward_name}'"
 
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
-                .content {{ background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }}
-                .highlight {{ background: #f59e0b; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold; display: inline-block; }}
-                .points {{ font-size: 36px; font-weight: bold; color: #ef4444; text-align: center; }}
-                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
-                .btn {{ display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Reward Redeemed!</h1>
-                </div>
-                <div class="content">
-                    <p>Hi {parent_name},</p>
-                    <p><span class="highlight">{kid_name}</span> has redeemed the reward:</p>
-                    <h2 style="color: #f59e0b;">"{reward_name}"</h2>
-                    <p class="points">-{points_spent} points</p>
-                    <p>This reward may require your approval before it's granted.</p>
-                    <a href="#" class="btn">Review Now</a>
-                </div>
-                <div class="footer">
-                    <p>This is an automated message from KidsChores.</p>
-                    <p>To change your notification preferences, visit the app settings.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body = (
+            _h2("Reward redeemed")
+            + _p(f"Hi {parent_name},")
+            + _p(f'<strong style="color:{BODY_HEADING};">{kid_name}</strong> redeemed '
+                 f'<strong style="color:{BODY_HEADING};">&ldquo;{reward_name}&rdquo;</strong>.')
+            + _callout(f"-{points_spent}", "points redeemed", BRAND_HERO)
+            + _p("This reward may need your approval before it's granted. "
+                 "Open KidsChores to review.", muted=True)
+        )
+        html_content = self._branded_wrapper(body, preheader=f"{kid_name} redeemed {reward_name}")
 
-        text_content = f"""
-        Hi {parent_name},
+        text_content = f"""Hi {parent_name},
 
-        {kid_name} has redeemed the reward: "{reward_name}"
+{kid_name} has redeemed the reward: "{reward_name}"
 
-        Points spent: {points_spent}
+Points spent: {points_spent}
 
-        This reward may require your approval before it's granted.
+This reward may require your approval before it's granted.
 
-        --
-        KidsChores
-        """
-
+--
+KidsChores
+"""
         return await self.send_email(to_email, subject, html_content, text_content)
 
 

@@ -1,12 +1,12 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="frontend/src/assets/logo/kc-logo-horizontal-dark.svg">
-    <img src="frontend/src/assets/logo/kc-logo-horizontal.svg" width="400" alt="KidsChores">
+    <source media="(prefers-color-scheme: dark)" srcset="frontend/public/logo-horizontal-dark.png">
+    <img src="frontend/public/logo-horizontal-light.png" width="400" alt="KidsChores">
   </picture>
 </p>
 
 <p align="center">
-  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.14.3-green?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.14.4-green?style=flat-square" alt="Version"></a>
   <a href="https://github.com/misterberns/kidschores/actions/workflows/ci.yml"><img src="https://github.com/misterberns/kidschores/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square" alt="License">
@@ -336,4 +336,4 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ## Version
 
-Current version: **0.14.3** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.14.4** (see [CHANGELOG.md](CHANGELOG.md) for history)
