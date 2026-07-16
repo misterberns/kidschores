@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   app — a dark KidsChores header with the logo, the electric-cyan accent, and
   clean points callouts, replacing the old generic green template.
 
+### Fixed
+- Chore streaks and daily progress no longer break in the evening. A chore
+  completed at night now correctly counts toward the current day — the day
+  boundary follows the server's timezone. Previously a timezone mismatch could
+  drop evening completions, resetting streaks and leaving a claimed chore's
+  button still showing.
+
 ## [0.14.3] - 2026-07-14
 
 ### Changed

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db, SessionLocal
 from ..deps import require_auth, require_parent, require_kid_access, assert_kid_access
 from ..models import Chore, ChoreClaim, Kid, DailyMultiplier, PushSubscription, User, Parent
+from ..timeutil import local_day_bounds_utc
 from ..schemas import (
     ChoreCreate, ChoreUpdate, ChoreResponse, ChoreWithStatus,
     ChoreClaimRequest, ChoreApproveRequest, ChoreClaimResponse,
@@ -198,9 +199,9 @@ def get_todays_chores(kid_id: str, db: Session = Depends(get_db), _user: User = 
         raise HTTPException(status_code=404, detail="Kid not found")
 
     today = datetime.now()
-    day_of_week = today.weekday()  # 0=Monday, 6=Sunday
-    today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_end = today_start + timedelta(days=1)
+    day_of_week = today.weekday()  # 0=Monday, 6=Sunday (local)
+    # UTC bounds of the local calendar day, to match UTC-stored claimed_at.
+    today_start, today_end = local_day_bounds_utc()
 
     # Get all chores where kid is assigned
     all_chores = db.query(Chore).all()

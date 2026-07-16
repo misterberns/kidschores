@@ -8,6 +8,7 @@ from app.database import get_db_session
 from app.models import Kid, Chore, ChoreClaim, DailyMultiplier, PushSubscription, ScheduledJobLog
 from app.services.gamification import evaluate_badges
 from app.services.push_service import push_service
+from app.timeutil import local_day_bounds_utc
 
 logger = logging.getLogger(__name__)
 
@@ -79,16 +80,15 @@ def get_todays_chores_for_kid(db: Session, kid_id: str) -> list:
 
 
 def get_completed_chores_today(db: Session, kid_id: str, chore_ids: list) -> list:
-    """Get chores completed by kid today."""
-    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    tomorrow = today + timedelta(days=1)
+    """Get chores completed by kid today (local calendar day, matched in UTC)."""
+    day_start, day_end = local_day_bounds_utc()
 
     completed = db.query(ChoreClaim).filter(
         ChoreClaim.kid_id == kid_id,
         ChoreClaim.chore_id.in_(chore_ids),
         ChoreClaim.status == "approved",
-        ChoreClaim.claimed_at >= today,
-        ChoreClaim.claimed_at < tomorrow
+        ChoreClaim.claimed_at >= day_start,
+        ChoreClaim.claimed_at < day_end
     ).all()
 
     return [c.chore_id for c in completed]

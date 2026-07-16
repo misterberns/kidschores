@@ -6,6 +6,7 @@ import time
 from sqlalchemy.orm import Session
 from app.database import get_db_session
 from app.models import Chore, ChoreClaim, ScheduledJobLog
+from app.timeutil import local_day_start_utc
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +62,10 @@ async def reset_recurring_chores():
     try:
         db = next(get_db_session())
 
+        # UTC start of the local calendar day, to match UTC-stored claimed_at.
+        today_start = local_day_start_utc()
+        # Naive-local-midnight day-key marker for last_reset_date.
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        yesterday = today - timedelta(days=1)
 
         # Get recurring chores
         recurring_chores = db.query(Chore).filter(
@@ -75,7 +78,7 @@ async def reset_recurring_chores():
             expired_count = db.query(ChoreClaim).filter(
                 ChoreClaim.chore_id == chore.id,
                 ChoreClaim.status.in_(["pending", "claimed"]),
-                ChoreClaim.claimed_at < today
+                ChoreClaim.claimed_at < today_start
             ).update({"status": "expired"})
 
             affected_records += expired_count
