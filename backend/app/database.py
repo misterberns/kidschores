@@ -33,6 +33,24 @@ def init_db():
     Base.metadata.create_all(bind=engine)
 
 
+def ensure_columns():
+    """Add columns to EXISTING tables (create_all only creates missing tables).
+
+    Idempotent: checks PRAGMA table_info before ALTERing. Sibling of
+    ensure_indexes() — same create_all-gap mechanism, for columns.
+    """
+    with engine.connect() as conn:
+        user_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(users)"))]
+        if "token_version" not in user_cols:
+            # v0.15.0 session-revocation epoch; existing rows start at 0, which
+            # matches the missing-`tv`-claim default so pre-deploy JWTs stay
+            # valid until the user's first revocation event.
+            conn.execute(text(
+                "ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0"
+            ))
+        conn.commit()
+
+
 def ensure_indexes():
     """Create indexes on existing tables (create_all only handles new tables)."""
     indexes = [

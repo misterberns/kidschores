@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..database import get_db
 from ..deps import get_current_user, require_auth
-from ..models import User, Parent, Kid, PasswordResetToken, ParentInvitation
+from ..models import User, Parent, Kid, PasswordResetToken, ParentInvitation, RevokedToken
 from ..schemas import (
     PasswordResetRequest,
     PasswordResetVerify,
@@ -156,6 +156,20 @@ class VerifyPinResponse(BaseModel):
     valid: bool
 
 
+def _token_payload(user: User, role: Optional[str] = None, kid_id: Optional[str] = None) -> dict:
+    """Base claims for a token pair.
+
+    Always carries `tv` (the user's current token_version) so a later bump —
+    password reset, "log out everywhere" — instantly invalidates the tokens.
+    """
+    data: dict = {"sub": user.id, "tv": user.token_version or 0}
+    if role:
+        data["role"] = role
+    if kid_id:
+        data["kid_id"] = kid_id
+    return data
+
+
 # --- Endpoints ---
 
 @router.post("/register", response_model=TokenResponse)
@@ -199,8 +213,8 @@ async def register(request: RegisterRequest, db: Session = Depends(get_db)):
     db.commit()
 
     # Generate tokens
-    access_token = create_access_token({"sub": user.id})
-    refresh_token = create_refresh_token({"sub": user.id})
+    access_token = create_access_token(_token_payload(user))
+    refresh_token = create_refresh_token(_token_payload(user))
 
     return TokenResponse(
         access_token=access_token,
@@ -250,8 +264,8 @@ async def login(request: LoginRequest, req: Request, db: Session = Depends(get_d
     db.commit()
 
     # Generate tokens
-    access_token = create_access_token({"sub": user.id})
-    refresh_token = create_refresh_token({"sub": user.id})
+    access_token = create_access_token(_token_payload(user))
+    refresh_token = create_refresh_token(_token_payload(user))
 
     return TokenResponse(
         access_token=access_token,
@@ -279,12 +293,35 @@ async def refresh(request: RefreshRequest, db: Session = Depends(get_db)):
             detail="User not found or inactive"
         )
 
+    # Session-revocation epoch: a token_version bump (password reset,
+    # "log out everywhere") invalidates every outstanding token, refresh
+    # included. Missing claim ≡ 0 keeps pre-v0.15.0 tokens working.
+    if payload.get("tv", 0) != (user.token_version or 0):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked"
+        )
+
+    # Per-device logout: POST /auth/logout denylists the refresh token's jti.
+    # Legacy (pre-v0.15.0) tokens have no jti — accepted, and the rotation
+    # below hands back a jti-carrying replacement. Deliberately NO
+    # reuse-theft punishment: multi-tab clients share localStorage and a
+    # simultaneous double-refresh race must not mass-logout the family.
+    jti = payload.get("jti")
+    if jti:
+        revoked = db.query(RevokedToken).filter(RevokedToken.jti == jti).first()
+        if revoked:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been revoked"
+            )
+    else:
+        logger.info("Rotating legacy jti-less refresh token for user %s", user.id)
+
     # Preserve role and kid_id claims from original token
     role = payload.get("role", "parent")
     kid_id = payload.get("kid_id")
-    token_data = {"sub": user.id, "role": role}
-    if kid_id:
-        token_data["kid_id"] = kid_id
+    token_data = _token_payload(user, role=role, kid_id=kid_id)
 
     # Generate new tokens
     access_token = create_access_token(token_data)
@@ -397,8 +434,8 @@ async def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db))
         db.commit()
 
         # JWT with kid role
-        access_token = create_access_token({"sub": user.id, "role": "kid", "kid_id": kid.id})
-        refresh_token = create_refresh_token({"sub": user.id, "role": "kid", "kid_id": kid.id})
+        access_token = create_access_token(_token_payload(user, role="kid", kid_id=kid.id))
+        refresh_token = create_refresh_token(_token_payload(user, role="kid", kid_id=kid.id))
         return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
     # Parent sign-in flow: find or create user
@@ -437,8 +474,8 @@ async def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db))
     db.commit()
 
     # Generate tokens with parent role
-    access_token = create_access_token({"sub": user.id, "role": "parent"})
-    refresh_token = create_refresh_token({"sub": user.id, "role": "parent"})
+    access_token = create_access_token(_token_payload(user, role="parent"))
+    refresh_token = create_refresh_token(_token_payload(user, role="parent"))
 
     return TokenResponse(
         access_token=access_token,
@@ -522,13 +559,40 @@ async def verify_pin_endpoint(
 
 
 @router.post("/logout")
-async def logout():
+async def logout(request: RefreshRequest, db: Session = Depends(get_db)):
+    """Log out this device: denylist the presented refresh token's jti.
+
+    The refresh token itself is the credential (no access token required —
+    the client may already have dropped it). Always returns success: logout
+    is best-effort and must not leak token validity. The device's access
+    token expires on its own short TTL.
     """
-    Logout endpoint.
-    Note: JWT tokens are stateless, so this is handled client-side.
-    This endpoint exists for consistency and future token blocklisting.
-    """
+    payload = decode_token(request.refresh_token)
+    if payload and payload.get("type") == "refresh":
+        jti = payload.get("jti")
+        exp = payload.get("exp")
+        if jti and exp:
+            already = db.query(RevokedToken).filter(RevokedToken.jti == jti).first()
+            if not already:
+                db.add(RevokedToken(
+                    jti=jti,
+                    user_id=payload.get("sub") or "",
+                    expires_at=datetime.fromtimestamp(exp, tz=timezone.utc),
+                ))
+                db.commit()
     return {"message": "Logged out successfully"}
+
+
+@router.post("/logout-all")
+async def logout_all(db: Session = Depends(get_db), user: User = Depends(require_auth)):
+    """Log out EVERYWHERE: bump the user's token_version.
+
+    Every outstanding access + refresh token (all devices) carries the old
+    `tv` claim and is rejected immediately — including the caller's own.
+    """
+    user.token_version = (user.token_version or 0) + 1
+    db.commit()
+    return {"message": "Logged out on all devices"}
 
 
 # --- Password Reset Endpoints ---
@@ -654,6 +718,11 @@ async def reset_password(request: PasswordResetVerify, db: Session = Depends(get
 
     # Update password
     user.password_hash = hash_password(request.new_password)
+
+    # Sign out ALL existing sessions (v0.15.0): a password reset must evict a
+    # potentially-compromised session — every outstanding access + refresh
+    # token carries the old `tv` claim and dies with this bump.
+    user.token_version = (user.token_version or 0) + 1
 
     # Mark token as used
     valid_token.used_at = now
@@ -817,8 +886,8 @@ async def accept_invitation(
     db.commit()
 
     # Generate tokens for auto-login
-    access_token = create_access_token({"sub": user.id})
-    refresh_token = create_refresh_token({"sub": user.id})
+    access_token = create_access_token(_token_payload(user))
+    refresh_token = create_refresh_token(_token_payload(user))
 
     return TokenResponse(
         access_token=access_token,

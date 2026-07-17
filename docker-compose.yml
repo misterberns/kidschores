@@ -10,6 +10,11 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    # Immutable rootfs (v0.15.0): nginx-unprivileged writes its pid + temp
+    # files under /tmp — a tmpfs covers everything it needs at runtime.
+    read_only: true
+    tmpfs:
+      - /tmp
     mem_limit: 256m
     cpus: 1.0
     logging:
@@ -42,7 +47,9 @@ services:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3103}
       - TZ=${TZ:-America/Chicago}
-      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      # 30 min (v0.15.0, was 24h): the frontend auto-refreshes on 401; a short
+      # TTL bounds how long a logged-out device's access token keeps working.
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
       - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-14}
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
@@ -60,6 +67,12 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    # Immutable rootfs (v0.15.0): /app/data stays writable (bind volume above);
+    # PYTHONDONTWRITEBYTECODE=1 is set in the image; /tmp tmpfs covers SQLite
+    # temp files + anything stdlib wants to scratch.
+    read_only: true
+    tmpfs:
+      - /tmp
     mem_limit: 512m
     cpus: 1.0
     logging:

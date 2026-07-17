@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, UserPlus, Pencil, Users, Lock, Unlock, Bell } from 'lucide-react';
-import { kidsApi, parentsApi } from '../../api/client';
+import { Plus, UserPlus, Pencil, Users, Lock, Unlock, Bell, ShieldAlert, LogOut } from 'lucide-react';
+import { api, kidsApi, parentsApi } from '../../api/client';
 import type { Kid, Parent } from '../../api/client';
+import { useAuth } from '../../auth';
 import { FormInput } from './FormElements';
 import { EntityCard } from './EntityCard';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
@@ -312,6 +313,66 @@ export function ParentsSection() {
           onCancel={() => setDeleteConfirm(null)}
           isPending={deleteMutation.isPending}
         />
+      )}
+
+      <SecuritySection />
+    </div>
+  );
+}
+
+function SecuritySection() {
+  const { logout } = useAuth();
+  const [confirming, setConfirming] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  const logoutEverywhere = async () => {
+    setPending(true);
+    try {
+      // Bumps the account's token_version server-side — every device's
+      // access + refresh tokens (including this one's) die immediately.
+      await api.post('/auth/logout-all');
+    } catch {
+      // Even if the call fails (offline), fall through to local logout.
+    }
+    logout();
+  };
+
+  return (
+    <div className="card p-4 mt-2">
+      <h3 className="font-bold text-lg mb-1 text-text-primary flex items-center gap-2">
+        <ShieldAlert size={20} className="text-primary-500" /> Security
+      </h3>
+      <p className="text-sm text-text-muted mb-3">
+        Signed in on a device you don't recognize, or lost one? Sign out of
+        every device at once. Everyone will need to log in again.
+      </p>
+      {confirming ? (
+        <div className="flex items-center gap-2">
+          <button
+            data-testid="logout-everywhere-confirm"
+            onClick={logoutEverywhere}
+            disabled={pending}
+            className="btn touch-target font-bold bg-error-500 text-white px-4 py-2 rounded-xl disabled:opacity-60"
+          >
+            {pending ? 'Signing out…' : 'Yes, sign out everywhere'}
+          </button>
+          <button
+            data-testid="logout-everywhere-cancel"
+            onClick={() => setConfirming(false)}
+            disabled={pending}
+            className="btn touch-target font-bold px-4 py-2 rounded-xl border border-border text-text-primary"
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          data-testid="logout-everywhere-btn"
+          onClick={() => setConfirming(true)}
+          className="btn touch-target font-bold px-4 py-2 rounded-xl border border-border text-text-primary flex items-center gap-2"
+        >
+          <LogOut size={18} /> Log out everywhere
+        </button>
       )}
     </div>
   );

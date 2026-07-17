@@ -1,6 +1,7 @@
 """Security utilities for authentication."""
 import secrets
 import hashlib
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 
@@ -67,12 +68,17 @@ def create_refresh_token(
     data: dict,
     expires_delta: Optional[timedelta] = None
 ) -> str:
-    """Create a JWT refresh token."""
+    """Create a JWT refresh token.
+
+    Every refresh token carries a unique `jti` so POST /auth/logout can
+    denylist exactly the token that device held (checked at /auth/refresh).
+    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days)
+    to_encode.setdefault("jti", str(uuid.uuid4()))
     to_encode.update({"exp": expire, "type": "refresh"})
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
