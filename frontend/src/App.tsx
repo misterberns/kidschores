@@ -1,25 +1,11 @@
+import { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Home as HomeIcon, ClipboardList, Gift, Users, LogOut, Bell, Wallet, History as HistoryIcon } from 'lucide-react';
-import { Home } from './pages/Home';
-import { Chores } from './pages/Chores';
-import { Rewards } from './pages/Rewards';
-import { Admin } from './pages/Admin';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { ForgotPassword } from './pages/ForgotPassword';
-import { ResetPassword } from './pages/ResetPassword';
-import { AcceptInvitation } from './pages/AcceptInvitation';
-import { GoogleCallback } from './pages/GoogleCallback';
-import { SelectKid } from './pages/SelectKid';
-import NotificationSettings from './pages/NotificationSettings';
-import { Allowance } from './pages/Allowance';
-import { History } from './pages/History';
-import Help from './pages/Help';
-import { Onboarding } from './pages/Onboarding';
+import { lazyWithRetry } from './utils/lazyWithRetry';
 import { AuthProvider, useAuth, ProtectedRoute } from './auth';
 import { ThemeProvider, ThemeToggle } from './theme';
 import { useReducedMotion } from './hooks/useReducedMotion';
@@ -27,6 +13,37 @@ import { pageVariants } from './utils/animations';
 import { Logo } from './components/Logo';
 import { ToastProvider } from './components/notifications/ToastProvider';
 import ErrorBoundary from './components/ErrorBoundary';
+
+// Route pages are code-split (v0.15.1): each loads on demand behind Suspense,
+// via lazyWithRetry (reload-once on a stale post-deploy chunk hash, then the
+// ErrorBoundary). Pages are imported NOWHERE else — keep it that way or the
+// static import folds the page back into the entry chunk (contract-tested).
+const Home = lazyWithRetry(() => import('./pages/Home').then(m => ({ default: m.Home })));
+const Chores = lazyWithRetry(() => import('./pages/Chores').then(m => ({ default: m.Chores })));
+const Rewards = lazyWithRetry(() => import('./pages/Rewards').then(m => ({ default: m.Rewards })));
+const Admin = lazyWithRetry(() => import('./pages/Admin').then(m => ({ default: m.Admin })));
+const Login = lazyWithRetry(() => import('./pages/Login').then(m => ({ default: m.Login })));
+const Register = lazyWithRetry(() => import('./pages/Register').then(m => ({ default: m.Register })));
+const ForgotPassword = lazyWithRetry(() => import('./pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
+const ResetPassword = lazyWithRetry(() => import('./pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
+const AcceptInvitation = lazyWithRetry(() => import('./pages/AcceptInvitation').then(m => ({ default: m.AcceptInvitation })));
+const GoogleCallback = lazyWithRetry(() => import('./pages/GoogleCallback').then(m => ({ default: m.GoogleCallback })));
+const SelectKid = lazyWithRetry(() => import('./pages/SelectKid').then(m => ({ default: m.SelectKid })));
+const NotificationSettings = lazyWithRetry(() => import('./pages/NotificationSettings'));
+const Allowance = lazyWithRetry(() => import('./pages/Allowance').then(m => ({ default: m.Allowance })));
+const History = lazyWithRetry(() => import('./pages/History').then(m => ({ default: m.History })));
+const Help = lazyWithRetry(() => import('./pages/Help'));
+const Onboarding = lazyWithRetry(() => import('./pages/Onboarding').then(m => ({ default: m.Onboarding })));
+
+/** Full-screen spinner — the Suspense fallback while a page chunk loads
+ *  (same visual as the auth-loading state). */
+function PageSpinner() {
+  return (
+    <div className="min-h-[40vh] flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -144,17 +161,21 @@ function AnimatedRoutes() {
         animate="animate"
         exit={prefersReducedMotion ? undefined : 'exit'}
       >
-        <Routes location={location}>
-          <Route path="/" element={<Home />} />
-          <Route path="/chores" element={<Chores />} />
-          <Route path="/rewards" element={<Rewards />} />
-          <Route path="/allowance" element={<Allowance />} />
-          <Route path="/history" element={<History />} />
-          {role === 'parent' && <Route path="/admin" element={<Admin />} />}
-          {role === 'parent' && <Route path="/onboarding" element={<Onboarding />} />}
-          <Route path="/notifications" element={<NotificationSettings />} />
-          <Route path="/help" element={<Help />} />
-        </Routes>
+        {/* Suspense INSIDE the motion.div: a suspending lazy page swaps to the
+            spinner without unmounting the AnimatePresence tree. */}
+        <Suspense fallback={<PageSpinner />}>
+          <Routes location={location}>
+            <Route path="/" element={<Home />} />
+            <Route path="/chores" element={<Chores />} />
+            <Route path="/rewards" element={<Rewards />} />
+            <Route path="/allowance" element={<Allowance />} />
+            <Route path="/history" element={<History />} />
+            {role === 'parent' && <Route path="/admin" element={<Admin />} />}
+            {role === 'parent' && <Route path="/onboarding" element={<Onboarding />} />}
+            <Route path="/notifications" element={<NotificationSettings />} />
+            <Route path="/help" element={<Help />} />
+          </Routes>
+        </Suspense>
       </motion.div>
     </AnimatePresence>
   );
@@ -178,6 +199,13 @@ function AppRoutes() {
   }
 
   return (
+    <Suspense
+      fallback={
+        <div className="min-h-[100dvh] flex items-center justify-center bg-bg-base">
+          <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
     <Routes location={location}>
       {/* Public routes */}
       <Route
@@ -225,6 +253,7 @@ function AppRoutes() {
         }
       />
     </Routes>
+    </Suspense>
   );
 }
 

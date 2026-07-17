@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-07-17
+
+### Changed
+- The app loads noticeably faster: pages now load on demand instead of all at
+  once (28% less to download before the first screen appears), and after app
+  updates your device re-downloads much less because the unchanged parts stay
+  cached.
+
 ## [0.15.0] - 2026-07-16
 
 ### Added
