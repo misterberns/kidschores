@@ -252,6 +252,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [checkAuth]);
 
   const logout = () => {
+    // Best-effort server-side revocation of THIS device's refresh token
+    // (v0.15.0 — /auth/logout denylists its jti). Fire-and-forget: local
+    // logout must never block on the network.
+    const refreshTokenValue = getStoredRefreshToken();
+    if (refreshTokenValue) {
+      api.post('/auth/logout', { refresh_token: refreshTokenValue }).catch(() => {
+        /* offline / already-invalid — local logout proceeds regardless */
+      });
+    }
     clearTokens();
     setState({
       user: null,

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from .config import settings
-from .database import init_db, ensure_indexes
+from .database import init_db, ensure_columns, ensure_indexes
 from .observability import RequestIdMiddleware, configure_logging, init_sentry
 from .routers import kids, chores, rewards, parents, approvals, auth, api_tokens, notifications, categories, allowance, history, badges, challenges
 from .scheduler import start_scheduler, shutdown_scheduler
@@ -39,6 +39,7 @@ async def lifespan(app: FastAPI):
             "python -c \"import secrets; print(secrets.token_urlsafe(32))\""
         )
     init_db()
+    ensure_columns()
     ensure_indexes()
     logger.info("Database initialized")
 
@@ -69,7 +70,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KidsChores",
     description="Family chore management with points and rewards",
-    version="0.14.4",  # Keep in sync with VERSION file
+    version="0.15.0",  # Keep in sync with VERSION file
     lifespan=lifespan,
     redirect_slashes=False,  # Prevent 307 redirects for /api/kids vs /api/kids/
 )

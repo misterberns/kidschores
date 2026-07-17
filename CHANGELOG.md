@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-07-16
+
+### Added
+- Logging out now really signs that device out — its saved session can no
+  longer be renewed on the server.
+- New "Log out everywhere" button (Parent → Parents → Security): instantly
+  signs the account out of every device — for a lost tablet or a session you
+  don't recognize.
+
+### Security
+- Resetting your password now signs you out everywhere. Previously, anyone
+  still signed in with the old session stayed signed in after a reset.
+- Sessions renew quietly in the background much more often, so a signed-out
+  device stops working within minutes instead of hours.
+- The app's containers now run with a read-only filesystem for extra
+  protection (self-hosting hardening).
+
 ## [0.14.4] - 2026-07-15
 
 ### Changed

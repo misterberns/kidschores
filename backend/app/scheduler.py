@@ -52,6 +52,7 @@ async def setup_scheduled_jobs(scheduler: AsyncIOScheduler):
     from app.jobs.chore_reset import reset_recurring_chores
     from app.jobs.streak_calculation import calculate_daily_streaks
     from app.jobs.daily_summary import send_daily_summary_emails
+    from app.jobs.token_cleanup import purge_expired_revoked_tokens
 
     # Midnight chore reset - runs at 00:01 every day
     scheduler.add_job(
@@ -83,6 +84,17 @@ async def setup_scheduled_jobs(scheduler: AsyncIOScheduler):
         minute=0,
         id='send_daily_summary_emails',
         name='Send Daily Summary Emails',
+        replace_existing=True
+    )
+
+    # Revoked-token denylist purge - runs at 03:30 (offset from other jobs)
+    scheduler.add_job(
+        purge_expired_revoked_tokens,
+        'cron',
+        hour=3,
+        minute=30,
+        id='purge_expired_revoked_tokens',
+        name='Purge Expired Revoked Tokens',
         replace_existing=True
     )
 

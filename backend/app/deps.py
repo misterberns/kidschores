@@ -33,7 +33,15 @@ async def get_current_user(
         user_id = payload.get("sub")
         if user_id:
             user = db.query(User).filter(User.id == user_id).first()
-            if user and user.is_active:
+            # Session-revocation epoch: the token's `tv` claim must match the
+            # user's current token_version (missing claim ≡ 0 so pre-v0.15.0
+            # tokens stay valid until the user's first revocation event).
+            # Zero extra queries — the user row is loaded here anyway.
+            if (
+                user
+                and user.is_active
+                and payload.get("tv", 0) == (user.token_version or 0)
+            ):
                 return user
 
     # Try API token (starts with prefix)

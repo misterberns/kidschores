@@ -1,4 +1,4 @@
-import { test as base, expect, APIRequestContext } from '@playwright/test';
+import { test as base, expect, APIRequestContext, Playwright } from '@playwright/test';
 import { TestData } from '../fixtures/test-data';
 import { getOrCacheTokens, API_URL, TEST_USER } from '../fixtures/cached-auth';
 
@@ -302,6 +302,54 @@ test.describe('Security — Rate Limiting', () => {
     expect(allValid).toBe(true);
     expect(statuses[5]).toBe(429);
 
+    await ctx.dispose();
+  });
+});
+
+test.describe('Security — Token revocation (v0.15.0)', () => {
+  // DEDICATED user per run — never the cached-auth fixture user, whose tokens
+  // are shared across workers (revoking those would break the whole suite).
+  async function registerDedicated(playwright: Playwright) {
+    const ctx = await playwright.request.newContext({
+      baseURL: API_URL,
+      extraHTTPHeaders: { 'Content-Type': 'application/json' },
+      ignoreHTTPSErrors: true,
+    });
+    const email = `revoke-e2e-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
+    const resp = await ctx.post('/api/auth/register', {
+      data: { email, password: 'E2eRevoke-pass-123', display_name: 'Revoke E2E' },
+    });
+    expect(resp.status(), await resp.text()).toBe(200);
+    const body = await resp.json();
+    return { ctx, email, access: body.access_token as string, refresh: body.refresh_token as string };
+  }
+
+  test('logout denylists the refresh token (per-device revocation)', async ({ playwright }) => {
+    const { ctx, refresh } = await registerDedicated(playwright);
+
+    const logout = await ctx.post('/api/auth/logout', { data: { refresh_token: refresh } });
+    expect(logout.status()).toBe(200);
+
+    const reuse = await ctx.post('/api/auth/refresh', { data: { refresh_token: refresh } });
+    expect(reuse.status(), 'a logged-out refresh token must be rejected').toBe(401);
+    await ctx.dispose();
+  });
+
+  test('logout-all invalidates access + refresh immediately', async ({ playwright }) => {
+    const { ctx, access, refresh } = await registerDedicated(playwright);
+
+    const all = await ctx.post('/api/auth/logout-all', {
+      headers: { Authorization: `Bearer ${access}` },
+    });
+    expect(all.status()).toBe(200);
+
+    const me = await ctx.get('/api/auth/me', {
+      headers: { Authorization: `Bearer ${access}` },
+    });
+    expect(me.status(), 'old access token must die on token_version bump').toBe(401);
+
+    const reuse = await ctx.post('/api/auth/refresh', { data: { refresh_token: refresh } });
+    expect(reuse.status(), 'old refresh token must die on token_version bump').toBe(401);
     await ctx.dispose();
   });
 });

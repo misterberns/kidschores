@@ -9,10 +9,14 @@ class Settings(BaseSettings):
     # Database
     database_path: str = "./data/kidschores.db"
 
-    # JWT Settings (home network - longer expiry for convenience)
+    # JWT Settings
     jwt_secret_key: str  # REQUIRED — app fails to start without it
     jwt_algorithm: str = "HS256"
-    access_token_expire_minutes: int = 1440  # 24 hours
+    # 30 min (was 24h pre-v0.15.0): the frontend's 401→refresh interceptor
+    # renews transparently, and a short access TTL bounds how long a revoked
+    # device's access token keeps working after logout. Must stay ≥15 min —
+    # the e2e cached-auth fixture reuses tokens for up to 10 minutes.
+    access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 14  # shortened from 30 (2026-07 hardening)
 
     # Google OAuth (optional)

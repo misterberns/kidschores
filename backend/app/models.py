@@ -32,6 +32,12 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)  # For future admin features
 
+    # Session revocation epoch (v0.15.0): every JWT carries a `tv` claim minted
+    # from this value; bumping it (password reset, "log out everywhere")
+    # instantly invalidates ALL of the user's outstanding tokens. Checked for
+    # free in get_current_user — the user row is already loaded per request.
+    token_version = Column(Integer, nullable=False, default=0, server_default="0")
+
     # Timestamps
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_login = Column(DateTime, nullable=True)
@@ -40,6 +46,22 @@ class User(Base):
     parent = relationship("Parent", back_populates="user", uselist=False)
     api_tokens = relationship("ApiToken", back_populates="user")
     reset_tokens = relationship("PasswordResetToken", back_populates="user")
+
+
+class RevokedToken(Base):
+    """Denylisted refresh-token jti (v0.15.0 real logout).
+
+    Rows are written by POST /auth/logout (per-device revocation) and checked
+    ONLY at /auth/refresh — never on the per-request access path, so steady
+    request cost is unchanged. `expires_at` mirrors the token's own exp so the
+    daily purge job can drop rows that could no longer authenticate anyway.
+    """
+    __tablename__ = "revoked_tokens"
+
+    jti = Column(String(36), primary_key=True)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    revoked_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    expires_at = Column(DateTime, nullable=False, index=True)
 
 
 class PasswordResetToken(Base):
