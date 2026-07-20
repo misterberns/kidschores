@@ -1,7 +1,7 @@
 # KidsChores Backend Dependencies
 # Pinned with compatible-release (~=) for reproducible builds
 # that still resolve pre-built wheels for Python 3.14
-fastapi~=0.139.0
+fastapi~=0.139.2
 uvicorn[standard]~=0.35.0  # >=0.33 for IP-network FORWARDED_ALLOW_IPS
 sqlalchemy~=2.0.51
 pydantic~=2.13.4
