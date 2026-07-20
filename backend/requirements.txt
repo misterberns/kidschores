@@ -22,7 +22,7 @@ python-dotenv~=1.2.2
 apscheduler~=3.11.3
 
 # Push Notifications
-pywebpush~=2.0.1
+pywebpush~=2.3.0
 
 # Email Notifications
 aiosmtplib~=5.1.2
