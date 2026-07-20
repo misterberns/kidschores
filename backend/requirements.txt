@@ -2,7 +2,7 @@
 # Pinned with compatible-release (~=) for reproducible builds
 # that still resolve pre-built wheels for Python 3.14
 fastapi~=0.139.0
-uvicorn[standard]~=0.35.0  # >=0.33 for IP-network FORWARDED_ALLOW_IPS
+uvicorn[standard]~=0.51.0  # >=0.33 for IP-network FORWARDED_ALLOW_IPS
 sqlalchemy~=2.0.51
 pydantic~=2.13.4
 pydantic[email]~=2.13.4
