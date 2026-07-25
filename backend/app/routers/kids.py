@@ -126,6 +126,10 @@ def adjust_points(kid_id: str, request: PointsAdjustRequest, db: Session = Depen
         raise HTTPException(status_code=404, detail="Kid not found")
 
     kid.points += request.points
+    if request.reason:
+        # No history table exists — the log line is the (honest) trace, e.g.
+        # the savings-goal Boost button tags 'Boost toward "<goal name>"'.
+        logger.info("Points adjusted: kid=%s delta=%s reason=%s", kid_id, request.points, request.reason)
 
     # Track max points ever
     if kid.points > kid.max_points_ever:

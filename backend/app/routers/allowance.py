@@ -147,19 +147,25 @@ def update_allowance_settings(
     )
 
 
-@router.post("/convert/{kid_id}", response_model=PayoutResponse)
-def request_payout(
+def create_payout(
+    db: Session,
     kid_id: str,
-    request: PayoutRequest,
-    db: Session = Depends(get_db),
-    _user: User = Depends(require_kid_access),
-):
-    """Request a payout (convert points to money)."""
+    points_to_convert: int,
+    payout_method: str = "cash",
+    notes: Optional[str] = None,
+) -> AllowancePayout:
+    """Validate + deduct points + add a pending AllowancePayout row.
+
+    Does NOT commit — the caller owns the transaction so a companion write
+    (e.g. marking a SavingsGoal completed) lands atomically with the payout.
+    Raises HTTPException 404/400 on unknown kid / insufficient balance /
+    below-minimum amount.
+    """
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
         raise HTTPException(status_code=404, detail="Kid not found")
 
-    # Get settings
+    # Get settings (lazily created; flush only — no commit)
     settings = db.query(AllowanceSettings).filter(
         AllowanceSettings.kid_id == kid_id
     ).first()
@@ -167,14 +173,13 @@ def request_payout(
     if not settings:
         settings = AllowanceSettings(kid_id=kid_id)
         db.add(settings)
-        db.commit()
-        db.refresh(settings)
+        db.flush()
 
     # Calculate dollar amount
-    dollar_amount = request.points_to_convert / settings.points_per_dollar
+    dollar_amount = points_to_convert / settings.points_per_dollar
 
     # Validate
-    if request.points_to_convert > kid.points:
+    if points_to_convert > kid.points:
         raise HTTPException(
             status_code=400,
             detail=f"Not enough points. You have {kid.points:.0f} points."
@@ -187,18 +192,36 @@ def request_payout(
         )
 
     # Deduct points immediately
-    kid.points -= request.points_to_convert
+    kid.points -= points_to_convert
 
     # Create payout record
     payout = AllowancePayout(
         kid_id=kid_id,
-        points_converted=request.points_to_convert,
+        points_converted=points_to_convert,
         dollar_amount=dollar_amount,
-        payout_method=request.payout_method,
+        payout_method=payout_method,
         status="pending",
-        notes=request.notes,
+        notes=notes,
     )
     db.add(payout)
+    return payout
+
+
+@router.post("/convert/{kid_id}", response_model=PayoutResponse)
+def request_payout(
+    kid_id: str,
+    request: PayoutRequest,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_kid_access),
+):
+    """Request a payout (convert points to money)."""
+    payout = create_payout(
+        db,
+        kid_id,
+        request.points_to_convert,
+        payout_method=request.payout_method,
+        notes=request.notes,
+    )
     db.commit()
     db.refresh(payout)
 

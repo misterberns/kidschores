@@ -520,3 +520,29 @@ class AllowancePayout(Base):
 
     # Relationships
     kid = relationship("Kid")
+
+
+class SavingsGoal(Base):
+    """Savings goal (UX-REVIEW 5b). Denominated in POINTS (rendered as $ via the
+    kid's points_per_dollar) so it doesn't depend on the float-money migration.
+    Progress is the kid's live points balance vs target_points — "reached" is
+    derived, never stored. Converting deducts target_points via the allowance
+    payout flow and marks the goal completed; a later payout cancellation
+    refunds points but the goal stays completed (payout_id keeps the link)."""
+    __tablename__ = "savings_goals"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    kid_id = Column(String(36), ForeignKey("kids.id"), nullable=False, index=True)
+
+    name = Column(String(100), nullable=False)
+    icon = Column(String(50), default="piggy-bank")
+    target_points = Column(Integer, nullable=False)
+    target_date = Column(DateTime, nullable=True)  # naive UTC, optional
+    status = Column(String(20), default="active", index=True)  # active | completed
+
+    payout_id = Column(String(36), nullable=True)  # AllowancePayout id on conversion
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    kid = relationship("Kid")
