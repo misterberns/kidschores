@@ -154,8 +154,8 @@ export const kidsApi = {
   create: (data: Partial<Kid>) => api.post<Kid>('/kids', data),
   update: (id: string, data: Partial<Kid>) => api.put<Kid>(`/kids/${id}`, data),
   delete: (id: string) => api.delete(`/kids/${id}`),
-  adjustPoints: (id: string, points: number) =>
-    api.post<Kid>(`/kids/${id}/points`, { points }),
+  adjustPoints: (id: string, points: number, reason?: string) =>
+    api.post<Kid>(`/kids/${id}/points`, { points, ...(reason ? { reason } : {}) }),
   getStreaks: (id: string) => api.get<StreakInfo>(`/kids/${id}/streaks`),
   getDailyProgress: (id: string) => api.get<DailyProgress>(`/kids/${id}/daily-progress`),
   useStreakFreeze: (id: string) => api.post<Kid>(`/kids/${id}/streak-freeze`),
@@ -452,4 +452,48 @@ export const challengesApi = {
   create: (data: Omit<ChallengeTemplate, never> & { kid_ids?: string[] }) =>
     api.post<Challenge>('/challenges', data),
   delete: (id: string) => api.delete(`/challenges/${id}`),
+};
+
+// Savings goals (v0.16.0) — denominated in points, rendered as $ via the
+// points_per_dollar carried on the list response
+export interface SavingsGoalBase {
+  id: string;
+  kid_id: string;
+  name: string;
+  icon: string;
+  target_points: number;
+  target_date: string | null;
+  status: 'active' | 'completed';
+  payout_id: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+// List items carry server-derived live progress
+export interface SavingsGoal extends SavingsGoalBase {
+  progress_pct: number; // clamped 0-100
+  reached: boolean;     // active && balance >= target
+}
+
+export interface GoalsListResponse {
+  kid_id: string;
+  current_points: number;
+  points_per_dollar: number;
+  goals: SavingsGoal[];
+}
+
+export interface GoalConvertResponse {
+  goal: SavingsGoalBase;
+  payout: AllowancePayout;
+}
+
+export const goalsApi = {
+  list: (kidId: string) => api.get<GoalsListResponse>(`/goals/${kidId}`),
+  create: (kidId: string, data: { name: string; icon?: string; target_points: number; target_date?: string | null }) =>
+    api.post<SavingsGoalBase>(`/goals/${kidId}`, data),
+  update: (kidId: string, goalId: string, data: Partial<{ name: string; icon: string; target_points: number; target_date: string | null }>) =>
+    api.put<SavingsGoalBase>(`/goals/${kidId}/${goalId}`, data),
+  delete: (kidId: string, goalId: string) => api.delete(`/goals/${kidId}/${goalId}`),
+  convert: (kidId: string, goalId: string, payoutMethod = 'cash') =>
+    api.post<GoalConvertResponse>(`/goals/${kidId}/${goalId}/convert`, { payout_method: payoutMethod }),
 };

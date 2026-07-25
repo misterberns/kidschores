@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-07-25
+
+### Added
+- Savings goals: kids can now set up to 3 savings goals (name, icon, points
+  target, optional target date) and watch a progress ring fill as their points
+  balance grows — on their Home card and on the Allowance page.
+- Goal amounts show in real dollars using each kid's own points-per-dollar
+  rate (the Home allowance line now uses the real rate too).
+- Reaching a goal triggers a celebration with a one-tap "Request payout"
+  button that cashes in exactly the goal amount — the payout lands in the
+  parent's pending approvals tagged with the goal's name.
+- Parents can boost a kid's progress toward a goal with a quick points bonus
+  right from the goal card.
+- Finished goals stay visible in a Completed history section.
+
+
 ## [0.15.1] - 2026-07-17
 
 ### Changed

@@ -91,6 +91,8 @@ const EXTRA_ICONS: Record<string, IconComponent> = {
   'shopping': T('shopping'),
   'shopping-bag': T('shopping-bag'),
   'cash': T('cash'),
+  // Savings-goal default (v0.16) — Twemoji has no piggy bank; money-bag artwork fits
+  'piggy-bank': T('cash'),
   'television': T('television'),
   'gamepad': T('gamepad'),
   'gamepad-variant': T('gamepad-variant'),

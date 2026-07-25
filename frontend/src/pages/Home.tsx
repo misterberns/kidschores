@@ -16,12 +16,19 @@ import { DailyProgress } from '../components/DailyProgress';
 import { StreakDisplay } from '../components/StreakDisplay';
 import { BadgeDisplay } from '../components/gamification/BadgeDisplay';
 import { BadgeCelebration } from '../components/celebrations/BadgeCelebration';
+import { GoalCelebration } from '../components/celebrations/GoalCelebration';
+import { GoalRing, useGoals } from '../components/goals/GoalRing';
+import type { SavingsGoal } from '../api/client';
 import { InstallAppBanner } from '../components/InstallAppBanner';
 
 function KidCard({ kid, index }: { kid: Kid; index: number }) {
   const { getKidColor } = useTheme();
   const kidColor = getKidColor(kid.id, kid.name);
   const prefersReducedMotion = useReducedMotion();
+  // Shared with GoalRing (same query key — one fetch): supplies the kid's REAL
+  // points_per_dollar for the $ line, which was hardcoded /100 before v0.16.
+  const { data: goalsData } = useGoals(kid.id);
+  const pointsPerDollar = goalsData?.points_per_dollar ?? 100;
 
   const cardMotionProps = prefersReducedMotion
     ? {}
@@ -77,11 +84,14 @@ function KidCard({ kid, index }: { kid: Kid; index: number }) {
         <span className="text-sm font-medium text-text-muted">pts</span>
       </div>
       <p className="text-xs text-text-muted mt-0.5 mb-4">
-        = ${(kid.points / 100).toFixed(2)} allowance
+        = ${(kid.points / pointsPerDollar).toFixed(2)} allowance
       </p>
 
       {/* Today's progress ring */}
       <DailyProgress kidId={kid.id} compact />
+
+      {/* Savings goal ring (nearest-complete active goal) */}
+      <GoalRing kidId={kid.id} />
 
       {/* Badges */}
       {kid.badges && kid.badges.length > 0 && (
@@ -135,6 +145,28 @@ export function Home() {
     setCelebrateBadges([]);
   };
 
+  // Savings-goal celebration: on the kid's own device, fire once per goal when
+  // it first reaches its target (per-device localStorage flag — same pattern
+  // as the badge watcher above). Balance can later drop below target again;
+  // the flag persists so there's no re-celebration.
+  const { data: ownGoalsData } = useGoals(ownKid?.id);
+  const [celebrateGoal, setCelebrateGoal] = useState<SavingsGoal | null>(null);
+  useEffect(() => {
+    if (!ownKid || !ownGoalsData) return;
+    const reached = ownGoalsData.goals.find(
+      g => g.status === 'active' && g.reached &&
+        localStorage.getItem(`kidschores-goal-celebrated-${g.id}`) !== '1'
+    );
+    if (reached) setCelebrateGoal(reached);
+  }, [ownKid?.id, ownGoalsData]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const dismissGoalCelebration = () => {
+    if (celebrateGoal) {
+      localStorage.setItem(`kidschores-goal-celebrated-${celebrateGoal.id}`, '1');
+    }
+    setCelebrateGoal(null);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -181,6 +213,16 @@ export function Home() {
         show={celebrateBadges.length > 0}
         onClose={dismissBadgeCelebration}
       />
+      {ownKid && (
+        <GoalCelebration
+          goal={celebrateGoal}
+          kidId={ownKid.id}
+          kidName={ownKid.name}
+          pointsPerDollar={ownGoalsData?.points_per_dollar ?? 100}
+          show={celebrateGoal !== null && celebrateBadges.length === 0}
+          onClose={dismissGoalCelebration}
+        />
+      )}
       <motion.h2
         className="text-2xl font-bold text-text-primary text-center"
         initial={prefersReducedMotion ? false : { opacity: 0, y: -12 }}

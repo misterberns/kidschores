@@ -21,6 +21,7 @@ import type { AllowancePayout } from '../api/client';
 import { useToast } from '../hooks/useToast';
 import { getApiErrorMessage } from '../utils/errorMessage';
 import { Button, IconButton, Tab, TabList } from '../components/ui';
+import { SavingsGoalsCard } from '../components/goals/SavingsGoalsCard';
 
 const PAYOUT_METHODS = [
   { id: 'cash', label: 'Cash', icon: Banknote },
@@ -400,6 +401,9 @@ export function Allowance() {
           </p>
         </motion.div>
       )}
+
+      {/* Savings Goals */}
+      {activeKidId && <SavingsGoalsCard kidId={activeKidId} isParent={isParent} />}
 
       {/* Request Payout */}
       <div className="card p-4">
