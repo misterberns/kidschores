@@ -36,6 +36,7 @@
 - **Rewards** - Define rewards with point costs for kids to redeem
 - **Parent Approval** - Parents approve chore completions and reward redemptions
 - **Points System** - Flexible points with multipliers and adjustments
+- **Savings Goals** - Kids save toward up to 3 goals with progress rings, real-dollar amounts, a reach celebration, and one-tap cash-in to a payout request; parents can boost progress
 - **Badges & Achievements** - Automatic awards (streaks, milestones, early bird, first reward) with full-screen unlock celebrations, push notifications, and rarity-ringed badge art; parents can create custom badges
 - **Challenges** - Time-boxed goals (chore count or points earned) with live progress bars, bonus-point and badge rewards
 - **Kid Avatars** - Per-kid emoji + color picker
@@ -46,7 +47,7 @@
 - **Mobile-Responsive** - Works on phones, tablets, and desktops
 - **Security** - JWT auth (PyJWT) on all endpoints, rate limiting, bcrypt hashing, CORS restriction, unprivileged nginx, locked-down proxy trust
 - **Error Handling** - React error boundaries, global error handler, auto-toast notifications
-- **CI-Gated Testing** - 34 backend pytest tests + ~220 Playwright e2e tests (API, UI, accessibility, workflows) run on every push; Dependabot keeps dependencies fresh
+- **CI-Gated Testing** - 75 backend pytest tests + ~250 Playwright e2e tests (API, UI, accessibility, workflows) run on every push; Dependabot keeps dependencies fresh
 
 ## Screenshots
 
