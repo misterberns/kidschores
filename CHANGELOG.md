@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-07-27
+
+### Changed
+- Dependency refresh (Dependabot batch): backend FastAPI 0.139.2, uvicorn 0.51,
+  pydantic-settings 2.14.2, pywebpush 2.3.0, httpx 0.28.1; frontend Sentry 10.66,
+  Tailwind CSS 4.3.3, lucide icons 1.25, autoprefixer 10.5.4, postcss 8.5.20,
+  typescript-eslint 8.64; CI actions setup-node/setup-python v7.
+
+### Security
+- pydantic-settings 2.14.2 includes the fix for a secrets-directory symlink
+  traversal issue (GHSA-4xgf-cpjx-pc3j).
+
 ## [0.16.0] - 2026-07-25
 
 ### Added
