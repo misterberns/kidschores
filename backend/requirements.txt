@@ -1,12 +1,12 @@
 # KidsChores Backend Dependencies
 # Pinned with compatible-release (~=) for reproducible builds
 # that still resolve pre-built wheels for Python 3.14
-fastapi~=0.139.0
-uvicorn[standard]~=0.35.0  # >=0.33 for IP-network FORWARDED_ALLOW_IPS
+fastapi~=0.139.2
+uvicorn[standard]~=0.51.0  # >=0.33 for IP-network FORWARDED_ALLOW_IPS
 sqlalchemy~=2.0.51
 pydantic~=2.13.4
 pydantic[email]~=2.13.4
-pydantic-settings~=2.7.0
+pydantic-settings~=2.14.2
 python-multipart~=0.0.32
 
 # Authentication
@@ -15,14 +15,14 @@ bcrypt~=5.0.0  # used directly; passlib removed (was an unused leftover)
 
 # Observability (dormant unless SENTRY_DSN is set)
 sentry-sdk[fastapi]~=2.64
-httpx~=0.28.0
+httpx~=0.28.1
 python-dotenv~=1.2.2
 
 # Background Jobs
 apscheduler~=3.11.3
 
 # Push Notifications
-pywebpush~=2.0.1
+pywebpush~=2.3.0
 
 # Email Notifications
 aiosmtplib~=5.1.2
