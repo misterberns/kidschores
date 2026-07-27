@@ -3,7 +3,6 @@ import { X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { useToast } from '../../hooks/useToast';
-import { getApiErrorMessage } from '../../utils/errorMessage';
 import { goalsApi } from '../../api/client';
 import type { SavingsGoal } from '../../api/client';
 import { Confetti } from './Confetti';
@@ -40,9 +39,7 @@ export function GoalCelebration({ goal, kidId, kidName, pointsPerDollar, show, o
       toast.success(`Payout of ${formatGoalDollars(res.data.payout.points_converted, pointsPerDollar)} requested!`);
       onClose();
     },
-    onError: (error) => {
-      toast.error(getApiErrorMessage(error, 'Failed to request payout'));
-    },
+    meta: { errorFallback: 'Failed to request payout' },
   });
 
   if (!goal) return null;

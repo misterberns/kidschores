@@ -90,7 +90,7 @@ export interface Chore {
   recurring_frequency: string;
   custom_interval?: number;
   custom_interval_unit?: string;
-  applicable_days?: number[];
+  applicable_days?: number[]; // 0=Mon..6=Sun (Python weekday() convention — see utils/days.ts)
   due_date?: string;
   allow_multiple_claims_per_day: boolean;
   partial_allowed?: boolean;
@@ -175,10 +175,12 @@ export const choresApi = {
   todayForKid: (kidId: string) => api.get<TodaysChore[]>(`/chores/today/${kidId}`),
   claim: (choreId: string, kidId: string) =>
     api.post(`/chores/${choreId}/claim`, { kid_id: kidId }),
-  approve: (choreId: string, parentName: string, points?: number) =>
-    api.post(`/chores/${choreId}/approve`, { parent_name: parentName, points_awarded: points }),
-  disapprove: (choreId: string, parentName: string) =>
-    api.post(`/chores/${choreId}/disapprove`, { parent_name: parentName }),
+  // kidId disambiguates which kid's claim to approve/deny on shared chores;
+  // omitted, the backend acts on the oldest pending claim.
+  approve: (choreId: string, parentName: string, points?: number, kidId?: string) =>
+    api.post(`/chores/${choreId}/approve`, { parent_name: parentName, points_awarded: points, kid_id: kidId }),
+  disapprove: (choreId: string, parentName: string, kidId?: string) =>
+    api.post(`/chores/${choreId}/disapprove`, { parent_name: parentName, kid_id: kidId }),
 };
 
 export const rewardsApi = {

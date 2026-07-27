@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.2] - 2026-07-27
+
+### Fixed
+- Chores can be claimed again the day after they were approved. Previously,
+  once a chore's claim was approved it could never be claimed again (the
+  "already claimed today" check looked at all time, not just today) - and
+  the rejection was silent, so tapping Claim appeared to do nothing.
+- Error messages now always appear when something goes wrong - several
+  actions could fail without any visible feedback.
+- Approving a chore shared by multiple kids now credits the kid whose claim
+  you approved, not whichever claim happened to be first.
+- Weekly chore day selections were stored off by one day (picking Monday
+  scheduled Tuesday). The day picker now matches what is stored.
+- The Claim button disables while a claim is being sent (no more accidental
+  double-claims), and the All view no longer shows Claim buttons for chores
+  that cannot be claimed there.
+- Old unapproved claims on one-time chores now expire overnight instead of
+  sitting in the parent approval list forever.
+
 ## [0.16.1] - 2026-07-27
 
 ### Changed

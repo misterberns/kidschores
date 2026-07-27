@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { PiggyBank, Plus, Pencil, Trash2, Rocket, ChevronDown, ChevronRight, Send } from 'lucide-react';
 import { goalsApi, kidsApi } from '../../api/client';
 import { useToast } from '../../hooks/useToast';
-import { getApiErrorMessage } from '../../utils/errorMessage';
 import { Button, IconButton } from '../ui';
 import { DynamicIcon } from '../DynamicIcon';
 import { ProgressRing } from '../gamification/ProgressRing';
@@ -71,7 +70,7 @@ export function SavingsGoalsCard({ kidId, isParent }: SavingsGoalsCardProps) {
       setForm(null);
       toast.success(f.id ? 'Goal updated' : 'Goal created — start saving!');
     },
-    onError: (error) => toast.error(getApiErrorMessage(error, 'Failed to save goal')),
+    meta: { errorFallback: 'Failed to save goal' },
   });
 
   const deleteMutation = useMutation({
@@ -81,7 +80,7 @@ export function SavingsGoalsCard({ kidId, isParent }: SavingsGoalsCardProps) {
       setConfirmDelete(null);
       toast.success('Goal removed');
     },
-    onError: (error) => toast.error(getApiErrorMessage(error, 'Failed to remove goal')),
+    meta: { errorFallback: 'Failed to remove goal' },
   });
 
   const convertMutation = useMutation({
@@ -90,7 +89,7 @@ export function SavingsGoalsCard({ kidId, isParent }: SavingsGoalsCardProps) {
       invalidate();
       toast.success(`Payout of ${formatGoalDollars(res.data.payout.points_converted, ppd)} requested!`);
     },
-    onError: (error) => toast.error(getApiErrorMessage(error, 'Failed to request payout')),
+    meta: { errorFallback: 'Failed to request payout' },
   });
 
   const boostMutation = useMutation({
@@ -102,7 +101,7 @@ export function SavingsGoalsCard({ kidId, isParent }: SavingsGoalsCardProps) {
       setBoostPoints('');
       toast.success(`Boosted ${vars.points} points toward "${vars.goalName}"`);
     },
-    onError: (error) => toast.error(getApiErrorMessage(error, 'Failed to boost')),
+    meta: { errorFallback: 'Failed to boost' },
   });
 
   if (!data) return null;

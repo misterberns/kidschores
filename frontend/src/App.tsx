@@ -1,11 +1,10 @@
 import { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import axios from 'axios';
-import { toast } from 'sonner';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Home as HomeIcon, ClipboardList, Gift, Users, LogOut, Bell, Wallet, History as HistoryIcon } from 'lucide-react';
 import { lazyWithRetry } from './utils/lazyWithRetry';
+import { createQueryClient } from './queryClient';
 import { AuthProvider, useAuth, ProtectedRoute } from './auth';
 import { ThemeProvider, ThemeToggle } from './theme';
 import { useReducedMotion } from './hooks/useReducedMotion';
@@ -45,32 +44,7 @@ function PageSpinner() {
   );
 }
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // Never retry 4xx — a 403/404 won't succeed on retry, and each attempt
-      // re-fires the global "Access denied" toast (the kid-tablet toast storm).
-      retry: (failureCount, error: unknown) => {
-        if (axios.isAxiosError(error) && error.response && error.response.status < 500) {
-          return false;
-        }
-        return failureCount < 2;
-      },
-    },
-    mutations: {
-      onError: (error: unknown) => {
-        if (axios.isAxiosError(error) && error.response) {
-          const detail = error.response.data?.detail;
-          if (typeof detail === 'string') {
-            toast.error(detail);
-          } else if (Array.isArray(detail)) {
-            toast.error(detail.map((d: { msg: string }) => d.msg).join(', '));
-          }
-        }
-      },
-    },
-  },
-});
+const queryClient = createQueryClient();
 
 function NavBar() {
   const location = useLocation();

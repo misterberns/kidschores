@@ -280,7 +280,7 @@ test.describe('Chores API', () => {
       const response = await apiContext.post('/api/chores', {
         data: {
           ...TestData.chore.cleanRoom([kidId]),
-          applicable_days: [1, 2, 3, 4, 5], // Mon-Fri
+          applicable_days: [1, 2, 3, 4, 5], // Tue-Sat (0=Monday convention)
         },
       });
 
