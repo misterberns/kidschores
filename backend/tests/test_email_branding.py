@@ -32,6 +32,9 @@ BUILDERS = [
         "r@e.com", "Robin",
         [{"name": "Ava", "chores_completed": 4, "points_today": 35, "streak": 6, "total_points": 420}],
     )),
+    ("bug_report", lambda s: s.send_bug_report_email(
+        "r@e.com", "Robin", "Ava", "kid", "It <b>broke</b> & nothing happened", "0.17.0", "/chores",
+    )),
 ]
 
 # The retired pre-v2 palette — must not survive anywhere in the module or output.

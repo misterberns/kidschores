@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Home as HomeIcon, ClipboardList, Gift, Users, LogOut, Bell, Wallet, History as HistoryIcon } from 'lucide-react';
+import { Home as HomeIcon, ClipboardList, Gift, Users, LogOut, Wallet, History as HistoryIcon } from 'lucide-react';
 import { lazyWithRetry } from './utils/lazyWithRetry';
 import { createQueryClient } from './queryClient';
 import { AuthProvider, useAuth, ProtectedRoute } from './auth';
@@ -10,6 +10,8 @@ import { ThemeProvider, ThemeToggle } from './theme';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { pageVariants } from './utils/animations';
 import { Logo } from './components/Logo';
+import { NotificationBell } from './components/notifications/NotificationBell';
+import { VersionChip } from './components/VersionChip';
 import { ToastProvider } from './components/notifications/ToastProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -232,7 +234,7 @@ function AppRoutes() {
 }
 
 function AppContent() {
-  const { user, activeKidId, kids, logout } = useAuth();
+  const { user, activeKidId, kids, logout, role } = useAuth();
 
   // Find active kid name if selected
   const activeKid = kids.find((k) => k.id === activeKidId);
@@ -266,14 +268,8 @@ function AppContent() {
           </h1>
 
           <div className="flex items-center gap-2">
-            <Link
-              to="/notifications"
-              aria-label="Notification settings"
-              className="p-2 rounded-lg hover:bg-bg-accent text-text-muted hover:text-primary-500 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary-500/40"
-              title="Notification settings"
-            >
-              <Bell size={18} />
-            </Link>
+            <VersionChip />
+            <NotificationBell role={role === 'kid' ? 'kid' : 'parent'} />
             <ThemeToggle />
             <button
               onClick={logout}

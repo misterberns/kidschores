@@ -19,20 +19,36 @@ router = APIRouter()
 
 @router.get("/pending", response_model=PendingApprovalsResponse)
 def get_pending_approvals(db: Session = Depends(get_db), _user: User = Depends(require_parent)):
-    """Get all pending approvals for parents to review."""
-    # Get pending chore claims
-    chore_claims = db.query(ChoreClaim).filter(
-        ChoreClaim.status == "claimed"
-    ).all()
+    """Get all pending approvals for parents to review.
 
-    # Get pending reward claims
-    reward_claims = db.query(RewardClaim).filter(
-        RewardClaim.status == "pending"
-    ).all()
+    Responses carry kid/chore/reward names (v0.17.0, joinedload — mirrors
+    /history) so consumers like the header bell need no client-side joins.
+    """
+    chore_claims = db.query(ChoreClaim).options(
+        joinedload(ChoreClaim.kid),
+        joinedload(ChoreClaim.chore),
+    ).filter(ChoreClaim.status == "claimed").all()
+
+    reward_claims = db.query(RewardClaim).options(
+        joinedload(RewardClaim.kid),
+        joinedload(RewardClaim.reward),
+    ).filter(RewardClaim.status == "pending").all()
 
     return PendingApprovalsResponse(
-        chores=[ChoreClaimResponse.model_validate(c) for c in chore_claims],
-        rewards=[RewardClaimResponse.model_validate(c) for c in reward_claims]
+        chores=[
+            ChoreClaimResponse.model_validate(c).model_copy(update={
+                "kid_name": c.kid.name if c.kid else None,
+                "chore_name": c.chore.name if c.chore else None,
+            })
+            for c in chore_claims
+        ],
+        rewards=[
+            RewardClaimResponse.model_validate(c).model_copy(update={
+                "kid_name": c.kid.name if c.kid else None,
+                "reward_name": c.reward.name if c.reward else None,
+            })
+            for c in reward_claims
+        ],
     )
 
 

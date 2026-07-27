@@ -181,11 +181,21 @@ def update_chore(chore_id: str, chore_update: ChoreUpdate, db: Session = Depends
 
 @router.delete("/{chore_id}")
 def delete_chore(chore_id: str, db: Session = Depends(get_db), _admin: User = Depends(require_parent)):
-    """Delete chore."""
+    """Delete chore and its claims.
+
+    The claims MUST be deleted explicitly: no cascade is configured, and
+    chore_claims.chore_id is NOT NULL, so a bare db.delete(chore) makes
+    SQLAlchemy try to null the FK -> IntegrityError 500 for any chore that
+    was ever claimed (surfaced during v0.16.2 verification). Points already
+    awarded stay on the kid; history entries for this chore go with it.
+    """
     chore = db.query(Chore).filter(Chore.id == chore_id).first()
     if not chore:
         raise HTTPException(status_code=404, detail="Chore not found")
 
+    db.query(ChoreClaim).filter(ChoreClaim.chore_id == chore_id).delete(
+        synchronize_session=False
+    )
     db.delete(chore)
     db.commit()
     return {"message": "Chore deleted"}
