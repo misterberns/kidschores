@@ -137,6 +137,30 @@ class TestApproveKidTargeting:
             db.close()
 
 
+class TestChoreDelete:
+    def test_delete_chore_with_claims_succeeds(self, client, parent_token):
+        """v0.17.0 regression: deleting an ever-claimed chore 500'd (SQLAlchemy
+        nulled chore_claims.chore_id — NOT NULL, no cascade). Claims must be
+        removed with the chore."""
+        kid = make_kid(client, parent_token)
+        chore = make_chore(client, parent_token, assigned_kids=[kid["id"]])
+
+        assert _claim(client, parent_token, chore["id"], kid["id"]).status_code == 200
+        assert _approve(client, parent_token, chore["id"]).status_code == 200
+
+        res = client.delete(f"/api/chores/{chore['id']}", headers=auth(parent_token))
+        assert res.status_code == 200, res.text
+
+        db = SessionLocal()
+        try:
+            remaining = db.query(ChoreClaim).filter(
+                ChoreClaim.chore_id == chore["id"]
+            ).count()
+            assert remaining == 0
+        finally:
+            db.close()
+
+
 class TestTodaysChoresWeekdayConvention:
     def test_weekly_chore_uses_python_weekday_indices(self, client, parent_token):
         """Pins applicable_days as Python weekday() indices (0=Monday). The

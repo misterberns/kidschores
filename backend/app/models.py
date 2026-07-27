@@ -546,3 +546,29 @@ class SavingsGoal(Base):
 
     # Relationships
     kid = relationship("Kid")
+
+
+class Feedback(Base):
+    """In-app problem report (v0.17.0). Kids report bugs verbally today — this
+    gives any authenticated user a durable report channel; parents get a push +
+    branded email and review reports on the Parent tab. role/kid_id are derived
+    SERVER-side from the authenticated user, never trusted from the client."""
+    __tablename__ = "feedback"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    kid_id = Column(String(36), ForeignKey("kids.id"), nullable=True)  # set for kid sessions
+    role = Column(String(10), nullable=False, default="parent")  # parent | kid
+
+    message = Column(String(1000), nullable=False)
+    app_version = Column(String(20), nullable=True)   # client-reported context
+    page_path = Column(String(200), nullable=True)    # client-reported context
+
+    status = Column(String(20), default="new", index=True)  # new | reviewed
+    reviewed_by = Column(String(100), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+    # Relationships
+    user = relationship("User")
+    kid = relationship("Kid")

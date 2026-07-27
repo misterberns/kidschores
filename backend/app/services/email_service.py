@@ -576,6 +576,51 @@ KidsChores
 """
         return await self.send_email(to_email, subject, html_content, text_content)
 
+    async def send_bug_report_email(
+        self,
+        to_email: str,
+        parent_name: str,
+        reporter_name: str,
+        role: str,
+        message: str,
+        app_version: str,
+        page_path: str,
+    ) -> bool:
+        """Send email to a parent when someone submits an in-app problem report."""
+        parent_name = html.escape(parent_name)
+        reporter_name = html.escape(reporter_name)
+        role = html.escape(role or "parent")
+        safe_message = html.escape(message)
+        app_version = html.escape(app_version or "?")
+        page_path = html.escape(page_path or "?")
+        subject = f"[KidsChores] Problem report from {reporter_name}"
+
+        body = (
+            _h2("Problem report")
+            + _p(f"Hi {parent_name},")
+            + _p(f'<strong style="color:{BODY_HEADING};">{reporter_name}</strong> reported '
+                 "a problem in KidsChores.")
+            + _note_box("What happened", safe_message, BRAND_HERO)
+            + _p(f"v{app_version} &middot; {page_path} &middot; {role} account", muted=True)
+            + _p("Open the Parent tab &rarr; Reports to mark it reviewed.", muted=True)
+        )
+        html_content = self._branded_wrapper(body, preheader=f"Problem report from {reporter_name}")
+
+        text_content = f"""Hi {parent_name},
+
+{reporter_name} reported a problem in KidsChores:
+
+{message}
+
+Context: v{app_version} | {page_path} | {role} account
+
+Open the Parent tab -> Reports to mark it reviewed.
+
+--
+KidsChores
+"""
+        return await self.send_email(to_email, subject, html_content, text_content)
+
 
 # Singleton instance
 email_service = EmailService()

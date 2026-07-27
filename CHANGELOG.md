@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-07-27
+
+### Added
+- Notification bell for parents in the top bar: a badge shows how many
+  approvals are waiting, and tapping it lists who claimed what, pending
+  reward requests, and allowance payouts - with a one-tap jump to the
+  approvals list.
+- The app version is now always visible in the top bar for everyone, so
+  it's easy to say exactly which version you're on when something looks off.
+- Report a problem: a link at the bottom of the Home page (works for kids
+  too) opens a quick form; parents get notified and can review reports on
+  the new Parent > Reports tab. The app attaches the version and page
+  automatically.
+
+### Fixed
+- Deleting a chore that had ever been claimed failed with a server error.
+
 ## [0.16.2] - 2026-07-27
 
 ### Fixed

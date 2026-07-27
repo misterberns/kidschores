@@ -118,6 +118,9 @@ export interface PendingChoreClaim {
   claimed_at: string;
   approved_at: string | null;
   approved_by: string | null;
+  // Display names populated by /approvals/pending (v0.17.0)
+  kid_name?: string | null;
+  chore_name?: string | null;
 }
 
 export interface PendingRewardClaim {
@@ -129,6 +132,9 @@ export interface PendingRewardClaim {
   requested_at: string;
   approved_at: string | null;
   approved_by: string | null;
+  // Display names populated by /approvals/pending (v0.17.0)
+  kid_name?: string | null;
+  reward_name?: string | null;
 }
 
 export interface PendingApprovals {
@@ -199,8 +205,29 @@ export const rewardsApi = {
 
 export const approvalsApi = {
   pending: () => api.get<PendingApprovals>('/approvals/pending'),
-  count: () => api.get<{ total: number }>('/approvals/pending/count'),
+  count: () => api.get<{ chores: number; rewards: number; total: number }>('/approvals/pending/count'),
   history: (limit = 50) => api.get(`/approvals/history?limit=${limit}`),
+};
+
+export interface FeedbackItem {
+  id: string;
+  reporter_name: string;
+  role: 'parent' | 'kid';
+  message: string;
+  app_version: string | null;
+  page_path: string | null;
+  status: 'new' | 'reviewed';
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
+export const feedbackApi = {
+  create: (data: { message: string; app_version?: string; page_path?: string }) =>
+    api.post<FeedbackItem>('/feedback', data),
+  list: (status?: 'new' | 'reviewed') =>
+    api.get<FeedbackItem[]>(`/feedback${status ? `?status=${status}` : ''}`),
+  markReviewed: (id: string) => api.post<FeedbackItem>(`/feedback/${id}/review`),
 };
 
 export const parentsApi = {

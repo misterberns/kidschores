@@ -186,6 +186,16 @@ test.describe('Keyboard Navigation', () => {
   });
 });
 
+test.describe('Header version chip (v0.17.0)', () => {
+  test('version chip is visible in the header on every page', async ({ page, playwright }) => {
+    await authenticatePage(page, playwright);
+
+    const chip = page.getByTestId('version-chip').first();
+    await expect(chip).toBeVisible();
+    await expect(chip).toHaveText(/^v\d+\.\d+\.\d+$/);
+  });
+});
+
 test.describe('Help Page', () => {
   test('version badge displays at bottom of Help page', async ({ page, playwright }) => {
     await authenticatePage(page, playwright);

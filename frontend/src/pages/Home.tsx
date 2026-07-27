@@ -20,6 +20,7 @@ import { GoalCelebration } from '../components/celebrations/GoalCelebration';
 import { GoalRing, useGoals } from '../components/goals/GoalRing';
 import type { SavingsGoal } from '../api/client';
 import { InstallAppBanner } from '../components/InstallAppBanner';
+import { ReportProblemButton } from '../components/feedback/ReportProblemButton';
 
 function KidCard({ kid, index }: { kid: Kid; index: number }) {
   const { getKidColor } = useTheme();
@@ -242,6 +243,12 @@ export function Home() {
           <KidCard key={kid.id} kid={kid} index={index} />
         ))}
       </motion.div>
+
+      {/* Quiet footer affordance — Home is the guaranteed landing surface for
+          kid sessions (kids can't reach /help), so this is where they report. */}
+      <div className="flex justify-center pt-2">
+        <ReportProblemButton />
+      </div>
     </div>
   );
 }

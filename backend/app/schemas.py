@@ -168,6 +168,9 @@ class ChoreClaimResponse(BaseModel):
     # Gamification results (populated on approve; additive for older clients)
     new_badges: List[str] = []
     completed_challenges: List[dict] = []
+    # Display names (populated by /approvals/pending, v0.17.0; additive)
+    kid_name: Optional[str] = None
+    chore_name: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -222,6 +225,9 @@ class RewardClaimResponse(BaseModel):
     requested_at: datetime
     approved_at: Optional[datetime]
     approved_by: Optional[str]
+    # Display names (populated by /approvals/pending, v0.17.0; additive)
+    kid_name: Optional[str] = None
+    reward_name: Optional[str] = None
 
     class Config:
         from_attributes = True

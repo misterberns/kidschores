@@ -7,3 +7,4 @@ export { ChoresSection } from './ChoresSection';
 export { RewardsSection } from './RewardsSection';
 export { ParentsSection } from './ParentsSection';
 export { ChallengesSection } from './ChallengesSection';
+export { FeedbackSection } from './FeedbackSection';
