@@ -50,8 +50,9 @@ async def reset_recurring_chores():
     Reset recurring chores at midnight.
 
     This job:
-    1. Marks old pending/claimed statuses as 'expired' for recurring chores
-    2. Updates last_reset_date on chores
+    1. Marks old pending/claimed statuses as 'expired' for ALL chores (v0.16.2:
+       previously recurring-only, which let non-recurring claims linger forever)
+    2. Updates last_reset_date on recurring chores
     3. Logs the job execution
     """
     start_time = time.time()
@@ -67,28 +68,27 @@ async def reset_recurring_chores():
         # Naive-local-midnight day-key marker for last_reset_date.
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # Get recurring chores
+        # Expire stale unapproved claims for ALL chores, not just recurring ones.
+        # Since v0.16.2 the claim guard is day-windowed, so a lingering claimed row
+        # on a non-recurring chore no longer blocks tomorrow's claim — but without
+        # expiry it would sit in the parent pending list forever and permit a
+        # double-approval. Approved rows are deliberately kept (history/streaks).
+        affected_records = db.query(ChoreClaim).filter(
+            ChoreClaim.status.in_(["pending", "claimed"]),
+            ChoreClaim.claimed_at < today_start
+        ).update({"status": "expired"}, synchronize_session=False)
+
+        # last_reset_date remains a recurring-chore-only marker.
         recurring_chores = db.query(Chore).filter(
             Chore.recurring_frequency != "none",
             Chore.recurring_frequency.isnot(None)
         ).all()
-
         for chore in recurring_chores:
-            # Mark old pending claims as expired (claims from before today)
-            expired_count = db.query(ChoreClaim).filter(
-                ChoreClaim.chore_id == chore.id,
-                ChoreClaim.status.in_(["pending", "claimed"]),
-                ChoreClaim.claimed_at < today_start
-            ).update({"status": "expired"})
-
-            affected_records += expired_count
-
-            # Update last_reset_date
             chore.last_reset_date = today
 
         db.commit()
 
-        logger.info(f"Reset {affected_records} chore claims for {len(recurring_chores)} recurring chores")
+        logger.info(f"Expired {affected_records} stale chore claims; reset {len(recurring_chores)} recurring chores")
 
     except Exception as e:
         error_message = str(e)

@@ -653,7 +653,7 @@ export function Onboarding() {
       setCategoriesSeeded(true);
       toast.success('Categories loaded!');
     },
-    onError: () => toast.error('Failed to seed categories'),
+    meta: { errorFallback: 'Failed to seed categories' },
   });
 
   const goNext = () => {

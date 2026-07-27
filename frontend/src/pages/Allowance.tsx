@@ -19,7 +19,6 @@ import {
 import { kidsApi, allowanceApi } from '../api/client';
 import type { AllowancePayout } from '../api/client';
 import { useToast } from '../hooks/useToast';
-import { getApiErrorMessage } from '../utils/errorMessage';
 import { Button, IconButton, Tab, TabList } from '../components/ui';
 import { SavingsGoalsCard } from '../components/goals/SavingsGoalsCard';
 
@@ -64,9 +63,7 @@ function AllowanceSettingsPanel({ kidId }: { kidId: string }) {
       setMinimumPayout(null);
       toast.success('Allowance settings saved');
     },
-    onError: (error) => {
-      toast.error(getApiErrorMessage(error, 'Failed to save settings'));
-    },
+    meta: { errorFallback: 'Failed to save settings' },
   });
 
   if (!settings) return null;
@@ -270,9 +267,7 @@ export function Allowance() {
       setPointsToConvert('');
       toast.success(`Requested ${formatCurrency(data.data.dollar_amount)} payout!`);
     },
-    onError: (error: any) => {
-      toast.error(getApiErrorMessage(error, 'Failed to request payout'));
-    },
+    meta: { errorFallback: 'Failed to request payout' },
   });
 
   // Mark paid mutation

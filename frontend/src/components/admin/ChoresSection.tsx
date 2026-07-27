@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil } from 'lucide-react';
 import { kidsApi, choresApi, parentsApi, categoriesApi } from '../../api/client';
+import { DAY_NAMES } from '../../utils/days';
 import type { Kid, Chore, Parent } from '../../api/client';
 import { DynamicIcon } from '../DynamicIcon';
 import { FormInput, FormSelect } from './FormElements';
@@ -46,7 +47,6 @@ function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent
   const [applicableDays, setApplicableDays] = useState<number[]>([]);
   const queryClient = useQueryClient();
 
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const mutation = useMutation({
     mutationFn: (data: Partial<Chore>) => choresApi.create(data),
@@ -152,7 +152,7 @@ function AddChoreForm({ kids, parents, onClose }: { kids: Kid[]; parents: Parent
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2 text-text-secondary">Applicable Days:</label>
         <div className="flex gap-1 flex-wrap">
-          {dayNames.map((day, idx) => (
+          {DAY_NAMES.map((day, idx) => (
             <button
               key={idx}
               type="button"
@@ -211,7 +211,6 @@ function EditChoreForm({ chore, kids, parents, onClose }: { chore: Chore; kids: 
   const [applicableDays, setApplicableDays] = useState<number[]>(chore.applicable_days || []);
   const queryClient = useQueryClient();
 
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const mutation = useMutation({
     mutationFn: (data: Partial<Chore>) => choresApi.update(chore.id, data),
@@ -317,7 +316,7 @@ function EditChoreForm({ chore, kids, parents, onClose }: { chore: Chore; kids: 
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2 text-text-secondary">Applicable Days:</label>
         <div className="flex gap-1 flex-wrap">
-          {dayNames.map((day, idx) => (
+          {DAY_NAMES.map((day, idx) => (
             <button
               key={idx}
               type="button"

@@ -98,7 +98,7 @@ class ChoreBase(BaseModel):
     recurring_frequency: str = "none"
     custom_interval: Optional[int] = None
     custom_interval_unit: Optional[str] = None
-    applicable_days: List[int] = []
+    applicable_days: List[int] = []  # 0=Monday..6=Sunday (Python weekday() convention)
     due_date: Optional[datetime] = None
     allow_multiple_claims_per_day: bool = False
     partial_allowed: bool = False
@@ -151,6 +151,9 @@ class ChoreClaimRequest(BaseModel):
 class ChoreApproveRequest(BaseModel):
     parent_name: Optional[str] = None  # Derived from JWT if not provided
     points_awarded: Optional[float] = None
+    # Disambiguates which kid's claim to approve on shared chores; without it the
+    # oldest pending claim is used (legacy-caller compatibility).
+    kid_id: Optional[str] = None
 
 
 class ChoreClaimResponse(BaseModel):

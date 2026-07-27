@@ -330,12 +330,18 @@ def claim_chore(
     if request.kid_id not in (chore.assigned_kids or []):
         raise HTTPException(status_code=400, detail="Kid not assigned to this chore")
 
-    # Check for existing claim if multiple claims not allowed
+    # Check for existing claim TODAY if multiple claims not allowed. The window must
+    # match the one get_todays_chores uses for status display, or the UI shows a Claim
+    # button the guard then rejects (pre-v0.16.2: no window at all, so one approved
+    # claim made the chore permanently unclaimable — approved rows are never expired).
     if not chore.allow_multiple_claims_per_day:
+        day_start, day_end = local_day_bounds_utc()
         existing = db.query(ChoreClaim).filter(
             ChoreClaim.chore_id == chore_id,
             ChoreClaim.kid_id == request.kid_id,
-            ChoreClaim.status.in_(["claimed", "approved"])
+            ChoreClaim.status.in_(["claimed", "approved"]),
+            ChoreClaim.claimed_at >= day_start,
+            ChoreClaim.claimed_at < day_end,
         ).first()
         if existing:
             raise HTTPException(status_code=400, detail="Chore already claimed today")
@@ -372,11 +378,16 @@ def approve_chore(
     admin: User = Depends(require_parent),
 ):
     """Parent approves a claimed chore."""
-    # Find the pending claim
-    claim = db.query(ChoreClaim).filter(
+    # Find the pending claim. kid_id disambiguates when a shared chore has claims
+    # from multiple kids — without it, .first() could credit the wrong kid. Legacy
+    # callers omitting kid_id get the OLDEST claim (deterministic, was insertion luck).
+    query = db.query(ChoreClaim).filter(
         ChoreClaim.chore_id == chore_id,
         ChoreClaim.status == "claimed"
-    ).first()
+    )
+    if request.kid_id:
+        query = query.filter(ChoreClaim.kid_id == request.kid_id)
+    claim = query.order_by(ChoreClaim.claimed_at.asc()).first()
 
     if not claim:
         raise HTTPException(status_code=404, detail="No pending claim found for this chore")
@@ -442,10 +453,13 @@ def approve_chore(
 @router.post("/{chore_id}/disapprove", response_model=MessageResponse)
 def disapprove_chore(chore_id: str, request: ChoreApproveRequest, db: Session = Depends(get_db), admin: User = Depends(require_parent)):
     """Parent disapproves a claimed chore."""
-    claim = db.query(ChoreClaim).filter(
+    query = db.query(ChoreClaim).filter(
         ChoreClaim.chore_id == chore_id,
         ChoreClaim.status == "claimed"
-    ).first()
+    )
+    if request.kid_id:
+        query = query.filter(ChoreClaim.kid_id == request.kid_id)
+    claim = query.order_by(ChoreClaim.claimed_at.asc()).first()
 
     if not claim:
         raise HTTPException(status_code=404, detail="No pending claim found for this chore")

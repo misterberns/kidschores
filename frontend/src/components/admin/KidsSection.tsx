@@ -7,7 +7,6 @@ import { useToast } from '../../hooks/useToast';
 import { FormInput } from './FormElements';
 import { EntityCard } from './EntityCard';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
-import { getApiErrorMessage } from '../../utils/errorMessage';
 import { KidAvatar } from '../KidAvatar';
 import { useTheme } from '../../theme';
 import { kidColorPalette } from '../../theme/colors';
@@ -150,9 +149,7 @@ function GoogleLinkButton({ kidId, kidName }: { kidId: string; kidName: string }
       setEmail('');
       toast.success(`Google linked for ${kidName}`);
     },
-    onError: (err: any) => {
-      toast.error(getApiErrorMessage(err, 'Failed to link'));
-    },
+    meta: { errorFallback: 'Failed to link' },
   });
 
   if (!showInput) {

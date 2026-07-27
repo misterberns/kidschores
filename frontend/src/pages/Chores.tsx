@@ -61,6 +61,8 @@ function ChoreCard({
   category,
   multiplier,
   claimAsKidId,
+  isClaiming,
+  readOnly,
 }: {
   chore: Chore;
   kids: Kid[];
@@ -72,6 +74,12 @@ function ChoreCard({
   multiplier?: number;
   /** Kid sessions always claim as themselves — no "Who's claiming?" picker. */
   claimAsKidId?: string | null;
+  /** This chore's claim POST is in flight — disable the button (double-tap guard). */
+  isClaiming?: boolean;
+  /** All view: GET /chores has no per-kid status, so chore.status is undefined and
+      would render an always-on Claim button (silent 400 on already-claimed chores).
+      Hide the status/actions row instead of lying. */
+  readOnly?: boolean;
 }) {
   const [showKidSelect, setShowKidSelect] = useState(false);
   const prefersReducedMotion = useReducedMotion();
@@ -161,6 +169,7 @@ function ChoreCard({
       )}
 
       {/* Status and Actions */}
+      {!readOnly && (
       <div className="mt-4 flex items-center justify-between">
         <AnimatedBadge status={status} />
 
@@ -168,6 +177,8 @@ function ChoreCard({
           <div className="relative">
             <motion.button
               data-testid={`claim-btn-${chore.id}`}
+              disabled={isClaiming}
+              aria-busy={isClaiming || undefined}
               onClick={() => {
                 if (claimAsKidId) {
                   onClaim(chore.id, claimAsKidId);
@@ -177,7 +188,7 @@ function ChoreCard({
               }}
               className={`btn touch-target font-bold ${
                 isSuccess ? 'bg-primary-500 hover:bg-primary-600' : 'btn-primary'
-              }`}
+              } ${isClaiming ? 'opacity-60 pointer-events-none' : ''}`}
               whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
               whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
               animate={
@@ -273,6 +284,7 @@ function ChoreCard({
           </motion.div>
         )}
       </div>
+      )}
     </motion.div>
   );
 }
@@ -382,9 +394,16 @@ export function Chores() {
       }, 2500);
       queryClient.invalidateQueries({ queryKey: ['chores'] });
       queryClient.invalidateQueries({ queryKey: ['kids'] });
+      // A parent with the Parent tab (or bell) already open sees the new claim
+      // without waiting for the 30s poll.
+      queryClient.invalidateQueries({ queryKey: ['approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['approvals-count'] });
     },
     onError: () => {
-      // The global mutation onError shows the error toast; just make sure no
+      // The error toast comes from the MutationCache-level handler in
+      // queryClient.ts (which runs IN ADDITION to this one — unlike the old
+      // defaultOptions.mutations.onError, which this handler silently
+      // replaced, making claim failures invisible). Here: only make sure no
       // celebration/"Claimed!" state is left showing.
       setClaimSuccess(null);
       setShowPointsEarned(false);
@@ -612,7 +631,10 @@ export function Chores() {
               category={chore.category_id ? categoryMap.get(chore.category_id) : null}
               multiplier={viewMode === 'today' ? currentMultiplier : undefined}
               claimAsKidId={role === 'kid' ? ownKidId : null}
+              isClaiming={claimMutation.isPending && claimMutation.variables?.choreId === chore.id}
+              readOnly={viewMode === 'all'}
             />
+
           ))
         )}
       </motion.div>

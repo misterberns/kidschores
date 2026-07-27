@@ -3,7 +3,6 @@ import { Target, Trophy, Trash2, Sparkles } from 'lucide-react';
 import { challengesApi } from '../../api/client';
 import type { Challenge, ChallengeTemplate } from '../../api/client';
 import { useToast } from '../../hooks/useToast';
-import { getApiErrorMessage } from '../../utils/errorMessage';
 import { Button } from '../ui';
 import { DynamicIcon } from '../DynamicIcon';
 
@@ -99,7 +98,7 @@ export function ChallengesSection() {
       queryClient.invalidateQueries({ queryKey: ['challenges'] });
       toast.success(`Challenge "${template.name}" started!`);
     },
-    onError: (error: unknown) => toast.error(getApiErrorMessage(error, 'Failed to create challenge')),
+    meta: { errorFallback: 'Failed to create challenge' },
   });
 
   const deleteMutation = useMutation({

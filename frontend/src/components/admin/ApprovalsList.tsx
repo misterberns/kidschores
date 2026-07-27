@@ -24,27 +24,32 @@ export function ApprovalsList() {
     queryFn: () => choresApi.list().then(res => res.data),
   });
 
+  // Chore mutations take the whole claim: kid_id disambiguates which kid's claim
+  // to act on when a shared chore has claims from multiple kids (pre-v0.16.2 the
+  // backend picked whichever row came first — the wrong kid could be credited).
   const approveChoreMutation = useMutation({
-    mutationFn: (choreId: string) => choresApi.approve(choreId, ''),
-    onSuccess: (_data, choreId) => {
-      const chore = chores.find(c => c.id === choreId);
+    mutationFn: (claim: PendingChoreClaim) => choresApi.approve(claim.chore_id, '', undefined, claim.kid_id),
+    onSuccess: (_data, claim) => {
+      const chore = chores.find(c => c.id === claim.chore_id);
       if (chore) {
         toast.choreApproved(chore.name, chore.default_points);
       }
       queryClient.invalidateQueries({ queryKey: ['approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['approvals-count'] });
       queryClient.invalidateQueries({ queryKey: ['kids'] });
       queryClient.invalidateQueries({ queryKey: ['chores'] });
     },
   });
 
   const disapproveChoreMutation = useMutation({
-    mutationFn: (choreId: string) => choresApi.disapprove(choreId, ''),
-    onSuccess: (_data, choreId) => {
-      const chore = chores.find(c => c.id === choreId);
+    mutationFn: (claim: PendingChoreClaim) => choresApi.disapprove(claim.chore_id, '', claim.kid_id),
+    onSuccess: (_data, claim) => {
+      const chore = chores.find(c => c.id === claim.chore_id);
       if (chore) {
         toast.choreDenied(chore.name);
       }
       queryClient.invalidateQueries({ queryKey: ['approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['approvals-count'] });
       queryClient.invalidateQueries({ queryKey: ['chores'] });
     },
   });
@@ -54,6 +59,7 @@ export function ApprovalsList() {
     onSuccess: () => {
       toast.success('Reward approved!');
       queryClient.invalidateQueries({ queryKey: ['approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['approvals-count'] });
       queryClient.invalidateQueries({ queryKey: ['kids'] });
     },
   });
@@ -63,6 +69,7 @@ export function ApprovalsList() {
     onSuccess: () => {
       toast.success('Reward denied');
       queryClient.invalidateQueries({ queryKey: ['approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['approvals-count'] });
     },
   });
 
@@ -105,7 +112,7 @@ export function ApprovalsList() {
                 variant="success"
                 className="flex-1"
                 data-testid={`approve-chore-btn-${claim.chore_id}`}
-                onClick={() => approveChoreMutation.mutate(claim.chore_id)}
+                onClick={() => approveChoreMutation.mutate(claim)}
               >
                 <Check size={18} /> Approve
               </Button>
@@ -113,7 +120,7 @@ export function ApprovalsList() {
                 variant="danger"
                 className="flex-1"
                 data-testid={`deny-chore-btn-${claim.chore_id}`}
-                onClick={() => disapproveChoreMutation.mutate(claim.chore_id)}
+                onClick={() => disapproveChoreMutation.mutate(claim)}
               >
                 <X size={18} /> Deny
               </Button>
