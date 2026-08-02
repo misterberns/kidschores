@@ -25,12 +25,22 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      # Must be its OWN step, BEFORE the install it protects: setup-ci appends
-      # its shim dir to GITHUB_PATH, which only takes effect in *later* steps.
-      # Run after `npm ci` and it intercepts nothing, silently.
+      # Two ordering traps here, both of which fail SILENTLY GREEN:
+      #
+      # 1. This must be its OWN step, BEFORE the install it protects. setup-ci
+      #    appends its shim dir to GITHUB_PATH, which only takes effect in
+      #    *later* steps. Run after `npm ci` and it intercepts nothing.
+      # 2. safe-chain must be installed GLOBALLY, not invoked via `npx`. The
+      #    generated shims test `command -v safe-chain` and fall through to the
+      #    unprotected command when it is missing. `npx` runs it from a temp
+      #    cache that is gone by the next step, so every shim printed
+      #    "safe-chain is not available to protect you" while the job stayed
+      #    green. Verify by asserting that warning is ABSENT from the install log.
       - name: Safe Chain (malicious-package interception)
         working-directory: .
-        run: npx @aikidosec/safe-chain setup-ci
+        run: |
+          npm install -g @aikidosec/safe-chain
+          safe-chain setup-ci
 
       - name: Install dependencies
         run: npm ci
@@ -79,7 +89,9 @@ jobs:
       # safe-chain shims pip/python as well as npm.
       - name: Safe Chain (malicious-package interception)
         working-directory: .
-        run: npx @aikidosec/safe-chain setup-ci
+        run: |
+          npm install -g @aikidosec/safe-chain
+          safe-chain setup-ci
 
       - name: Install dependencies
         run: |
@@ -120,7 +132,9 @@ jobs:
           cache-dependency-path: e2e/package-lock.json
 
       - name: Safe Chain (malicious-package interception)
-        run: npx @aikidosec/safe-chain setup-ci
+        run: |
+          npm install -g @aikidosec/safe-chain
+          safe-chain setup-ci
 
       - name: Install e2e dependencies
         working-directory: e2e
