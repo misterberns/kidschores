@@ -25,6 +25,13 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
+      # Must be its OWN step, BEFORE the install it protects: setup-ci appends
+      # its shim dir to GITHUB_PATH, which only takes effect in *later* steps.
+      # Run after `npm ci` and it intercepts nothing, silently.
+      - name: Safe Chain (malicious-package interception)
+        working-directory: .
+        run: npx @aikidosec/safe-chain setup-ci
+
       - name: Install dependencies
         run: npm ci
 
@@ -67,6 +74,13 @@ jobs:
         working-directory: .
         run: bash scripts/check-version-consistency.sh
 
+      # Same ordering rule as the frontend job — before the install, own step.
+      # Node is preinstalled on ubuntu-latest, so npx works without setup-node.
+      # safe-chain shims pip/python as well as npm.
+      - name: Safe Chain (malicious-package interception)
+        working-directory: .
+        run: npx @aikidosec/safe-chain setup-ci
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
@@ -105,6 +119,9 @@ jobs:
           cache: npm
           cache-dependency-path: e2e/package-lock.json
 
+      - name: Safe Chain (malicious-package interception)
+        run: npx @aikidosec/safe-chain setup-ci
+
       - name: Install e2e dependencies
         working-directory: e2e
         run: |
@@ -135,3 +152,43 @@ jobs:
           name: playwright-report
           path: e2e/playwright-report/
           retention-days: 7
+
+  security:
+    name: Security (Aikido — blocking on high+)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write   # for post-scan-status-comment
+    env:
+      AIKIDO_SECRET_KEY: ${{ secrets.AIKIDO_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # The `secrets` context cannot be used in a job-level `if`, so gate on an
+      # env copy instead. This makes the job self-activating: it is inert until
+      # AIKIDO_SECRET_KEY exists, and becomes a real blocking gate the moment it
+      # does — no follow-up edit to this file required.
+      - name: Is the Aikido gate configured?
+        id: gate
+        run: |
+          if [ -z "$AIKIDO_SECRET_KEY" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Aikido gate INACTIVE::AIKIDO_SECRET_KEY is not set, so no dependency/SAST scan ran for this PR. Add the repo secret to activate the blocking high+ gate."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Blocking on HIGH and CRITICAL. Medium/low stay non-blocking and are
+      # reported by the existing `npm audit` / `pip-audit` steps above.
+      # NOTE: minimum-severity defaults to CRITICAL — HIGH must be set explicitly.
+      - name: Aikido scan
+        if: steps.gate.outputs.configured == 'true'
+        uses: AikidoSec/github-actions-workflow@v1.0.13
+        with:
+          secret-key: ${{ secrets.AIKIDO_SECRET_KEY }}
+          minimum-severity: HIGH
+          fail-on-dependency-scan: true
+          fail-on-sast-scan: true
+          fail-on-iac-scan: false
+          post-scan-status-comment: only_if_new_findings
+          github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -48,6 +48,7 @@
 - **Security** - JWT auth (PyJWT) on all endpoints, rate limiting, bcrypt hashing, CORS restriction, unprivileged nginx, locked-down proxy trust
 - **Error Handling** - React error boundaries, global error handler, auto-toast notifications
 - **CI-Gated Testing** - 75 backend pytest tests + ~250 Playwright e2e tests (API, UI, accessibility, workflows) run on every push; Dependabot keeps dependencies fresh
+- **CI-Gated Security** - Aikido scanning blocks the build on new high/critical findings, Safe Chain intercepts malicious packages at install time, and `npm audit` / `pip-audit` report the rest (see [SECURITY.md](SECURITY.md))
 
 ## Screenshots
 
@@ -289,7 +290,7 @@ kidschores/
 │   ├── kc-build.sh          # Build + push to container registry
 │   └── check-version-consistency.sh  # CI gate: all version surfaces must match
 ├── .github/
-│   ├── workflows/ci.yml     # CI: frontend checks, backend pytest, full e2e stack
+│   ├── workflows/ci.yml     # CI: frontend checks, backend pytest, full e2e stack, security scan
 │   └── dependabot.yml       # Weekly dependency updates (npm, pip, actions, docker)
 ├── docker-compose.yml       # Standalone deployment (builds locally)
 ├── .env.example             # Environment variable template
