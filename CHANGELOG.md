@@ -19,9 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The one remaining advisory (GHSA-qwww-vcr4-c8h2, react-router RSC-mode CSRF)
   does not apply to this app — it has no RSC mode and no route actions. Recorded
   with the reasoning in `SECURITY.md` under "Known non-applicable advisories".
-- CI now runs an Aikido security scan that blocks the build on new high or
-  critical findings, and runs Safe Chain before every dependency install to
-  intercept malicious packages at install time.
+- Aikido Security now gates pull requests via its PR Checks app (dependencies,
+  IaC, secrets, SAST, malware, license risk), and CI runs Safe Chain before
+  every dependency install to intercept malicious packages at install time.
 
 ## [0.17.0] - 2026-07-27
 

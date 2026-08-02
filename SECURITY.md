@@ -47,11 +47,14 @@ KidsChores implements the following security practices:
 
 ## Dependency scanning
 
-Dependencies are scanned continuously by **Dependabot**, **Aikido Security**, and per-PR
+Dependencies are scanned continuously by **Dependabot** and **Aikido Security**, with per-PR
 `npm audit` / `pip-audit` reports in CI. CI additionally runs **Safe Chain**
 (`@aikidosec/safe-chain`) ahead of every dependency install, which intercepts known-malicious
-packages at install time rather than after the fact. The CI security job fails the build on new
-**high** or **critical** findings; medium and low are reported without blocking.
+packages at install time rather than after the fact.
+
+Aikido gates pull requests through its **PR Checks app** (configured in the Aikido dashboard, not
+in this repo's workflow), covering dependencies, IaC, secrets, SAST, malware and license risk on
+the feature branch before it merges.
 
 ### Known non-applicable advisories
 
