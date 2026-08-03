@@ -28,4 +28,4 @@ pywebpush~=2.3.0
 aiosmtplib~=5.1.2
 
 # Database Migrations
-alembic~=1.14.0
+alembic~=1.18.5
