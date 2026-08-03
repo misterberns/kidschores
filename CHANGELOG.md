@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Dependency updates clearing every actionable advisory in the frontend
+  lockfile: react-router-dom 7.18.2, form-data 4.0.6 (CRLF injection),
+  picomatch 4.0.5 (ReDoS), rollup 4.62.3 (path traversal), vite 7.3.6
+  (`server.fs.deny` bypasses), minimatch 3.1.5 / 10.2.6 (ReDoS),
+  brace-expansion 1.1.18 / 5.0.9 (DoS), js-yaml 4.3.1, flatted 3.4.4,
+  ajv 6.15.0, esbuild 0.28.1, @babel/core 7.29.7. `npm audit` findings went from
+  13 to 2, and both remaining entries are the same advisory (below). No
+  application code changed.
+- The one remaining advisory (GHSA-qwww-vcr4-c8h2, react-router RSC-mode CSRF)
+  does not apply to this app — it has no RSC mode and no route actions. Recorded
+  with the reasoning in `SECURITY.md` under "Known non-applicable advisories".
+- Aikido Security now gates pull requests via its PR Checks app (dependencies,
+  IaC, secrets, SAST, malware, license risk), and CI runs Safe Chain before
+  every dependency install to intercept malicious packages at install time.
+
 ## [0.17.0] - 2026-07-27
 
 ### Added

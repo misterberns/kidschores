@@ -48,6 +48,7 @@
 - **Security** - JWT auth (PyJWT) on all endpoints, rate limiting, bcrypt hashing, CORS restriction, unprivileged nginx, locked-down proxy trust
 - **Error Handling** - React error boundaries, global error handler, auto-toast notifications
 - **CI-Gated Testing** - 75 backend pytest tests + ~250 Playwright e2e tests (API, UI, accessibility, workflows) run on every push; Dependabot keeps dependencies fresh
+- **Gated Security** - Aikido PR Checks gate every pull request (dependencies, IaC, secrets, SAST, malware), Safe Chain intercepts malicious packages at install time, and `npm audit` / `pip-audit` report the rest (see [SECURITY.md](SECURITY.md))
 
 ## Screenshots
 

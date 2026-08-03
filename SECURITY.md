@@ -45,6 +45,26 @@ KidsChores implements the following security practices:
 - **SQL injection prevention**: SQLAlchemy ORM with parameterized queries.
 - **No secrets in code**: all credentials loaded from environment variables.
 
+## Dependency scanning
+
+Dependencies are scanned continuously by **Dependabot** and **Aikido Security**, with per-PR
+`npm audit` / `pip-audit` reports in CI. CI additionally runs **Safe Chain**
+(`@aikidosec/safe-chain`) ahead of every dependency install, which intercepts known-malicious
+packages at install time rather than after the fact.
+
+Aikido gates pull requests through its **PR Checks app** (configured in the Aikido dashboard, not
+in this repo's workflow), covering dependencies, IaC, secrets, SAST, malware and license risk on
+the feature branch before it merges.
+
+### Known non-applicable advisories
+
+An advisory is listed here only when the vulnerable code path provably does not exist in this
+application. Each entry is re-checked whenever the dependency is upgraded.
+
+| Advisory | Package | Status | Why it does not apply |
+|---|---|---|---|
+| [GHSA-qwww-vcr4-c8h2](https://github.com/advisories/GHSA-qwww-vcr4-c8h2) — RSC-mode CSRF bypass | `react-router` | Not applicable | The flaw is reachable only in **React Server Components mode**. This frontend is a client-only SPA: it uses declarative `<BrowserRouter>` + `<Routes>`/`<Route>` (`frontend/src/App.tsx`), has no data router (`createBrowserRouter`), defines **no route `action`s or `loader`s**, and has no RSC plugin in `frontend/vite.config.ts`. The only patched release is `8.3.0`, a major version in which `react-router-dom` is discontinued; migrating would rewrite routing across the app to remove a code path this build does not contain. Tracked for the next routing overhaul. |
+
 ## Scope
 
 This policy covers the KidsChores application code. Third-party dependencies are managed via `requirements.txt` (Python) and `package.json` (Node.js) — please report upstream vulnerabilities to their respective maintainers.
