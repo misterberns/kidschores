@@ -15,7 +15,7 @@
     "@sentry/react": "^10.66.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tanstack/react-query": "^5.101.2",
-    "axios": "^1.18.1",
+    "axios": "^1.20.0",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.25.0",
     "react": "^19.2.7",
