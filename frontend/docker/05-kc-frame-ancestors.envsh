@@ -1,0 +1,27 @@
+#!/bin/sh
+# Sourced by the nginx image entrypoint before 20-envsubst-on-templates.sh renders
+# /etc/nginx/templates/default.conf.template (KidsChores 0.18.1).
+#
+# KC_FRAME_ANCESTORS is the CSP frame-ancestors source list: which sites may show
+# KidsChores inside a frame, e.g. a Home Assistant dashboard for kiosk mode:
+#   KC_FRAME_ANCESTORS="'self' https://homeassistant.local:8123"
+# Unset or empty keeps the default 'self' (no other site may frame the app).
+#
+# An empty or malformed value is NOT passed through: "frame-ancestors ;" is an
+# invalid directive that browsers drop, which would allow framing by ANY site.
+
+kc_default="'self'"
+
+if [ -z "${KC_FRAME_ANCESTORS:-}" ]; then
+  KC_FRAME_ANCESTORS="$kc_default"
+elif printf '%s' "$KC_FRAME_ANCESTORS" | grep -q "[^A-Za-z0-9.:/*' _-]"; then
+  echo "kidschores: KC_FRAME_ANCESTORS has characters a CSP source list cannot contain; using $kc_default" >&2
+  KC_FRAME_ANCESTORS="$kc_default"
+fi
+
+export KC_FRAME_ANCESTORS
+
+# The template renders into this directory (NGINX_ENVSUBST_OUTPUT_DIR); the render
+# step requires it to exist and be writable. /tmp is writable even on a read-only rootfs.
+mkdir -p "${NGINX_ENVSUBST_OUTPUT_DIR:-/tmp/kc-nginx}"
+unset kc_default
