@@ -1,8 +1,8 @@
 # KidsChores Backend Dependencies
 # Pinned with compatible-release (~=) for reproducible builds
 # that still resolve pre-built wheels for Python 3.14
-fastapi~=0.139.2
-uvicorn[standard]~=0.51.0  # >=0.33 for IP-network FORWARDED_ALLOW_IPS
+fastapi~=0.142.4  # 0.143+ carries breaking changes: own review (hold)
+uvicorn[standard]~=0.54.0  # >=0.33 for IP-network FORWARDED_ALLOW_IPS
 sqlalchemy~=2.0.51
 pydantic~=2.13.4
 pydantic[email]~=2.13.4
@@ -14,7 +14,7 @@ pyjwt~=2.13  # replaced unmaintained python-jose (CVE-2024-33663/33664)
 bcrypt~=5.0.0  # used directly; passlib removed (was an unused leftover)
 
 # Observability (dormant unless SENTRY_DSN is set)
-sentry-sdk[fastapi]~=2.64
+sentry-sdk[fastapi]~=2.74
 httpx~=0.28.1
 python-dotenv~=1.2.2
 
@@ -28,4 +28,4 @@ pywebpush~=2.3.0
 aiosmtplib~=5.1.2
 
 # Database Migrations
-alembic~=1.14.0
+alembic~=1.20.1
