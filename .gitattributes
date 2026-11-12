@@ -1,0 +1,4 @@
+# Shell scripts run inside Linux images and CI: always LF, whatever core.autocrlf says.
+# (0.18.1: frontend/docker/*.envsh is sourced by the nginx entrypoint; a CR breaks it.)
+*.sh    text eol=lf
+*.envsh text eol=lf

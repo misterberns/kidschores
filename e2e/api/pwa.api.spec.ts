@@ -38,4 +38,16 @@ test.describe('PWA static files', () => {
       expect(resp.headers()['content-type'], path).toContain('image/png');
     }
   });
+
+  // 0.18.1: framing is CSP frame-ancestors only, from KC_FRAME_ANCESTORS. CI runs the
+  // image with the variable unset, so this pins the PUBLIC default: same-origin only.
+  for (const path of ['/', '/kiosk']) {
+    test(`${path} defaults to frame-ancestors 'self' with no X-Frame-Options`, async ({ request }) => {
+      const resp = await request.get(path);
+      expect(resp.status()).toBe(200);
+      const h = resp.headers();
+      expect(h['x-frame-options']).toBeUndefined();
+      expect((h['content-security-policy'] ?? '').match(/frame-ancestors ([^;]+)/)?.[1]).toBe("'self'");
+    });
+  }
 });

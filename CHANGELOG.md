@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-11-12
+
+### Added
+- `KC_FRAME_ANCESTORS` setting on the frontend container: the list of sites
+  allowed to show KidsChores inside a frame, so it can be embedded in another
+  dashboard (for example a Home Assistant tablet view running kiosk mode).
+  The default stays `'self'`: no other site can frame the app unless you set it.
+
+### Changed
+- The frontend's nginx config is now a template rendered at container start.
+  Only `KC_*` variables are filled in, so nginx's own variables are untouched.
+- `X-Frame-Options: SAMEORIGIN` is no longer sent. It cannot name another
+  site, so it blocked any embedding; the CSP `frame-ancestors` directive
+  (supported by every current browser) is now the single framing control.
+- An empty or malformed `KC_FRAME_ANCESTORS` falls back to `'self'` with a
+  warning, so a typo can never switch framing protection off.
+- `.gitattributes` keeps shell scripts LF on Windows checkouts.
+
 ## [0.18.0] - 2026-11-12
 
 ### Added

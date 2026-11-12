@@ -15,8 +15,17 @@ RUN npm run build
 # Stage 2: Serve with unprivileged nginx (runs as uid 101, listens on 8080)
 FROM nginxinc/nginx-unprivileged:1.31-alpine@sha256:592b23aa79a6e6c08ba4b20f1fff700e1328895705966722608e115d62e52d39
 
-# Copy nginx config and built assets
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# nginx config is a template, rendered at startup (0.18.1). Only KC_* variables are
+# substituted. KC_FRAME_ANCESTORS = which sites may frame the app (default 'self');
+# the .envsh validates it and falls back to 'self' before the template renders.
+# It renders into /tmp/kc-nginx, NOT /etc/nginx/conf.d: the rootfs may be read-only
+# (our compose sets read_only: true), while /tmp must be writable anyway because this
+# image keeps its pid file and temp paths there. conf.d/default.conf only includes it.
+ENV NGINX_ENVSUBST_FILTER="^KC_"     NGINX_ENVSUBST_OUTPUT_DIR="/tmp/kc-nginx"     KC_FRAME_ANCESTORS="'self'"
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY docker/default.conf /etc/nginx/conf.d/default.conf
+COPY --chmod=0755 docker/05-kc-frame-ancestors.envsh /docker-entrypoint.d/05-kc-frame-ancestors.envsh
+# Built assets
 COPY --from=builder /build/dist /usr/share/nginx/html
 
 EXPOSE 8080

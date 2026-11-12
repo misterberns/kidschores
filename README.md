@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.18.0-green?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.18.1-green?style=flat-square" alt="Version"></a>
   <a href="https://github.com/misterberns/kidschores/actions/workflows/ci.yml"><img src="https://github.com/misterberns/kidschores/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square" alt="License">
@@ -206,6 +206,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development setup instructio
 | `VITE_GOOGLE_REDIRECT_ORIGIN` | No | `frontend/.env.production` | Base URL for OAuth redirect (e.g., `http://localhost:3103`) |
 | `VITE_SENTRY_DSN` | No | `frontend/.env.production` | Enables frontend Sentry error reporting (the SDK is only loaded when set) |
 
+**Frontend container (runtime — set on the `kidschores-ui` service):**
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `KC_FRAME_ANCESTORS` | No | `'self'` | Which sites may show KidsChores inside a frame (the CSP `frame-ancestors` source list). Set it to embed the app in another dashboard, for example a Home Assistant tablet view for kiosk mode: `KC_FRAME_ANCESTORS="'self' https://homeassistant.local:8123"`. Unset, empty or malformed values fall back to `'self'`, so no other site can frame the app. |
+
 > **Important:** Frontend vars are baked into the image at build time by Vite. They must be set in `frontend/.env.production` before building — they are NOT read from the root `.env` file.
 
 ### Google SSO Setup (Optional)
@@ -339,4 +345,4 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ## Version
 
-Current version: **0.18.0** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.18.1** (see [CHANGELOG.md](CHANGELOG.md) for history)
