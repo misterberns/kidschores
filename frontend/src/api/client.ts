@@ -230,6 +230,21 @@ export const feedbackApi = {
   markReviewed: (id: string) => api.post<FeedbackItem>(`/feedback/${id}/review`),
 };
 
+// Kiosk devices (v0.18.0) — parent-only management of claim-only tablet tokens.
+export interface KioskDevice {
+  id: string;
+  name: string;
+  token_prefix: string;
+  created_at: string;
+  last_used?: string | null;
+}
+
+export const kioskDevicesApi = {
+  list: () => api.get<KioskDevice[]>('/kiosk/devices'),
+  create: (name: string) => api.post<KioskDevice & { token: string }>('/kiosk/devices', { name }),
+  revoke: (id: string) => api.delete(`/kiosk/devices/${id}`),
+};
+
 export const parentsApi = {
   list: () => api.get<Parent[]>('/parents'),
   get: (id: string) => api.get<Parent>(`/parents/${id}`),

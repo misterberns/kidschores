@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -18,8 +18,21 @@ router = APIRouter()
 
 class CreateTokenRequest(BaseModel):
     name: str  # e.g., "Home Assistant"
-    scopes: List[str] = []  # Future use
+    # Scopes were stored but never enforced before v0.18.0, so a "scoped" token was a
+    # full one. General tokens are full-access by definition; a scoped token comes
+    # from its own endpoint (kiosk devices: POST /api/kiosk/devices, parent-only), so
+    # anything non-empty here is refused rather than silently ignored.
+    scopes: List[str] = []
     expires_in_days: Optional[int] = None  # None = never expires
+
+    @field_validator("scopes")
+    @classmethod
+    def _no_scopes(cls, v: List[str]) -> List[str]:
+        if v:
+            raise ValueError(
+                "scoped tokens are not created here; kiosk devices use /api/kiosk/devices"
+            )
+        return v
 
 
 class TokenCreatedResponse(BaseModel):

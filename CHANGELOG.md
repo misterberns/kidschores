@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-12
+
+### Added
+- **Kiosk mode for a shared tablet.** Parent Dashboard has a new Kiosk tab.
+  "Start kiosk on this device" turns the current browser into a family chore
+  board and signs the parent out on it. Kids tap their name, see today's
+  chores as big buttons, and tap "I did it!" to claim one, with confetti and a
+  "A parent will check it soon" note. The board returns to the name picker
+  after a minute without a touch, refreshes every 30 seconds, and keeps the
+  screen awake where the browser allows. To leave, hold "Hold to exit" for two
+  seconds and confirm. The Kiosk tab lists every kiosk device with when it was
+  added and last used, and a parent can remove one at any time.
+- A Help entry explaining kiosk mode.
+
+### Security
+- API token scopes are enforced. A kiosk device holds a claim-only token
+  (`scopes=["kiosk"]`) that every route outside `/api/kiosk` refuses, so it
+  cannot approve chores, spend points, read history or change settings, even
+  though it belongs to a parent account. Before this release the `scopes`
+  column was stored and never read, so any token was a full one. The general
+  `/api/tokens` endpoint now refuses scopes instead of silently ignoring them;
+  existing unscoped tokens (Home Assistant) keep working unchanged.
+- A backend test walks every route in the OpenAPI schema and requires a kiosk
+  token to get exactly the answer an anonymous caller gets.
+
+### Changed
+- The "which chores are due today" and "may this kid claim it" rules moved
+  into `services/chore_service.py`, used by both the chores and kiosk routers,
+  so the two can't drift apart. Kiosk state loads today's claims for all kids
+  in one query.
+
 ## [0.17.1] - 2026-11-12
 
 Maintenance release: no new features and no visible change.

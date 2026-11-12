@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from .config import settings
 from .database import init_db, ensure_columns, ensure_indexes
 from .observability import RequestIdMiddleware, configure_logging, init_sentry
-from .routers import kids, chores, rewards, parents, approvals, auth, api_tokens, notifications, categories, allowance, history, badges, challenges, goals, feedback
+from .routers import kids, chores, rewards, parents, approvals, auth, api_tokens, notifications, categories, allowance, history, badges, challenges, goals, feedback, kiosk
 from .scheduler import start_scheduler, shutdown_scheduler
 
 # Configure logging (LOG_FORMAT=json switches to structured lines)
@@ -70,7 +70,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KidsChores",
     description="Family chore management with points and rewards",
-    version="0.17.1",  # Keep in sync with VERSION file
+    version="0.18.0",  # Keep in sync with VERSION file
     lifespan=lifespan,
     redirect_slashes=False,  # Prevent 307 redirects for /api/kids vs /api/kids/
 )
@@ -104,6 +104,7 @@ app.include_router(badges.router, prefix="/api/badges", tags=["Badges"])
 app.include_router(challenges.router, prefix="/api/challenges", tags=["Challenges"])
 app.include_router(goals.router, prefix="/api/goals", tags=["Savings Goals"])
 app.include_router(feedback.router, prefix="/api/feedback", tags=["Feedback"])
+app.include_router(kiosk.router, prefix="/api/kiosk", tags=["Kiosk"])
 
 # Test endpoints — mounted ONLY in explicit non-prod environments. Fail-closed:
 # an unset or unrecognized ENVIRONMENT does NOT mount them, so a deploy that forgets

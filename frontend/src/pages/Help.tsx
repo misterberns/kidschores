@@ -72,6 +72,16 @@ export default function Help() {
             </ol>
           </AccordionItem>
 
+          <AccordionItem question="How do I set up a shared tablet (kiosk mode)?">
+            <ol className="list-decimal list-inside space-y-2">
+              <li>On the tablet, sign in as a parent and go to <strong>Parent</strong> → <strong>Kiosk</strong> tab</li>
+              <li>Give the tablet a name and tap <strong>Start kiosk on this device</strong></li>
+              <li>You're signed out on that tablet, and it shows the family chore board</li>
+            </ol>
+            <p className="mt-2">Kids tap their name, then tap <strong>I did it!</strong> on a chore. You still approve it as usual. The board goes back to the name picker after a minute. The tablet can only mark chores done: it can't approve chores, spend points or change settings.</p>
+            <p className="mt-2">To leave kiosk mode, hold <strong>Hold to exit</strong> for two seconds and confirm. To switch a tablet off from anywhere, remove it from the <strong>Kiosk</strong> tab.</p>
+          </AccordionItem>
+
           <AccordionItem question="What's the difference between kid mode and parent mode?">
             <p className="mb-2"><strong>Kid Mode:</strong> Kids can view their chores, claim completed chores, check their points, and redeem rewards. They see a simplified, gamified interface.</p>
             <p className="mb-2"><strong>Parent Mode:</strong> Parents can manage kids, create/edit chores, approve claims, run challenges, configure allowance, and access all settings. Accessed via the Parent tab.</p>

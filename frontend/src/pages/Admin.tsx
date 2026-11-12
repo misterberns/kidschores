@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, User, ClipboardList, Gift, Users, Settings, HelpCircle, Wand2, Target, Bug } from 'lucide-react';
+import { CheckCircle2, User, ClipboardList, Gift, Users, Settings, HelpCircle, Wand2, Target, Bug, Tablet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { approvalsApi } from '../api/client';
-import { ApprovalsList, KidsSection, ChoresSection, RewardsSection, ParentsSection, ChallengesSection, FeedbackSection } from '../components/admin';
+import { ApprovalsList, KidsSection, ChoresSection, RewardsSection, ParentsSection, ChallengesSection, FeedbackSection, KioskSection } from '../components/admin';
 import { Tab as TabButton, TabList } from '../components/ui';
 
-type Tab = 'approvals' | 'kids' | 'chores' | 'rewards' | 'challenges' | 'parents' | 'feedback';
+type Tab = 'approvals' | 'kids' | 'chores' | 'rewards' | 'challenges' | 'parents' | 'kiosk' | 'feedback';
 
 export function Admin() {
   const [activeTab, setActiveTab] = useState<Tab>('approvals');
@@ -24,6 +24,7 @@ export function Admin() {
     { id: 'rewards', label: 'Rewards', Icon: Gift },
     { id: 'challenges', label: 'Challenges', Icon: Target },
     { id: 'parents', label: 'Parents', Icon: Users },
+    { id: 'kiosk', label: 'Kiosk', Icon: Tablet },
     { id: 'feedback', label: 'Reports', Icon: Bug },
   ];
 
@@ -83,6 +84,7 @@ export function Admin() {
       {activeTab === 'rewards' && <RewardsSection />}
       {activeTab === 'challenges' && <ChallengesSection />}
       {activeTab === 'parents' && <ParentsSection />}
+      {activeTab === 'kiosk' && <KioskSection />}
       {activeTab === 'feedback' && <FeedbackSection />}
     </div>
   );

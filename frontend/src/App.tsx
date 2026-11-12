@@ -8,6 +8,7 @@ import { createQueryClient } from './queryClient';
 import { AuthProvider, useAuth, ProtectedRoute } from './auth';
 import { ThemeProvider, ThemeToggle } from './theme';
 import { useReducedMotion } from './hooks/useReducedMotion';
+import { getKioskToken } from './kiosk/kioskClient';
 import { pageVariants } from './utils/animations';
 import { Logo } from './components/Logo';
 import { NotificationBell } from './components/notifications/NotificationBell';
@@ -35,6 +36,7 @@ const Allowance = lazyWithRetry(() => import('./pages/Allowance').then(m => ({ d
 const History = lazyWithRetry(() => import('./pages/History').then(m => ({ default: m.History })));
 const Help = lazyWithRetry(() => import('./pages/Help'));
 const Onboarding = lazyWithRetry(() => import('./pages/Onboarding').then(m => ({ default: m.Onboarding })));
+const Kiosk = lazyWithRetry(() => import('./pages/Kiosk').then(m => ({ default: m.Kiosk })));
 
 /** Full-screen spinner — the Suspense fallback while a page chunk loads
  *  (same visual as the auth-loading state). */
@@ -209,6 +211,10 @@ function AppRoutes() {
         element={<GoogleCallback />}
       />
 
+      {/* Kiosk / shared tablet (v0.18.0): its own claim-only device token, never a
+          user session, so it sits outside ProtectedRoute. */}
+      <Route path="/kiosk" element={<Kiosk />} />
+
       {/* Kid selector (authenticated but before main app) */}
       <Route
         path="/select-kid"
@@ -223,6 +229,8 @@ function AppRoutes() {
       <Route
         path="/*"
         element={
+          // A signed-out kiosk tablet that lands on any app path goes back to the board.
+          !isAuthenticated && getKioskToken() ? <Navigate to="/kiosk" replace /> :
           <ProtectedRoute>
             <AppContent />
           </ProtectedRoute>
