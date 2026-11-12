@@ -58,6 +58,9 @@ export const kioskApi = {
   claim: (kidId: string, choreId: string) =>
     kioskHttp.post('/kiosk/claim', { kid_id: kidId, chore_id: choreId }).then((r) => r.data),
   endSession: () => kioskHttp.delete('/kiosk/session'),
+  /** Anonymous: exchange a parent's one-time pairing code for this device's token (v0.18.2). */
+  pair: (code: string) =>
+    kioskHttp.post<{ token: string; name: string }>('/kiosk/pair', { code }).then((r) => r.data),
 };
 
 /** True when an axios error means the device token is no longer valid. */

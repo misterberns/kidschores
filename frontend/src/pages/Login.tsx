@@ -238,6 +238,19 @@ export function Login() {
             Sign up
           </Link>
         </p>
+
+        {/* Kiosk pairing (v0.18.2): a shared tablet is set up with a parent's code, never a sign-in */}
+        <p className="text-center mt-3 text-sm text-text-muted">
+          Setting up a shared tablet?{' '}
+          <Link
+            to="/kiosk"
+            data-testid="kiosk-pair-link"
+            style={{ color: 'var(--primary-500)' }}
+            className="hover:opacity-80 font-medium"
+          >
+            Enter a pairing code
+          </Link>
+        </p>
       </motion.div>
     </div>
   );

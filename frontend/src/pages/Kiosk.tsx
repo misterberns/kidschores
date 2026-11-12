@@ -7,9 +7,11 @@ import { KidAvatar } from '../components/KidAvatar';
 import { DynamicIcon } from '../components/DynamicIcon';
 import { Confetti } from '../components/celebrations';
 import type { TodaysChore } from '../api/client';
+import axios from 'axios';
 import {
   clearKioskToken,
   getKioskToken,
+  setKioskToken,
   isKioskAuthError,
   kioskApi,
   type KioskKid,
@@ -166,7 +168,26 @@ function FullscreenButton() {
   );
 }
 
-function NotSetUp({ revoked }: { revoked: boolean }) {
+function NotSetUp({ revoked, onPaired }: { revoked: boolean; onPaired: (token: string) => void }) {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const pair = useMutation({
+    mutationFn: (c: string) => kioskApi.pair(c),
+    meta: { suppressErrorToast: true }, // the kiosk shows its own inline message
+    onSuccess: (device) => {
+      setKioskToken(device.token);
+      onPaired(device.token);
+    },
+    onError: (err) => {
+      const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+      setError(
+        status === 429
+          ? 'Too many wrong codes. Wait a few minutes and try again.'
+          : 'That code isn’t valid or has expired. Ask a parent for a new one.',
+      );
+    },
+  });
+
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-4 p-6 bg-bg-base text-center">
       <Logo variant="icon" size={56} />
@@ -174,14 +195,44 @@ function NotSetUp({ revoked }: { revoked: boolean }) {
         {revoked ? 'This kiosk was turned off' : 'This device is not a kiosk yet'}
       </h1>
       <p className="text-text-muted max-w-md">
-        A parent can set it up from Parent Dashboard, Kiosk tab, “Start kiosk on this device”.
+        On your own phone or computer, open Parent Dashboard, Kiosk tab, and tap “Pair a device”. Then type
+        the code here.
       </p>
-      <button
-        type="button"
-        onClick={leaveKiosk}
-        className="mt-2 px-6 py-3 rounded-xl font-semibold text-[var(--text-inverse)] bg-[var(--primary-500)]"
+      <form
+        className="w-full max-w-sm flex flex-col gap-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setError(null);
+          pair.mutate(code);
+        }}
       >
-        Parent sign in
+        <label htmlFor="kiosk-pair-code" className="sr-only">Pairing code</label>
+        <input
+          id="kiosk-pair-code"
+          data-testid="kiosk-pair-code"
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          placeholder="XXXX-XXXX"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={12}
+          className="w-full text-center text-3xl tracking-widest font-bold py-4 rounded-xl border border-[var(--border-color)] bg-bg-surface text-text-primary focus:outline-none focus:border-[var(--primary-500)]"
+        />
+        {error && (
+          <p role="alert" className="text-text-primary">{error}</p>
+        )}
+        <button
+          type="submit"
+          data-testid="kiosk-pair-submit"
+          disabled={pair.isPending || code.replace(/[^A-Za-z0-9]/g, '').length < 8}
+          className="py-4 rounded-xl text-lg font-semibold text-[var(--text-inverse)] bg-[var(--primary-500)] disabled:opacity-50"
+        >
+          {pair.isPending ? 'Pairing…' : 'Pair this device'}
+        </button>
+      </form>
+      <button type="button" onClick={leaveKiosk} className="mt-2 text-sm text-text-muted underline">
+        Parent sign in instead
       </button>
     </div>
   );
@@ -269,7 +320,7 @@ function ChoreTile({
 }
 
 export function Kiosk() {
-  const [token] = useState(getKioskToken);
+  const [token, setToken] = useState(getKioskToken);
   const [kidId, setKidId] = useState<string | null>(null);
   const [celebrate, setCelebrate] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -292,6 +343,7 @@ export function Kiosk() {
 
   const claim = useMutation({
     mutationFn: ({ kid, chore }: { kid: KioskKid; chore: TodaysChore }) => kioskApi.claim(kid.id, chore.id),
+    meta: { suppressErrorToast: true }, // the kiosk shows its own inline message
     onSuccess: (_res, { kid }) => {
       setError(null);
       setCelebrate(kid.name);
@@ -318,7 +370,18 @@ export function Kiosk() {
     if (revoked) clearKioskToken();
   }, [revoked]);
 
-  if (!token || revoked) return <NotSetUp revoked={revoked} />;
+  if (!token || revoked) {
+    return (
+      <NotSetUp
+        revoked={revoked && !!token}
+        onPaired={(t) => {
+          // Drop the old 401 so the fresh token is not read as revoked.
+          queryClient.removeQueries({ queryKey: ['kiosk-state'] });
+          setToken(t);
+        }}
+      />
+    );
+  }
 
   const kid = data?.kids.find((k) => k.id === kidId) ?? null;
 

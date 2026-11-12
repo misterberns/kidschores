@@ -243,6 +243,9 @@ export const kioskDevicesApi = {
   list: () => api.get<KioskDevice[]>('/kiosk/devices'),
   create: (name: string) => api.post<KioskDevice & { token: string }>('/kiosk/devices', { name }),
   revoke: (id: string) => api.delete(`/kiosk/devices/${id}`),
+  /** One-time code a device types in to become a kiosk (v0.18.2). */
+  createPairing: (name: string) =>
+    api.post<{ name: string; code: string; expires_at: string }>('/kiosk/pairings', { name }),
 };
 
 export const parentsApi = {

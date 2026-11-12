@@ -80,7 +80,7 @@ test.describe('Kiosk mode', () => {
     await authenticatePage(page, playwright);
     await page.goto(`${FRONTEND_URL}/admin`);
     await page.getByTestId('tab-kiosk').click();
-    await page.getByLabel('Device name').fill(`${DEVICE_NAME}-ui`);
+    await page.getByLabel('Device name', { exact: true }).fill(`${DEVICE_NAME}-ui`);
     await page.getByTestId('start-kiosk-btn').click();
 
     await expect(page).toHaveURL(/\/kiosk$/);
@@ -92,5 +92,32 @@ test.describe('Kiosk mode', () => {
     // A signed-out kiosk tablet sent to an app path goes back to the board.
     await page.goto(`${FRONTEND_URL}/rewards`);
     await expect(page).toHaveURL(/\/kiosk$/);
+  });
+
+  test('a parent gets a pairing code; a signed-out tablet pairs from the sign-in page (0.18.2)', async ({ page, playwright, browser }) => {
+    await authenticatePage(page, playwright);
+    await page.goto(`${FRONTEND_URL}/admin`);
+    await page.getByTestId('tab-kiosk').click();
+    await page.getByLabel('Paired device name').fill(`${DEVICE_NAME}-paired`);
+    await page.getByTestId('kiosk-pairing-btn').click();
+    const code = (await page.getByTestId('kiosk-pairing-code').innerText()).trim();
+    expect(code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+
+    // A separate, never-signed-in browser context plays the tablet.
+    const tablet = await browser.newContext();
+    const tab = await tablet.newPage();
+    await tab.goto(`${FRONTEND_URL}/`);
+    await expect(tab).toHaveURL(/\/login/);
+    await tab.getByTestId('kiosk-pair-link').click();
+    await tab.getByTestId('kiosk-pair-code').fill(code.toLowerCase());
+    await tab.getByTestId('kiosk-pair-submit').click();
+    await expect(tab.getByText('Who’s doing chores?')).toBeVisible();
+    await expect(tab.getByTestId(`kiosk-kid-${kidId}`)).toBeVisible();
+    expect(await tab.evaluate(() => localStorage.getItem('kc_access_token'))).toBeNull();
+    await tablet.close();
+
+    // The code is spent.
+    const again = await parentCtx.post('/api/kiosk/pair', { data: { code } });
+    expect(again.status()).toBe(400);
   });
 });

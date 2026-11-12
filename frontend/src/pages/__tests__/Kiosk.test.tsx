@@ -12,6 +12,7 @@ import type { KioskState } from '../../kiosk/kioskClient'
 const state = vi.fn()
 const claim = vi.fn()
 const endSession = vi.fn()
+const pair = vi.fn()
 
 vi.mock('../../kiosk/kioskClient', async (orig) => {
   const actual = await orig<typeof import('../../kiosk/kioskClient')>()
@@ -21,6 +22,7 @@ vi.mock('../../kiosk/kioskClient', async (orig) => {
       state: () => state(),
       claim: (k: string, c: string) => claim(k, c),
       endSession: () => endSession(),
+      pair: (c: string) => pair(c),
     },
   }
 })
@@ -65,6 +67,7 @@ beforeEach(() => {
   state.mockReset().mockResolvedValue(STATE)
   claim.mockReset().mockResolvedValue({ id: 'cl1', status: 'claimed' })
   endSession.mockReset().mockResolvedValue({})
+  pair.mockReset()
   localStorage.setItem(KIOSK_TOKEN_KEY, 'kc_test')
 })
 
@@ -142,5 +145,28 @@ describe('Kiosk', () => {
     expect(screen.queryByTestId('kiosk-exit-confirm')).not.toBeInTheDocument()
     expect(endSession).not.toHaveBeenCalled()
     expect(localStorage.getItem(KIOSK_TOKEN_KEY)).toBe('kc_test')
+  })
+
+  it('pairs with a code: no sign-in, token stored, board shown (0.18.2)', async () => {
+    localStorage.removeItem(KIOSK_TOKEN_KEY)
+    pair.mockResolvedValue({ token: 'kc_paired', name: 'HA tablet' })
+    renderKiosk()
+    const submit = screen.getByTestId('kiosk-pair-submit')
+    expect(submit).toBeDisabled() // nothing typed yet
+    fireEvent.change(screen.getByTestId('kiosk-pair-code'), { target: { value: 'abcd-efgh' } })
+    fireEvent.click(submit)
+    await waitFor(() => expect(pair).toHaveBeenCalledWith('ABCD-EFGH'))
+    expect(await screen.findByText('Who’s doing chores?')).toBeInTheDocument()
+    expect(localStorage.getItem(KIOSK_TOKEN_KEY)).toBe('kc_paired')
+  })
+
+  it('a wrong pairing code shows an error and stores nothing', async () => {
+    localStorage.removeItem(KIOSK_TOKEN_KEY)
+    pair.mockRejectedValue(Object.assign(new Error('400'), { isAxiosError: true, response: { status: 400 } }))
+    renderKiosk()
+    fireEvent.change(screen.getByTestId('kiosk-pair-code'), { target: { value: 'WRNG-CODE' } })
+    fireEvent.click(screen.getByTestId('kiosk-pair-submit'))
+    expect(await screen.findByRole('alert')).toHaveTextContent('isn’t valid or has expired')
+    expect(localStorage.getItem(KIOSK_TOKEN_KEY)).toBeNull()
   })
 })
