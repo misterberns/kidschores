@@ -34,6 +34,7 @@ KidsChores implements the following security practices:
 
 - **Authentication**: JWT tokens (PyJWT) with configurable expiry, bcrypt password hashing (12 rounds). The app **refuses to start** with a missing/placeholder/too-short `JWT_SECRET_KEY`. Google sign-in requires a verified email and a validated token audience.
 - **Authorization**: parent/kid role model — management actions require a parent account; kid accounts can only act on and read their own data (object-level ownership checks).
+- **Kiosk pairing codes** (0.18.2): 8 characters from a 31-symbol alphabet, stored only as a SHA-256 hash, single use (an atomic update), valid 10 minutes, and wrong guesses are rate-limited per client. A redeemed code yields a kiosk-scoped token, never a user session.
 - **Framing**: CSP `frame-ancestors` is the only framing control (0.18.1; `X-Frame-Options` was removed because it cannot allow a named site). It defaults to `'self'`; an operator can list sites allowed to embed the app with `KC_FRAME_ANCESTORS`, which is validated at container start and falls back to `'self'` when empty or malformed.
 - **API tokens**: hashed at rest, prefix-narrowed lookup, and **expiry is enforced** at authentication time. **Scopes are enforced** (0.18.0): a scoped token (today only `kiosk`) is refused by every route except its own, and the general token endpoint refuses scopes it cannot honor. Before 0.18.0 the `scopes` column was stored but never read.
 - **Rate limiting**: login attempts rate-limited **per account (email) and per IP**.

@@ -118,3 +118,71 @@ def test_kiosk_token_grants_nothing_outside_kiosk(client, parent_token):
             checked += 1
     # Control: the walk must actually have covered the authenticated surface.
     assert checked >= 60, f"only {checked} routes walked"
+
+
+# --- Pairing codes (v0.18.2) ---
+
+from datetime import datetime, timedelta, timezone  # noqa: E402
+
+from app.database import SessionLocal  # noqa: E402
+from app.models import KioskPairing  # noqa: E402
+from app.routers import kiosk as kiosk_router  # noqa: E402
+
+
+def _pair_code(client, parent_token, name="Paired tablet") -> str:
+    res = client.post("/api/kiosk/pairings", json={"name": name}, headers=auth(parent_token))
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert re.fullmatch(r"[A-Z2-9]{4}-[A-Z2-9]{4}", body["code"]), body["code"]
+    return body["code"]
+
+
+def test_pairing_code_turns_a_device_into_a_kiosk(client, parent_token):
+    kiosk_router._pair_failures.clear()
+    code = _pair_code(client, parent_token, "HA tablet")
+    # The device is anonymous: no Authorization header at all.
+    res = client.post("/api/kiosk/pair", json={"code": code.lower().replace("-", " ")})
+    assert res.status_code == 200, res.text
+    dev = res.json()
+    assert dev["name"] == "HA tablet" and dev["token"].startswith("kc_")
+    assert client.get("/api/kiosk/state", headers=auth(dev["token"])).status_code == 200
+    listed = client.get("/api/kiosk/devices", headers=auth(parent_token)).json()
+    assert any(d["id"] == dev["id"] for d in listed)
+
+
+def test_pairing_code_is_single_use(client, parent_token):
+    kiosk_router._pair_failures.clear()
+    code = _pair_code(client, parent_token)
+    assert client.post("/api/kiosk/pair", json={"code": code}).status_code == 200
+    assert client.post("/api/kiosk/pair", json={"code": code}).status_code == 400
+
+
+def test_expired_pairing_code_is_refused(client, parent_token):
+    kiosk_router._pair_failures.clear()
+    code = _pair_code(client, parent_token)
+    db = SessionLocal()
+    try:
+        row = db.query(KioskPairing).filter(KioskPairing.code_hash == kiosk_router._hash_code(code)).one()
+        row.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+        db.commit()
+    finally:
+        db.close()
+    assert client.post("/api/kiosk/pair", json={"code": code}).status_code == 400
+
+
+def test_only_parents_create_pairing_codes(client, parent_token):
+    kid = make_kid(client, parent_token)
+    kid_jwt = make_kid_account(kid["id"])
+    assert client.post("/api/kiosk/pairings", json={"name": "x"}, headers=auth(kid_jwt)).status_code == 403
+    assert client.post("/api/kiosk/pairings", json={"name": "x"}).status_code == 401
+
+
+def test_wrong_codes_are_rate_limited(client, parent_token):
+    kiosk_router._pair_failures.clear()
+    for _ in range(kiosk_router._PAIR_FAIL_MAX):
+        assert client.post("/api/kiosk/pair", json={"code": "AAAA-AAAA"}).status_code == 400
+    # Locked out now, even for a valid code.
+    code = _pair_code(client, parent_token)
+    assert client.post("/api/kiosk/pair", json={"code": code}).status_code == 429
+    kiosk_router._pair_failures.clear()
+    assert client.post("/api/kiosk/pair", json={"code": code}).status_code == 200

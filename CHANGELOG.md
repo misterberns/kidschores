@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-11-12
+
+### Added
+- **Pair a kiosk with a code.** Parent Dashboard → Kiosk → "Pair a device"
+  shows a one-time code (valid 10 minutes). On the tablet, "Enter a pairing
+  code" on the sign-in screen (or the kiosk's own setup screen) turns it into
+  the chore board. No parent signs in on the shared tablet, and it works where
+  sign-in can't, such as KidsChores shown inside a Home Assistant dashboard,
+  where Google refuses to run its sign-in.
+
+### Security
+- Pairing codes are stored only as a hash, work once, expire after 10
+  minutes, and wrong guesses are rate-limited (10 per 10 minutes per client).
+
 ## [0.18.1] - 2026-11-12
 
 ### Added

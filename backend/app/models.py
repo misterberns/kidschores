@@ -120,6 +120,21 @@ class ApiToken(Base):
     user = relationship("User", back_populates="api_tokens")
 
 
+class KioskPairing(Base):
+    """One-time code that turns a device into a kiosk without a parent signing in
+    on it (v0.18.2). A parent creates it; the device redeems it once, before
+    expires_at, and receives a kiosk-scoped ApiToken owned by that parent."""
+    __tablename__ = "kiosk_pairings"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    created_by = Column(String(36), ForeignKey("users.id"), nullable=False)
+    name = Column(String(60), nullable=False)
+    code_hash = Column(String(64), nullable=False, index=True)  # sha256 hex of the normalized code
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
 class Kid(Base):
     """Kid profile model."""
     __tablename__ = "kids"

@@ -1,13 +1,88 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Tablet, MonitorSmartphone, Trash2 } from 'lucide-react';
+import { Tablet, MonitorSmartphone, Trash2, KeyRound } from 'lucide-react';
 import { kioskDevicesApi } from '../../api/client';
 import type { KioskDevice } from '../../api/client';
 import { useAuth } from '../../auth';
 import { setKioskToken } from '../../kiosk/kioskClient';
 import { FormInput } from './FormElements';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
+
+/** The one-time code a device types in, with a live countdown (v0.18.2). */
+function PairingPanel() {
+  const [name, setName] = useState('Tablet');
+  const [pairing, setPairing] = useState<{ name: string; code: string; expires_at: string } | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  const queryClient = useQueryClient();
+
+  const create = useMutation({
+    mutationFn: (deviceName: string) => kioskDevicesApi.createPairing(deviceName).then((r) => r.data),
+    onSuccess: setPairing,
+  });
+
+  useEffect(() => {
+    if (!pairing) return;
+    const t = window.setInterval(() => {
+      setNow(Date.now());
+      // The device list gains a row once the code is used; keep it fresh meanwhile.
+      queryClient.invalidateQueries({ queryKey: ['kiosk-devices'] });
+    }, 5000);
+    return () => window.clearInterval(t);
+  }, [pairing, queryClient]);
+
+  const msLeft = pairing ? new Date(pairing.expires_at).getTime() - now : 0;
+  const expired = pairing !== null && msLeft <= 0;
+
+  return (
+    <div className="card p-4" data-testid="kiosk-pairing">
+      <h3 className="font-bold text-lg mb-1 text-text-primary flex items-center gap-2">
+        <KeyRound size={20} className="text-primary-500" /> Pair a device with a code
+      </h3>
+      <p className="text-text-secondary mb-4">
+        For a tablet where you don’t want to sign in, or where sign-in can’t work, such as KidsChores shown
+        inside a Home Assistant dashboard. Get a code here, then on the tablet tap “Enter a pairing code” on
+        the sign-in screen and type it in. Codes work once and expire after 10 minutes.
+      </p>
+      {pairing && !expired ? (
+        <div className="text-center">
+          <p className="text-sm text-text-muted">Code for {pairing.name}</p>
+          <p data-testid="kiosk-pairing-code" className="my-2 text-4xl font-bold tracking-widest text-text-primary select-all">
+            {pairing.code}
+          </p>
+          <p className="text-sm text-text-muted">
+            Expires in {Math.max(1, Math.ceil(msLeft / 60000))} min
+          </p>
+          <button type="button" className="btn btn-secondary mt-3" onClick={() => setPairing(null)}>
+            Done
+          </button>
+        </div>
+      ) : (
+        <>
+          {expired && <p className="mb-3 text-text-primary">That code expired. Get a new one.</p>}
+          <FormInput
+            label="Device name"
+            aria-label="Paired device name"
+            value={name}
+            maxLength={60}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Tablet"
+          />
+          <button
+            type="button"
+            data-testid="kiosk-pairing-btn"
+            className="btn btn-primary w-full sm:w-auto"
+            disabled={create.isPending || !name.trim()}
+            onClick={() => create.mutate(name.trim())}
+          >
+            <KeyRound size={18} />
+            {create.isPending ? 'Getting a code…' : 'Pair a device'}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
 
 function formatWhen(iso?: string | null): string {
   if (!iso) return 'never';
@@ -79,6 +154,8 @@ export function KioskSection() {
           {start.isPending ? 'Starting…' : 'Start kiosk on this device'}
         </button>
       </div>
+
+      <PairingPanel />
 
       <div className="card p-4">
         <h3 className="font-bold text-lg mb-3 text-text-primary">Kiosk devices</h3>
