@@ -14,6 +14,39 @@ from .security import decode_token, verify_api_token, get_token_prefix
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
+KIOSK_SCOPE = "kiosk"
+# Scopes a token may carry. Anything else is rejected at creation (the column was
+# stored but never read before v0.18.0, so a "scoped" token used to be a full one).
+KNOWN_SCOPES = {KIOSK_SCOPE}
+
+
+def match_api_token(db: Session, token: str) -> Optional[ApiToken]:
+    """Return the unexpired ApiToken matching a raw `kc_...` token, else None.
+
+    Updates last_used on a match.
+    """
+    if not token.startswith("kc_"):
+        return None
+    # Use token_prefix for narrowed lookup instead of scanning all tokens
+    prefix = get_token_prefix(token)
+    candidates = db.query(ApiToken).filter(ApiToken.token_prefix == prefix).all()
+    for api_token in candidates:
+        if verify_api_token(token, api_token.token_hash):
+            # Enforce expiry — a bcrypt match uniquely identifies this token, so
+            # an expired match must NOT authenticate (expires_at is stored naive-UTC).
+            if api_token.expires_at is not None:
+                expires_at = api_token.expires_at
+                if expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=timezone.utc)
+                if expires_at < datetime.now(timezone.utc):
+                    return None
+            api_token.last_used = datetime.now(timezone.utc)
+            db.commit()
+            return api_token
+    return None
+
+
+
 async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     db: Session = Depends(get_db)
@@ -45,27 +78,17 @@ async def get_current_user(
                 return user
 
     # Try API token (starts with prefix)
-    if token.startswith("kc_"):
-        # Use token_prefix for narrowed lookup instead of scanning all tokens
-        prefix = get_token_prefix(token)
-        candidates = db.query(ApiToken).filter(ApiToken.token_prefix == prefix).all()
-        for api_token in candidates:
-            if verify_api_token(token, api_token.token_hash):
-                # Enforce expiry — a bcrypt match uniquely identifies this token, so
-                # an expired match must NOT authenticate (expires_at is stored naive-UTC).
-                if api_token.expires_at is not None:
-                    expires_at = api_token.expires_at
-                    if expires_at.tzinfo is None:
-                        expires_at = expires_at.replace(tzinfo=timezone.utc)
-                    if expires_at < datetime.now(timezone.utc):
-                        return None
-
-                api_token.last_used = datetime.now(timezone.utc)
-                db.commit()
-
-                user = db.query(User).filter(User.id == api_token.user_id).first()
-                if user and user.is_active:
-                    return user
+    api_token = match_api_token(db, token)
+    if api_token is not None:
+        # A SCOPED token is not a user session. It authenticates only through the
+        # dependency for its own scope (e.g. require_kiosk on /api/kiosk/*), so it is
+        # rejected here, which keeps it out of every other route by default (fail
+        # closed). Empty scopes = a legacy full-access token (Home Assistant).
+        if api_token.scopes:
+            return None
+        user = db.query(User).filter(User.id == api_token.user_id).first()
+        if user and user.is_active:
+            return user
 
     return None
 
@@ -160,3 +183,21 @@ async def require_kid_access(
     """
     assert_kid_access(db, user, kid_id)
     return user
+
+
+async def require_kiosk(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+) -> ApiToken:
+    """Authenticate a kiosk device: an API token carrying the `kiosk` scope whose
+    owning parent account is still active. Returns the token row."""
+    api_token = match_api_token(db, credentials.credentials) if credentials else None
+    if api_token is not None and KIOSK_SCOPE in (api_token.scopes or []):
+        owner = db.query(User).filter(User.id == api_token.user_id).first()
+        if owner and owner.is_active:
+            return api_token
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Kiosk session not valid",
+        headers={"WWW-Authenticate": "Bearer"},
+    )

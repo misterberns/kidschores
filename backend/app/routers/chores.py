@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from ..database import get_db, SessionLocal
 from ..deps import require_auth, require_parent, require_kid_access, assert_kid_access
 from ..models import Chore, ChoreClaim, Kid, DailyMultiplier, PushSubscription, User, Parent
-from ..timeutil import local_day_bounds_utc
 from ..schemas import (
     ChoreCreate, ChoreUpdate, ChoreResponse, ChoreWithStatus,
     ChoreClaimRequest, ChoreApproveRequest, ChoreClaimResponse,
@@ -17,6 +16,7 @@ from ..schemas import (
 from ..services.push_service import push_service
 from ..services.gamification import evaluate_badges, evaluate_challenges
 from ..services.email_service import email_service
+from ..services.chore_service import todays_chores_for_kid, claim_chore_for_kid
 
 logger = logging.getLogger(__name__)
 
@@ -207,74 +207,7 @@ def get_todays_chores(kid_id: str, db: Session = Depends(get_db), _user: User = 
     kid = db.query(Kid).filter(Kid.id == kid_id).first()
     if not kid:
         raise HTTPException(status_code=404, detail="Kid not found")
-
-    today = datetime.now()
-    day_of_week = today.weekday()  # 0=Monday, 6=Sunday (local)
-    # UTC bounds of the local calendar day, to match UTC-stored claimed_at.
-    today_start, today_end = local_day_bounds_utc()
-
-    # Get all chores where kid is assigned
-    all_chores = db.query(Chore).all()
-    result = []
-
-    for chore in all_chores:
-        if kid_id not in (chore.assigned_kids or []):
-            continue
-
-        # Check if chore is applicable today based on recurring settings
-        is_applicable = False
-        is_recurring = False
-
-        if chore.recurring_frequency == "none" or chore.recurring_frequency is None:
-            is_applicable = True  # Non-recurring chores always show
-        elif chore.recurring_frequency == "daily":
-            is_applicable = True
-            is_recurring = True
-        elif chore.recurring_frequency == "weekly":
-            if not chore.applicable_days or day_of_week in chore.applicable_days:
-                is_applicable = True
-            is_recurring = True
-        elif chore.recurring_frequency == "biweekly":
-            week_number = today.isocalendar()[1]
-            if week_number % 2 == 0:
-                if not chore.applicable_days or day_of_week in chore.applicable_days:
-                    is_applicable = True
-            is_recurring = True
-        elif chore.recurring_frequency == "monthly":
-            if today.day == 1:
-                is_applicable = True
-            is_recurring = True
-
-        if not is_applicable:
-            continue
-
-        # Check claim status for today
-        claim = db.query(ChoreClaim).filter(
-            ChoreClaim.chore_id == chore.id,
-            ChoreClaim.kid_id == kid_id,
-            ChoreClaim.claimed_at >= today_start,
-            ChoreClaim.claimed_at < today_end
-        ).order_by(ChoreClaim.claimed_at.desc()).first()
-
-        status = "pending"
-        claimed_by = None
-        if claim:
-            status = claim.status
-            claimed_by = kid.name
-
-        # Get streak count for this chore
-        chore_streaks = kid.chore_streaks or {}
-        streak_count = chore_streaks.get(chore.id, 0)
-
-        result.append(TodaysChoreResponse(
-            **{k: v for k, v in chore.__dict__.items() if not k.startswith('_')},
-            status=status,
-            claimed_by=claimed_by,
-            streak_count=streak_count,
-            is_recurring=is_recurring
-        ))
-
-    return result
+    return todays_chores_for_kid(db, kid)
 
 
 @router.get("/kid/{kid_id}", response_model=List[ChoreWithStatus])
@@ -327,56 +260,15 @@ def claim_chore(
     """Kid claims a chore."""
     # A kid-linked account may only claim chores for its own kid_id.
     assert_kid_access(db, user, request.kid_id)
-
-    chore = db.query(Chore).filter(Chore.id == chore_id).first()
-    if not chore:
-        raise HTTPException(status_code=404, detail="Chore not found")
-
-    kid = db.query(Kid).filter(Kid.id == request.kid_id).first()
-    if not kid:
-        raise HTTPException(status_code=404, detail="Kid not found")
-
-    # Check if kid is assigned to this chore
-    if request.kid_id not in (chore.assigned_kids or []):
-        raise HTTPException(status_code=400, detail="Kid not assigned to this chore")
-
-    # Check for existing claim TODAY if multiple claims not allowed. The window must
-    # match the one get_todays_chores uses for status display, or the UI shows a Claim
-    # button the guard then rejects (pre-v0.16.2: no window at all, so one approved
-    # claim made the chore permanently unclaimable — approved rows are never expired).
-    if not chore.allow_multiple_claims_per_day:
-        day_start, day_end = local_day_bounds_utc()
-        existing = db.query(ChoreClaim).filter(
-            ChoreClaim.chore_id == chore_id,
-            ChoreClaim.kid_id == request.kid_id,
-            ChoreClaim.status.in_(["claimed", "approved"]),
-            ChoreClaim.claimed_at >= day_start,
-            ChoreClaim.claimed_at < day_end,
-        ).first()
-        if existing:
-            raise HTTPException(status_code=400, detail="Chore already claimed today")
-
-    # Create claim
-    claim = ChoreClaim(
-        kid_id=request.kid_id,
-        chore_id=chore_id,
-        status="claimed"
-    )
-    db.add(claim)
-
-    # Update chore last_claimed
-    chore.last_claimed = datetime.now(timezone.utc)
-
-    db.commit()
-    db.refresh(claim)
-
-    # Send push notification to parents (in background — task opens its own session)
-    background_tasks.add_task(notify_parents_chore_claimed, kid.name, chore.name)
-
-    # Send email notification to parents (in background — task opens its own session)
-    background_tasks.add_task(email_notify_parents_chore_claimed, kid.id, kid.name, chore.name)
-
+    claim, kid, chore = claim_chore_for_kid(db, chore_id, request.kid_id)
+    schedule_claim_notifications(background_tasks, kid, chore)
     return claim
+
+
+def schedule_claim_notifications(background_tasks: BackgroundTasks, kid: Kid, chore: Chore) -> None:
+    """Push + email the parents about a claim (tasks open their own sessions)."""
+    background_tasks.add_task(notify_parents_chore_claimed, kid.name, chore.name)
+    background_tasks.add_task(email_notify_parents_chore_claimed, kid.id, kid.name, chore.name)
 
 
 @router.post("/{chore_id}/approve", response_model=ChoreClaimResponse)
