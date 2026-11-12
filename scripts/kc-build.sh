@@ -13,6 +13,12 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REGISTRY="${DOCKER_REGISTRY:-ghcr.io/misterberns}"
 REPO="${DOCKER_REPO:-kidschores}"
+# The name the NAS composes (gt-stacks kidschores + kidschores-test) reference.
+# Images reach the NAS by `docker save | docker load`, which carries only the
+# tags that were saved, so every build also gets this name. Without it a
+# recreate tries to pull it, the registry answers `manifest unknown`, and the
+# deploy stops (2026-11-11). Set DEPLOY_REGISTRY= (empty) to skip.
+DEPLOY_REGISTRY="${DEPLOY_REGISTRY-forgejo.wakanda.lan:8443/wakanda}"
 
 # Read version from VERSION file
 VERSION=$(cat "$APP_DIR/VERSION" | tr -d '[:space:]')
@@ -47,6 +53,20 @@ docker.exe build \
   -t "$FRONTEND_IMAGE:$VERSION" \
   -t "$FRONTEND_IMAGE:latest" \
   "$APP_DIR/frontend/"
+
+if [ -n "$DEPLOY_REGISTRY" ]; then
+  echo ""
+  echo "=== Tagging with the NAS compose name ==="
+  for img in kidschores-backend kidschores-ui; do
+    docker.exe tag "$REGISTRY/$REPO/$img:$VERSION" "$DEPLOY_REGISTRY/$img:$VERSION"
+    # Fail here, not at deploy time, if the tag did not land.
+    docker.exe image inspect "$DEPLOY_REGISTRY/$img:$VERSION" >/dev/null
+    echo "$DEPLOY_REGISTRY/$img:$VERSION"
+  done
+  echo "Ship to the NAS by the compose name, so the loaded image carries it:"
+  echo "  docker.exe save $DEPLOY_REGISTRY/kidschores-backend:$VERSION $DEPLOY_REGISTRY/kidschores-ui:$VERSION \\"
+  echo "    | ssh root@192.168.87.35 docker load"
+fi
 
 echo ""
 echo "=== BUILD COMPLETE ==="

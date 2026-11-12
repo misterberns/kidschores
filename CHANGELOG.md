@@ -7,18 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-11-12
+
+Maintenance release: no new features and no visible change.
+
+### Changed
+- Backend: FastAPI 0.142.4 (held below 0.143, the first of eleven releases
+  with breaking-change notes), uvicorn 0.54.0, Alembic 1.20.1, sentry-sdk 2.74,
+  pytest 9.2.
+- Frontend: React 19.3.1, TanStack Query 5.107, axios 1.21.1, react-router-dom
+  7.18.5, framer-motion 12.43, lucide-react 1.71, Tailwind 4.3.5, vite 7.3.8,
+  vitest 4.1.12, plus the rest of the minor/patch group. e2e: Playwright 1.65.
+- Still held for their own migrations: Python 3.14, @types/node 26, ESLint 10,
+  TypeScript 7, Vite 8, and now FastAPI 0.143+.
+- `scripts/kc-build.sh` also tags each image with the name the NAS composes
+  use (`forgejo.wakanda.lan:8443/wakanda/...`). Images reach the NAS by
+  `docker save | docker load`, which carries only saved tags; with only the
+  ghcr name on the NAS, a recreate tried the registry and stopped with
+  `manifest unknown`. `docs/RELEASE.md` now says to save the forgejo name and
+  check it is present before `up`.
+
 ### Security
-- Dependency updates clearing every actionable advisory in the frontend
+- zod 4.6.7 (GHSA-mrhx-c7xc-m3w5, memory exhaustion; dev tooling only).
+- GHSA-qwww-vcr4-c8h2 (react-router) is resolved, not just non-applicable:
+  the advisory now lists 7.18.2 as patched, and this release ships 7.18.5.
+- Left open, dev tooling only, nothing in the shipped bundle: brace-expansion
+  < 1.1.21 (its fix is newer than Safe Chain's minimum package age; it lands
+  next release) and the minimatch chain under typescript-eslint, which needs
+  the held ESLint 10 major.
+- Carried from August (merged, never released until now): dependency updates clearing every actionable advisory in the frontend
   lockfile: react-router-dom 7.18.2, form-data 4.0.6 (CRLF injection),
   picomatch 4.0.5 (ReDoS), rollup 4.62.3 (path traversal), vite 7.3.6
   (`server.fs.deny` bypasses), minimatch 3.1.5 / 10.2.6 (ReDoS),
   brace-expansion 1.1.18 / 5.0.9 (DoS), js-yaml 4.3.1, flatted 3.4.4,
   ajv 6.15.0, esbuild 0.28.1, @babel/core 7.29.7. `npm audit` findings went from
-  13 to 2, and both remaining entries are the same advisory (below). No
-  application code changed.
-- The one remaining advisory (GHSA-qwww-vcr4-c8h2, react-router RSC-mode CSRF)
-  does not apply to this app — it has no RSC mode and no route actions. Recorded
-  with the reasoning in `SECURITY.md` under "Known non-applicable advisories".
+  13 to 2. No application code changed.
 - Aikido Security now gates pull requests via its PR Checks app (dependencies,
   IaC, secrets, SAST, malware, license risk), and CI runs Safe Chain before
   every dependency install to intercept malicious packages at install time.

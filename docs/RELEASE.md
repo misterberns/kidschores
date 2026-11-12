@@ -60,6 +60,12 @@ PR that forgets one of them fails CI.
 
 - [ ] Build images (`scripts/kc-build.sh`), `docker save` → `scp -O` → `docker load`
       on the GT (registry pull is blocked by step-ca trust)
+- [ ] **Save the `forgejo.wakanda.lan:8443/wakanda/...` names, not the `ghcr.io` ones.**
+      `docker load` brings only the tags that were saved, and the NAS composes name the
+      forgejo image. `kc-build.sh` adds that tag. Before `up`, confirm on the GT that
+      `docker image inspect forgejo.wakanda.lan:8443/wakanda/kidschores-ui:X.Y.Z` (and
+      `-backend`) succeeds, and use `up --pull never`. A missing tag makes `up` try the
+      registry and stop with `manifest unknown` (2026-11-11; the old container keeps running)
 - [ ] **Prod** (`/volume1/gt-stacks/kidschores/`): DB backup first
       (in-container `VACUUM INTO`), compose `.bak`, bump image tags,
       `docker compose -p kidschores-ui --env-file stack.env config --quiet` gate,

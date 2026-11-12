@@ -63,7 +63,7 @@ application. Each entry is re-checked whenever the dependency is upgraded.
 
 | Advisory | Package | Status | Why it does not apply |
 |---|---|---|---|
-| [GHSA-qwww-vcr4-c8h2](https://github.com/advisories/GHSA-qwww-vcr4-c8h2) — RSC-mode CSRF bypass | `react-router` | Not applicable | The flaw is reachable only in **React Server Components mode**. This frontend is a client-only SPA: it uses declarative `<BrowserRouter>` + `<Routes>`/`<Route>` (`frontend/src/App.tsx`), has no data router (`createBrowserRouter`), defines **no route `action`s or `loader`s**, and has no RSC plugin in `frontend/vite.config.ts`. The only patched release is `8.3.0`, a major version in which `react-router-dom` is discontinued; migrating would rewrite routing across the app to remove a code path this build does not contain. Tracked for the next routing overhaul. |
+| [GHSA-qwww-vcr4-c8h2](https://github.com/advisories/GHSA-qwww-vcr4-c8h2) — RSC-mode CSRF bypass | `react-router` | **Resolved in 0.17.1** | Patched, so this row is history. The advisory now lists `7.18.2` as the first patched 7.x release (it named only `8.3.0` when this row was written), and 0.17.1 ships `7.18.5`. It never applied anyway: the flaw needs React Server Components mode, and this frontend is a client-only SPA with declarative `<BrowserRouter>` routes, no data router, and no route `action`s or `loader`s. Re-checked 2026-11-12. |
 
 ## Scope
 
