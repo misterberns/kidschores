@@ -120,4 +120,59 @@ test.describe('Kiosk mode', () => {
     const again = await parentCtx.post('/api/kiosk/pair', { data: { code } });
     expect(again.status()).toBe(400);
   });
+
+  test('a grown-up marks their chore done; a parent approves a kid claim with a PIN (0.19.0)', async ({ page, playwright }) => {
+    // A second parent account WITH a PIN (registration accepts one), plus a grown-up profile.
+    const pin = '7391';
+    const reg = await playwright.request.newContext({ baseURL: API_URL, ignoreHTTPSErrors: true });
+    const regRes = await reg.post('/api/auth/register', {
+      data: { email: `kiosk-pin-${RUN}@example.com`, password: 'kiosk-pin-pass-123', display_name: `PinParent-${RUN}`, pin },
+    });
+    expect(regRes.status()).toBe(200);
+    await reg.dispose();
+    const adult = await (await parentCtx.post('/api/parents', { data: { name: `Grownup-${RUN}` } })).json();
+    const adultChore = await (await parentCtx.post('/api/chores', {
+      data: { name: `AdultChore-${RUN}`, icon: 'trash', default_points: 3, assigned_kids: [adult.id], recurring_frequency: 'daily' },
+    })).json();
+    const kidChore = await (await parentCtx.post('/api/chores', {
+      data: { name: `PinChore-${RUN}`, icon: 'broom', default_points: 9, assigned_kids: [kidId], recurring_frequency: 'daily' },
+    })).json();
+    const before = (await (await parentCtx.get(`/api/kids/${kidId}`)).json()).points;
+
+    await page.addInitScript((t) => localStorage.setItem('kc_kiosk_token', t), kioskToken);
+    await page.goto(`${FRONTEND_URL}/kiosk`);
+
+    // Grown-up: done instantly, no points line, nothing queued for approval.
+    await page.getByTestId(`kiosk-adult-${adult.id}`).click();
+    const adultTile = page.getByTestId(`kiosk-chore-${adultChore.id}`);
+    await expect(adultTile).toContainText('Mark done');
+    await expect(adultTile).not.toContainText('points');
+    await adultTile.click();
+    await expect(page.getByTestId('kiosk-celebration')).toContainText(`Thanks, Grownup-${RUN}!`);
+    await expect(adultTile).toContainText('Done');
+
+    // Kid claims, then a parent approves on the same tablet with a PIN.
+    await page.getByTestId('kiosk-back').click();
+    await page.getByTestId(`kiosk-kid-${kidId}`).click();
+    await page.getByTestId(`kiosk-chore-${kidChore.id}`).click();
+    await expect(page.getByTestId('kiosk-celebration')).toBeVisible();
+
+    await page.getByTestId('kiosk-parent-btn').click();
+    for (const d of pin) await page.getByTestId(`kiosk-pin-${d}`).click();
+    await page.getByTestId('kiosk-pin-ok').click();
+    await expect(page.getByText(`Hi, PinParent-${RUN}`)).toBeVisible();
+    await page.getByTestId(`kiosk-approve-${kidId}-${kidChore.id}`).click();
+    await expect(page.getByTestId(`kiosk-approve-${kidId}-${kidChore.id}`)).toHaveCount(0);
+
+    // The approval is real: same points rule as the parent app, recorded by the PIN's parent.
+    const after = (await (await parentCtx.get(`/api/kids/${kidId}`)).json()).points;
+    expect(after).toBe(before + 9);
+    const history = await (await parentCtx.get('/api/approvals/history')).json();
+    const row = history.find((h: { item_name?: string; approved_by?: string }) => h.item_name === `PinChore-${RUN}`);
+    expect(row?.approved_by).toBe(`PinParent-${RUN}`);
+
+    await parentCtx.delete(`/api/chores/${adultChore.id}`);
+    await parentCtx.delete(`/api/chores/${kidChore.id}`);
+    await parentCtx.delete(`/api/parents/${adult.id}`);
+  });
 });

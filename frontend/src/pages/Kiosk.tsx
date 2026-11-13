@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, Clock, Maximize, Power, Star } from 'lucide-react';
+import { ArrowLeft, Check, Clock, Maximize, Power, ShieldCheck, Star } from 'lucide-react';
 import { Logo } from '../components/Logo';
 import { KidAvatar } from '../components/KidAvatar';
 import { DynamicIcon } from '../components/DynamicIcon';
@@ -14,8 +14,10 @@ import {
   setKioskToken,
   isKioskAuthError,
   kioskApi,
+  type KioskAdult,
   type KioskKid,
 } from '../kiosk/kioskClient';
+import { ParentPanel } from '../kiosk/ParentPanel';
 
 /** Back to the picker after this long without a touch on a kid's screen. */
 export const KIOSK_IDLE_MS = 60_000;
@@ -238,35 +240,53 @@ function NotSetUp({ revoked, onPaired }: { revoked: boolean; onPaired: (token: s
   );
 }
 
-function KidPicker({ kids, onPick }: { kids: KioskKid[]; onPick: (id: string) => void }) {
-  if (kids.length === 0) {
+type Who = { kind: 'kid' | 'adult'; id: string };
+
+function PersonCard({ person, testId, onPick }: { person: KioskKid | KioskAdult; testId: string; onPick: () => void }) {
+  const left = person.chores.filter((c) => (c.status ?? 'pending') === 'pending').length;
+  return (
+    <motion.button
+      type="button"
+      data-testid={testId}
+      whileTap={{ scale: 0.96 }}
+      onClick={onPick}
+      className="flex flex-col items-center gap-2 p-6 sm:p-8 rounded-2xl border border-[var(--border-color)] bg-bg-surface shadow-card"
+    >
+      <KidAvatar kidId={person.id} kidName={person.name} size="lg" />
+      <span className="text-xl sm:text-2xl font-bold text-text-primary">{person.name}</span>
+      <span className="text-text-muted">
+        {person.chores.length === 0
+          ? 'No chores today'
+          : left === 0
+            ? 'All done today'
+            : `${left} chore${left === 1 ? '' : 's'} to do`}
+      </span>
+    </motion.button>
+  );
+}
+
+function PeoplePicker({ kids, adults, onPick }: { kids: KioskKid[]; adults: KioskAdult[]; onPick: (who: Who) => void }) {
+  if (kids.length === 0 && adults.length === 0) {
     return <p className="text-center text-text-muted text-lg">No kids have been added yet.</p>;
   }
+  const grid = 'grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-4 w-full max-w-5xl';
   return (
-    <div className="grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-4 w-full max-w-5xl">
-      {kids.map((kid) => {
-        const left = kid.chores.filter((c) => (c.status ?? 'pending') === 'pending').length;
-        return (
-          <motion.button
-            key={kid.id}
-            type="button"
-            data-testid={`kiosk-kid-${kid.id}`}
-            whileTap={{ scale: 0.96 }}
-            onClick={() => onPick(kid.id)}
-            className="flex flex-col items-center gap-2 p-6 sm:p-8 rounded-2xl border border-[var(--border-color)] bg-bg-surface shadow-card"
-          >
-            <KidAvatar kidId={kid.id} kidName={kid.name} size="lg" />
-            <span className="text-xl sm:text-2xl font-bold text-text-primary">{kid.name}</span>
-            <span className="text-text-muted">
-              {kid.chores.length === 0
-                ? 'No chores today'
-                : left === 0
-                  ? 'All done today'
-                  : `${left} chore${left === 1 ? '' : 's'} to do`}
-            </span>
-          </motion.button>
-        );
-      })}
+    <div className="w-full max-w-5xl flex flex-col items-center gap-8">
+      <div className={grid}>
+        {kids.map((k) => (
+          <PersonCard key={k.id} person={k} testId={`kiosk-kid-${k.id}`} onPick={() => onPick({ kind: 'kid', id: k.id })} />
+        ))}
+      </div>
+      {adults.length > 0 && (
+        <div className="w-full flex flex-col items-center gap-3" data-testid="kiosk-adults">
+          <h2 className="text-lg font-semibold text-text-muted">Grown-ups</h2>
+          <div className={grid}>
+            {adults.map((a) => (
+              <PersonCard key={a.id} person={a} testId={`kiosk-adult-${a.id}`} onPick={() => onPick({ kind: 'adult', id: a.id })} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -275,10 +295,13 @@ function ChoreTile({
   chore,
   onClaim,
   busy,
+  adult = false,
 }: {
   chore: TodaysChore;
   onClaim: () => void;
   busy: boolean;
+  /** Grown-ups: no points line; done instantly, so never "waiting". */
+  adult?: boolean;
 }) {
   const status = chore.status ?? 'pending';
   const base = 'flex flex-col items-center justify-center gap-2 p-5 min-h-[160px] rounded-2xl border text-center';
@@ -286,9 +309,11 @@ function ChoreTile({
     <>
       <DynamicIcon icon={chore.icon} size={44} />
       <span className="text-lg sm:text-xl font-semibold text-text-primary">{chore.name}</span>
-      <span className="flex items-center gap-1 text-text-muted">
-        <Star size={16} /> {chore.default_points} points
-      </span>
+      {!adult && (
+        <span className="flex items-center gap-1 text-text-muted">
+          <Star size={16} /> {chore.default_points} points
+        </span>
+      )}
     </>
   );
 
@@ -304,7 +329,7 @@ function ChoreTile({
       >
         {body}
         <span className="mt-1 px-4 py-2 rounded-full text-sm font-bold text-[var(--text-inverse)] bg-[var(--primary-500)]">
-          I did it!
+          {adult ? 'Mark done' : 'I did it!'}
         </span>
       </motion.button>
     );
@@ -321,9 +346,11 @@ function ChoreTile({
 
 export function Kiosk() {
   const [token, setToken] = useState(getKioskToken);
-  const [kidId, setKidId] = useState<string | null>(null);
-  const [celebrate, setCelebrate] = useState<string | null>(null);
+  const [who, setWho] = useState<Who | null>(null);
+  const [celebrate, setCelebrate] = useState<{ name: string; adult: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [parentOpen, setParentOpen] = useState(false);
+  const closeParent = useCallback(() => setParentOpen(false), []);
   const queryClient = useQueryClient();
   useWakeLock();
 
@@ -336,17 +363,18 @@ export function Kiosk() {
   });
 
   const backToPicker = useCallback(() => {
-    setKidId(null);
+    setWho(null);
     setError(null);
   }, []);
-  useIdleReturn(kidId !== null, KIOSK_IDLE_MS, backToPicker);
+  useIdleReturn(who !== null, KIOSK_IDLE_MS, backToPicker);
 
   const claim = useMutation({
-    mutationFn: ({ kid, chore }: { kid: KioskKid; chore: TodaysChore }) => kioskApi.claim(kid.id, chore.id),
+    mutationFn: ({ person, chore, adult }: { person: KioskKid | KioskAdult; chore: TodaysChore; adult: boolean }) =>
+      adult ? kioskApi.adultDone(person.id, chore.id) : kioskApi.claim(person.id, chore.id),
     meta: { suppressErrorToast: true }, // the kiosk shows its own inline message
-    onSuccess: (_res, { kid }) => {
+    onSuccess: (_res, { person, adult }) => {
       setError(null);
-      setCelebrate(kid.name);
+      setCelebrate({ name: person.name, adult });
       queryClient.invalidateQueries({ queryKey: ['kiosk-state'] });
     },
     onError: (err) => {
@@ -383,12 +411,14 @@ export function Kiosk() {
     );
   }
 
-  const kid = data?.kids.find((k) => k.id === kidId) ?? null;
+  const isAdult = who?.kind === 'adult';
+  const person: KioskKid | KioskAdult | null =
+    (isAdult ? data?.adults.find((a) => a.id === who?.id) : data?.kids.find((k) => k.id === who?.id)) ?? null;
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-bg-base" data-testid="kiosk">
       <header className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3">
-        {kid ? (
+        {person ? (
           <button
             type="button"
             onClick={backToPicker}
@@ -404,6 +434,16 @@ export function Kiosk() {
           </div>
         )}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            data-testid="kiosk-parent-btn"
+            aria-label="Parent: approve chores"
+            onClick={() => setParentOpen(true)}
+            className="whitespace-nowrap flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-muted border border-[var(--border-color)] bg-bg-surface"
+          >
+            <ShieldCheck size={16} />
+            <span className="hidden sm:inline">Parent</span>
+          </button>
           <FullscreenButton />
           <HoldToExit />
         </div>
@@ -416,13 +456,13 @@ export function Kiosk() {
           </div>
         ) : !data ? (
           <p className="mt-16 text-lg text-text-muted">Can’t reach KidsChores right now. Retrying…</p>
-        ) : kid ? (
+        ) : person ? (
           <div className="w-full max-w-6xl">
             <div className="flex items-center gap-4 mb-6">
-              <KidAvatar kidId={kid.id} kidName={kid.name} size="lg" />
+              <KidAvatar kidId={person.id} kidName={person.name} size="lg" />
               <div>
-                <h1 className="text-3xl font-bold text-text-primary">{kid.name}’s chores</h1>
-                <p className="text-text-muted text-lg">{Math.round(kid.points)} points</p>
+                <h1 className="text-3xl font-bold text-text-primary">{person.name}’s chores</h1>
+                {!isAdult && <p className="text-text-muted text-lg">{Math.round((person as KioskKid).points)} points</p>}
               </div>
             </div>
             {error && (
@@ -430,16 +470,17 @@ export function Kiosk() {
                 {error}
               </p>
             )}
-            {kid.chores.length === 0 ? (
+            {person.chores.length === 0 ? (
               <p className="text-lg text-text-muted">No chores today. Enjoy your day!</p>
             ) : (
               <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-                {sortChores(kid.chores).map((chore) => (
+                {sortChores(person.chores).map((chore) => (
                   <ChoreTile
                     key={chore.id}
                     chore={chore}
+                    adult={isAdult}
                     busy={claim.isPending}
-                    onClaim={() => claim.mutate({ kid, chore })}
+                    onClaim={() => claim.mutate({ person, chore, adult: isAdult })}
                   />
                 ))}
               </div>
@@ -448,10 +489,12 @@ export function Kiosk() {
         ) : (
           <div className="flex-1 w-full flex flex-col items-center justify-center pb-[8vh]">
             <h1 className="mb-8 text-3xl sm:text-4xl font-bold text-text-primary text-center">Who’s doing chores?</h1>
-            <KidPicker kids={data.kids} onPick={setKidId} />
+            <PeoplePicker kids={data.kids} adults={data.adults ?? []} onPick={setWho} />
           </div>
         )}
       </main>
+
+      {parentOpen && <ParentPanel pinSet={!!data?.parent_pin_set} onClose={closeParent} />}
 
       <Confetti show={celebrate !== null} />
       <AnimatePresence>
@@ -464,8 +507,12 @@ export function Kiosk() {
             exit={{ opacity: 0 }}
             className="fixed inset-x-0 top-1/3 mx-auto w-fit max-w-[90vw] px-8 py-6 rounded-2xl bg-bg-surface shadow-card border border-[var(--border-color)] text-center pointer-events-none"
           >
-            <p className="text-3xl font-bold text-text-primary">Nice work, {celebrate}!</p>
-            <p className="mt-2 text-lg text-text-muted">A parent will check it soon.</p>
+            <p className="text-3xl font-bold text-text-primary">
+              {celebrate.adult ? `Thanks, ${celebrate.name}!` : `Nice work, ${celebrate.name}!`}
+            </p>
+            <p className="mt-2 text-lg text-text-muted">
+              {celebrate.adult ? 'Marked done.' : 'A parent will check it soon.'}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>

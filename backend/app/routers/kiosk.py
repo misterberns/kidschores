@@ -22,17 +22,34 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..deps import KIOSK_SCOPE, require_kiosk, require_parent
-from ..models import ApiToken, Chore, Kid, KioskPairing, User
-from ..schemas import ChoreClaimResponse, TodaysChoreResponse
-from ..security import generate_api_token, get_token_prefix
-from ..services.chore_service import claim_chore_for_kid, latest_claims_today, todays_chores_for_kid
-from .chores import schedule_claim_notifications
+from ..models import ApiToken, Chore, ChoreClaim, Kid, KioskPairing, Parent, User
+from ..schemas import ChoreApproveRequest, ChoreClaimResponse, MessageResponse, TodaysChoreResponse
+from ..security import (
+    KIOSK_PARENT_TICKET_TYPE,
+    create_kiosk_parent_ticket,
+    decode_token,
+    generate_api_token,
+    get_token_prefix,
+    hash_pin,
+    needs_rehash,
+    verify_pin,
+)
+from ..services.chore_service import (
+    adult_completions_today,
+    adults_with_chores,
+    claim_chore_for_kid,
+    complete_adult_chore,
+    latest_claims_today,
+    todays_chores_for_adult,
+    todays_chores_for_kid,
+)
+from .chores import approve_chore, disapprove_chore, schedule_claim_notifications
 
 router = APIRouter()
 
@@ -74,9 +91,47 @@ class KioskKid(BaseModel):
     chores: List[TodaysChoreResponse]
 
 
+class KioskAdult(BaseModel):
+    id: str
+    name: str
+    chores: List[TodaysChoreResponse]
+
+
 class KioskState(BaseModel):
     device_name: str
     kids: List[KioskKid]
+    adults: List[KioskAdult] = []
+    # True when at least one parent has a PIN, i.e. approving on the kiosk is possible.
+    parent_pin_set: bool = False
+
+
+class KioskAdultDone(BaseModel):
+    parent_id: str
+    chore_id: str
+
+
+class KioskUnlockRequest(BaseModel):
+    pin: str = Field(min_length=1, max_length=12)
+
+
+class KioskUnlocked(BaseModel):
+    ticket: str
+    parent_name: str
+    expires_in: int  # seconds
+
+
+class KioskPendingClaim(BaseModel):
+    chore_id: str
+    kid_id: str
+    kid_name: str
+    chore_name: str
+    points: float
+    claimed_at: datetime
+
+
+class KioskDecision(BaseModel):
+    chore_id: str
+    kid_id: str
 
 
 class KioskClaimRequest(BaseModel):
@@ -225,6 +280,8 @@ def kiosk_state(db: Session = Depends(get_db), device: ApiToken = Depends(requir
     kids = db.query(Kid).order_by(Kid.created_at.asc()).all()
     chores = db.query(Chore).all()
     claims = latest_claims_today(db, [k.id for k in kids])
+    adults = adults_with_chores(db, chores)
+    done = adult_completions_today(db, [a.id for a in adults])
     return KioskState(
         device_name=device.name,
         kids=[
@@ -234,7 +291,147 @@ def kiosk_state(db: Session = Depends(get_db), device: ApiToken = Depends(requir
             )
             for k in kids
         ],
+        adults=[
+            KioskAdult(id=a.id, name=a.name, chores=todays_chores_for_adult(a, chores, done))
+            for a in adults
+        ],
+        parent_pin_set=db.query(Parent)
+        .filter((Parent.pin_hash.isnot(None)) | (Parent.pin.isnot(None)))
+        .first() is not None,
     )
+
+
+@router.post("/adult-done", response_model=MessageResponse)
+def kiosk_adult_done(
+    body: KioskAdultDone,
+    db: Session = Depends(get_db),
+    _device: ApiToken = Depends(require_kiosk),
+):
+    """A grown-up marks their own assigned chore done: instant, no approval, no points."""
+    complete_adult_chore(db, body.chore_id, body.parent_id)
+    return {"message": "Done"}
+
+
+# --- Parent approval on the kiosk (v0.19.0) ---
+
+_UNLOCK_FAIL_MAX = 5
+_UNLOCK_FAIL_WINDOW = 600  # seconds
+_unlock_failures: dict = defaultdict(list)  # client ip -> failure timestamps
+TICKET_MINUTES = 2
+
+
+def _pin_matches(db: Session, parent: Parent, pin: str) -> bool:
+    """Same checks as /auth/verify-pin, except a parent WITHOUT a PIN never matches."""
+    if parent.pin_hash:
+        ok = verify_pin(pin, parent.pin_hash)
+        if ok and needs_rehash(parent.pin_hash):
+            parent.pin_hash = hash_pin(pin)
+            db.commit()
+        return ok
+    if parent.pin:
+        ok = secrets.compare_digest(pin, parent.pin)
+        if ok:  # migrate the legacy plaintext PIN, as /auth/verify-pin does
+            parent.pin_hash = hash_pin(pin)
+            parent.pin = None
+            db.commit()
+        return ok
+    return False
+
+
+@router.post("/parent/unlock", response_model=KioskUnlocked)
+def kiosk_parent_unlock(
+    body: KioskUnlockRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    device: ApiToken = Depends(require_kiosk),
+):
+    """A parent types their PIN on the kiosk and gets a 2-minute approval ticket bound to
+    this device. Only parents linked to an active, non-kid account qualify."""
+    ip = request.client.host if request.client else "unknown"
+    now = time.monotonic()
+    _unlock_failures[ip] = [t for t in _unlock_failures[ip] if now - t < _UNLOCK_FAIL_WINDOW]
+    if len(_unlock_failures[ip]) >= _UNLOCK_FAIL_MAX:
+        raise HTTPException(status_code=429, detail="Too many wrong PINs. Wait a few minutes and try again.")
+
+    for parent in db.query(Parent).filter(Parent.user_id.isnot(None)).all():
+        if not (parent.pin_hash or parent.pin) or not _pin_matches(db, parent, body.pin):
+            continue
+        user = db.query(User).filter(User.id == parent.user_id).first()
+        if user is None or not user.is_active or db.query(Kid).filter(Kid.user_id == user.id).first():
+            continue
+        ticket = create_kiosk_parent_ticket(user.id, device.id, user.token_version or 0, TICKET_MINUTES)
+        return KioskUnlocked(ticket=ticket, parent_name=parent.name, expires_in=TICKET_MINUTES * 60)
+
+    _unlock_failures[ip].append(time.monotonic())
+    raise HTTPException(status_code=401, detail="That PIN didn't match a parent.")
+
+
+def _ticket_parent(db: Session, device: ApiToken, ticket: Optional[str]) -> User:
+    payload = decode_token(ticket) if ticket else None
+    if not payload or payload.get("type") != KIOSK_PARENT_TICKET_TYPE or payload.get("dev") != device.id:
+        raise HTTPException(status_code=401, detail="Parent PIN needed again")
+    user = db.query(User).filter(User.id == payload.get("sub")).first()
+    if (
+        user is None
+        or not user.is_active
+        or payload.get("tv", 0) != (user.token_version or 0)
+        or db.query(Kid).filter(Kid.user_id == user.id).first() is not None
+    ):
+        raise HTTPException(status_code=401, detail="Parent PIN needed again")
+    return user
+
+
+@router.get("/parent/pending", response_model=List[KioskPendingClaim])
+def kiosk_parent_pending(
+    db: Session = Depends(get_db),
+    device: ApiToken = Depends(require_kiosk),
+    x_kiosk_parent: Optional[str] = Header(default=None),
+):
+    """Kids' chore claims waiting for a parent (reward redemptions stay in the parent app)."""
+    _ticket_parent(db, device, x_kiosk_parent)
+    rows = (
+        db.query(ChoreClaim)
+        .filter(ChoreClaim.status == "claimed")
+        .order_by(ChoreClaim.claimed_at.asc())
+        .all()
+    )
+    kids = {k.id: k for k in db.query(Kid).all()}
+    chores = {c.id: c for c in db.query(Chore).all()}
+    out = []
+    for r in rows:
+        kid, chore = kids.get(r.kid_id), chores.get(r.chore_id)
+        if kid is None or chore is None:
+            continue
+        out.append(KioskPendingClaim(
+            chore_id=chore.id, kid_id=kid.id, kid_name=kid.name, chore_name=chore.name,
+            points=round(chore.default_points * (kid.points_multiplier or 1)),
+            claimed_at=r.claimed_at,
+        ))
+    return out
+
+
+@router.post("/parent/approve", response_model=ChoreClaimResponse)
+def kiosk_parent_approve(
+    body: KioskDecision,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    device: ApiToken = Depends(require_kiosk),
+    x_kiosk_parent: Optional[str] = Header(default=None),
+):
+    """Approve through the SAME function as the parent app (points, streaks, badges, push)."""
+    user = _ticket_parent(db, device, x_kiosk_parent)
+    return approve_chore(body.chore_id, ChoreApproveRequest(kid_id=body.kid_id), background_tasks, db, user)
+
+
+@router.post("/parent/reject", response_model=MessageResponse)
+def kiosk_parent_reject(
+    body: KioskDecision,
+    db: Session = Depends(get_db),
+    device: ApiToken = Depends(require_kiosk),
+    x_kiosk_parent: Optional[str] = Header(default=None),
+):
+    user = _ticket_parent(db, device, x_kiosk_parent)
+    return disapprove_chore(body.chore_id, ChoreApproveRequest(kid_id=body.kid_id), db, user)
 
 
 @router.post("/claim", response_model=ChoreClaimResponse)

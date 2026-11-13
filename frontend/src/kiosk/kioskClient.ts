@@ -48,16 +48,51 @@ export interface KioskKid {
   chores: TodaysChore[];
 }
 
+/** A grown-up assigned chores (v0.19.0): done instantly, no points. */
+export interface KioskAdult {
+  id: string;
+  name: string;
+  chores: TodaysChore[];
+}
+
 export interface KioskState {
   device_name: string;
   kids: KioskKid[];
+  adults: KioskAdult[];
+  /** At least one parent has a PIN, so approving on the kiosk is possible. */
+  parent_pin_set: boolean;
 }
+
+export interface KioskPendingClaim {
+  chore_id: string;
+  kid_id: string;
+  kid_name: string;
+  chore_name: string;
+  points: number;
+  claimed_at: string;
+}
+
+const ticketHeader = (ticket: string) => ({ headers: { 'X-Kiosk-Parent': ticket } });
 
 export const kioskApi = {
   state: () => kioskHttp.get<KioskState>('/kiosk/state').then((r) => r.data),
   claim: (kidId: string, choreId: string) =>
     kioskHttp.post('/kiosk/claim', { kid_id: kidId, chore_id: choreId }).then((r) => r.data),
   endSession: () => kioskHttp.delete('/kiosk/session'),
+  /** A grown-up marks their own chore done: instant, no approval (v0.19.0). */
+  adultDone: (parentId: string, choreId: string) =>
+    kioskHttp.post('/kiosk/adult-done', { parent_id: parentId, chore_id: choreId }).then((r) => r.data),
+  /** Parent PIN -> a 2-minute approval ticket for THIS device (v0.19.0). Never stored. */
+  unlock: (pin: string) =>
+    kioskHttp
+      .post<{ ticket: string; parent_name: string; expires_in: number }>('/kiosk/parent/unlock', { pin })
+      .then((r) => r.data),
+  pending: (ticket: string) =>
+    kioskHttp.get<KioskPendingClaim[]>('/kiosk/parent/pending', ticketHeader(ticket)).then((r) => r.data),
+  approve: (ticket: string, kidId: string, choreId: string) =>
+    kioskHttp.post('/kiosk/parent/approve', { kid_id: kidId, chore_id: choreId }, ticketHeader(ticket)),
+  reject: (ticket: string, kidId: string, choreId: string) =>
+    kioskHttp.post('/kiosk/parent/reject', { kid_id: kidId, chore_id: choreId }, ticketHeader(ticket)),
   /** Anonymous: exchange a parent's one-time pairing code for this device's token (v0.18.2). */
   pair: (code: string) =>
     kioskHttp.post<{ token: string; name: string }>('/kiosk/pair', { code }).then((r) => r.data),

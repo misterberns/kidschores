@@ -80,6 +80,8 @@ export default function Help() {
             </ol>
             <p className="mt-2">Kids tap their name, then tap <strong>I did it!</strong> on a chore. You still approve it as usual. The board goes back to the name picker after a minute. The tablet can only mark chores done: it can't approve chores, spend points or change settings.</p>
             <p className="mt-2"><strong>Can't sign in on the tablet</strong> (for example, KidsChores shown inside a Home Assistant dashboard, where Google sign-in won't run)? Use <strong>Pair a device</strong> in the same tab on your own phone, then on the tablet tap <strong>Enter a pairing code</strong> on the sign-in screen and type the code. Codes work once and expire after 10 minutes.</p>
+            <p className="mt-2"><strong>Grown-ups:</strong> anyone you assign under <strong>Adults</strong> in the chore editor appears on the kiosk under Grown-ups and taps <strong>Mark done</strong>. It counts as done right away, with no approval and no points.</p>
+            <p className="mt-2"><strong>Approving on the tablet:</strong> tap <strong>Parent</strong> on the kiosk and enter your PIN to approve the kids' chores there. Set your PIN first in <strong>Parent</strong> → <strong>Parents</strong> on your own device. The panel locks itself after a minute.</p>
             <p className="mt-2">To leave kiosk mode, hold <strong>Hold to exit</strong> for two seconds and confirm. To switch a tablet off from anywhere, remove it from the <strong>Kiosk</strong> tab.</p>
           </AccordionItem>
 
