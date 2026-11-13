@@ -83,6 +83,25 @@ def create_refresh_token(
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
+KIOSK_PARENT_TICKET_TYPE = "kiosk_parent"
+
+
+def create_kiosk_parent_ticket(user_id: str, device_id: str, token_version: int, minutes: int = 2) -> str:
+    """Short-lived proof that a parent entered their PIN on ONE kiosk device (v0.19.0).
+
+    Its `type` is not "access", so get_current_user never accepts it as a session;
+    only the kiosk approval endpoints read it, and only from the device in `dev`.
+    """
+    to_encode = {
+        "sub": user_id,
+        "dev": device_id,
+        "tv": token_version,
+        "type": KIOSK_PARENT_TICKET_TYPE,
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=minutes),
+    }
+    return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+
+
 def decode_token(token: str) -> Optional[dict]:
     """Decode and validate a JWT token."""
     try:

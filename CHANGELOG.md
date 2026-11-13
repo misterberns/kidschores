@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-12
+
+### Added
+- **Grown-ups on the kiosk.** Parents assigned to chores (the "Adults" row in
+  the chore editor, available since 0.7.7 but with no way to claim) now appear
+  on the kiosk under "Grown-ups". Tapping "Mark done" records the chore right
+  away: no approval, no points, no streaks, and nothing in the approval queue.
+- **Approve on the kiosk with a PIN.** A "Parent" button on the kiosk asks for
+  a parent's PIN and then lists the kids' waiting chore claims with Approve and
+  "Not yet". Approval uses exactly the same rules as the parent app (points,
+  multiplier, streaks, badges, notifications) and is recorded under that
+  parent's name. The panel locks after a minute without a touch, and the PIN
+  unlock itself lasts two minutes. Only parents who have set a PIN can approve
+  here; reward redemptions stay in the parent app.
+
+### Security
+- The PIN unlock is a short ticket bound to one kiosk device and is never
+  accepted as a sign-in anywhere else. Wrong PINs are rate-limited.
+
 ## [0.18.2] - 2026-11-12
 
 ### Added

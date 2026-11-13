@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.18.2-green?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/misterberns/kidschores/releases"><img src="https://img.shields.io/badge/Version-v0.19.0-green?style=flat-square" alt="Version"></a>
   <a href="https://github.com/misterberns/kidschores/actions/workflows/ci.yml"><img src="https://github.com/misterberns/kidschores/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue?style=flat-square" alt="License">
@@ -40,7 +40,7 @@
 - **Badges & Achievements** - Automatic awards (streaks, milestones, early bird, first reward) with full-screen unlock celebrations, push notifications, and rarity-ringed badge art; parents can create custom badges
 - **Challenges** - Time-boxed goals (chore count or points earned) with live progress bars, bonus-point and badge rewards
 - **Kid Avatars** - Per-kid emoji + color picker
-- **Kiosk Mode** - Turn a shared tablet into a family chore board: kids tap their name, see today's chores as big buttons and mark them done, then it returns to the name picker on its own. The tablet holds a claim-only device token, never a parent session, and a parent can remove it from the dashboard. Set one up by starting it on the tablet, or with a one-time pairing code from a parent's own phone, which also works inside another dashboard such as Home Assistant (see `KC_FRAME_ANCESTORS`)
+- **Kiosk Mode** - Turn a shared tablet into a family chore board: kids tap their name, see today's chores as big buttons and mark them done, then it returns to the name picker on its own. The tablet holds a claim-only device token, never a parent session, and a parent can remove it from the dashboard. Set one up by starting it on the tablet, or with a one-time pairing code from a parent's own phone, which also works inside another dashboard such as Home Assistant (see `KC_FRAME_ANCESTORS`). Grown-ups assigned to chores appear on it too and mark theirs done instantly (no points), and a parent can approve the kids' claims right on the tablet with their PIN
 - **Google SSO** - Parents and kids sign in with Google (optional)
 - **Email Notifications** - Parents notified on chore claims and reward redemptions
 - **Midnight + Electric design** - Dark-first, sleek theme system with a light variant; per-kid accent colors, ring progress, metal-tier badge art
@@ -345,4 +345,4 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ## Version
 
-Current version: **0.18.2** (see [CHANGELOG.md](CHANGELOG.md) for history)
+Current version: **0.19.0** (see [CHANGELOG.md](CHANGELOG.md) for history)

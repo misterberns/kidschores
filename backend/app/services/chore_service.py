@@ -10,7 +10,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from ..models import Chore, ChoreClaim, Kid
+from ..models import AdultChoreCompletion, Chore, ChoreClaim, Kid, Parent
 from ..schemas import TodaysChoreResponse
 from ..timeutil import local_day_bounds_utc
 
@@ -132,3 +132,83 @@ def claim_chore_for_kid(db: Session, chore_id: str, kid_id: str) -> Tuple[ChoreC
     db.commit()
     db.refresh(claim)
     return claim, kid, chore
+
+
+# --- Grown-ups (v0.19.0): assigned by Parent id, done instantly, no points ---
+
+def adult_completions_today(db: Session, parent_ids: Iterable[str]) -> Dict[Tuple[str, str], AdultChoreCompletion]:
+    """One query: the latest completion today for every (chore_id, parent_id)."""
+    parent_ids = list(parent_ids)
+    if not parent_ids:
+        return {}
+    day_start, day_end = local_day_bounds_utc()
+    rows = (
+        db.query(AdultChoreCompletion)
+        .filter(
+            AdultChoreCompletion.parent_id.in_(parent_ids),
+            AdultChoreCompletion.completed_at >= day_start,
+            AdultChoreCompletion.completed_at < day_end,
+        )
+        .order_by(AdultChoreCompletion.completed_at.asc())
+        .all()
+    )
+    return {(r.chore_id, r.parent_id): r for r in rows}
+
+
+def adults_with_chores(db: Session, chores: List[Chore]) -> List[Parent]:
+    """Parents assigned to at least one chore, oldest first."""
+    assigned = {pid for c in chores for pid in (c.assigned_kids or [])}
+    if not assigned:
+        return []
+    return (
+        db.query(Parent)
+        .filter(Parent.id.in_(assigned))
+        .order_by(Parent.created_at.asc())
+        .all()
+    )
+
+
+def todays_chores_for_adult(
+    parent: Parent,
+    chores: List[Chore],
+    done_today: Dict[Tuple[str, str], AdultChoreCompletion],
+) -> List[TodaysChoreResponse]:
+    """Chores applicable today for a grown-up: 'approved' once done, else 'pending'."""
+    today = datetime.now()
+    result = []
+    for chore in chores:
+        if parent.id not in (chore.assigned_kids or []):
+            continue
+        applicable, is_recurring = is_applicable_today(chore, today)
+        if not applicable:
+            continue
+        done = done_today.get((chore.id, parent.id))
+        result.append(TodaysChoreResponse(
+            **{k: v for k, v in chore.__dict__.items() if not k.startswith('_')},
+            status="approved" if done else "pending",
+            claimed_by=parent.name if done else None,
+            streak_count=0,
+            is_recurring=is_recurring,
+        ))
+    return result
+
+
+def complete_adult_chore(db: Session, chore_id: str, parent_id: str) -> AdultChoreCompletion:
+    """Mark a grown-up's assigned chore done (once per day unless the chore allows more). Commits."""
+    chore = db.query(Chore).filter(Chore.id == chore_id).first()
+    if not chore:
+        raise HTTPException(status_code=404, detail="Chore not found")
+    parent = db.query(Parent).filter(Parent.id == parent_id).first()
+    if not parent:
+        raise HTTPException(status_code=404, detail="Grown-up not found")
+    if parent_id not in (chore.assigned_kids or []):
+        raise HTTPException(status_code=400, detail="Not assigned to this chore")
+    if not chore.allow_multiple_claims_per_day:
+        if adult_completions_today(db, [parent_id]).get((chore_id, parent_id)):
+            raise HTTPException(status_code=400, detail="Already done today")
+    row = AdultChoreCompletion(parent_id=parent_id, chore_id=chore_id)
+    db.add(row)
+    chore.last_completed = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(row)
+    return row

@@ -4,7 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.18.x  | Yes       |
+| 0.19.x  | Yes       |
+| 0.18.x  | No        |
 | 0.17.x  | No        |
 | 0.16.x  | No        |
 | 0.15.x  | No        |
@@ -35,6 +36,7 @@ KidsChores implements the following security practices:
 - **Authentication**: JWT tokens (PyJWT) with configurable expiry, bcrypt password hashing (12 rounds). The app **refuses to start** with a missing/placeholder/too-short `JWT_SECRET_KEY`. Google sign-in requires a verified email and a validated token audience.
 - **Authorization**: parent/kid role model — management actions require a parent account; kid accounts can only act on and read their own data (object-level ownership checks).
 - **Kiosk pairing codes** (0.18.2): 8 characters from a 31-symbol alphabet, stored only as a SHA-256 hash, single use (an atomic update), valid 10 minutes, and wrong guesses are rate-limited per client. A redeemed code yields a kiosk-scoped token, never a user session.
+- **Kiosk parent approval** (0.19.0): a parent PIN typed on a kiosk yields a 2-minute ticket bound to that one device. It is a JWT of type `kiosk_parent`, which `get_current_user` never accepts as a session, so it opens only the kiosk approval endpoints. Parents without a PIN, and Parent rows linked to a kid account, can never unlock. Wrong PINs are rate-limited (5 per 10 minutes per client); the ticket honors the account's session-revocation epoch.
 - **Framing**: CSP `frame-ancestors` is the only framing control (0.18.1; `X-Frame-Options` was removed because it cannot allow a named site). It defaults to `'self'`; an operator can list sites allowed to embed the app with `KC_FRAME_ANCESTORS`, which is validated at container start and falls back to `'self'` when empty or malformed.
 - **API tokens**: hashed at rest, prefix-narrowed lookup, and **expiry is enforced** at authentication time. **Scopes are enforced** (0.18.0): a scoped token (today only `kiosk`) is refused by every route except its own, and the general token endpoint refuses scopes it cannot honor. Before 0.18.0 the `scopes` column was stored but never read.
 - **Rate limiting**: login attempts rate-limited **per account (email) and per IP**.

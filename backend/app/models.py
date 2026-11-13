@@ -135,6 +135,20 @@ class KioskPairing(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
+class AdultChoreCompletion(Base):
+    """A grown-up marked one of their assigned chores done (v0.19.0).
+
+    Adults are assigned chores by Parent id (Chore.assigned_kids, since 0.7.7) but
+    have no points, streaks or rewards, so their completions are a separate record:
+    done instantly, never approved, never touching kid claims or balances."""
+    __tablename__ = "adult_chore_completions"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    parent_id = Column(String(36), ForeignKey("parents.id"), nullable=False, index=True)
+    chore_id = Column(String(36), ForeignKey("chores.id"), nullable=False, index=True)
+    completed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
 class Kid(Base):
     """Kid profile model."""
     __tablename__ = "kids"
