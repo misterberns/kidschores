@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-11-14
+
+### Changed
+- When KidsChores is shown inside another app's page (for example a Home
+  Assistant dashboard), the sign-in screen leads with "Enter a pairing code"
+  and hides "Continue with Google", which Google refuses to run inside another
+  app. A short note says why; email and password sign-in still works. The
+  sign-up screen hides "Sign up with Google" the same way. Nothing changes
+  when KidsChores is opened on its own.
+
 ## [0.19.0] - 2026-11-12
 
 ### Added
