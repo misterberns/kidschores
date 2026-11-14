@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, KeyRound } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../theme/ThemeToggle';
 import { getApiErrorMessage } from '../utils/errorMessage';
+import { isEmbedded } from '../utils/embedded';
 
 export function Login() {
+  // Inside another site's frame (e.g. a Home Assistant dashboard) Google sign-in can't run.
+  const [embedded] = useState(isEmbedded);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +63,28 @@ export function Login() {
         <Logo variant="stacked" size={160} className="mb-2 max-w-[70vw]" />
         <p className="text-text-muted mt-2">Welcome back!</p>
       </motion.div>
+
+      {/* Embedded (v0.19.1): pairing is the way to set up a tablet shown inside another app */}
+      {embedded && (
+        <div
+          data-testid="embedded-pair-card"
+          className="w-full max-w-md mb-6 p-5 rounded-xl border border-[var(--primary-500)] bg-bg-surface text-center"
+        >
+          <p className="font-semibold text-text-primary">Setting up a shared tablet?</p>
+          <p className="mt-1 text-sm text-text-muted">
+            Get a pairing code from Parent Dashboard, Kiosk tab, on your own phone or computer.
+          </p>
+          <Link
+            to="/kiosk"
+            data-testid="kiosk-pair-primary"
+            style={{ backgroundColor: 'var(--primary-500)' }}
+            className="mt-4 w-full py-3 px-4 rounded-lg font-bold text-[var(--text-inverse)] flex items-center justify-center gap-2"
+          >
+            <KeyRound size={20} />
+            Enter a pairing code
+          </Link>
+        </div>
+      )}
 
       {/* Login Form */}
       <motion.div
@@ -179,6 +204,13 @@ export function Login() {
             )}
           </motion.button>
 
+          {embedded ? (
+            <p data-testid="google-unavailable" className="mt-4 text-center text-sm text-text-muted">
+              Google sign-in doesn’t work inside another app. Use your email and password, or open
+              KidsChores in its own browser tab.
+            </p>
+          ) : (
+          <>
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
@@ -225,6 +257,8 @@ export function Login() {
             </svg>
             Continue with Google
           </button>
+          </>
+          )}
         </form>
 
         {/* Register Link */}
@@ -239,7 +273,9 @@ export function Login() {
           </Link>
         </p>
 
-        {/* Kiosk pairing (v0.18.2): a shared tablet is set up with a parent's code, never a sign-in */}
+        {/* Kiosk pairing (v0.18.2): a shared tablet is set up with a parent's code, never a sign-in.
+            When embedded, the card at the top already offers it. */}
+        {!embedded && (
         <p className="text-center mt-3 text-sm text-text-muted">
           Setting up a shared tablet?{' '}
           <Link
@@ -251,6 +287,7 @@ export function Login() {
             Enter a pairing code
           </Link>
         </p>
+        )}
       </motion.div>
     </div>
   );

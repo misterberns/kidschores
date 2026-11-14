@@ -5,8 +5,11 @@ import { Mail, Lock, User, UserPlus, AlertCircle, CheckCircle } from 'lucide-rea
 import { useAuth } from '../auth/AuthContext';
 import { Logo } from '../components/Logo';
 import { getApiErrorMessage } from '../utils/errorMessage';
+import { isEmbedded } from '../utils/embedded';
 
 export function Register() {
+  // Inside another site's frame (e.g. a Home Assistant dashboard) Google sign-up can't run.
+  const [embedded] = useState(isEmbedded);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -240,6 +243,13 @@ export function Register() {
             )}
           </motion.button>
 
+          {embedded ? (
+            <p data-testid="google-unavailable" className="mt-4 text-center text-sm text-text-muted">
+              Google sign-up doesn’t work inside another app. Use your email and a password, or open
+              KidsChores in its own browser tab.
+            </p>
+          ) : (
+          <>
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
@@ -286,6 +296,8 @@ export function Register() {
             </svg>
             Sign up with Google
           </button>
+          </>
+          )}
         </form>
 
         {/* Login Link */}
